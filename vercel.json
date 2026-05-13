@@ -10,14 +10,10 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/v1/(.*)",
-      "dest": "erp-backend/src/server.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "erp-frontend/$1"
+      "source": "/api/v1/(.*)",
+      "destination": "/erp-backend/src/server.ts"
     }
   ]
 }
