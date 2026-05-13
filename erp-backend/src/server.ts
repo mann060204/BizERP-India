@@ -8,10 +8,17 @@ import { notFound, errorHandler } from './middlewares/error.middleware';
 
 dotenv.config();
 
-// Connect to database
-connectDB();
-
 const app = express();
+
+// Connect to database middleware for Serverless
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Database connection failed. Please check MONGODB_URI and IP whitelist.' });
+  }
+});
 
 // Middlewares
 app.use(express.json({ limit: '10mb' }));
