@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #262626;
+  --primary-light: #FFFFFF;
+  --accent: #FFFFFF;
+  --accent-light: #D4D4D4;
+  --success: #10B981;
+  --danger: #EF4444;
+  --bg: #000000;
+  --bg-card: #0A0A0A;
+  --bg-elevated: #111111;
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+  ::selection { background: #2563EB; color: white; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-card); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+}
+
+@layer utilities {
+  .glass {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .ngrok-card-hover {
+    --glow-color: 168, 85, 247; /* Default purple */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glow-green { --glow-color: 16, 185, 129; }
+  .glow-red { --glow-color: 239, 68, 68; }
+  .glow-blue { --glow-color: 59, 130, 246; }
+  .glow-orange { --glow-color: 249, 115, 22; }
+  .glow-yellow { --glow-color: 250, 204, 21; } /* Added yellow */
+  .glow-purple { --glow-color: 168, 85, 247; }
+  
+  .ngrok-card-hover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at top, rgba(var(--glow-color), 0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .ngrok-card-hover:hover {
+    border-color: rgba(var(--glow-color), 0.6);
+    box-shadow: 0 0 40px -10px rgba(var(--glow-color), 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .ngrok-card-hover:hover::before {
+    opacity: 1;
+  }
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  }
+  .gradient-accent {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  }
+
+}
