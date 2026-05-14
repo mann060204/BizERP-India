@@ -3,82 +3,138 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchasesApi } from '../../../../lib/erp-api';
-import { Plus, Trash2, Search, Loader2, Save, CheckCircle } from 'lucide-react';
+import { 
+  Plus, Trash2, Search, Loader2, Save, CheckCircle, 
+  Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
+  Calendar, ChevronDown, User, MapPin, CreditCard
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: any; }
-interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; }
-interface LineItem { productId?: string; productName: string; hsnCode: string; quantity: number; unit: string; rate: number; discount: number; gstRate: number; taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; }
+interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; }
+interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
+interface LineItem { 
+  productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
+  quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
+  taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
+}
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
+const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
-
-const calcItem = (item: LineItem, isInterState: boolean): LineItem => {
-  const gross = item.quantity * item.rate;
-  const discountAmt = (gross * item.discount) / 100;
-  const taxableAmount = round2(gross - discountAmt);
-  const cgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
-  const sgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
-  const igst = isInterState ? round2((taxableAmount * item.gstRate) / 100) : 0;
-  return { ...item, taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst) };
-};
-
-const newLine = (): LineItem => ({ productName: '', hsnCode: '', quantity: 1, unit: 'Nos', rate: 0, discount: 0, gstRate: 18, taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0 });
 
 export default function NewPurchasePage() {
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [supplierSearch, setSupplierSearch] = useState('');
-  const [productSearch, setProductSearch] = useState<Record<number, string>>({});
-  const [showSupplierDD, setShowSupplierDD] = useState(false);
-  const [showProductDD, setShowProductDD] = useState<Record<number, boolean>>({});
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  
-  const [billNumber, setBillNumber] = useState('');
-  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isInterState, setIsInterState] = useState(false);
-  const [paymentMode, setPaymentMode] = useState('Cash');
-  const [amountPaid, setAmountPaid] = useState(0);
-  const [notes, setNotes] = useState('');
-  const [lineItems, setLineItems] = useState<LineItem[]>([newLine()]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Header State
+  const [billNumber, setBillNumber] = useState('');
+  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isInterState, setIsInterState] = useState(false);
+  const [billTo, setBillTo] = useState<'Cash' | 'Supplier'>('Supplier');
+  const [contactNo, setContactNo] = useState('');
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [showSupplierDD, setShowSupplierDD] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [supplierAddress, setSupplierAddress] = useState('');
+  const [supplierGstin, setSupplierGstin] = useState('');
+
+  // Particulars (Input Row) State
+  const [itemInput, setItemInput] = useState<LineItem>({
+    productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
+    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 18, cess: 0,
+    taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
+  });
+  const [itemSearch, setItemSearch] = useState('');
+  const [showItemDD, setShowItemDD] = useState(false);
+
+  // Main List
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
+
+  // Footer State
+  const [purchasedBy, setPurchasedBy] = useState('');
+  const [deliveryTerms, setDeliveryTerms] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [paymentMode, setPaymentMode] = useState('Cash');
+  const [amountPaid, setAmountPaid] = useState(0);
+  const [txnId, setTxnId] = useState('');
+
   useEffect(() => {
-    suppliersApi.list({ limit: 200 }).then(r => setSuppliers(r.data.suppliers)).catch(() => {});
-    productsApi.list({ limit: 500 }).then(r => setProducts(r.data.products)).catch(() => {});
+    const fetchData = async () => {
+      try {
+        const [sRes, pRes] = await Promise.all([
+          suppliersApi.list({ limit: 200 }),
+          productsApi.list({ limit: 500 })
+        ]);
+        setSuppliers(sRes.data.suppliers);
+        setProducts(pRes.data.products);
+      } catch (err) {
+        toast.error('Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
-  const filteredProducts = (idx: number) => products.filter(p => p.name.toLowerCase().includes((productSearch[idx] || '').toLowerCase()));
+  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
 
-  const pickSupplier = (s: Supplier) => { setSelectedSupplier(s); setSupplierSearch(s.name); setShowSupplierDD(false); };
-
-  const pickProduct = (idx: number, p: Product) => {
-    const updated = [...lineItems];
-    updated[idx] = calcItem({ ...updated[idx], productId: p._id, productName: p.name, hsnCode: p.hsnCode || '', unit: p.unit, rate: p.purchasePrice, gstRate: p.gstRate }, isInterState);
-    setLineItems(updated);
-    setProductSearch({ ...productSearch, [idx]: p.name });
-    setShowProductDD({ ...showProductDD, [idx]: false });
+  const pickSupplier = (s: Supplier) => {
+    setSelectedSupplier(s);
+    setSupplierSearch(s.name);
+    setContactNo(s.mobile || '');
+    setSupplierAddress(s.address || '');
+    setSupplierGstin(s.gstin || '');
+    setShowSupplierDD(false);
   };
 
-  const updateLine = (idx: number, key: keyof LineItem, value: any) => {
-    const updated = [...lineItems];
-    (updated[idx] as any)[key] = value;
-    updated[idx] = calcItem(updated[idx], isInterState);
-    setLineItems(updated);
+  const pickProduct = (p: Product) => {
+    setItemInput(prev => ({
+      ...prev,
+      productId: p._id,
+      productName: p.name,
+      hsnCode: p.hsnCode || '',
+      rate: p.purchasePrice,
+      mrp: p.mrp || p.purchasePrice,
+      gstRate: p.gstRate,
+      unit: p.unit
+    }));
+    setItemSearch(p.name);
+    setShowItemDD(false);
   };
 
-  const addLine = () => setLineItems([...lineItems, newLine()]);
-  const removeLine = (idx: number) => { if (lineItems.length === 1) return; setLineItems(lineItems.filter((_, i) => i !== idx)); };
+  const calculateItem = (item: LineItem) => {
+    const gross = item.quantity * item.rate;
+    const discountAmt = (gross * item.discount) / 100;
+    const taxableAmount = round2(gross - discountAmt);
+    const cgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
+    const sgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
+    const igst = isInterState ? round2((taxableAmount * item.gstRate) / 100) : 0;
+    const cessAmt = round2((taxableAmount * item.cess) / 100);
+    return { ...item, taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
+  };
 
-  useEffect(() => {
-    setLineItems(lines => lines.map(l => calcItem(l, isInterState)));
-  }, [isInterState]);
+  const addItem = () => {
+    if (!itemInput.productName) { toast.error('Select an item first'); return; }
+    const newItem = calculateItem(itemInput);
+    setLineItems([...lineItems, newItem]);
+    setItemInput({
+      productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
+      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 18, cess: 0,
+      taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
+    });
+    setItemSearch('');
+  };
 
-  const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
-  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
+  const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
+
+  // Totals
+  const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
@@ -88,224 +144,316 @@ export default function NewPurchasePage() {
 
   const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
     if (!billNumber.trim()) { toast.error('Bill Number is required'); return; }
-    if (!lineItems.some(i => i.productName.trim())) { toast.error('Add at least one item'); return; }
+    if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     setSaving(true);
     try {
       const payload = {
+        billNumber,
+        billDate,
+        dueDate,
         supplierId: selectedSupplier?._id,
-        supplierSnapshot: selectedSupplier
-          ? { name: selectedSupplier.name, mobile: selectedSupplier.mobile, gstin: selectedSupplier.gstin }
-          : { name: 'Walk-in Supplier' },
-        billNumber, billDate, isInterState, lineItems, paymentMode,
-        amountPaid, notes,
+        supplierSnapshot: selectedSupplier ? {
+          name: selectedSupplier.name,
+          mobile: contactNo,
+          gstin: supplierGstin,
+          address: supplierAddress
+        } : { name: supplierSearch || 'Cash Supplier' },
+        isInterState,
+        lineItems,
+        paymentMode,
+        amountPaid,
+        txnId,
+        notes: remarks,
+        deliveryTerms,
+        purchasedBy,
+        billTo,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
       };
       await purchasesApi.create(payload);
-      toast.success(`Purchase Bill recorded!`);
+      toast.success(`Purchase Bill ${billNumber} Recorded!`);
       router.push('/dashboard/purchases');
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to save purchase bill'); }
-    finally { setSaving(false); }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to save purchase bill');
+    } finally {
+      setSaving(false);
+    }
   };
 
+  if (loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="w-10 h-10 animate-spin text-white" /></div>;
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
       <Topbar title="Add Purchase Bill" />
-      <main className="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">Record Purchase Bill</h2>
-          <div className="flex gap-2">
-            <button onClick={() => handleSave('draft')} disabled={saving} className="px-4 py-2 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white text-sm font-medium transition flex items-center gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Draft
-            </button>
-            <button onClick={() => handleSave('received')} disabled={saving} className="px-4 py-2 rounded-xl bg-white text-black hover:bg-gray-200 text-sm font-semibold transition hover:opacity-90 flex items-center gap-2 shadow-lg shadow-white/10/30">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Save & Mark Received
-            </button>
+
+      <main className="flex-1 overflow-y-auto p-2 space-y-2 pb-20">
+        
+        {/* Section 1: Bill Information */}
+        <div className="erp-container">
+          <div className="erp-header">Purchase Bill Information</div>
+          <div className="p-2 grid grid-cols-6 gap-x-4 gap-y-2">
+            <div>
+              <label className="erp-label">Bill Number <span className="text-red-500">*</span></label>
+              <input value={billNumber} onChange={e => setBillNumber(e.target.value)} className="erp-input w-full" placeholder="SUP-INV-001" />
+            </div>
+            <div>
+              <label className="erp-label">Bill Date</label>
+              <input type="date" value={billDate} onChange={e => setBillDate(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label">Due Date</label>
+              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div className="flex items-center gap-2 pt-4 col-span-1">
+               <label className="flex items-center gap-1 text-[10px] cursor-pointer">
+                 <input type="radio" checked={billTo === 'Cash'} onChange={() => setBillTo('Cash')} className="accent-white" /> Cash A/c
+               </label>
+               <label className="flex items-center gap-1 text-[10px] cursor-pointer">
+                 <input type="radio" checked={billTo === 'Supplier'} onChange={() => setBillTo('Supplier')} className="accent-white" /> Supplier A/c
+               </label>
+            </div>
+            <div className="col-span-2 flex items-end pb-1">
+                <label className="flex items-center gap-2 text-xs cursor-pointer group">
+                  <input type="checkbox" checked={isInterState} onChange={e => setIsInterState(e.target.checked)} className="accent-white" />
+                  <span className="text-[#94a3b8] group-hover:text-white transition">Inter-State Purchase (IGST)</span>
+                </label>
+            </div>
+
+            <div className="col-span-2">
+              <label className="erp-label">Supplier <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); }} onFocus={() => setShowSupplierDD(true)} className="erp-input w-full" placeholder="Search supplier..." />
+                {showSupplierDD && filteredSuppliers.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    {filteredSuppliers.map(s => (
+                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A]">
+                        {s.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="erp-label">Contact No.</label>
+              <input value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div className="col-span-2">
+              <label className="erp-label">Address</label>
+              <input value={supplierAddress} onChange={e => setSupplierAddress(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label">Supplier GSTIN</label>
+              <input value={supplierGstin} onChange={e => setSupplierGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Supplier + Supply */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="glass rounded-2xl p-5 space-y-4">
-              <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Bill Details</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Supplier</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
-                    <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); if (!e.target.value) setSelectedSupplier(null); }}
-                      onFocus={() => setShowSupplierDD(true)} placeholder="Search supplier..."
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
-                  </div>
-                  {showSupplierDD && filteredSuppliers.length > 0 && (
-                    <div className="absolute mt-1 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
-                      {filteredSuppliers.slice(0, 8).map(s => (
-                        <button key={s._id} onClick={() => pickSupplier(s)} className="w-full text-left px-4 py-3 hover:bg-[#111111] transition text-sm">
-                          <p className="text-white font-medium">{s.name}</p>
-                          {s.mobile && <p className="text-[#475569] text-xs">{s.mobile}</p>}
-                        </button>
+        {/* Section 2: Particulars Input */}
+        <div className="erp-container">
+          <div className="erp-header">Particulars</div>
+          <div className="p-2 space-y-2">
+            <div className="grid grid-cols-10 gap-2">
+              <div className="col-span-1">
+                <label className="erp-label">Batch No.</label>
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a0000]" />
+              </div>
+              <div className="col-span-3">
+                <label className="erp-label">Item Name <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
+                  {showItemDD && filteredProducts.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                      {filteredProducts.map(p => (
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between">
+                          <span>{p.name}</span>
+                          <span className="text-[#475569]">₹{p.purchasePrice}</span>
+                        </div>
                       ))}
                     </div>
                   )}
-                  {selectedSupplier?.gstin && <p className="text-xs text-[#94a3b8] mt-1">GSTIN: <span className="font-mono text-white">{selectedSupplier.gstin}</span></p>}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Bill Number *</label>
-                    <input value={billNumber} onChange={e => setBillNumber(e.target.value)} placeholder="SUP-001"
-                      className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Bill Date</label>
-                    <input type="date" value={billDate} onChange={e => setBillDate(e.target.value)}
-                      className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
-                  </div>
                 </div>
               </div>
-
+              <div className="col-span-1">
+                <label className="erp-label">Unit <span className="text-red-500">*</span></label>
+                <select value={itemInput.unit} onChange={e => setItemInput({...itemInput, unit: e.target.value})} className="erp-input w-full">
+                  <option>Nos</option><option>Kgs</option><option>Pcs</option><option>Mtr</option><option>Box</option>
+                </select>
+              </div>
               <div>
-                <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Supply Type</label>
-                <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] max-w-xs">
-                  {[{ label: 'Intra-state (CGST+SGST)', v: false }, { label: 'Inter-state (IGST)', v: true }].map(({ label, v }) => (
-                    <button key={label} type="button" onClick={() => setIsInterState(v)}
-                      className={`flex-1 py-2 text-xs font-medium transition ${isInterState === v ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#94a3b8] hover:text-white'}`}>
-                      {label}
-                    </button>
-                  ))}
+                <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
+                <input type="number" value={itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+              </div>
+              <div>
+                <label className="erp-label">Pur Price</label>
+                <div className="relative">
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <input type="number" value={itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
+              </div>
+              <div>
+                <label className="erp-label">MRP</label>
+                <div className="relative">
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <input type="number" value={itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                </div>
+              </div>
+              <div>
+                <label className="erp-label">Disc. (%)</label>
+                <input type="number" value={itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+              </div>
+              <div>
+                <label className="erp-label">Tax (%)</label>
+                <input type="number" value={itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
             </div>
-
-            {/* Line Items */}
-            <div className="glass rounded-2xl p-5 space-y-3">
-              <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Line Items</h3>
-              {lineItems.map((item, idx) => (
-                <div key={idx} className="bg-[#111111] border border-[#1A1A1A] rounded-xl p-4 space-y-3">
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 relative">
-                      <label className="block text-xs text-[#475569] mb-1">Item</label>
-                      <div className="relative">
-                        <input value={productSearch[idx] || item.productName}
-                          onChange={e => { setProductSearch({ ...productSearch, [idx]: e.target.value }); updateLine(idx, 'productName', e.target.value); setShowProductDD({ ...showProductDD, [idx]: true }); }}
-                          onFocus={() => setShowProductDD({ ...showProductDD, [idx]: true })}
-                          placeholder="Search item..."
-                          className="w-full px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
-                        {showProductDD[idx] && filteredProducts(idx).length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-1 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl shadow-xl z-20 max-h-36 overflow-y-auto">
-                            {filteredProducts(idx).slice(0, 6).map(p => (
-                              <button key={p._id} onClick={() => pickProduct(idx, p)} className="w-full text-left px-3 py-2.5 hover:bg-[#111111] transition text-xs">
-                                <span className="text-white">{p.name}</span>
-                                <span className="text-[#475569] ml-2">₹{p.purchasePrice} | {p.gstRate}%</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button onClick={() => removeLine(idx)} className="mt-5 p-2 text-[#475569] hover:text-red-400 hover:bg-red-900/10 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-
-                  <div className="grid grid-cols-5 gap-2">
-                    {[
-                      { label: 'Qty', key: 'quantity', type: 'number' },
-                      { label: 'Pur Rate (₹)', key: 'rate', type: 'number' },
-                      { label: 'Disc (%)', key: 'discount', type: 'number' },
-                      { label: 'GST %', key: 'gstRate', type: 'number' },
-                    ].map(({ label, key, type }) => (
-                      <div key={key}>
-                        <label className="block text-xs text-[#475569] mb-1">{label}</label>
-                        <input type={type} 
-                          value={(item as any)[key] === 0 ? '' : (item as any)[key]}
-                          onChange={e => updateLine(idx, key as keyof LineItem, e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                          className="w-full px-2 py-1.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
-                      </div>
-                    ))}
-                    <div>
-                      <label className="block text-xs text-[#475569] mb-1">Amount</label>
-                      <div className="px-2 py-1.5 rounded-lg bg-[#000000] border border-[#1A1A1A] text-emerald-400 text-sm font-semibold">₹{item.totalAmount.toFixed(2)}</div>
-                    </div>
-                  </div>
-                  {item.taxableAmount > 0 && (
-                    <div className="flex gap-3 text-xs text-[#475569]">
-                      <span>Taxable: <span className="text-white">₹{item.taxableAmount.toFixed(2)}</span></span>
-                      {!isInterState ? (<><span>CGST: <span className="text-white">₹{item.cgst.toFixed(2)}</span></span><span>SGST: <span className="text-white">₹{item.sgst.toFixed(2)}</span></span></>) : (<span>IGST: <span className="text-white">₹{item.igst.toFixed(2)}</span></span>)}
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button onClick={addLine} className="w-full py-2.5 rounded-xl border border-dashed border-[#1A1A1A] text-[#94a3b8] hover:text-[#D4D4D4] hover:border-[#D4D4D4] text-sm flex items-center justify-center gap-2 transition">
-                <Plus className="w-4 h-4" /> Add Line Item
-              </button>
-            </div>
-          </div>
-
-          {/* Summary Panel */}
-          <div className="space-y-4">
-            <div className="glass rounded-2xl p-5 space-y-3 sticky top-20">
-              <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Bill Summary</h3>
-
-              <div className="space-y-2 text-sm">
-                {[
-                  { label: 'Subtotal', val: subtotal },
-                  { label: 'Total Discount', val: -totalDiscount },
-                  { label: 'Taxable Amount', val: totalTaxable },
-                ].map(r => (
-                  <div key={r.label} className="flex justify-between text-[#94a3b8]">
-                    <span>{r.label}</span>
-                    <span className={r.val < 0 ? 'text-red-400' : 'text-white'}>₹{Math.abs(r.val).toFixed(2)}</span>
-                  </div>
-                ))}
-                {!isInterState ? (
-                  <>
-                    <div className="flex justify-between text-[#94a3b8]"><span>CGST</span><span className="text-white">₹{totalCGST.toFixed(2)}</span></div>
-                    <div className="flex justify-between text-[#94a3b8]"><span>SGST</span><span className="text-white">₹{totalSGST.toFixed(2)}</span></div>
-                  </>
-                ) : (
-                  <div className="flex justify-between text-[#94a3b8]"><span>IGST</span><span className="text-white">₹{totalIGST.toFixed(2)}</span></div>
-                )}
-                <div className="border-t border-[#1A1A1A] pt-2 flex justify-between font-bold text-base">
-                  <span className="text-white">Grand Total</span>
-                  <span className="text-[#D4D4D4]">₹{grandTotal.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Payment */}
-              <div className="space-y-3 pt-2 border-t border-[#1A1A1A]">
-                <div>
-                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Payment Mode</label>
-                  <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition">
-                    {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Amount Paid (₹)</label>
-                  <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                    max={grandTotal}
-                    className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#94a3b8]">Balance Payable</span>
-                  <span className={balance > 0 ? 'text-red-400 font-bold' : 'text-green-400 font-bold'}>₹{balance.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Notes</label>
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Any specific remarks..."
-                  className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
-              </div>
-
-              <button onClick={() => handleSave('received')} disabled={saving} className="w-full py-3 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-white/10/30">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Record Purchase
-              </button>
+            
+            <div className="grid grid-cols-10 gap-2 items-end">
+               <div className="col-span-1 flex flex-col gap-1">
+                  <label className="flex items-center gap-1 text-[9px] cursor-pointer"><input type="radio" checked className="accent-white" /> Item Tag</label>
+                  <label className="flex items-center gap-1 text-[9px] cursor-pointer"><input type="radio" className="accent-white" /> Item Code</label>
+               </div>
+               <div className="col-span-1">
+                 <input value={itemInput.tag} onChange={e => setItemInput({...itemInput, tag: e.target.value})} className="erp-input w-full" placeholder="Tag..." />
+               </div>
+               <div className="col-span-4">
+                 <input value={itemInput.description} onChange={e => setItemInput({...itemInput, description: e.target.value})} className="erp-input w-full" placeholder="Item Description" />
+               </div>
+               <div>
+                 <label className="erp-label">Cess (%)</label>
+                 <input type="number" value={itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+               </div>
+               <div className="col-span-2">
+                  <label className="erp-label">Amount</label>
+                  <div className="erp-input w-full bg-[#001a00] text-emerald-400 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
+               </div>
+               <button onClick={addItem} className="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded flex items-center justify-center">
+                 <Plus className="w-5 h-5" />
+               </button>
             </div>
           </div>
         </div>
+
+        {/* Section 3: Item Grid */}
+        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[300px]">
+           <div className="grid grid-cols-12 erp-grid-header border-b border-[#1A1A1A]">
+             <div className="col-span-1 erp-grid-cell">S.No</div>
+             <div className="col-span-3 erp-grid-cell">Item Name</div>
+             <div className="col-span-1 erp-grid-cell text-center">Qty</div>
+             <div className="col-span-1 erp-grid-cell">Unit</div>
+             <div className="col-span-1 erp-grid-cell text-right">Unit Price</div>
+             <div className="col-span-1 erp-grid-cell text-center">Disc%</div>
+             <div className="col-span-1 erp-grid-cell text-center">Tax%</div>
+             <div className="col-span-1 erp-grid-cell text-center">Cess%</div>
+             <div className="col-span-2 erp-grid-cell text-right">Total</div>
+           </div>
+           <div className="flex-1 overflow-y-auto bg-[#020202]">
+              {lineItems.length === 0 ? (
+                <div className="p-10 text-center text-[#262626] italic text-sm">No items added yet...</div>
+              ) : (
+                lineItems.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-12 erp-grid-row group">
+                    <div className="col-span-1 erp-grid-cell text-[#475569]">{idx + 1}</div>
+                    <div className="col-span-3 erp-grid-cell font-medium">
+                      {item.productName}
+                      {item.tag && <span className="ml-2 text-[9px] bg-[#1A1A1A] px-1 rounded text-[#94a3b8]">{item.tag}</span>}
+                    </div>
+                    <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
+                    <div className="col-span-1 erp-grid-cell">{item.unit}</div>
+                    <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
+                    <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>
+                    <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>
+                    <div className="col-span-2 erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center">
+                      <span>₹{item.totalAmount.toFixed(2)}</span>
+                      <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+           </div>
+        </div>
+
+        {/* Section 4: Footer */}
+        <div className="grid grid-cols-4 gap-2">
+           <div className="erp-footer-box flex flex-col justify-between">
+              <div>
+                <label className="erp-label block mb-1">Total Quantity</label>
+                <div className="text-xl font-bold bg-[#1a1a00] p-1 border border-yellow-900/30 text-yellow-400">{totalQty}</div>
+              </div>
+              <div>
+                <label className="erp-label block mb-1">Purchased By</label>
+                <select value={purchasedBy} onChange={e => setPurchasedBy(e.target.value)} className="erp-input w-full">
+                  <option value="">Select Staff</option>
+                  <option>Admin</option><option>Purchase Manager</option>
+                </select>
+              </div>
+           </div>
+
+           <div className="erp-footer-box">
+              <label className="erp-label block mb-1">Delivery Terms</label>
+              <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-20 resize-none" />
+           </div>
+
+           <div className="erp-footer-box">
+              <label className="erp-label block mb-1">Remarks (Private Use)</label>
+              <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-20 resize-none" />
+           </div>
+
+           <div className="erp-footer-box space-y-2">
+              <div className="bg-[#111111] p-1 text-[10px] font-bold text-center border border-[#1A1A1A]">PAYMENT DETAILS</div>
+              <div className="flex justify-between items-center">
+                <span className="erp-label">Mode</span>
+                <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-2/3">
+                  {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="erp-label">Txn ID</span>
+                <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-2/3" />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="erp-label">Amount Paid</span>
+                <div className="relative w-2/3">
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <input type="number" value={amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold text-emerald-400" />
+                </div>
+              </div>
+              <div className="pt-2 border-t border-[#1A1A1A] flex justify-between font-bold">
+                <span className="text-xs">GRAND TOTAL</span>
+                <span className="text-emerald-400">₹{grandTotal.toFixed(2)}</span>
+              </div>
+           </div>
+        </div>
+
       </main>
+
+      {/* Bottom Toolbar */}
+      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
+        <div className="flex gap-4">
+           <Bell className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Calculator className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Truck className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Wallet className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Hand className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Search className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <RotateCcw className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+        </div>
+        
+        <div className="text-xs font-mono text-[#475569]">
+          Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(2)}</span>
+        </div>
+
+        <div className="flex gap-2">
+          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+            <Save className="w-4 h-4" /> Save and Mark Paid
+          </button>
+          <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#111111] hover:bg-[#1A1A1A] text-white border border-[#1A1A1A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <CheckCircle className="w-4 h-4" /> Mark Received
+          </button>
+        </div>
+      </footer>
     </div>
   );
 }

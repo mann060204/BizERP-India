@@ -4,12 +4,17 @@ export interface ILineItem {
   productId?: mongoose.Types.ObjectId;
   productName: string;
   hsnCode?: string;
+  batchNo?: string;
+  tag?: string;
+  description?: string;
   quantity: number;
   unit: string;
   rate: number;
+  mrp?: number;
   discount: number;
   taxableAmount: number;
   gstRate: number;
+  cess?: number;
   cgst: number;
   sgst: number;
   igst: number;
@@ -39,7 +44,13 @@ export interface IInvoice extends Document {
   paymentMode: string;
   status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
   notes?: string;
+  remarks?: string;
+  deliveryTerms?: string;
   termsAndConditions?: string;
+  billTo: 'Cash' | 'Customer';
+  contactNo?: string;
+  soldBy?: string;
+  txnId?: string;
   isReverseCharge: boolean;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -50,12 +61,17 @@ const LineItemSchema = new Schema<ILineItem>({
   productId: { type: Schema.Types.ObjectId, ref: 'Product' },
   productName: { type: String, required: true },
   hsnCode: String,
+  batchNo: String,
+  tag: String,
+  description: String,
   quantity: { type: Number, required: true },
   unit: { type: String, default: 'Nos' },
   rate: { type: Number, required: true },
+  mrp: { type: Number, default: 0 },
   discount: { type: Number, default: 0 },
   taxableAmount: { type: Number, required: true },
   gstRate: { type: Number, default: 18 },
+  cess: { type: Number, default: 0 },
   cgst: { type: Number, default: 0 },
   sgst: { type: Number, default: 0 },
   igst: { type: Number, default: 0 },
@@ -95,7 +111,13 @@ const InvoiceSchema = new Schema<IInvoice>(
       default: 'draft',
     },
     notes: String,
+    remarks: String,
+    deliveryTerms: String,
     termsAndConditions: String,
+    billTo: { type: String, enum: ['Cash', 'Customer'], default: 'Customer' },
+    contactNo: String,
+    soldBy: String,
+    txnId: String,
     isReverseCharge: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },

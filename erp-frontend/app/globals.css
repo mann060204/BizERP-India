@@ -81,4 +81,28 @@
     background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
   }
 
+  .erp-container {
+    @apply border border-[#1A1A1A] bg-[#000000];
+  }
+  .erp-header {
+    @apply bg-[#111111] border-b border-[#1A1A1A] px-2 py-1 text-[11px] font-bold text-[#94a3b8] uppercase tracking-tight;
+  }
+  .erp-label {
+    @apply text-[11px] font-medium text-[#94a3b8];
+  }
+  .erp-input {
+    @apply bg-[#050505] border border-[#1A1A1A] px-2 py-1 text-xs text-white focus:outline-none focus:border-[#D4D4D4] transition placeholder-[#262626];
+  }
+  .erp-grid-header {
+    @apply bg-[#111111] text-[#94a3b8] text-[10px] font-bold uppercase;
+  }
+  .erp-grid-cell {
+    @apply border-r border-b border-[#1A1A1A] px-2 py-1 text-xs;
+  }
+  .erp-grid-row:hover {
+    @apply bg-[#0A0A0A];
+  }
+  .erp-footer-box {
+    @apply border border-[#1A1A1A] bg-[#050505] p-2;
+  }
 }

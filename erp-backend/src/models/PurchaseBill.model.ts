@@ -6,12 +6,17 @@ const LineItemSchema = new Schema<ILineItem>({
   productId: { type: Schema.Types.ObjectId, ref: 'Product' },
   productName: { type: String, required: true },
   hsnCode: String,
+  batchNo: String,
+  tag: String,
+  description: String,
   quantity: { type: Number, required: true },
   unit: { type: String, default: 'Nos' },
   rate: { type: Number, required: true },
+  mrp: { type: Number, default: 0 },
   discount: { type: Number, default: 0 },
   taxableAmount: { type: Number, required: true },
   gstRate: { type: Number, default: 18 },
+  cess: { type: Number, default: 0 },
   cgst: { type: Number, default: 0 },
   sgst: { type: Number, default: 0 },
   igst: { type: Number, default: 0 },
@@ -40,6 +45,12 @@ export interface IPurchaseBill extends Document {
   paymentMode: string;
   status: 'draft' | 'received' | 'paid' | 'partial' | 'overdue' | 'cancelled';
   notes?: string;
+  remarks?: string;
+  deliveryTerms?: string;
+  billTo: 'Cash' | 'Supplier';
+  contactNo?: string;
+  purchasedBy?: string;
+  txnId?: string;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -77,6 +88,12 @@ const PurchaseBillSchema = new Schema<IPurchaseBill>(
       default: 'draft',
     },
     notes: String,
+    remarks: String,
+    deliveryTerms: String,
+    billTo: { type: String, enum: ['Cash', 'Supplier'], default: 'Supplier' },
+    contactNo: String,
+    purchasedBy: String,
+    txnId: String,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }
