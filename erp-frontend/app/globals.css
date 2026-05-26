@@ -82,27 +82,27 @@
   }
 
   .erp-container {
-    @apply border border-[#1A1A1A] bg-[#000000];
+    @apply border dark:border-[#1A1A1A] border-gray-300 dark:bg-[#000000] bg-white;
   }
   .erp-header {
-    @apply bg-[#111111] border-b border-[#1A1A1A] px-2 py-1 text-[11px] font-bold text-[#94a3b8] uppercase tracking-tight;
+    @apply dark:bg-[#111111] bg-gray-100 border-b dark:border-[#1A1A1A] border-gray-300 px-2 py-1 text-[11px] font-bold dark:text-[#94a3b8] text-gray-600 uppercase tracking-tight;
   }
   .erp-label {
-    @apply text-[11px] font-medium text-[#94a3b8];
+    @apply text-[11px] font-medium dark:text-[#94a3b8] text-gray-700;
   }
   .erp-input {
-    @apply bg-[#050505] border border-[#1A1A1A] px-2 py-1 text-xs text-white focus:outline-none focus:border-[#D4D4D4] transition placeholder-[#262626];
+    @apply dark:bg-[#050505] bg-gray-50 border dark:border-[#1A1A1A] border-gray-300 px-2 py-1 text-xs dark:text-white text-gray-900 focus:outline-none dark:focus:border-[#D4D4D4] focus:border-indigo-500 transition dark:placeholder-[#262626] placeholder-gray-400;
   }
   .erp-grid-header {
-    @apply bg-[#111111] text-[#94a3b8] text-[10px] font-bold uppercase;
+    @apply dark:bg-[#111111] bg-gray-100 dark:text-[#94a3b8] text-gray-700 text-[10px] font-bold uppercase;
   }
   .erp-grid-cell {
-    @apply border-r border-b border-[#1A1A1A] px-2 py-1 text-xs;
+    @apply border-r border-b dark:border-[#1A1A1A] border-gray-300 px-2 py-1 text-xs;
   }
   .erp-grid-row:hover {
-    @apply bg-[#0A0A0A];
+    @apply dark:bg-[#0A0A0A] bg-gray-100;
   }
   .erp-footer-box {
-    @apply border border-[#1A1A1A] bg-[#050505] p-2;
+    @apply border dark:border-[#1A1A1A] border-gray-300 dark:bg-[#050505] bg-white p-2;
   }
 }

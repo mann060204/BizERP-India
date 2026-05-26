@@ -51,13 +51,13 @@ export default function LoginPage() {
         <div className="relative">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-white" />
+              <BarChart3 className="w-6 h-6 dark:text-white text-gray-900" />
             </div>
-            <span className="text-white font-bold text-xl tracking-tight">BizERP India</span>
+            <span className="dark:text-white text-gray-900 font-bold text-xl tracking-tight">BizERP India</span>
           </div>
         </div>
         <div className="relative space-y-6">
-          <h1 className="text-4xl font-bold text-white leading-tight">
+          <h1 className="text-4xl font-bold dark:text-white text-gray-900 leading-tight">
             Complete Business<br />
             <span className="text-[#D4D4D4]">Management</span> for<br />
             Indian Enterprises
@@ -74,7 +74,7 @@ export default function LoginPage() {
             ].map((f) => (
               <div key={f.label} className="glass rounded-xl p-4 flex items-center gap-3">
                 <span className="text-2xl">{f.icon}</span>
-                <span className="text-white text-sm font-medium">{f.label}</span>
+                <span className="dark:text-white text-gray-900 text-sm font-medium">{f.label}</span>
               </div>
             ))}
           </div>
@@ -85,46 +85,46 @@ export default function LoginPage() {
       </div>
 
       {/* Right Panel — Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-[#000000]">
+      <div className="flex-1 flex items-center justify-center p-6 dark:bg-[#000000] bg-white">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" />
+              <BarChart3 className="w-5 h-5 dark:text-white text-gray-900" />
             </div>
-            <span className="text-white font-bold text-lg">BizERP India</span>
+            <span className="dark:text-white text-gray-900 font-bold text-lg">BizERP India</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
-            <p className="text-[#94a3b8]">Sign in to your business account</p>
+            <h2 className="text-3xl font-bold dark:text-white text-gray-900 mb-2">Welcome back</h2>
+            <p className="dark:text-[#94a3b8] text-gray-600">Sign in to your business account</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-[#94a3b8] mb-2">Email address</label>
+              <label className="block text-sm font-medium dark:text-[#94a3b8] text-gray-600 mb-2">Email address</label>
               <input
                 {...register('email')}
                 type="email"
                 placeholder="owner@yourbusiness.com"
-                className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
+                className="w-full px-4 py-3 rounded-xl dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 dark:text-white text-gray-900 placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
               />
               {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-[#94a3b8] mb-2">Password</label>
+              <label className="block text-sm font-medium dark:text-[#94a3b8] text-gray-600 mb-2">Password</label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPass ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-12 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
+                  className="w-full px-4 py-3 pr-12 rounded-xl dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 dark:text-white text-gray-900 placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-white transition">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 transition">
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
@@ -142,7 +142,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-[#94a3b8] mt-8 text-sm">
+          <p className="text-center dark:text-[#94a3b8] text-gray-600 mt-8 text-sm">
             New to BizERP?{' '}
             <Link href="/register" className="text-[#D4D4D4] hover:text-[#60A5FA] font-medium transition">
               Register your business →

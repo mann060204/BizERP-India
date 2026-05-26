@@ -37,11 +37,11 @@ export default function Sidebar() {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-[#1A1A1A] ${collapsed ? 'justify-center' : ''}`}>
+      <div className={`flex items-center gap-3 px-4 py-5 border-b dark:border-[#1A1A1A] border-gray-300 ${collapsed ? 'justify-center' : ''}`}>
         <div className="w-9 h-9 rounded-xl bg-[#2563EB] flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-          <BarChart3 className="w-5 h-5 text-white" />
+          <BarChart3 className="w-5 h-5 dark:text-white text-gray-900" />
         </div>
-        {!collapsed && <span className="text-white font-bold text-base tracking-tight">BizERP India</span>}
+        {!collapsed && <span className="dark:text-white text-gray-900 font-bold text-base tracking-tight">BizERP India</span>}
       </div>
 
       {/* Nav */}
@@ -51,7 +51,7 @@ export default function Sidebar() {
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
               ${isActive(href)
                 ? 'bg-[#FFFFFF]/10 text-[#D4D4D4] border border-[#FFFFFF]/30 shadow-[0_0_15px_rgba(255,255,255,0.15)]'
-                : 'text-[#94a3b8] hover:text-white hover:bg-[#111111] border border-transparent'}`}>
+                : 'dark:text-[#94a3b8] text-gray-600 hover:dark:text-white text-gray-900 hover:dark:bg-[#111111] bg-gray-50 border border-transparent'}`}>
             <Icon className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">{label}</span>}
           </Link>
@@ -59,15 +59,15 @@ export default function Sidebar() {
       </nav>
 
       {/* User + Logout */}
-      <div className="p-3 border-t border-[#1A1A1A]">
+      <div className="p-3 border-t dark:border-[#1A1A1A] border-gray-300">
         {!collapsed && (
           <div className="px-3 py-2 mb-2">
-            <p className="text-white text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
-            <p className="text-[#94a3b8] text-xs capitalize">{user?.role}</p>
+            <p className="dark:text-white text-gray-900 text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
+            <p className="dark:text-[#94a3b8] text-gray-600 text-xs capitalize">{user?.role}</p>
           </div>
         )}
         <button onClick={() => dispatch(logout())}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#94a3b8] hover:text-red-400 hover:bg-red-900/10 transition-all ${collapsed ? 'justify-center' : ''}`}>
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl dark:text-[#94a3b8] text-gray-600 hover:text-red-400 hover:bg-red-900/10 transition-all ${collapsed ? 'justify-center' : ''}`}>
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Logout</span>}
         </button>
@@ -78,12 +78,12 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full bg-[#0A0A0A] border-r border-[#1A1A1A] transition-all duration-300 z-40
+      <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full dark:bg-[#0A0A0A] bg-white border-r dark:border-[#1A1A1A] border-gray-300 transition-all duration-300 z-40
         ${collapsed ? 'w-[68px]' : 'w-60'}`}>
         <SidebarContent />
         {/* Collapse toggle */}
         <button onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-[#0A0A0A] border border-[#1A1A1A] flex items-center justify-center text-[#94a3b8] hover:text-white transition">
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 flex items-center justify-center dark:text-[#94a3b8] text-gray-600 hover:dark:text-white text-gray-900 transition">
           {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
         </button>
       </aside>
@@ -91,15 +91,15 @@ export default function Sidebar() {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-64 bg-[#0A0A0A] h-full shadow-2xl z-50">
+          <div className="fixed inset-0 dark:bg-black bg-gray-50/60" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-64 dark:bg-[#0A0A0A] bg-white h-full shadow-2xl z-50">
             <SidebarContent />
           </aside>
         </div>
       )}
 
       {/* Mobile menu button (inside topbar — exported via context, or just repeat) */}
-      <button className="lg:hidden fixed top-3.5 left-4 z-40 p-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#94a3b8]"
+      <button className="lg:hidden fixed top-3.5 left-4 z-40 p-2 rounded-lg dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 dark:text-[#94a3b8] text-gray-600"
         onClick={() => setMobileOpen(true)}>
         <Menu className="w-5 h-5" />
       </button>

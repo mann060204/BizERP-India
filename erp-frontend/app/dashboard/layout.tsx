@@ -22,14 +22,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#000000]">
+      <div className="min-h-screen flex items-center justify-center dark:bg-[#000000] bg-white">
         <div className="w-8 h-8 border-4 border-[#D4D4D4] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-[#000000]">
+    <div className="flex min-h-screen dark:bg-[#000000] bg-white">
       <Sidebar />
       <div className="flex-1 lg:pl-60 transition-all duration-300 min-w-0">
         {children}

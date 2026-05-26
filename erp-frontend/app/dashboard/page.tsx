@@ -71,8 +71,8 @@ export default function DashboardPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#0A0A0A] border border-[#1A1A1A] p-3 rounded-lg shadow-xl">
-          <p className="text-white font-medium text-sm mb-2">{label}</p>
+        <div className="dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 p-3 rounded-lg shadow-xl">
+          <p className="dark:text-white text-gray-900 font-medium text-sm mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm font-semibold flex justify-between gap-4" style={{ color: entry.color }}>
               <span>{entry.name}:</span>
@@ -92,11 +92,11 @@ export default function DashboardPage() {
       <main className="flex-1 p-6 space-y-8 overflow-auto">
         {/* Greeting */}
         <div>
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-2xl font-bold dark:text-white text-gray-900">
             Good {greeting},{' '}
-            <span className="text-white">{user?.name?.split(' ')[0] || 'Admin'}</span> 👋
+            <span className="dark:text-white text-gray-900">{user?.name?.split(' ')[0] || 'Admin'}</span> 👋
           </h2>
-          <p className="text-[#94a3b8] mt-1 text-sm">Here's your business snapshot for today.</p>
+          <p className="dark:text-[#94a3b8] text-gray-600 mt-1 text-sm">Here's your business snapshot for today.</p>
         </div>
 
         {/* KPI Grid */}
@@ -113,11 +113,11 @@ export default function DashboardPage() {
                     <div className={`w-11 h-11 rounded-xl ${bg} flex items-center justify-center`}>
                       <Icon className={`w-6 h-6 ${color}`} />
                     </div>
-                    <ArrowUpRight className="w-4 h-4 text-[#475569] group-hover:text-[#D4D4D4] transition" />
+                    <ArrowUpRight className="w-4 h-4 dark:text-[#475569] text-gray-500 group-hover:text-[#D4D4D4] transition" />
                   </div>
-                  <p className="text-[#94a3b8] text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
-                  <p className="text-white text-2xl font-bold">{value}</p>
-                  <p className="text-[#475569] text-xs mt-1">{sub}</p>
+                  <p className="dark:text-[#94a3b8] text-gray-600 text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
+                  <p className="dark:text-white text-gray-900 text-2xl font-bold">{value}</p>
+                  <p className="dark:text-[#475569] text-gray-500 text-xs mt-1">{sub}</p>
                 </div>
                 );
               })}
@@ -128,8 +128,8 @@ export default function DashboardPage() {
               {/* Sales Area Chart */}
               <div className="glass rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-white font-semibold">Sales Overview</h3>
-                  <span className="text-xs text-[#94a3b8] bg-[#000000] px-3 py-1 rounded-full border border-[#1A1A1A]">Last 30 days</span>
+                  <h3 className="dark:text-white text-gray-900 font-semibold">Sales Overview</h3>
+                  <span className="text-xs dark:text-[#94a3b8] text-gray-600 dark:bg-[#000000] bg-white px-3 py-1 rounded-full border dark:border-[#1A1A1A] border-gray-300">Last 30 days</span>
                 </div>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -153,8 +153,8 @@ export default function DashboardPage() {
               {/* Profit Bar Chart */}
               <div className="glass rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-white font-semibold">Revenue vs Profit</h3>
-                  <span className="text-xs text-[#94a3b8] bg-[#000000] px-3 py-1 rounded-full border border-[#1A1A1A]">Last 6 Months</span>
+                  <h3 className="dark:text-white text-gray-900 font-semibold">Revenue vs Profit</h3>
+                  <span className="text-xs dark:text-[#94a3b8] text-gray-600 dark:bg-[#000000] bg-white px-3 py-1 rounded-full border dark:border-[#1A1A1A] border-gray-300">Last 6 Months</span>
                 </div>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -176,17 +176,17 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div>
-          <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
+          <h3 className="dark:text-white text-gray-900 font-semibold mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {QUICK_ACTIONS.map(({ label, href, icon: ActionIcon, desc }) => (
               <a key={label} href={href}
                 className="glass ngrok-card-hover rounded-2xl p-5 group cursor-pointer flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-xl bg-[#111111] border border-[#1A1A1A] flex items-center justify-center mb-4 group-hover:bg-[#2563EB]/10 group-hover:border-[#2563EB]/30 transition">
-                  {ActionIcon && <ActionIcon className="w-5 h-5 text-[#94a3b8] group-hover:text-[#2563EB] transition" />}
+                <div className="w-10 h-10 rounded-xl dark:bg-[#111111] bg-gray-50 border dark:border-[#1A1A1A] border-gray-300 flex items-center justify-center mb-4 group-hover:bg-[#2563EB]/10 group-hover:border-[#2563EB]/30 transition">
+                  {ActionIcon && <ActionIcon className="w-5 h-5 dark:text-[#94a3b8] text-gray-600 group-hover:text-[#2563EB] transition" />}
                 </div>
                 <div>
-                  <p className="text-white text-sm font-semibold group-hover:text-[#FFFFFF] transition">{label}</p>
-                  <p className="text-[#475569] text-xs mt-1">{desc}</p>
+                  <p className="dark:text-white text-gray-900 text-sm font-semibold group-hover:text-[#FFFFFF] transition">{label}</p>
+                  <p className="dark:text-[#475569] text-gray-500 text-xs mt-1">{desc}</p>
                 </div>
               </a>
             ))}

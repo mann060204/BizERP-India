@@ -95,7 +95,7 @@ export default function SuppliersPage() {
             <h2 className="text-xl font-bold dark:text-white text-gray-900">Supplier Directory</h2>
             <p className="dark:text-[#94a3b8] text-gray-500 text-sm mt-0.5">{suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/20">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 dark:text-white text-gray-900 font-semibold text-sm transition shadow-lg shadow-indigo-600/20">
             + Add Supplier
           </button>
         </div>
@@ -113,7 +113,7 @@ export default function SuppliersPage() {
             <Truck className="w-14 h-14 text-indigo-500/50 mx-auto mb-4" />
             <p className="dark:text-white text-gray-900 font-semibold text-lg">No suppliers yet</p>
             <p className="dark:text-[#475569] text-gray-500 text-sm mt-1 mb-6">Add your first supplier to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition">Add Supplier</button>
+            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-indigo-600 dark:text-white text-gray-900 text-sm font-semibold hover:bg-indigo-500 transition">Add Supplier</button>
           </div>
         ) : (
           <div className="dark:bg-[#0A0A0A] bg-white rounded-2xl overflow-hidden border dark:border-[#1A1A1A] border-gray-200 shadow-sm">
@@ -128,7 +128,7 @@ export default function SuppliersPage() {
                 </thead>
                 <tbody className="divide-y dark:divide-[#1A1A1A] divide-gray-100">
                   {suppliers.map((s) => (
-                    <tr key={s._id} className="dark:hover:bg-[#111111] hover:bg-gray-50 transition-colors group">
+                    <tr key={s._id} className="dark:hover:dark:bg-[#111111] bg-gray-50 hover:bg-gray-50 transition-colors group">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-orange-400/20 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xs font-bold">{s.name.charAt(0).toUpperCase()}</div>
@@ -146,7 +146,7 @@ export default function SuppliersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg dark:hover:bg-[#1A1A1A] hover:bg-gray-200 dark:text-[#94a3b8] text-gray-500 dark:hover:text-white hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg dark:hover:dark:bg-[#1A1A1A] bg-gray-200 hover:bg-gray-200 dark:text-[#94a3b8] text-gray-500 dark:hover:dark:text-white text-gray-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg dark:hover:bg-red-900/20 hover:bg-red-50 dark:text-[#94a3b8] text-gray-500 dark:hover:text-red-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
@@ -161,7 +161,7 @@ export default function SuppliersPage() {
 
       {/* Supplier Modal Design (Screenshot Match) */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 dark:bg-black bg-gray-50/60 backdrop-blur-sm">
           <div className="dark:bg-[#050505] bg-white border dark:border-[#1A1A1A] border-gray-300 rounded-xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
             
             <div className="flex items-center justify-between p-4 border-b dark:border-[#1A1A1A] border-gray-200">
@@ -169,7 +169,7 @@ export default function SuppliersPage() {
                 <Truck className="w-5 h-5 dark:text-[#94a3b8] text-gray-500" />
                 <h3 className="dark:text-white text-gray-900 font-bold text-lg">{editing ? 'Edit Supplier Information' : 'New Supplier Information'}</h3>
               </div>
-              <button onClick={() => setShowModal(false)} className="dark:text-[#475569] text-gray-400 dark:hover:text-white hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowModal(false)} className="dark:text-[#475569] text-gray-400 dark:hover:dark:text-white text-gray-900 hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
             </div>
 
             <div className="border-b dark:border-[#1A1A1A] border-gray-200 px-6 py-2">
@@ -312,8 +312,8 @@ export default function SuppliersPage() {
             </div>
 
             <div className="flex justify-end gap-3 p-4 border-t dark:border-[#1A1A1A] border-gray-200 dark:bg-[#050505] bg-gray-100 rounded-b-xl">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border dark:border-[#262626] border-gray-300 dark:text-[#94a3b8] text-gray-600 dark:hover:text-white hover:text-gray-900 dark:hover:bg-[#1A1A1A] hover:bg-white font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border dark:border-[#262626] border-gray-300 dark:text-[#94a3b8] text-gray-600 dark:hover:dark:text-white text-gray-900 hover:text-gray-900 dark:hover:dark:bg-[#1A1A1A] bg-gray-200 hover:bg-white font-medium text-sm transition">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 dark:text-white text-gray-900 font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update' : 'Save'}
               </button>
             </div>
