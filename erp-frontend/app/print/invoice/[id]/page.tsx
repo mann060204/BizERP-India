@@ -306,16 +306,19 @@ export default function PrintableInvoicePage() {
             
             {/* Bank Details */}
             <div className="w-[30%] border-r border-black p-2 flex flex-col justify-center gap-1">
+               {business.bankDetails?.upiId && (
+                 <div className="flex flex-col items-center mb-1">
+                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`upi://pay?pa=${business.bankDetails.upiId}&pn=${business.ownerName || business.businessName}&am=${invoice.grandTotal.toFixed(2)}&cu=INR`)}`} alt="UPI QR" className="w-16 h-16" />
+                   <span className="text-[8px] mt-0.5 font-bold">Scan to Pay ₹{invoice.grandTotal.toFixed(2)}</span>
+                 </div>
+               )}
                {business.bankDetails?.accountNumber ? (
-                 <>
-                   <p className="font-bold">Account Number: {business.bankDetails.accountNumber}</p>
-                   <p className="font-bold">Bank: {business.bankDetails.bankName}</p>
-                   <p className="font-bold">IFSC: {business.bankDetails.ifsc}</p>
-                   <p className="font-bold">Branch: {business.bankDetails.branch}</p>
-                   <p className="font-bold">Name: {business.ownerName || business.businessName}</p>
-                 </>
+                 <div className="text-center">
+                   <p className="font-bold text-[9px]">A/c: {business.bankDetails.accountNumber}</p>
+                   <p className="font-bold text-[9px]">IFSC: {business.bankDetails.ifsc} | {business.bankDetails.bankName}</p>
+                 </div>
                ) : (
-                 <div className="text-gray-400 italic text-center w-full">Bank details not provided</div>
+                 !business.bankDetails?.upiId && <div className="text-gray-400 italic text-center w-full">Bank details not provided</div>
                )}
             </div>
 
