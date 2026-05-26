@@ -6,8 +6,13 @@ export interface ISupplier extends Document {
   mobile?: string;
   email?: string;
   gstin?: string;
-  address?: { street?: string; city?: string; state?: string; pinCode?: string };
+  pan?: string;
+  address?: { street?: string; city?: string; state?: string; pinCode?: string; country?: string };
   openingBalance: number;
+  balanceType?: 'Debit' | 'Credit';
+  contactPerson?: string;
+  note?: string;
+  bankDetails?: { bankName?: string; accountNumber?: string; ifsc?: string };
   tags?: string[];
   isActive: boolean;
   createdAt: Date;
@@ -21,10 +26,17 @@ const SupplierSchema = new Schema<ISupplier>(
     mobile: { type: String, trim: true },
     email: { type: String, lowercase: true, trim: true },
     gstin: { type: String, trim: true },
+    pan: { type: String, trim: true },
     address: {
-      street: String, city: String, state: String, pinCode: String,
+      street: String, city: String, state: String, pinCode: String, country: { type: String, default: 'India' }
     },
     openingBalance: { type: Number, default: 0 },
+    balanceType: { type: String, enum: ['Debit', 'Credit'], default: 'Credit' },
+    contactPerson: { type: String, trim: true },
+    note: { type: String },
+    bankDetails: {
+      bankName: String, accountNumber: String, ifsc: String
+    },
     tags: [String],
     isActive: { type: Boolean, default: true },
   },

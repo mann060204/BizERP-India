@@ -80,12 +80,14 @@ export default function MastersPage() {
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
+  const [productCategories, setProductCategories] = useState<{name: string, brands: string[]}[]>([]);
 
   const fetchSettings = useCallback(async () => {
     try {
       const { data } = await businessApi.getProfile();
       setProductGroups(data.business?.productGroups || []);
       setProductBrands(data.business?.productBrands || []);
+      setProductCategories(data.business?.productCategories || []);
     } catch (e) {
       console.error('Failed to load business settings', e);
     }
@@ -300,8 +302,22 @@ export default function MastersPage() {
                     <Input label="Product Name" keyName="name" required form={form} setForm={setForm} />
                     <Input label="Print Name (Optional)" keyName="printName" form={form} setForm={setForm} />
                     <div className="grid grid-cols-2 gap-4">
-                      <Select label="Group" keyName="group" options={['', ...productGroups]} form={form} setForm={setForm} />
-                      <Select label="Brand" keyName="brand" options={['', ...productBrands]} form={form} setForm={setForm} />
+                      {(() => {
+                        const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
+                        const currentCat = productCategories.find(c => c.name === form.group);
+                        const availableBrands = currentCat ? currentCat.brands : (productCategories.length > 0 && form.group ? [] : productBrands);
+                        
+                        return (
+                          <>
+                            <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
+                               // Reset brand if group changes to avoid invalid brand selection
+                               if (newForm.group !== form.group) newForm.brand = '';
+                               setForm(newForm);
+                            }} />
+                            <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} setForm={setForm} />
+                          </>
+                        );
+                      })()}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <Input label="Item Code / SKU" keyName="sku" form={form} setForm={setForm} />

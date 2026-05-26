@@ -32,6 +32,10 @@ export interface IBusiness extends Document {
   isCompositionScheme: boolean;
   productGroups: string[];
   productBrands: string[];
+  productCategories: {
+    name: string;
+    brands: string[];
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -78,6 +82,13 @@ const BusinessSchema = new Schema<IBusiness>(
     productBrands: {
       type: [String],
       default: ['Generic', 'Local', 'Imported', 'Premium']
+    },
+    productCategories: {
+      type: [{
+        name: { type: String, required: true },
+        brands: [String]
+      }],
+      default: []
     }
   },
   { timestamps: true }

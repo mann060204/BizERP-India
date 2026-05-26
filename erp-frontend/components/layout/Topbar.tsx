@@ -1,9 +1,11 @@
 'use client';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Sun, Moon } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useRedux';
+import { useTheme } from 'next-themes';
 
 export default function Topbar({ title }: { title?: string }) {
   const { user } = useAppSelector((s) => s.auth);
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="h-16 flex items-center justify-between px-6 bg-[#0A0A0A]/80 backdrop-blur border-b border-[#1A1A1A] sticky top-0 z-30">
@@ -18,6 +20,15 @@ export default function Topbar({ title }: { title?: string }) {
           <Search className="w-4 h-4" />
           <span>Search...</span>
         </div>
+
+        {/* Theme Toggle */}
+        <button 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="p-2 rounded-xl bg-[#000000] border border-[#1A1A1A] text-[#94a3b8] hover:text-white transition"
+        >
+          <Sun className="w-5 h-5 hidden dark:block" />
+          <Moon className="w-5 h-5 block dark:hidden" />
+        </button>
 
         {/* Notifications */}
         <button className="relative p-2 rounded-xl bg-[#000000] border border-[#1A1A1A] text-[#94a3b8] hover:text-white transition">

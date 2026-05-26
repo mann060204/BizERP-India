@@ -28,23 +28,13 @@ export default function MasterDashboard() {
       ]
     },
     {
-      title: 'Brand Master',
-      description: 'Define and organize the product brands available in your store.',
+      title: 'Category & Brand Master',
+      description: 'Define your product groups and link specific brands to each group.',
       icon: Layers,
-      color: 'text-purple-400',
-      bg: 'bg-purple-500/10',
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-500/10',
       actions: [
-        { label: 'Manage Brands', href: '/dashboard/masters/brands', icon: Database },
-      ]
-    },
-    {
-      title: 'Group Master',
-      description: 'Categorize items into distinct groups for easier sorting and reporting.',
-      icon: Layers,
-      color: 'text-amber-400',
-      bg: 'bg-amber-500/10',
-      actions: [
-        { label: 'Manage Groups', href: '/dashboard/masters/groups', icon: Database },
+        { label: 'Manage Categories', href: '/dashboard/masters/categories', icon: Database },
       ]
     },
     {
