@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; }
-interface Product { _id: string; name: string; sellingPrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
@@ -55,6 +55,7 @@ export default function NewInvoicePage() {
   });
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
+  const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
 
   // Main List
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -115,19 +116,35 @@ export default function NewInvoicePage() {
     setShowCustomerDD(false);
   };
 
-  const pickProduct = (p: Product) => {
+  const pickProduct = async (p: Product) => {
+    const isWholesale = selectedCustomer?.priceCategory === 'Wholesale';
+    const rate = isWholesale ? (p.sellingPrice2 || p.sellingPrice) : p.sellingPrice;
+
     setItemInput(prev => ({
       ...prev,
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
-      rate: p.sellingPrice,
+      rate: rate,
       mrp: p.mrp || p.sellingPrice,
       gstRate: p.gstRate,
       unit: p.unit
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
+
+    if (selectedCustomer?._id) {
+      try {
+        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
+        if (data && data.lastPrice !== null) {
+          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.invoiceDate).toLocaleDateString() });
+        } else {
+          setLastPriceInfo(null);
+        }
+      } catch (e) {
+        setLastPriceInfo(null);
+      }
+    }
   };
 
   const calculateItem = (item: LineItem) => {
@@ -152,6 +169,7 @@ export default function NewInvoicePage() {
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
+    setLastPriceInfo(null);
   };
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
@@ -331,12 +349,17 @@ export default function NewInvoicePage() {
                 <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
                 <input type="number" value={itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
-              <div>
+              <div className="relative">
                 <label className="erp-label">Sale Price</label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                    <input type="number" value={itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
+                {lastPriceInfo && (
+                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-black/80 px-1 rounded shadow cursor-pointer hover:bg-[#111111] whitespace-nowrap" onClick={() => setItemInput({...itemInput, rate: lastPriceInfo.price})}>
+                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                  </div>
+                )}
               </div>
               <div>
                 <label className="erp-label">MRP</label>

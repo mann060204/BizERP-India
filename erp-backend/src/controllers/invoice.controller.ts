@@ -21,6 +21,36 @@ const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NO
   return `${prefixVal}-${year}-${counter}`;
 };
 
+// GET /api/v1/invoices/last-price
+export const getCustomerLastPrice = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { customerId, productId } = req.query;
+    if (!customerId || !productId) {
+      res.status(400).json({ message: 'customerId and productId are required' });
+      return;
+    }
+    
+    // Find the most recent invoice for this customer that contains this product
+    const invoice = await Invoice.findOne({
+      businessId: req.user!.businessId,
+      customerId: customerId as string,
+      'lineItems.productId': productId as string,
+      status: { $ne: 'cancelled' }
+    }).sort({ invoiceDate: -1 });
+
+    if (!invoice) {
+      res.json({ lastPrice: null });
+      return;
+    }
+
+    // Find the specific line item
+    const lineItem = invoice.lineItems.find(item => item.productId?.toString() === productId);
+    res.json({ lastPrice: lineItem?.rate || null, invoiceDate: invoice.invoiceDate });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 // GET /api/v1/invoices
 export const getInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

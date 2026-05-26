@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { productsApi } from '../../../lib/erp-api';
-import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save } from 'lucide-react';
+import { productsApi, businessApi } from '../../../lib/erp-api';
+import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Product {
@@ -20,9 +20,6 @@ interface Product {
 
 const GST_RATES = [0, 5, 12, 18, 28];
 const UNITS = ['Nos', 'Kg', 'Gm', 'L', 'Ml', 'Box', 'Pcs', 'Mtr', 'Cm', 'Sqft', 'Hours', 'Job', 'Dozen', 'Set'];
-const PRODUCT_TYPES = ['General', 'Medicine', 'Electronics', 'Clothing', 'Food', 'Beverage', 'Cosmetic', 'Furniture'];
-const POPULAR_GROUPS = ['Electronics', 'Clothing', 'Food', 'Beverages', 'Medicine', 'Cosmetics', 'Furniture', 'Tools', 'Stationery', 'Other'];
-const POPULAR_BRANDS = ['Generic', 'Local', 'Imported', 'Premium'];
 
 const emptyForm = {
   name: '', printName: '', group: '', brand: '', type: 'product', sku: '', hsnCode: '',
@@ -40,10 +37,25 @@ export default function MastersPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  
   const [showModal, setShowModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
+
+  const [productGroups, setProductGroups] = useState<string[]>([]);
+  const [productBrands, setProductBrands] = useState<string[]>([]);
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const { data } = await businessApi.getProfile();
+      setProductGroups(data.business?.productGroups || []);
+      setProductBrands(data.business?.productBrands || []);
+    } catch (e) {
+      console.error('Failed to load business settings', e);
+    }
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -54,9 +66,12 @@ export default function MastersPage() {
     finally { setLoading(false); }
   }, [search, typeFilter]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => { 
+    fetchSettings();
+    fetchProducts(); 
+  }, [fetchProducts, fetchSettings]);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setShowModal(true); };
+  const openCreate = () => { setEditing(null); setForm(emptyForm); setActiveTab('basic'); setShowModal(true); };
   const openEdit = (p: Product) => {
     setEditing(p);
     setForm({
@@ -76,12 +91,13 @@ export default function MastersPage() {
       oneClickSale: p.oneClickSale || false, enableTracking: p.enableTracking || false,
       printExpiryDate: p.printExpiryDate || false, notForSale: p.notForSale || false,
     });
+    setActiveTab('basic');
     setShowModal(true);
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('Item name is required'); return; }
-    if (!form.sellingPrice || form.sellingPrice <= 0) { toast.error('Sale Price 1 must be greater than 0'); return; }
+    if (!form.name.trim()) { toast.error('Item name is required'); setActiveTab('basic'); return; }
+    if (!form.sellingPrice || form.sellingPrice <= 0) { toast.error('Sale Price 1 must be greater than 0'); setActiveTab('pricing'); return; }
     setSaving(true);
     try {
       if (editing) { await productsApi.update(editing._id, form); toast.success('Item updated'); }
@@ -98,10 +114,10 @@ export default function MastersPage() {
   };
 
   // Reusable styling components for the dark theme
-  const Input = ({ label, required = false, type = 'text', keyName, placeholder = '', list }: any) => (
+  const Input = ({ label, required = false, type = 'text', keyName, placeholder = '' }: any) => (
     <div>
       <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
-      <input type={type} list={list}
+      <input type={type}
         value={form[keyName] === 0 && type === 'number' ? '' : form[keyName]}
         onChange={e => setForm({ ...form, [keyName]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
         placeholder={placeholder}
@@ -114,7 +130,7 @@ export default function MastersPage() {
       <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
       <select value={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.value })}
         className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none">
-        {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
+        {options.map((o: string) => <option key={o} value={o}>{o || 'Select...'}</option>)}
       </select>
     </div>
   );
@@ -126,6 +142,14 @@ export default function MastersPage() {
       {label}
     </label>
   );
+
+  const tabs = [
+    { id: 'basic', label: 'Basic Details', icon: Tag },
+    { id: 'pricing', label: 'Pricing', icon: DollarSign },
+    { id: 'stock', label: 'Stock & Units', icon: Layers },
+    { id: 'tax', label: 'Tax & Other', icon: FileText },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -227,20 +251,12 @@ export default function MastersPage() {
         )}
       </main>
 
-      {/* Datalists for Combobox behavior */}
-      <datalist id="group-list">
-        {POPULAR_GROUPS.map(g => <option key={g} value={g} />)}
-      </datalist>
-      <datalist id="brand-list">
-        {POPULAR_BRANDS.map(b => <option key={b} value={b} />)}
-      </datalist>
-
-      {/* New Modern Dark Modal */}
+      {/* New Modern Dark Modal - Tabbed */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#050505] border border-[#1A1A1A] rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-[#050505] border border-[#1A1A1A] rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col h-[600px]">
             
-            <div className="flex items-center justify-between p-6 border-b border-[#1A1A1A]">
+            <div className="flex items-center justify-between p-6 border-b border-[#1A1A1A] shrink-0">
               <div>
                 <h3 className="text-white font-bold text-xl">{editing ? 'Edit Item' : 'Add New Item'}</h3>
                 <p className="text-sm text-[#94a3b8] mt-1">Fill in the product details below</p>
@@ -248,57 +264,59 @@ export default function MastersPage() {
               <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-[#111111] text-[#94a3b8] hover:text-white transition"><X className="w-5 h-5" /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-1 overflow-hidden">
+              {/* Sidebar Tabs */}
+              <div className="w-48 border-r border-[#1A1A1A] p-4 space-y-1 overflow-y-auto bg-[#0A0A0A]">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition ${activeTab === tab.id ? 'bg-white text-black' : 'text-[#94a3b8] hover:bg-[#111111] hover:text-white'}`}
+                  >
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-                {/* Left Column */}
-                <div className="space-y-6">
-                  {/* Basic Details */}
-                  <div className="glass rounded-xl p-5 border border-[#1A1A1A] space-y-4">
-                    <h4 className="text-sm font-semibold text-white mb-2 flex items-center gap-2"><Package className="w-4 h-4 text-blue-400" /> Basic Details</h4>
+              {/* Tab Content */}
+              <div className="flex-1 p-6 overflow-y-auto">
+                {activeTab === 'basic' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Basic Details</h4>
+                    <Input label="Product Name" keyName="name" required />
+                    <Input label="Print Name (Optional)" keyName="printName" />
                     <div className="grid grid-cols-2 gap-4">
-                      <Input label="Product Name" keyName="name" required />
-                      <Input label="Print Name" keyName="printName" />
-                      <Input label="Group" keyName="group" list="group-list" placeholder="Select or type..." />
-                      <Input label="Brand" keyName="brand" list="brand-list" placeholder="Select or type..." />
+                      <Select label="Group" keyName="group" options={['', ...productGroups]} />
+                      <Select label="Brand" keyName="brand" options={['', ...productBrands]} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <Input label="Item Code / SKU" keyName="sku" />
                       <Select label="Type" keyName="type" options={['product', 'service']} />
                     </div>
                   </div>
+                )}
 
-                  {/* Pricing Details */}
-                  <div className="glass rounded-xl p-5 border border-[#1A1A1A] space-y-4">
-                    <h4 className="text-sm font-semibold text-white mb-2 text-blue-400">Pricing</h4>
+                {activeTab === 'pricing' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Pricing</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" />
                       <Input label="MRP (₹)" type="number" keyName="mrp" />
-                      <Input label="Sale Price 1 (₹)" type="number" keyName="sellingPrice" required />
-                      <Input label="Sale Price 2 (₹)" type="number" keyName="sellingPrice2" />
+                      <Input label="Sale Price 1 (Retail) (₹)" type="number" keyName="sellingPrice" required />
+                      <Input label="Sale Price 2 (Wholesale) (₹)" type="number" keyName="sellingPrice2" />
                       <Input label="Sale Price 3 (₹)" type="number" keyName="sellingPrice3" />
                       <Input label="Min Sale Price (₹)" type="number" keyName="minSalePrice" />
-                      <Input label="Sale Discount (%)" type="number" keyName="saleDiscount" />
+                      <div className="col-span-2">
+                        <Input label="Sale Discount (%)" type="number" keyName="saleDiscount" />
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  {/* Settings */}
-                  <div className="glass rounded-xl p-5 border border-[#1A1A1A] space-y-3">
-                    <h4 className="text-sm font-semibold text-white mb-2 text-blue-400">Settings</h4>
-                    <div className="grid grid-cols-2 gap-y-3">
-                      <Checkbox label="Print Description" keyName="printDescription" />
-                      <Checkbox label="One Click Sale" keyName="oneClickSale" />
-                      <Checkbox label="Enable Tracking" keyName="enableTracking" />
-                      <Checkbox label="Print Batch No" keyName="printBatchNo" />
-                      <Checkbox label="Print Expiry Date" keyName="printExpiryDate" />
-                      <Checkbox label="Not For Sale" keyName="notForSale" danger />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  {/* Stock & Units */}
-                  <div className="glass rounded-xl p-5 border border-[#1A1A1A] space-y-4">
-                    <h4 className="text-sm font-semibold text-white mb-2 text-blue-400">Stock & Units</h4>
+                {activeTab === 'stock' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Stock & Units</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <Select label="Primary Unit" keyName="unit" options={UNITS} required />
                       <Select label="Secondary Unit" keyName="secondaryUnit" options={['', ...UNITS]} />
@@ -324,41 +342,50 @@ export default function MastersPage() {
                       )}
                     </div>
                   </div>
+                )}
 
-                  {/* GST & Tax */}
-                  <div className="glass rounded-xl p-5 border border-[#1A1A1A] space-y-4">
-                    <h4 className="text-sm font-semibold text-white mb-2 text-blue-400">Tax Details</h4>
+                {activeTab === 'tax' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Tax & Location</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <Input label="HSN / SAC Code" keyName="hsnCode" />
                       <Select label="Total GST Rate (%)" keyName="gstRate" options={GST_RATES} />
                       <Input label="CESS Rate (%)" type="number" keyName="cessRate" />
                       <Input label="IGST Rate (%)" type="number" keyName="igstRate" />
-                    </div>
-                  </div>
-
-                  {/* Other Details */}
-                  <div className="glass rounded-xl p-5 border border-[#1A1A1A] space-y-4">
-                    <h4 className="text-sm font-semibold text-white mb-2 text-blue-400">Other Details</h4>
-                    <div className="grid grid-cols-2 gap-4">
                       <Input label="Location / Rack" keyName="location" />
                       <Input label="Batch No." keyName="batchNo" />
-                      <div className="col-span-2">
-                        <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">Description</label>
-                        <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3}
-                          className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">Description</label>
+                      <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3}
+                        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'settings' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Item Settings</h4>
+                    <div className="grid grid-cols-1 gap-y-4 bg-[#111111] border border-[#1A1A1A] rounded-xl p-5">
+                      <Checkbox label="Print Description on Invoice" keyName="printDescription" />
+                      <Checkbox label="One Click Sale (POS)" keyName="oneClickSale" />
+                      <Checkbox label="Enable Batch/Serial Tracking" keyName="enableTracking" />
+                      <Checkbox label="Print Batch No on Invoice" keyName="printBatchNo" />
+                      <Checkbox label="Print Expiry Date on Invoice" keyName="printExpiryDate" />
+                      <div className="pt-2 border-t border-[#1A1A1A]">
+                        <Checkbox label="Not For Sale" keyName="notForSale" danger />
                       </div>
                     </div>
                   </div>
-                </div>
-
+                )}
               </div>
             </div>
 
-            <div className="flex gap-3 p-6 border-t border-[#1A1A1A] bg-[#050505] rounded-b-2xl">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] font-medium text-sm transition">
+            <div className="flex gap-3 p-6 border-t border-[#1A1A1A] bg-[#0A0A0A] shrink-0 rounded-b-2xl">
+              <button onClick={() => setShowModal(false)} className="px-6 py-2.5 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
-              <button onClick={handleSave} disabled={saving} className="flex-1 py-3 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2">
+              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-white/10">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Save Changes' : 'Create Item'}
               </button>
             </div>

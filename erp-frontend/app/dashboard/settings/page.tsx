@@ -2,8 +2,30 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../../../components/layout/Topbar';
 import { businessApi } from '../../../lib/erp-api';
-import { Loader2, Save, Building2, ShieldCheck, FileText } from 'lucide-react';
+import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const ArrayEditor = ({ title, items = [], onChange }: { title: string, items: string[], onChange: (items: string[]) => void }) => {
+  const [newItem, setNewItem] = useState('');
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">{title}</label>
+      <div className="flex gap-2">
+        <input value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (newItem.trim() && !items.includes(newItem.trim())) { onChange([...items, newItem.trim()]); setNewItem(''); } } }} className="flex-1 px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder={`Add new...`} />
+        <button type="button" onClick={() => { if (newItem.trim() && !items.includes(newItem.trim())) { onChange([...items, newItem.trim()]); setNewItem(''); } }} className="px-3 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-gray-200 transition">Add</button>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-2">
+        {items.map((item, i) => (
+          <span key={i} className="px-2.5 py-1.5 bg-[#111111] border border-[#1A1A1A] rounded-md text-xs text-white flex items-center gap-2">
+            {item}
+            <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="text-[#94a3b8] hover:text-red-400"><X className="w-3 h-3" /></button>
+          </span>
+        ))}
+        {items.length === 0 && <span className="text-[#475569] text-xs">No items added yet.</span>}
+      </div>
+    </div>
+  );
+};
 
 export default function SettingsPage() {
   const [form, setForm] = useState<any>(null);
@@ -49,7 +71,9 @@ export default function SettingsPage() {
         termsAndConditions: form.termsAndConditions,
         invoiceTemplate: form.invoiceTemplate || 'A4',
         invoicePrefix: form.invoicePrefix || 'INV',
-        nonGstInvoicePrefix: form.nonGstInvoicePrefix || 'NON-GST'
+        nonGstInvoicePrefix: form.nonGstInvoicePrefix || 'NON-GST',
+        productGroups: form.productGroups || [],
+        productBrands: form.productBrands || []
       });
       toast.success('Settings updated successfully');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
@@ -227,6 +251,18 @@ export default function SettingsPage() {
                     placeholder="Enter default terms and conditions to print on invoices..."
                     className="w-full h-32 resize-none px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
+              </div>
+            </div>
+
+            {/* Product Masters */}
+            <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#1A1A1A] pb-3">
+                <Package className="w-5 h-5 text-[#D4D4D4]" />
+                <h3 className="font-semibold text-white">Product Masters</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ArrayEditor title="Custom Groups" items={form.productGroups || []} onChange={items => setForm({ ...form, productGroups: items })} />
+                <ArrayEditor title="Custom Brands" items={form.productBrands || []} onChange={items => setForm({ ...form, productBrands: items })} />
               </div>
             </div>
 

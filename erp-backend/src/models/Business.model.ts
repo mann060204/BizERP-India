@@ -30,6 +30,8 @@ export interface IBusiness extends Document {
   termsAndConditions?: string;
   invoiceTemplate: 'A4' | 'POS';
   isCompositionScheme: boolean;
+  productGroups: string[];
+  productBrands: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,6 +71,14 @@ const BusinessSchema = new Schema<IBusiness>(
     termsAndConditions: { type: String, default: '' },
     invoiceTemplate: { type: String, enum: ['A4', 'POS'], default: 'A4' },
     isCompositionScheme: { type: Boolean, default: false },
+    productGroups: {
+      type: [String],
+      default: ['Electronics', 'Clothing', 'Food', 'Beverages', 'Medicine', 'Cosmetics', 'Furniture', 'Tools', 'Stationery', 'Other']
+    },
+    productBrands: {
+      type: [String],
+      default: ['Generic', 'Local', 'Imported', 'Premium']
+    }
   },
   { timestamps: true }
 );
