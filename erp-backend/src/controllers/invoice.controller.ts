@@ -59,7 +59,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const {
       customerId, customerSnapshot, placeOfSupply, isInterState,
-      lineItems, paymentMode, amountReceived, dueDate, notes,
+      lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status,
     } = req.body;
 
@@ -72,6 +72,8 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const invoiceNumber = await getNextInvoiceNumber(businessId);
     const totals = calculateInvoiceTotals(lineItems, !!isInterState);
     const received = Number(amountReceived) || 0;
+    const shipping = Number(shippingCharge) || 0;
+    totals.grandTotal += shipping;
     const balance = totals.grandTotal - received;
 
     // Deduct stock for product items
@@ -102,6 +104,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       totalGST: totals.totalGST,
       grandTotal: totals.grandTotal,
       amountReceived: received,
+      shippingCharge: shipping,
       balance,
       paymentMode: paymentMode || 'Cash',
       status: status || (received >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
@@ -121,7 +124,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const { id } = req.params;
     const {
       customerId, customerSnapshot, placeOfSupply, isInterState,
-      lineItems, paymentMode, amountReceived, dueDate, notes,
+      lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceDate
     } = req.body;
 
@@ -145,6 +148,8 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
 
     const totals = calculateInvoiceTotals(lineItems, !!isInterState);
     const received = Number(amountReceived) || 0;
+    const shipping = Number(shippingCharge) || 0;
+    totals.grandTotal += shipping;
     const balance = totals.grandTotal - received;
 
     // Apply new stock deductions
@@ -175,6 +180,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
         totalGST: totals.totalGST,
         grandTotal: totals.grandTotal,
         amountReceived: received,
+        shippingCharge: shipping,
         balance,
         paymentMode: paymentMode || existingInvoice.paymentMode,
         status: status || (received >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),

@@ -40,6 +40,7 @@ export interface IInvoice extends Document {
   totalGST: number;
   grandTotal: number;
   amountReceived: number;
+  shippingCharge: number;
   balance: number;
   paymentMode: string;
   status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
@@ -103,6 +104,7 @@ const InvoiceSchema = new Schema<IInvoice>(
     totalGST: { type: Number, default: 0 },
     grandTotal: { type: Number, default: 0 },
     amountReceived: { type: Number, default: 0 },
+    shippingCharge: { type: Number, default: 0 },
     balance: { type: Number, default: 0 },
     paymentMode: { type: String, default: 'Cash' },
     status: {

@@ -6,7 +6,19 @@ export interface ICustomer extends Document {
   mobile?: string;
   email?: string;
   gstin?: string;
-  billingAddress?: { street?: string; city?: string; state?: string; pinCode?: string };
+  billingAddress?: { street?: string; city?: string; state?: string; pinCode?: string; country?: string };
+  panNo?: string;
+  gstType?: string;
+  tradeName?: string;
+  phoneNo?: string;
+  balanceType?: 'Debit' | 'Credit';
+  documentType?: string;
+  documentNo?: string;
+  dob?: Date;
+  anniversary?: Date;
+  creditAllowed: boolean;
+  priceCategory?: string;
+  remark?: string;
   creditLimit: number;
   openingBalance: number;
   tags?: string[];
@@ -23,8 +35,20 @@ const CustomerSchema = new Schema<ICustomer>(
     email: { type: String, lowercase: true, trim: true },
     gstin: { type: String, trim: true },
     billingAddress: {
-      street: String, city: String, state: String, pinCode: String,
+      street: String, city: String, state: String, pinCode: String, country: { type: String, default: 'India' },
     },
+    panNo: String,
+    gstType: { type: String, default: 'Unregistered' },
+    tradeName: String,
+    phoneNo: String,
+    balanceType: { type: String, enum: ['Debit', 'Credit'], default: 'Debit' },
+    documentType: String,
+    documentNo: String,
+    dob: Date,
+    anniversary: Date,
+    creditAllowed: { type: Boolean, default: false },
+    priceCategory: { type: String, default: 'Retail' },
+    remark: String,
     creditLimit: { type: Number, default: 0 },
     openingBalance: { type: Number, default: 0 },
     tags: [String],

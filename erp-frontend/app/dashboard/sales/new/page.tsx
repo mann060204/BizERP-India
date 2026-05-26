@@ -63,6 +63,7 @@ export default function NewInvoicePage() {
   const [remarks, setRemarks] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountReceived, setAmountReceived] = useState(0);
+  const [shippingCharge, setShippingCharge] = useState(0);
   const [txnId, setTxnId] = useState('');
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function NewInvoicePage() {
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
-  const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST);
+  const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge);
   const balance = round2(grandTotal - amountReceived);
 
   const handleSave = async (saveStatus: 'draft' | 'sent' | 'paid') => {
@@ -167,6 +168,7 @@ export default function NewInvoicePage() {
         lineItems,
         paymentMode,
         amountReceived,
+        shippingCharge,
         txnId,
         notes: remarks,
         deliveryTerms,
@@ -424,6 +426,13 @@ export default function NewInvoicePage() {
               <div className="flex justify-between items-center">
                 <span className="erp-label">Txn ID</span>
                 <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-2/3" />
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="erp-label">Shipping</span>
+                <div className="relative w-2/3">
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <input type="number" value={shippingCharge || ''} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3" />
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="erp-label">Amount</span>

@@ -66,9 +66,9 @@ export default function CustomersPage() {
             <h2 className="text-xl font-bold text-white">Customer Directory</h2>
             <p className="text-[#94a3b8] text-sm mt-0.5">{customers.length} customer{customers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+          <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Add Customer
-          </button>
+          </Link>
         </div>
 
         {/* Search */}
@@ -86,7 +86,7 @@ export default function CustomersPage() {
             <Users className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-white font-semibold text-lg">No customers yet</p>
             <p className="text-[#475569] text-sm mt-1 mb-6">Add your first customer to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-sm font-semibold hover:opacity-90 transition">Add Customer</button>
+            <Link href="/dashboard/customers/new" className="inline-block px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-sm font-semibold hover:opacity-90 transition">Add Customer</Link>
           </div>
         ) : (
           <div className="glass rounded-2xl overflow-hidden">
