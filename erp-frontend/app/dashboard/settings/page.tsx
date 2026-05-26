@@ -22,11 +22,12 @@ export default function SettingsPage() {
   }, []);
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('Business name is required'); return; }
+    const businessName = form.name || form.businessName;
+    if (!businessName?.trim()) { toast.error('Business name is required'); return; }
     setSaving(true);
     try {
       await businessApi.updateProfile({
-        name: form.name,
+        name: businessName,
         gstin: form.gstin,
         pan: form.pan,
         email: form.email,
@@ -37,6 +38,13 @@ export default function SettingsPage() {
           city: form.address?.city,
           state: form.address?.state,
           pinCode: form.address?.pinCode
+        },
+        bankDetails: {
+          accountNumber: form.bankDetails?.accountNumber,
+          bankName: form.bankDetails?.bankName,
+          ifsc: form.bankDetails?.ifsc,
+          branch: form.bankDetails?.branch,
+          upiId: form.bankDetails?.upiId
         },
         termsAndConditions: form.termsAndConditions,
         invoiceTemplate: form.invoiceTemplate || 'A4'
@@ -148,6 +156,38 @@ export default function SettingsPage() {
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">PIN Code</label>
                   <input value={form.address?.pinCode || ''} onChange={e => setForm({ ...form, address: { ...form.address, pinCode: e.target.value } })}
                     className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Details */}
+            <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
+              <h3 className="font-semibold text-white border-b border-[#1A1A1A] pb-3">Bank Account Details</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Bank Name</label>
+                  <input value={form.bankDetails?.bankName || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, bankName: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Account Number</label>
+                  <input value={form.bankDetails?.accountNumber || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, accountNumber: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">IFSC Code</label>
+                  <input value={form.bankDetails?.ifsc || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, ifsc: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Branch</label>
+                  <input value={form.bankDetails?.branch || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, branch: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">UPI ID (Optional)</label>
+                  <input value={form.bankDetails?.upiId || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, upiId: e.target.value } })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
             </div>

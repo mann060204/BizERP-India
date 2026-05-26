@@ -106,7 +106,10 @@ export default function PrintableInvoicePage() {
             <tbody>
               {invoice.lineItems.map((item: any, idx: number) => (
                 <tr key={idx}>
-                  <td className="py-1 pr-1">{item.name}</td>
+                  <td className="py-1 pr-1">
+                    <span className="font-bold">{item.productName}</span>
+                    {item.description && <span className="block text-[10px] text-gray-700">{item.description}</span>}
+                  </td>
                   <td className="py-1 text-right whitespace-nowrap">{item.quantity} x {item.rate}</td>
                   <td className="py-1 text-right font-bold">{(item.taxableAmount + item.cgst + item.sgst + item.igst).toFixed(2)}</td>
                 </tr>
@@ -146,8 +149,15 @@ export default function PrintableInvoicePage() {
 
   // A4 Template (Default)
   return (
-    <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 font-sans flex justify-center text-[11px]">
-      <div className="w-[210mm] min-h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col">
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          @page { size: A4; margin: 0; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+      `}} />
+      <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 font-sans flex justify-center text-[11px]">
+        <div className="w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col overflow-hidden">
         
         {/* Container */}
         <div className="border border-black flex-1 flex flex-col">
@@ -229,7 +239,10 @@ export default function PrintableInvoicePage() {
                   return (
                     <tr key={idx} className="align-top">
                       <td className="border-r border-black px-2 py-1">{idx + 1}</td>
-                      <td className="border-r border-black px-2 py-1 text-left">{item.name}</td>
+                      <td className="border-r border-black px-2 py-1 text-left">
+                        <span className="font-bold">{item.productName}</span>
+                        {item.description && <span className="block text-[9px] text-gray-700 leading-tight">{item.description}</span>}
+                      </td>
                       <td className="border-r border-black px-2 py-1">{item.hsnCode || '-'}</td>
                       <td className="border-r border-black px-2 py-1">{item.quantity}</td>
                       <td className="border-r border-black px-2 py-1">{item.unit || 'Nos'}</td>
@@ -329,5 +342,6 @@ export default function PrintableInvoicePage() {
       </div>
 
     </div>
+    </>
   );
 }
