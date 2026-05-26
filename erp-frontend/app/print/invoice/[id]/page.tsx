@@ -73,6 +73,7 @@ export default function PrintableInvoicePage() {
 
   const template = business.invoiceTemplate || 'A4';
   const isInterState = invoice.isInterState;
+  const isNonGst = invoice.invoiceType === 'NON-GST';
   const tAndC = invoice.termsAndConditions || business.termsAndConditions || '1. Any complaint regarding goods should be made within 24 hrs from the Receipt.\n2. Interest will be charged @ 18% p.a. on invoice amount including GST amount.\n3. Goods once sold will not be taken back.';
 
   if (template === 'POS') {
@@ -175,7 +176,7 @@ export default function PrintableInvoicePage() {
               </div>
             </div>
             <div className="text-right flex flex-col items-end">
-              <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 border-b-2 border-gray-800 pb-1 mb-2">Tax Invoice</h2>
+              <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 border-b-2 border-gray-800 pb-1 mb-2">{isNonGst ? 'RETAIL INVOICE' : 'TAX INVOICE'}</h2>
               <p className="text-[10px] font-semibold">Original for Recipient</p>
               <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin}</p>
               {business.pan && <p className="text-[11px] font-bold text-gray-700">PAN: {business.pan}</p>}
@@ -190,8 +191,17 @@ export default function PrintableInvoicePage() {
               <div className="grid grid-cols-[60px_1fr] gap-x-1 font-semibold text-gray-800">
                 <span>Name</span><span>: {invoice.customerSnapshot.name?.toUpperCase()}</span>
                 <span>Address</span><span className="whitespace-pre-wrap leading-tight">: {invoice.customerSnapshot.address?.toUpperCase() || 'N/A'}</span>
+                {invoice.shippingAddress && (
+                  <>
+                    <span>Shipped To</span><span className="whitespace-pre-wrap leading-tight">: {invoice.shippingAddress.toUpperCase()}</span>
+                  </>
+                )}
                 <span>Contact</span><span>: {invoice.customerSnapshot.mobile || invoice.contactNo || 'N/A'}</span>
-                <span>GSTIN</span><span>: {invoice.customerSnapshot.gstin || 'N/A'}</span>
+                {isNonGst ? null : (
+                  <>
+                    <span>GSTIN</span><span>: {invoice.customerSnapshot.gstin || 'N/A'}</span>
+                  </>
+                )}
                 <span>State</span><span>: {invoice.placeOfSupply?.toUpperCase() || 'N/A'}</span>
               </div>
             </div>
@@ -214,15 +224,17 @@ export default function PrintableInvoicePage() {
               <thead>
                 <tr className="border-b-2 border-gray-800 bg-blue-50 text-blue-900">
                   <th className="border-r-2 border-gray-800 p-1 w-[4%]">Sr</th>
-                  <th className="border-r-2 border-gray-800 p-1 w-[32%] text-left">Product / Service Description</th>
-                  <th className="border-r-2 border-gray-800 p-1 w-[10%]">HSN/SAC</th>
-                  <th className="border-r-2 border-gray-800 p-1 w-[8%]">Qty</th>
-                  <th className="border-r-2 border-gray-800 p-1 w-[10%]">Rate</th>
-                  <th className="border-r-2 border-gray-800 p-1 w-[12%]">Taxable</th>
-                  <th className="border-r-2 border-gray-800 p-0 w-[12%]">
-                    <div className="border-b-2 border-gray-800 pb-[1px]">GST</div>
-                    <div className="flex"><span className="w-1/2 border-r-2 border-gray-800">%</span><span className="w-1/2">Amt</span></div>
-                  </th>
+                  <th className={`border-r-2 border-gray-800 p-1 text-left ${isNonGst ? 'w-[60%]' : 'w-[32%]'}`}>Product / Service Description</th>
+                  {!isNonGst && <th className="border-r-2 border-gray-800 p-1 w-[10%]">HSN/SAC</th>}
+                  <th className={`border-r-2 border-gray-800 p-1 ${isNonGst ? 'w-[12%]' : 'w-[8%]'}`}>Qty</th>
+                  <th className={`border-r-2 border-gray-800 p-1 ${isNonGst ? 'w-[12%]' : 'w-[10%]'}`}>Rate</th>
+                  {!isNonGst && <th className="border-r-2 border-gray-800 p-1 w-[12%]">Taxable</th>}
+                  {!isNonGst && (
+                    <th className="border-r-2 border-gray-800 p-0 w-[12%]">
+                      <div className="border-b-2 border-gray-800 pb-[1px]">GST</div>
+                      <div className="flex"><span className="w-1/2 border-r-2 border-gray-800">%</span><span className="w-1/2">Amt</span></div>
+                    </th>
+                  )}
                   <th className="p-1 w-[12%]">Total</th>
                 </tr>
               </thead>
@@ -237,43 +249,48 @@ export default function PrintableInvoicePage() {
                         <span className="font-bold text-gray-900">{item.productName?.toUpperCase()}</span>
                         {item.description && <span className="block text-[8px] text-gray-500">{item.description.toUpperCase()}</span>}
                       </td>
-                      <td className="border-r-2 border-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>}
                       <td className="border-r-2 border-gray-800 px-1 py-1">{item.quantity} {item.unit}</td>
                       <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.rate.toFixed(2)}</td>
-                      <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>
-                      <td className="border-r-2 border-gray-800 p-0">
-                         <div className="flex h-full min-h-[24px]">
-                           <span className="w-1/2 border-r-2 border-gray-800 pt-[2px]">{item.gstRate}%</span>
-                           <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(2)}</span>
-                         </div>
-                      </td>
-                      <td className="px-1 py-1 text-right">{totalAmt.toFixed(2)}</td>
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>}
+                      {!isNonGst && (
+                        <td className="border-r-2 border-gray-800 p-0">
+                           <div className="flex h-full min-h-[24px]">
+                             <span className="w-1/2 border-r-2 border-gray-800 pt-[2px]">{item.gstRate}%</span>
+                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(2)}</span>
+                           </div>
+                        </td>
+                      )}
+                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(2) : totalAmt.toFixed(2)}</td>
                     </tr>
                   );
                 })}
                 {/* Filler space */}
                 <tr className="flex-1 h-full">
                   <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
                   <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
-                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
-                  <td className="border-r-2 border-gray-800 p-0"><div className="flex h-full"><span className="w-1/2 border-r-2 border-gray-800"></span><span className="w-1/2"></span></div></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
+                  {!isNonGst && <td className="border-r-2 border-gray-800 p-0"><div className="flex h-full"><span className="w-1/2 border-r-2 border-gray-800"></span><span className="w-1/2"></span></div></td>}
                   <td></td>
                 </tr>
                 {/* Total Row */}
                 <tr className="border-t-2 border-gray-800 bg-blue-50 h-6 font-bold text-blue-900">
                   <td className="border-r-2 border-gray-800"></td>
                   <td className="border-r-2 border-gray-800 text-right pr-2">Sub-Total:</td>
-                  <td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
                   <td className="border-r-2 border-gray-800">{invoice.lineItems.reduce((s:any, i:any)=>s + i.quantity, 0)}</td>
                   <td className="border-r-2 border-gray-800"></td>
-                  <td className="border-r-2 border-gray-800 text-right pr-1">{invoice.totalTaxableAmount.toFixed(2)}</td>
-                  <td className="border-r-2 border-gray-800 p-0">
-                     <div className="flex h-full">
-                       <span className="w-1/2 border-r-2 border-gray-800"></span>
-                       <span className="w-1/2 text-right pr-1 pt-[2px]">{invoice.totalGST.toFixed(2)}</span>
-                     </div>
-                  </td>
-                  <td className="text-right pr-1">{(invoice.totalTaxableAmount + invoice.totalGST).toFixed(2)}</td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{invoice.totalTaxableAmount.toFixed(2)}</td>}
+                  {!isNonGst && (
+                    <td className="border-r-2 border-gray-800 p-0">
+                       <div className="flex h-full">
+                         <span className="w-1/2 border-r-2 border-gray-800"></span>
+                         <span className="w-1/2 text-right pr-1 pt-[2px]">{invoice.totalGST.toFixed(2)}</span>
+                       </div>
+                    </td>
+                  )}
+                  <td className="text-right pr-1">{isNonGst ? invoice.subtotal.toFixed(2) : (invoice.totalTaxableAmount + invoice.totalGST).toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -321,20 +338,24 @@ export default function PrintableInvoicePage() {
                  <span>SUMMARY</span><span>AMOUNT</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Taxable Amount :</span><span>{invoice.totalTaxableAmount.toFixed(2)}</span>
+                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? invoice.subtotal.toFixed(2) : invoice.totalTaxableAmount.toFixed(2)}</span>
                </div>
-               {isInterState ? (
-                 <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                   <span>IGST Amt :</span><span>{invoice.totalIGST.toFixed(2)}</span>
-                 </div>
-               ) : (
+               {!isNonGst && (
                  <>
-                   <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                     <span>CGST Amt :</span><span>{invoice.totalCGST.toFixed(2)}</span>
-                   </div>
-                   <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                     <span>SGST Amt :</span><span>{invoice.totalSGST.toFixed(2)}</span>
-                   </div>
+                   {isInterState ? (
+                     <div className="flex justify-between border-b border-gray-300 px-2 py-1">
+                       <span>IGST Amt :</span><span>{invoice.totalIGST.toFixed(2)}</span>
+                     </div>
+                   ) : (
+                     <>
+                       <div className="flex justify-between border-b border-gray-300 px-2 py-1">
+                         <span>CGST Amt :</span><span>{invoice.totalCGST.toFixed(2)}</span>
+                       </div>
+                       <div className="flex justify-between border-b border-gray-300 px-2 py-1">
+                         <span>SGST Amt :</span><span>{invoice.totalSGST.toFixed(2)}</span>
+                       </div>
+                     </>
+                   )}
                  </>
                )}
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">

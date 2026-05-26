@@ -24,8 +24,10 @@ export interface ILineItem {
 export interface IInvoice extends Document {
   businessId: mongoose.Types.ObjectId;
   invoiceNumber: string;
+  invoiceType: 'GST' | 'NON-GST';
   invoiceDate: Date;
   dueDate?: Date;
+  shippingAddress?: string;
   customerId?: mongoose.Types.ObjectId;
   customerSnapshot: { name: string; gstin?: string; address?: string; mobile?: string };
   placeOfSupply: string;
@@ -83,8 +85,10 @@ const InvoiceSchema = new Schema<IInvoice>(
   {
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
     invoiceNumber: { type: String, required: true, index: true },
+    invoiceType: { type: String, enum: ['GST', 'NON-GST'], default: 'GST' },
     invoiceDate: { type: Date, required: true, index: true, default: Date.now },
     dueDate: { type: Date },
+    shippingAddress: { type: String },
     customerId: { type: Schema.Types.ObjectId, ref: 'Customer', index: true },
     customerSnapshot: {
       name: { type: String, required: true },

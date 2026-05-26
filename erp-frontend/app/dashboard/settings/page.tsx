@@ -47,7 +47,9 @@ export default function SettingsPage() {
           upiId: form.bankDetails?.upiId
         },
         termsAndConditions: form.termsAndConditions,
-        invoiceTemplate: form.invoiceTemplate || 'A4'
+        invoiceTemplate: form.invoiceTemplate || 'A4',
+        invoicePrefix: form.invoicePrefix || 'INV',
+        nonGstInvoicePrefix: form.nonGstInvoicePrefix || 'NON-GST'
       });
       toast.success('Settings updated successfully');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
@@ -206,6 +208,18 @@ export default function SettingsPage() {
                     <option value="A4">A4 Standard Format</option>
                     <option value="POS">Thermal Receipt (POS)</option>
                   </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">GST Invoice Prefix</label>
+                    <input value={form.invoicePrefix || ''} onChange={e => setForm({ ...form, invoicePrefix: e.target.value.toUpperCase() })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="INV" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Non-GST Invoice Prefix</label>
+                    <input value={form.nonGstInvoicePrefix || ''} onChange={e => setForm({ ...form, nonGstInvoicePrefix: e.target.value.toUpperCase() })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="NON-GST" />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Default Terms & Conditions</label>

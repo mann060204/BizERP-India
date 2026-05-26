@@ -18,6 +18,8 @@ export interface IBusiness extends Document {
   financialYearStart: number;
   invoicePrefix: string;
   invoiceCounter: number;
+  nonGstInvoicePrefix: string;
+  nonGstInvoiceCounter: number;
   bankDetails?: {
     bankName?: string;
     accountNumber?: string;
@@ -55,6 +57,8 @@ const BusinessSchema = new Schema<IBusiness>(
     financialYearStart: { type: Number, default: 4 }, // April
     invoicePrefix: { type: String, default: 'INV' },
     invoiceCounter: { type: Number, default: 0 },
+    nonGstInvoicePrefix: { type: String, default: 'NON-GST' },
+    nonGstInvoiceCounter: { type: Number, default: 0 },
     bankDetails: {
       bankName: String,
       accountNumber: String,

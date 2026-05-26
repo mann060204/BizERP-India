@@ -44,6 +44,8 @@ export default function NewInvoicePage() {
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
   const [isInterState, setIsInterState] = useState(false);
+  const [useShippingAddress, setUseShippingAddress] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState('');
 
   // Particulars (Input Row) State
   const [itemInput, setItemInput] = useState<LineItem>({
@@ -182,11 +184,13 @@ export default function NewInvoicePage() {
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
+        invoiceType,
         lineItems,
         paymentMode,
         amountReceived,
         shippingCharge,
         txnId,
+        shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
         soldBy,
@@ -275,6 +279,19 @@ export default function NewInvoicePage() {
             <div>
               <label className="erp-label">Customer GSTIN</label>
               <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
+            </div>
+            
+            <div className="col-span-6 border-t border-[#1A1A1A] mt-2 pt-2">
+              <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                <input type="checkbox" checked={useShippingAddress} onChange={e => setUseShippingAddress(e.target.checked)} className="accent-white" />
+                Custom Shipping Address
+              </label>
+              {useShippingAddress && (
+                <div className="mt-2">
+                  <label className="erp-label">Shipping Address</label>
+                  <textarea value={shippingAddress} onChange={e => setShippingAddress(e.target.value)} className="erp-input w-full resize-none h-12" placeholder="Enter complete shipping address..." />
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -6,15 +6,19 @@ import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 
 // Helper: generate next invoice number
-const getNextInvoiceNumber = async (businessId: string): Promise<string> => {
+const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' = 'GST'): Promise<string> => {
+  const isGst = invoiceType === 'GST';
+  const incrementField = isGst ? 'invoiceCounter' : 'nonGstInvoiceCounter';
   const business = await Business.findByIdAndUpdate(
     businessId,
-    { $inc: { invoiceCounter: 1 } },
+    { $inc: { [incrementField]: 1 } },
     { new: true }
   );
   const year = new Date().getFullYear();
-  const counter = String(business!.invoiceCounter).padStart(4, '0');
-  return `${business!.invoicePrefix}-${year}-${counter}`;
+  const counterVal = isGst ? business!.invoiceCounter : business!.nonGstInvoiceCounter;
+  const prefixVal = isGst ? business!.invoicePrefix : business!.nonGstInvoicePrefix;
+  const counter = String(counterVal).padStart(4, '0');
+  return `${prefixVal}-${year}-${counter}`;
 };
 
 // GET /api/v1/invoices
@@ -60,7 +64,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const {
       customerId, customerSnapshot, placeOfSupply, isInterState,
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
-      termsAndConditions, isReverseCharge, status,
+      termsAndConditions, isReverseCharge, status, invoiceType, shippingAddress,
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -69,7 +73,8 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     const businessId = req.user!.businessId;
-    const invoiceNumber = await getNextInvoiceNumber(businessId);
+    const invType = invoiceType === 'NON-GST' ? 'NON-GST' : 'GST';
+    const invoiceNumber = await getNextInvoiceNumber(businessId, invType);
     const totals = calculateInvoiceTotals(lineItems, !!isInterState);
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
@@ -88,8 +93,10 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const invoice = await Invoice.create({
       businessId,
       invoiceNumber,
+      invoiceType: invType,
       invoiceDate: new Date(),
       dueDate,
+      shippingAddress: shippingAddress || undefined,
       customerId: customerId || undefined,
       customerSnapshot: customerSnapshot || { name: 'Walk-in Customer' },
       placeOfSupply: placeOfSupply || '',
