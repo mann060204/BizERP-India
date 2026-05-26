@@ -8,7 +8,19 @@ export const getCustomers = async (req: AuthRequest, res: Response): Promise<voi
     const { search, page = '1', limit = '50' } = req.query as any;
     const businessId = req.user!.businessId;
     const query: any = { businessId, isActive: true };
-    if (search) query.name = { $regex: search, $options: 'i' };
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { mobile: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { gstin: { $regex: search, $options: 'i' } },
+        { tradeName: { $regex: search, $options: 'i' } },
+        { 'billingAddress.city': { $regex: search, $options: 'i' } },
+        { 'billingAddress.state': { $regex: search, $options: 'i' } },
+        { 'billingAddress.street': { $regex: search, $options: 'i' } },
+        { 'billingAddress.pinCode': { $regex: search, $options: 'i' } },
+      ];
+    }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [customers, total] = await Promise.all([
