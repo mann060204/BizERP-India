@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { customersApi } from '../../../../lib/erp-api';
-import { Upload, Camera, RefreshCw, X, Save, User as UserIcon } from 'lucide-react';
+import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, VideoOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const INDIAN_STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
@@ -11,7 +11,79 @@ const INDIAN_STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','
 export default function NewCustomerPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  
+
+  // --- Photo State ---
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Start camera
+  const startCamera = useCallback(async () => {
+    setCameraError('');
+    setShowCamera(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch (err: any) {
+      setCameraError(err.name === 'NotAllowedError' ? 'Camera permission denied. Please allow camera access.' : 'Could not access camera. Make sure it is connected.');
+    }
+  }, []);
+
+  // Stop camera stream
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+    setCameraError('');
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => { return () => stopCamera(); }, [stopCamera]);
+
+  // Attach stream to video element after showCamera renders the video tag
+  useEffect(() => {
+    if (showCamera && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play();
+    }
+  }, [showCamera]);
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      setPhoto(dataUrl);
+      stopCamera();
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
+    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be smaller than 2MB'); return; }
+    const reader = new FileReader();
+    reader.onloadend = () => setPhoto(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const [form, setForm] = useState({
     name: '', billingAddress: '', city: '', state: '', pinCode: '', country: 'India',
     email: '', phoneNo: '', mobile: '',
@@ -51,7 +123,8 @@ export default function NewCustomerPage() {
         creditAllowed: form.creditAllowed,
         creditLimit: form.creditLimit,
         priceCategory: form.priceCategory,
-        remark: form.remark
+        remark: form.remark,
+        photo: photo || undefined,
       };
       await customersApi.create(payload);
       toast.success('Customer Information Saved!');
@@ -72,19 +145,98 @@ export default function NewCustomerPage() {
       
       <main className="flex-1 overflow-y-auto p-4 bg-[#050505]">
          <div className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto">
-            {/* Left Panel */}
+            {/* Left Panel - Photo */}
             <div className="w-full md:w-64 shrink-0">
                <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-6 shadow-sm">
                  <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Profile Pic</legend>
-                 <div className="bg-white rounded-full w-40 h-40 mx-auto flex items-center justify-center mb-6 overflow-hidden border-4 border-[#1e3a8a]">
-                   <UserIcon className="w-32 h-32 text-blue-500 mt-6" />
+                 
+                 {/* Photo Preview or Camera */}
+                 <div className="w-40 h-40 mx-auto mb-4 relative">
+                   {showCamera ? (
+                     <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-black flex items-center justify-center relative">
+                       {cameraError ? (
+                         <div className="text-center p-2">
+                           <VideoOff className="w-8 h-8 text-red-400 mx-auto mb-1" />
+                           <p className="text-[9px] text-red-400">{cameraError}</p>
+                         </div>
+                       ) : (
+                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                       )}
+                     </div>
+                   ) : (
+                     <div className="bg-white rounded-full w-full h-full flex items-center justify-center overflow-hidden border-4 border-[#1e3a8a]">
+                       {photo ? (
+                         <img src={photo} alt="Customer" className="w-full h-full object-cover" />
+                       ) : (
+                         <UserIcon className="w-24 h-24 text-blue-500 mt-8" />
+                       )}
+                     </div>
+                   )}
                  </div>
-                 <div className="flex justify-between px-2 items-center">
-                    <button className="text-green-500 hover:text-green-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition" title="Upload"><Upload className="w-5 h-5" /></button>
-                    <button className="text-green-500 hover:text-green-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition" title="Camera"><Camera className="w-5 h-5" /></button>
-                    <button className="text-red-500 hover:text-red-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition" title="Reset"><RefreshCw className="w-5 h-5" /></button>
-                    <button className="text-red-500 hover:text-red-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition" title="Delete"><X className="w-5 h-5" /></button>
-                 </div>
+
+                 {/* Hidden canvas for capture */}
+                 <canvas ref={canvasRef} className="hidden" />
+
+                 {/* Hidden file input */}
+                 <input
+                   ref={fileInputRef}
+                   type="file"
+                   accept="image/*"
+                   className="hidden"
+                   onChange={handleFileUpload}
+                 />
+
+                 {/* Action Buttons */}
+                 {showCamera ? (
+                   <div className="flex justify-center gap-3 px-2 mt-2">
+                     {!cameraError && (
+                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-white bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                         <Camera className="w-4 h-4" /> Capture
+                       </button>
+                     )}
+                     <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-[#0a0a0a] hover:bg-[#1a0000] py-1.5 rounded border border-[#1A1A1A] transition">
+                       <X className="w-4 h-4" /> Cancel
+                     </button>
+                   </div>
+                 ) : (
+                   <div className="flex justify-between px-2 items-center mt-2">
+                     <button
+                       onClick={() => fileInputRef.current?.click()}
+                       className="text-green-500 hover:text-green-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition"
+                       title="Upload from File"
+                     >
+                       <Upload className="w-5 h-5" />
+                     </button>
+                     <button
+                       onClick={startCamera}
+                       className="text-green-500 hover:text-green-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition"
+                       title="Take Photo with Camera"
+                     >
+                       <Camera className="w-5 h-5" />
+                     </button>
+                     <button
+                       onClick={() => setPhoto(null)}
+                       className="text-red-500 hover:text-red-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition"
+                       title="Reset Photo"
+                       disabled={!photo}
+                     >
+                       <RefreshCw className="w-5 h-5" />
+                     </button>
+                     <button
+                       onClick={() => setPhoto(null)}
+                       className="text-red-500 hover:text-red-400 bg-[#0a0a0a] p-1.5 rounded border border-[#1A1A1A] transition"
+                       title="Delete Photo"
+                       disabled={!photo}
+                     >
+                       <X className="w-5 h-5" />
+                     </button>
+                   </div>
+                 )}
+
+                 {photo && !showCamera && (
+                   <p className="text-center text-[10px] text-green-400 mt-2">✓ Photo set</p>
+                 )}
+                 <p className="text-center text-[9px] text-[#475569] mt-1">Upload or take a photo (max 2MB)</p>
                </fieldset>
             </div>
             

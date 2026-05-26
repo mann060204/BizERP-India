@@ -22,6 +22,7 @@ export interface ICustomer extends Document {
   creditLimit: number;
   openingBalance: number;
   tags?: string[];
+  photo?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -52,6 +53,7 @@ const CustomerSchema = new Schema<ICustomer>(
     creditLimit: { type: Number, default: 0 },
     openingBalance: { type: Number, default: 0 },
     tags: [String],
+    photo: String,
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
