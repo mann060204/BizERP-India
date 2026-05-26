@@ -87,67 +87,67 @@ export default function SuppliersPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen dark:bg-[#000000] bg-gray-50 transition-colors">
+    <div className="flex flex-col min-h-screen bg-[#000000] transition-colors">
       <Topbar title="Suppliers" />
       <main className="flex-1 p-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold dark:text-white text-gray-900">Supplier Directory</h2>
-            <p className="dark:text-[#94a3b8] text-gray-500 text-sm mt-0.5">{suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} total</p>
+            <h2 className="text-xl font-bold text-white">Supplier Directory</h2>
+            <p className="text-[#94a3b8] text-sm mt-0.5">{suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 dark:text-white text-gray-900 font-semibold text-sm transition shadow-lg shadow-indigo-600/20">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/20">
             + Add Supplier
           </button>
         </div>
 
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 dark:text-[#475569] text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search suppliers..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-200 dark:text-white text-gray-900 focus:outline-none focus:border-indigo-500 transition text-sm" />
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-indigo-500 transition text-sm" />
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>
         ) : suppliers.length === 0 ? (
-          <div className="dark:bg-[#0A0A0A] bg-white rounded-2xl p-16 text-center border dark:border-[#1A1A1A] border-gray-200">
+          <div className="bg-[#0A0A0A] rounded-2xl p-16 text-center border border-[#1A1A1A]">
             <Truck className="w-14 h-14 text-indigo-500/50 mx-auto mb-4" />
-            <p className="dark:text-white text-gray-900 font-semibold text-lg">No suppliers yet</p>
-            <p className="dark:text-[#475569] text-gray-500 text-sm mt-1 mb-6">Add your first supplier to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-indigo-600 dark:text-white text-gray-900 text-sm font-semibold hover:bg-indigo-500 transition">Add Supplier</button>
+            <p className="text-white font-semibold text-lg">No suppliers yet</p>
+            <p className="text-[#475569] text-sm mt-1 mb-6">Add your first supplier to get started</p>
+            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition">Add Supplier</button>
           </div>
         ) : (
-          <div className="dark:bg-[#0A0A0A] bg-white rounded-2xl overflow-hidden border dark:border-[#1A1A1A] border-gray-200 shadow-sm">
+          <div className="bg-[#0A0A0A] rounded-2xl overflow-hidden border border-[#1A1A1A] shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b dark:border-[#1A1A1A] border-gray-100 bg-gray-50/50 dark:bg-[#050505]">
+                  <tr className="border-b border-[#1A1A1A] bg-gray-50/50 bg-[#050505]">
                     {['Name', 'Mobile', 'Email', 'GSTIN', 'City / State', 'Balance', 'Actions'].map(h => (
-                      <th key={h} className="text-left px-5 py-3.5 dark:text-[#94a3b8] text-gray-500 font-medium text-xs uppercase tracking-wider">{h}</th>
+                      <th key={h} className="text-left px-5 py-3.5 text-[#94a3b8] font-medium text-xs uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y dark:divide-[#1A1A1A] divide-gray-100">
+                <tbody className="divide-y divide-[#1A1A1A]">
                   {suppliers.map((s) => (
-                    <tr key={s._id} className="dark:hover:dark:bg-[#111111] bg-gray-50 hover:bg-gray-50 transition-colors group">
+                    <tr key={s._id} className="hover:bg-[#111111] hover:bg-gray-50 transition-colors group">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-orange-400/20 flex items-center justify-center text-orange-600 dark:text-orange-400 text-xs font-bold">{s.name.charAt(0).toUpperCase()}</div>
-                          <span className="dark:text-white text-gray-900 font-medium">{s.name}</span>
+                          <div className="w-8 h-8 rounded-lg bg-orange-400/20 flex items-center justify-center text-orange-600 text-orange-400 font-bold">{s.name.charAt(0).toUpperCase()}</div>
+                          <span className="text-white font-medium">{s.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 dark:text-[#94a3b8] text-gray-600">{s.mobile || '—'}</td>
-                      <td className="px-5 py-4 dark:text-[#94a3b8] text-gray-600">{s.email || '—'}</td>
-                      <td className="px-5 py-4 dark:text-[#94a3b8] text-gray-600 font-mono text-xs">{s.gstin || '—'}</td>
-                      <td className="px-5 py-4 dark:text-[#94a3b8] text-gray-600">{[s.address?.city, s.address?.state].filter(Boolean).join(', ') || '—'}</td>
+                      <td className="px-5 py-4 text-[#94a3b8]">{s.mobile || '—'}</td>
+                      <td className="px-5 py-4 text-[#94a3b8]">{s.email || '—'}</td>
+                      <td className="px-5 py-4 text-[#94a3b8] font-mono text-xs">{s.gstin || '—'}</td>
+                      <td className="px-5 py-4 text-[#94a3b8]">{[s.address?.city, s.address?.state].filter(Boolean).join(', ') || '—'}</td>
                       <td className="px-5 py-4">
-                        <span className={s.openingBalance > 0 ? 'text-green-500' : s.openingBalance < 0 ? 'text-red-500' : 'dark:text-[#475569] text-gray-400'}>
+                        <span className={s.openingBalance > 0 ? 'text-green-500' : s.openingBalance < 0 ? 'text-red-500' : 'text-[#475569]'}>
                           ₹{s.openingBalance?.toFixed(2) || '0.00'}
                         </span>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg dark:hover:dark:bg-[#1A1A1A] bg-gray-200 hover:bg-gray-200 dark:text-[#94a3b8] text-gray-500 dark:hover:dark:text-white text-gray-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg dark:hover:bg-red-900/20 hover:bg-red-50 dark:text-[#94a3b8] text-gray-500 dark:hover:text-red-400 hover:text-red-600 transition"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#1A1A1A] hover:bg-gray-200 text-[#94a3b8] hover:text-white hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-[#94a3b8] hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -161,24 +161,24 @@ export default function SuppliersPage() {
 
       {/* Supplier Modal Design (Screenshot Match) */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 dark:bg-black bg-gray-50/60 backdrop-blur-sm">
-          <div className="dark:bg-[#050505] bg-white border dark:border-[#1A1A1A] border-gray-300 rounded-xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black backdrop-blur-sm">
+          <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
             
-            <div className="flex items-center justify-between p-4 border-b dark:border-[#1A1A1A] border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-[#1A1A1A]">
               <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 dark:text-[#94a3b8] text-gray-500" />
-                <h3 className="dark:text-white text-gray-900 font-bold text-lg">{editing ? 'Edit Supplier Information' : 'New Supplier Information'}</h3>
+                <Truck className="w-5 h-5 text-[#94a3b8]" />
+                <h3 className="text-white font-bold text-lg">{editing ? 'Edit Supplier Information' : 'New Supplier Information'}</h3>
               </div>
-              <button onClick={() => setShowModal(false)} className="dark:text-[#475569] text-gray-400 dark:hover:dark:text-white text-gray-900 hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowModal(false)} className="text-[#475569] hover:text-white hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
             </div>
 
-            <div className="border-b dark:border-[#1A1A1A] border-gray-200 px-6 py-2">
-              <span className="text-sm font-semibold dark:text-white text-gray-900 border-b-2 border-indigo-500 pb-2 inline-block">Profile</span>
+            <div className="border-b border-[#1A1A1A] px-6 py-2">
+              <span className="text-sm font-semibold text-white border-b-2 border-indigo-500 pb-2 inline-block">Profile</span>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
               {/* Left Fixed Column - Account Status */}
-              <div className="w-12 border-r dark:border-[#1A1A1A] border-gray-200 flex flex-col items-center py-6 dark:bg-[#020202] bg-gray-50">
+              <div className="w-12 border-r border-[#1A1A1A] flex flex-col items-center py-6 bg-[#020202]">
                 <div className="whitespace-nowrap -rotate-90 text-[10px] font-bold text-red-500 tracking-wider mt-20">
                   ACCOUNT STATUS: UNSAVED
                 </div>
@@ -188,67 +188,67 @@ export default function SuppliersPage() {
               </div>
 
               {/* Main Form Content */}
-              <div className="flex-1 p-6 overflow-y-auto dark:bg-[#0A0A0A] bg-gray-50">
+              <div className="flex-1 p-6 overflow-y-auto bg-[#0A0A0A]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Left Main Column */}
                   <div className="space-y-6">
-                    <fieldset className="border dark:border-[#262626] border-gray-300 p-4 rounded-md">
+                    <fieldset className="border border-[#262626] p-4 rounded-md">
                       <legend className="px-2 text-xs font-bold text-indigo-500 uppercase">Supplier Details</legend>
                       
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Company Name <span className="text-red-500">*</span></label>
-                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Company Name <span className="text-red-500">*</span></label>
+                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right mt-1">Address</label>
-                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none resize-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right mt-1">Address</label>
+                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none resize-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">City <span className="text-red-500">*</span></label>
-                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">City <span className="text-red-500">*</span></label>
+                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">State <span className="text-red-500">*</span></label>
-                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none">
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">State <span className="text-red-500">*</span></label>
+                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none">
                             <option value="">Select</option>
                             {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Pin Code</label>
-                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Pin Code</label>
+                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Country</label>
-                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Country</label>
+                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Email</label>
-                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Email</label>
+                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Phone No</label>
-                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Phone No</label>
+                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                       </div>
                     </fieldset>
 
-                    <fieldset className="border dark:border-[#262626] border-gray-300 p-4 rounded-md">
+                    <fieldset className="border border-[#262626] p-4 rounded-md">
                       <legend className="px-2 text-xs font-bold text-indigo-500 uppercase">Bank Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Bank Name</label>
-                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Bank Name</label>
+                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Bank A/c No.</label>
-                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Bank A/c No.</label>
+                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">IFSC Code</label>
-                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">IFSC Code</label>
+                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -256,28 +256,28 @@ export default function SuppliersPage() {
 
                   {/* Right Main Column */}
                   <div className="space-y-6">
-                    <fieldset className="border dark:border-[#262626] border-gray-300 p-4 rounded-md">
+                    <fieldset className="border border-[#262626] p-4 rounded-md">
                       <legend className="px-2 text-xs font-bold text-indigo-500 uppercase">Tax Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">PAN No.</label>
-                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">PAN No.</label>
+                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">GSTIN</label>
-                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none uppercase" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">GSTIN</label>
+                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none uppercase" />
                         </div>
                       </div>
                     </fieldset>
 
-                    <fieldset className="border dark:border-[#262626] border-gray-300 p-4 rounded-md">
+                    <fieldset className="border border-[#262626] p-4 rounded-md">
                       <legend className="px-2 text-xs font-bold text-indigo-500 uppercase">Account Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Op. Balance</label>
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Op. Balance</label>
                           <div className="col-span-2 flex gap-2">
-                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
-                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none">
+                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none">
                               <option value="Credit">Credit</option>
                               <option value="Debit">Debit</option>
                             </select>
@@ -286,22 +286,22 @@ export default function SuppliersPage() {
                       </div>
                     </fieldset>
 
-                    <fieldset className="border dark:border-[#262626] border-gray-300 p-4 rounded-md">
+                    <fieldset className="border border-[#262626] p-4 rounded-md">
                       <legend className="px-2 text-xs font-bold text-indigo-500 uppercase">Contact Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right">Contact Person</label>
-                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right">Contact Person</label>
+                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
                         </div>
                       </div>
                     </fieldset>
 
-                    <fieldset className="border dark:border-[#262626] border-gray-300 p-4 rounded-md">
+                    <fieldset className="border border-[#262626] p-4 rounded-md">
                       <legend className="px-2 text-xs font-bold text-indigo-500 uppercase">Other Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 gap-2">
-                          <label className="text-xs font-semibold dark:text-[#94a3b8] text-gray-600 text-right mt-1">Remark / Note</label>
-                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border dark:border-[#262626] border-gray-300 dark:bg-[#111111] bg-white rounded dark:text-white text-gray-900 text-sm focus:border-indigo-500 outline-none resize-none" />
+                          <label className="text-xs font-semibold text-[#94a3b8] text-right mt-1">Remark / Note</label>
+                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none resize-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -311,9 +311,9 @@ export default function SuppliersPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 p-4 border-t dark:border-[#1A1A1A] border-gray-200 dark:bg-[#050505] bg-gray-100 rounded-b-xl">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border dark:border-[#262626] border-gray-300 dark:text-[#94a3b8] text-gray-600 dark:hover:dark:text-white text-gray-900 hover:text-gray-900 dark:hover:dark:bg-[#1A1A1A] bg-gray-200 hover:bg-white font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 dark:text-white text-gray-900 font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
+            <div className="flex justify-end gap-3 p-4 border-t border-[#1A1A1A] bg-[#050505] rounded-b-xl">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border border-[#262626] text-[#94a3b8] hover:text-white hover:text-gray-900 hover:bg-[#1A1A1A] hover:bg-white font-medium text-sm transition">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update' : 'Save'}
               </button>
             </div>

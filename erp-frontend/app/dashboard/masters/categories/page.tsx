@@ -91,38 +91,38 @@ export default function CategoryMasterPage() {
     <div className="flex flex-col min-h-screen">
       <Topbar title="Category Master" />
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
-        <div className="flex items-center gap-4 text-sm font-medium dark:text-[#475569] text-gray-500 mb-4">
-          <Link href="/dashboard/masters" className="hover:dark:text-white text-gray-900 transition">Master Dashboard</Link>
+        <div className="flex items-center gap-4 text-sm font-medium text-[#475569] mb-4">
+          <Link href="/dashboard/masters" className="hover:text-white transition">Master Dashboard</Link>
           <span>/</span>
-          <span className="dark:text-white text-gray-900">Category Master</span>
+          <span className="text-white">Category Master</span>
         </div>
 
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold dark:text-white text-gray-900">Category & Brand Master</h2>
-            <p className="dark:text-[#94a3b8] text-gray-600 text-sm mt-0.5">Define your product groups and assign specific brands to them.</p>
+            <h2 className="text-xl font-bold text-white">Category & Brand Master</h2>
+            <p className="text-[#94a3b8] text-sm mt-0.5">Define your product groups and assign specific brands to them.</p>
           </div>
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
           </button>
         </div>
 
-        <div className="glass rounded-2xl p-6 border dark:border-[#1A1A1A] border-gray-300 space-y-6">
+        <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-6">
           
-          <div className="flex items-center gap-3 border-b dark:border-[#1A1A1A] border-gray-300 pb-4">
+          <div className="flex items-center gap-3 border-b border-[#1A1A1A] pb-4">
             <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
               <Layers className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h3 className="font-semibold dark:text-white text-gray-900">Product Groups</h3>
-              <p className="dark:text-[#94a3b8] text-gray-600 text-xs mt-0.5">Create top-level groups (e.g. T-Shirts, Electronics)</p>
+              <h3 className="font-semibold text-white">Product Groups</h3>
+              <p className="text-[#94a3b8] text-xs mt-0.5">Create top-level groups (e.g. T-Shirts, Electronics)</p>
             </div>
           </div>
 
           <div className="flex gap-2 max-w-md">
             <input value={newGroup} onChange={e => setNewGroup(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGroup(); } }} 
-              className="flex-1 px-4 py-2.5 rounded-xl dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 dark:text-white text-gray-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new group (e.g. T-Shirts)..." />
-            <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 dark:text-white text-gray-900 rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-indigo-600/20"><Plus className="w-5 h-5" /></button>
+              className="flex-1 px-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new group (e.g. T-Shirts)..." />
+            <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-indigo-600/20"><Plus className="w-5 h-5" /></button>
           </div>
 
           <div className="space-y-4 pt-4">
@@ -136,16 +136,16 @@ export default function CategoryMasterPage() {
               const isExpanded = expandedGroup === cat.name;
               
               return (
-                <div key={cat.name} className="border dark:border-[#1A1A1A] border-gray-300 rounded-xl overflow-hidden dark:bg-[#0A0A0A] bg-white">
+                <div key={cat.name} className="border border-[#1A1A1A] rounded-xl overflow-hidden bg-[#0A0A0A]">
                   {/* Group Header */}
                   <div 
-                    className="flex items-center justify-between p-4 cursor-pointer hover:dark:bg-[#111111] bg-gray-50 transition"
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#111111] transition"
                     onClick={() => setExpandedGroup(isExpanded ? null : cat.name)}
                   >
                     <div className="flex items-center gap-3">
                       {isExpanded ? <ChevronDown className="w-5 h-5 text-[#64748b]" /> : <ChevronRight className="w-5 h-5 text-[#64748b]" />}
-                      <span className="font-bold dark:text-white text-gray-900 text-lg">{cat.name}</span>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full dark:bg-[#1A1A1A] bg-gray-200 dark:text-[#94a3b8] text-gray-600">{cat.brands.length} Brands</span>
+                      <span className="font-bold text-white text-lg">{cat.name}</span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#1A1A1A] text-[#94a3b8]">{cat.brands.length} Brands</span>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); removeGroup(cat.name); }} 
@@ -158,15 +158,15 @@ export default function CategoryMasterPage() {
 
                   {/* Brands List (Nested) */}
                   {isExpanded && (
-                    <div className="p-4 pt-0 border-t dark:border-[#1A1A1A] border-gray-300 dark:bg-[#050505] bg-gray-100">
+                    <div className="p-4 pt-0 border-t border-[#1A1A1A] bg-[#050505]">
                       <div className="mt-4 mb-3 flex items-center gap-2">
-                        <Tag className="w-4 h-4 dark:text-[#94a3b8] text-gray-600" />
-                        <span className="text-xs font-semibold uppercase tracking-wider dark:text-[#94a3b8] text-gray-600">Connected Brands</span>
+                        <Tag className="w-4 h-4 text-[#94a3b8]" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#94a3b8]">Connected Brands</span>
                       </div>
                       
                       <div className="flex flex-wrap gap-2 mb-4">
                         {cat.brands.map((brand, idx) => (
-                          <div key={idx} className="flex items-center gap-2 px-3 py-1.5 dark:bg-[#111111] bg-gray-50 border border-[#262626] rounded-lg text-sm dark:text-white text-gray-900 group">
+                          <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-[#111111] border border-[#262626] rounded-lg text-sm text-white group">
                             {brand}
                             <button onClick={() => removeBrand(cat.name, idx)} className="text-[#64748b] group-hover:text-red-400 transition">
                               <X className="w-3.5 h-3.5" />
@@ -174,7 +174,7 @@ export default function CategoryMasterPage() {
                           </div>
                         ))}
                         {cat.brands.length === 0 && (
-                          <span className="text-sm dark:text-[#475569] text-gray-500 italic">No brands assigned to {cat.name}.</span>
+                          <span className="text-sm text-[#475569] italic">No brands assigned to {cat.name}.</span>
                         )}
                       </div>
 
@@ -183,10 +183,10 @@ export default function CategoryMasterPage() {
                           value={newBrandInputs[cat.name] || ''} 
                           onChange={e => setNewBrandInputs({...newBrandInputs, [cat.name]: e.target.value})} 
                           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBrand(cat.name); } }} 
-                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-[#262626] dark:text-white text-gray-900 focus:outline-none focus:border-indigo-500 text-xs transition" 
+                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-[#262626] text-white focus:outline-none focus:border-indigo-500 text-xs transition" 
                           placeholder={`Add brand to ${cat.name} (e.g. ZARA)...`} 
                         />
-                        <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 dark:bg-[#1A1A1A] bg-gray-200 hover:bg-[#262626] dark:text-white text-gray-900 rounded-lg text-xs font-semibold transition">Add Brand</button>
+                        <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 bg-[#1A1A1A] hover:bg-[#262626] text-white rounded-lg text-xs font-semibold transition">Add Brand</button>
                       </div>
                     </div>
                   )}

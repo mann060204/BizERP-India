@@ -196,19 +196,19 @@ export default function NewPurchasePage() {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center dark:bg-black bg-gray-50"><Loader2 className="w-10 h-10 animate-spin dark:text-white text-gray-900" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="w-10 h-10 animate-spin text-white" /></div>;
 
   return (
-    <div className="flex flex-col h-screen dark:bg-black bg-gray-50 dark:text-white text-gray-900 font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
       <Topbar title="Unsaved Purchase Bill" />
 
       {/* Tabs */}
-      <div className="flex px-4 pt-2 border-b dark:border-[#1A1A1A] border-gray-300 dark:bg-[#050505] bg-gray-100">
-         <div className="px-4 py-2 text-xs font-semibold dark:bg-[#111111] bg-gray-50 border border-b-0 dark:border-[#1A1A1A] border-gray-300 rounded-t dark:text-white text-gray-900">Purchase Bill</div>
-         <div className="px-4 py-2 text-xs font-semibold dark:text-[#94a3b8] text-gray-600 hover:dark:text-white text-gray-900 cursor-pointer">Batch Numbers</div>
+      <div className="flex px-4 pt-2 border-b border-[#1A1A1A] bg-[#050505]">
+         <div className="px-4 py-2 text-xs font-semibold bg-[#111111] border border-b-0 border-[#1A1A1A] rounded-t text-white">Purchase Bill</div>
+         <div className="px-4 py-2 text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer">Batch Numbers</div>
       </div>
 
-      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 dark:bg-[#000000] bg-white">
+      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 bg-[#000000]">
         
         {/* Section 1: Purchase bill information */}
         <div className="erp-container">
@@ -232,9 +232,9 @@ export default function NewPurchasePage() {
               <div className="relative">
                 <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); }} onFocus={() => setShowSupplierDD(true)} className="erp-input w-full" placeholder="Select or type..." />
                 {showSupplierDD && filteredSuppliers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 z-50 max-h-40 overflow-y-auto shadow-2xl">
+                  <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredSuppliers.map(s => (
-                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:dark:bg-[#262626] bg-gray-200 cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300">
+                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A]">
                         {s.name}
                       </div>
                     ))}
@@ -291,7 +291,7 @@ export default function NewPurchasePage() {
             <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full dark:bg-[#1a1a00] bg-yellow-50 text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a1a00] text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -301,11 +301,11 @@ export default function NewPurchasePage() {
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Select item..." />
                   {showItemDD && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:dark:bg-[#262626] bg-gray-200 cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300 flex justify-between">
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between">
                           <span>{p.name}</span>
-                          <span className="dark:text-[#475569] text-gray-500">₹{p.purchasePrice}</span>
+                          <span className="text-[#475569]">₹{p.purchasePrice}</span>
                         </div>
                       ))}
                     </div>
@@ -325,7 +325,7 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-xs border dark:border-[#1A1A1A] border-gray-300 border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function NewPurchasePage() {
                 <label className="erp-label block mb-1">Disc. (%)</label>
                 <div className="flex">
                   <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
-                  <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-xs border dark:border-[#1A1A1A] border-gray-300 border-l-0 flex items-center">%</span>
+                  <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-l-0 flex items-center">%</span>
                 </div>
               </div>
               <div>
@@ -347,12 +347,12 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-xs border dark:border-[#1A1A1A] border-gray-300 border-r-0 flex items-center">₹</span>
-                   <div className="erp-input w-full rounded-none dark:bg-[#0a0a0a] bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                   <div className="erp-input w-full rounded-none bg-[#0a0a0a] flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
               <div className="flex items-center justify-center pb-[2px]">
-                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 dark:text-white text-gray-900 p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
+                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-white p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
                    <Plus className="w-5 h-5" />
                  </button>
               </div>
@@ -376,36 +376,36 @@ export default function NewPurchasePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="grid grid-cols-[30px_3fr_1fr_1fr_1.5fr_1fr_1fr_1fr_1.5fr] bg-[#2563eb] dark:text-white text-gray-900 text-[11px] font-medium border-b dark:border-[#1A1A1A] border-gray-300">
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">S. No.</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Item Name</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Quantity</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Unit</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Price/Unit</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Disc (%)</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Tax (%)</div>
-             <div className="border-r dark:border-[#1a1a1a] border-gray-300/30 px-2 py-1.5 text-center">Cess (%)</div>
+           <div className="grid grid-cols-[30px_3fr_1fr_1fr_1.5fr_1fr_1fr_1fr_1.5fr] bg-[#2563eb] text-white text-[11px] font-medium border-b border-[#1A1A1A]">
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">S. No.</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Item Name</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Quantity</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Unit</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Price/Unit</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Disc (%)</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Tax (%)</div>
+             <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">Cess (%)</div>
              <div className="px-2 py-1.5 text-center">Amount</div>
            </div>
            
-           <div className="flex-1 overflow-y-auto dark:bg-[#1a1a1a] bg-gray-200/50">
+           <div className="flex-1 overflow-y-auto bg-[#1a1a1a]">
               {lineItems.length === 0 ? (
-                <div className="p-10 text-center dark:text-[#475569] text-gray-500 italic text-sm"></div>
+                <div className="p-10 text-center text-[#475569] italic text-sm"></div>
               ) : (
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-[30px_3fr_1fr_1fr_1.5fr_1fr_1fr_1fr_1.5fr] erp-grid-row group">
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-center dark:text-[#475569] text-gray-500">{idx + 1}</div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs font-medium">
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-center text-[#475569]">{idx + 1}</div>
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs font-medium">
                       {item.productName}
-                      {item.tag && <span className="ml-2 text-[9px] dark:bg-[#1A1A1A] bg-gray-200 px-1 rounded dark:text-[#94a3b8] text-gray-600">{item.tag}</span>}
+                      {item.tag && <span className="ml-2 text-[9px] bg-[#1A1A1A] px-1 rounded text-[#94a3b8]">{item.tag}</span>}
                     </div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-center">{item.quantity}</div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-center">{item.unit}</div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-center">{item.discount || ''}</div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-center">{item.gstRate}</div>
-                    <div className="col-span-1 border-r dark:border-[#1a1a1a] border-gray-300 px-2 py-1.5 text-xs text-center">{item.cess || ''}</div>
-                    <div className="col-span-1 px-2 py-1.5 text-xs text-right font-medium flex justify-between items-center group-hover:dark:bg-[#1a1a1a] bg-gray-200">
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-center">{item.quantity}</div>
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-center">{item.unit}</div>
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-center">{item.discount || ''}</div>
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-center">{item.gstRate}</div>
+                    <div className="col-span-1 border-r border-[#1a1a1a] px-2 py-1.5 text-xs text-center">{item.cess || ''}</div>
+                    <div className="col-span-1 px-2 py-1.5 text-xs text-right font-medium flex justify-between items-center group-hover:bg-[#1a1a1a]">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />
@@ -426,7 +426,7 @@ export default function NewPurchasePage() {
               </label>
               {showAdditionalDiscount && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-xs border dark:border-[#1A1A1A] border-gray-300 border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
@@ -437,45 +437,45 @@ export default function NewPurchasePage() {
               </label>
               {showShipping && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-xs border dark:border-[#1A1A1A] border-gray-300 border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
            </div>
 
            <div className="col-span-1">
-              <div className="erp-container dark:border-[#1A1A1A] border-gray-300">
+              <div className="erp-container border-[#1A1A1A]">
                 <div className="erp-header bg-transparent border-none py-1">Remarks (Private Use)</div>
-                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-12 resize-none border-none border-t dark:border-[#1A1A1A] border-gray-300" />
+                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-12 resize-none border-none border-t border-[#1A1A1A]" />
               </div>
            </div>
 
            <div className="col-span-1">
-              <div className="erp-container dark:border-[#1A1A1A] border-gray-300">
+              <div className="erp-container border-[#1A1A1A]">
                 <div className="erp-header bg-transparent border-none py-1">Payments</div>
-                <div className="p-2 space-y-2 border-t dark:border-[#1A1A1A] border-gray-300">
+                <div className="p-2 space-y-2 border-t border-[#1A1A1A]">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs dark:text-[#94a3b8] text-gray-600 w-12">Mode</span>
+                    <span className="text-xs text-[#94a3b8] w-12">Mode</span>
                     <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input flex-1">
                       {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs dark:text-[#94a3b8] text-gray-600 w-12">Txn. ID</span>
+                    <span className="text-xs text-[#94a3b8] w-12">Txn. ID</span>
                     <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input flex-1" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs dark:text-[#94a3b8] text-gray-600 w-12">Amount</span>
+                    <span className="text-xs text-[#94a3b8] w-12">Amount</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-[10px] border dark:border-[#1A1A1A] border-gray-300 border-r-0 flex items-center">₹</span>
+                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs dark:text-[#94a3b8] text-gray-600 w-12">Balance</span>
+                    <span className="text-xs text-[#94a3b8] w-12">Balance</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] dark:text-white text-gray-900 px-2 py-1 text-[10px] border dark:border-[#1A1A1A] border-gray-300 border-r-0 flex items-center">₹</span>
-                       <div className="erp-input w-full rounded-none dark:bg-[#0a0a0a] bg-white flex items-center">{balance.toFixed(2)}</div>
+                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                       <div className="erp-input w-full rounded-none bg-[#0a0a0a] flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -483,7 +483,7 @@ export default function NewPurchasePage() {
            </div>
 
            <div className="col-span-1">
-              <div className="erp-container dark:border-[#1A1A1A] border-gray-300 h-full flex flex-col p-3 space-y-2">
+              <div className="erp-container border-[#1A1A1A] h-full flex flex-col p-3 space-y-2">
                  <div className="flex justify-between items-center">
                    <span className="text-xs font-bold">Sub Total</span>
                    <span className="text-sm font-bold">₹ {subtotal.toFixed(2)}</span>
@@ -508,10 +508,10 @@ export default function NewPurchasePage() {
         </div>
         
         <div className="flex gap-2">
-          <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#2563eb] hover:bg-blue-700 dark:text-white text-gray-900 px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#2563eb] hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#2563eb] hover:bg-blue-700 dark:text-white text-gray-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#2563eb] hover:bg-blue-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>

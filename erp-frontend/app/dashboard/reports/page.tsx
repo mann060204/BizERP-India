@@ -28,8 +28,8 @@ export default function ReportsPage() {
       <Topbar title="Reports Center" />
       <main className="flex-1 p-6 space-y-8 max-w-6xl mx-auto w-full">
         <div>
-          <h2 className="text-xl font-bold dark:text-white text-gray-900">Reports Center</h2>
-          <p className="dark:text-[#94a3b8] text-gray-600 text-sm mt-1">Real-time financial and compliance reports for your business.</p>
+          <h2 className="text-xl font-bold text-white">Reports Center</h2>
+          <p className="text-[#94a3b8] text-sm mt-1">Real-time financial and compliance reports for your business.</p>
         </div>
 
         <div className="space-y-8">
@@ -39,19 +39,19 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {section.items.map(item => (
                   item.disabled ? (
-                    <div key={item.name} className="glass rounded-2xl p-5 border dark:border-[#1A1A1A] border-gray-300 opacity-50 cursor-not-allowed">
-                      <item.icon className="w-8 h-8 dark:text-[#475569] text-gray-500 mb-3" />
-                      <h4 className="dark:text-white text-gray-900 font-medium text-base mb-1">{item.name}</h4>
-                      <p className="dark:text-[#475569] text-gray-500 text-xs">{item.desc}</p>
-                      <span className="inline-block mt-3 px-2 py-0.5 rounded text-[10px] font-bold dark:bg-[#0A0A0A] bg-white dark:text-[#94a3b8] text-gray-600 border dark:border-[#1A1A1A] border-gray-300">COMING SOON</span>
+                    <div key={item.name} className="glass rounded-2xl p-5 border border-[#1A1A1A] opacity-50 cursor-not-allowed">
+                      <item.icon className="w-8 h-8 text-[#475569] mb-3" />
+                      <h4 className="text-white font-medium text-base mb-1">{item.name}</h4>
+                      <p className="text-[#475569] text-xs">{item.desc}</p>
+                      <span className="inline-block mt-3 px-2 py-0.5 rounded text-[10px] font-bold bg-[#0A0A0A] text-[#94a3b8] border border-[#1A1A1A]">COMING SOON</span>
                     </div>
                   ) : (
                     <Link key={item.name} href={item.href} className="glass ngrok-card-hover rounded-2xl p-5 transition group">
-                      <div className="w-10 h-10 rounded-xl dark:bg-[#111111] bg-gray-50 flex items-center justify-center mb-3 group-hover:bg-orange-500/20 transition">
-                        <item.icon className="w-5 h-5 dark:text-[#94a3b8] text-gray-600 group-hover:text-[#D4D4D4] transition" />
+                      <div className="w-10 h-10 rounded-xl bg-[#111111] flex items-center justify-center mb-3 group-hover:bg-orange-500/20 transition">
+                        <item.icon className="w-5 h-5 text-[#94a3b8] group-hover:text-[#D4D4D4] transition" />
                       </div>
-                      <h4 className="dark:text-white text-gray-900 font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
-                      <p className="dark:text-[#94a3b8] text-gray-600 text-xs">{item.desc}</p>
+                      <h4 className="text-white font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
+                      <p className="text-[#94a3b8] text-xs">{item.desc}</p>
                     </Link>
                   )
                 ))}

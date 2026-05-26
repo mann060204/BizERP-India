@@ -2,14 +2,12 @@
 import { store } from '../store';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
-import { ThemeProvider } from '../components/ThemeProvider';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <ThemeProvider>
-        {children}
-        <Toaster
+      {children}
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {
@@ -20,7 +18,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           },
         }}
       />
-      </ThemeProvider>
     </Provider>
   );
 }

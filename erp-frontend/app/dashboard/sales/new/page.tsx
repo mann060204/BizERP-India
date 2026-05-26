@@ -225,10 +225,10 @@ export default function NewInvoicePage() {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center dark:bg-black bg-gray-50"><Loader2 className="w-10 h-10 animate-spin dark:text-white text-gray-900" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="w-10 h-10 animate-spin text-white" /></div>;
 
   return (
-    <div className="flex flex-col h-screen dark:bg-black bg-gray-50 dark:text-white text-gray-900 font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
       <Topbar title="New Invoice" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
@@ -281,9 +281,9 @@ export default function NewInvoicePage() {
                    </span>
                 )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 z-50 max-h-40 overflow-y-auto shadow-2xl">
+                  <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredCustomers.map(c => (
-                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:dark:bg-[#262626] bg-gray-200 cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300">
+                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A]">
                         {c.name}
                       </div>
                     ))}
@@ -304,7 +304,7 @@ export default function NewInvoicePage() {
               <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
             </div>
             
-            <div className="col-span-6 border-t dark:border-[#1A1A1A] border-gray-300 mt-2 pt-2">
+            <div className="col-span-6 border-t border-[#1A1A1A] mt-2 pt-2">
               <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
                 <input type="checkbox" checked={useShippingAddress} onChange={e => setUseShippingAddress(e.target.checked)} className="accent-white" />
                 Custom Shipping Address
@@ -326,25 +326,25 @@ export default function NewInvoicePage() {
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full dark:bg-[#1a0000] bg-red-50" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a0000]" />
               </div>
               <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0">Item Name <span className="text-red-500">*</span></label>
                   {itemInput.productId && (
-                    <span className="text-[9px] dark:text-[#94a3b8] text-gray-600">
-                      Stock: <span className="dark:text-emerald-400 text-emerald-600 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="dark:text-white text-gray-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                    <span className="text-[9px] text-[#94a3b8]">
+                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-white">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
                   {showItemDD && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:dark:bg-[#262626] bg-gray-200 cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300 flex justify-between">
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between">
                           <span>{p.name}</span>
-                          <span className="dark:text-[#475569] text-gray-500">₹{p.sellingPrice}</span>
+                          <span className="text-[#475569]">₹{p.sellingPrice}</span>
                         </div>
                       ))}
                     </div>
@@ -364,11 +364,11 @@ export default function NewInvoicePage() {
               <div className="relative">
                 <label className="erp-label">Sale Price</label>
                 <div className="relative">
-                   <span className="absolute left-1 top-1 text-[10px] dark:text-[#475569] text-gray-500">₹</span>
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                    <input type="number" value={itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
                 {lastPriceInfo && (
-                  <div className="absolute top-full left-0 mt-0.5 text-[9px] dark:text-emerald-400 text-emerald-600 dark:bg-black bg-gray-50/80 px-1 rounded shadow cursor-pointer hover:dark:bg-[#111111] bg-gray-50 whitespace-nowrap" onClick={() => setItemInput({...itemInput, rate: lastPriceInfo.price})}>
+                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-black px-1 rounded shadow cursor-pointer hover:bg-[#111111] whitespace-nowrap" onClick={() => setItemInput({...itemInput, rate: lastPriceInfo.price})}>
                     Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
                   </div>
                 )}
@@ -376,7 +376,7 @@ export default function NewInvoicePage() {
               <div>
                 <label className="erp-label">MRP</label>
                 <div className="relative">
-                   <span className="absolute left-1 top-1 text-[10px] dark:text-[#475569] text-gray-500">₹</span>
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                    <input type="number" value={itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
               </div>
@@ -407,9 +407,9 @@ export default function NewInvoicePage() {
                </div>
                <div className="col-span-2">
                   <label className="erp-label">Amount</label>
-                  <div className="erp-input w-full dark:bg-[#001a00] bg-emerald-50 dark:text-emerald-400 text-emerald-600 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
+                  <div className="erp-input w-full bg-[#001a00] text-emerald-400 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
                </div>
-               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 dark:text-white text-gray-900 p-1 rounded flex items-center justify-center">
+               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-white p-1 rounded flex items-center justify-center">
                  <Plus className="w-5 h-5" />
                </button>
             </div>
@@ -418,7 +418,7 @@ export default function NewInvoicePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="grid grid-cols-12 erp-grid-header border-b dark:border-[#1A1A1A] border-gray-300">
+           <div className="grid grid-cols-12 erp-grid-header border-b border-[#1A1A1A]">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
              <div className="col-span-1 erp-grid-cell text-center">Qty</div>
@@ -429,16 +429,16 @@ export default function NewInvoicePage() {
              <div className="col-span-1 erp-grid-cell text-center">Cess%</div>
              <div className="col-span-2 erp-grid-cell text-right">Total</div>
            </div>
-           <div className="flex-1 overflow-y-auto dark:bg-[#020202] bg-gray-50">
+           <div className="flex-1 overflow-y-auto bg-[#020202]">
               {lineItems.length === 0 ? (
-                <div className="p-10 text-center dark:text-[#262626] text-gray-400 italic text-sm">No items added yet...</div>
+                <div className="p-10 text-center text-[#262626] italic text-sm">No items added yet...</div>
               ) : (
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 erp-grid-row group">
-                    <div className="col-span-1 erp-grid-cell dark:text-[#475569] text-gray-500">{idx + 1}</div>
+                    <div className="col-span-1 erp-grid-cell text-[#475569]">{idx + 1}</div>
                     <div className="col-span-3 erp-grid-cell font-medium">
                       {item.productName}
-                      {item.tag && <span className="ml-2 text-[9px] dark:bg-[#1A1A1A] bg-gray-200 px-1 rounded dark:text-[#94a3b8] text-gray-600">{item.tag}</span>}
+                      {item.tag && <span className="ml-2 text-[9px] bg-[#1A1A1A] px-1 rounded text-[#94a3b8]">{item.tag}</span>}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
@@ -446,7 +446,7 @@ export default function NewInvoicePage() {
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
                     <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>
-                    <div className="col-span-2 erp-grid-cell text-right font-bold dark:text-emerald-400 text-emerald-600 flex justify-between items-center">
+                    <div className="col-span-2 erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded">
                         <Trash2 className="w-3 h-3" />
@@ -463,7 +463,7 @@ export default function NewInvoicePage() {
            <div className="erp-footer-box flex flex-col justify-between">
               <div>
                 <label className="erp-label block mb-1">Total Quantity</label>
-                <div className="text-xl font-bold dark:bg-[#1a1a00] bg-yellow-50 p-1 border dark:border-yellow-900/30 border-yellow-200 dark:text-yellow-400 text-yellow-600">{totalQty}</div>
+                <div className="text-xl font-bold bg-[#1a1a00] p-1 border border-yellow-900/30 text-yellow-400">{totalQty}</div>
               </div>
               <div>
                 <label className="erp-label block mb-1">Sold By</label>
@@ -485,7 +485,7 @@ export default function NewInvoicePage() {
            </div>
 
            <div className="erp-footer-box space-y-2">
-              <div className="dark:bg-[#111111] bg-gray-50 p-1 text-[10px] font-bold text-center border dark:border-[#1A1A1A] border-gray-300">PAYMENT DETAILS</div>
+              <div className="bg-[#111111] p-1 text-[10px] font-bold text-center border border-[#1A1A1A]">PAYMENT DETAILS</div>
               <div className="flex justify-between items-center">
                 <span className="erp-label">Mode</span>
                 <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-2/3">
@@ -499,20 +499,20 @@ export default function NewInvoicePage() {
               <div className="flex justify-between items-center">
                 <span className="erp-label">Shipping</span>
                 <div className="relative w-2/3">
-                   <span className="absolute left-1 top-1 text-[10px] dark:text-[#475569] text-gray-500">₹</span>
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                    <input type="number" value={shippingCharge || ''} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3" />
                 </div>
               </div>
               <div className="flex justify-between items-center">
                 <span className="erp-label">Amount</span>
                 <div className="relative w-2/3">
-                   <span className="absolute left-1 top-1 text-[10px] dark:text-[#475569] text-gray-500">₹</span>
-                   <input type="number" value={amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold dark:text-emerald-400 text-emerald-600" />
+                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <input type="number" value={amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold text-emerald-400" />
                 </div>
               </div>
-              <div className="pt-2 border-t dark:border-[#1A1A1A] border-gray-300 flex justify-between font-bold">
+              <div className="pt-2 border-t border-[#1A1A1A] flex justify-between font-bold">
                 <span className="text-xs">GRAND TOTAL</span>
-                <span className="dark:text-emerald-400 text-emerald-600">₹{grandTotal.toFixed(2)}</span>
+                <span className="text-emerald-400">₹{grandTotal.toFixed(2)}</span>
               </div>
            </div>
         </div>
@@ -520,26 +520,26 @@ export default function NewInvoicePage() {
       </main>
 
       {/* Bottom Toolbar */}
-      <footer className="fixed bottom-0 left-0 right-0 h-12 dark:bg-[#050505] bg-gray-100 border-t dark:border-[#1A1A1A] border-gray-300 flex items-center justify-between px-4 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
         <div className="flex gap-4">
-           <Bell className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
-           <Calculator className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
-           <Truck className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
-           <Wallet className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
-           <Hand className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
-           <Search className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
-           <RotateCcw className="w-5 h-5 dark:text-[#475569] text-gray-500 hover:dark:text-white text-gray-900 cursor-pointer" />
+           <Bell className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Calculator className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Truck className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Wallet className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Hand className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Search className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <RotateCcw className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
         </div>
         
-        <div className="text-xs font-mono dark:text-[#475569] text-gray-500">
+        <div className="text-xs font-mono text-[#475569]">
           Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(2)}</span>
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 dark:text-white text-gray-900 px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 dark:text-white text-gray-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>
