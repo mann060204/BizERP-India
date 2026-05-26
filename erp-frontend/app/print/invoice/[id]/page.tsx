@@ -73,7 +73,7 @@ export default function PrintableInvoicePage() {
 
   const template = business.invoiceTemplate || 'A4';
   const isInterState = invoice.isInterState;
-  const tAndC = invoice.termsAndConditions || business.termsAndConditions || '1. Goods once sold will not be taken back.\n2. Interest @ 18% p.a. will be charged if payment is delayed.';
+  const tAndC = invoice.termsAndConditions || business.termsAndConditions || '1. Any complaint regarding goods should be made within 24 hrs from the Receipt.\n2. Interest will be charged @ 18% p.a. on invoice amount including GST amount.\n3. Goods once sold will not be taken back.';
 
   if (template === 'POS') {
     return (
@@ -147,7 +147,7 @@ export default function PrintableInvoicePage() {
     );
   }
 
-  // A4 Template (Default)
+  // A4 Template (Matches specific photo layout)
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
@@ -163,93 +163,131 @@ export default function PrintableInvoicePage() {
         <div className="border border-black flex-1 flex flex-col">
           
           {/* Top Header Row */}
-          <div className="flex justify-between items-center border-b border-black px-2 py-1">
-            <span className="w-1/3 text-left">Page No. 1 of 1</span>
-            <span className="w-1/3 text-center font-bold text-sm">
-              {invoice.totalGST > 0 ? 'TAX INVOICE' : 'BILL OF SUPPLY'}
-            </span>
-            <span className="w-1/3 text-right">Original Copy</span>
+          <div className="text-center border-b border-black py-1 font-bold tracking-widest text-[10px]">
+            || SHREE GANESHAY NAMAH : ||
+          </div>
+          <div className="text-center border-b border-black py-2 relative flex flex-col justify-center min-h-[90px]">
+             {business.logo && (
+               <img src={business.logo} className="absolute right-4 top-2 max-w-[120px] max-h-[70px] object-contain" alt="logo" />
+             )}
+             <h1 className="text-2xl font-black">{business.businessName || business.name}</h1>
+             <p className="font-bold text-[9px] mt-1">{business.address?.street?.toUpperCase()} {business.address?.city?.toUpperCase()} {business.address?.state?.toUpperCase()} {business.address?.pinCode}</p>
+             <p className="font-bold text-[9px]">PHONE : (WHATSAPP){business.mobile || business.phone} MOBILE : {business.phone || business.mobile}</p>
+             <p className="font-bold text-[10px] mt-1">GSTIN : {business.gstin}</p>
+          </div>
+          
+          <div className="flex border-b border-black text-[9px]">
+             <div className="w-[75%] border-r border-black flex items-center justify-center font-bold text-lg tracking-widest bg-gray-100">
+                TAX INVOICE
+             </div>
+             <div className="w-[25%] flex flex-col justify-center pl-1 font-bold leading-tight">
+                <p>Original for Recipient</p>
+                <div className="border-t border-black my-0.5"></div>
+                <p>Duplicate for Supplier/Transporter</p>
+                <div className="border-t border-black my-0.5"></div>
+                <p>Triplicate for Supplier</p>
+             </div>
           </div>
 
-          {/* Company Info Box */}
-          <div className="relative border-b border-black flex flex-col items-center justify-center p-4 text-center min-h-[100px]">
-            {business.logo && (
-               <div className="absolute left-4 top-1/2 -translate-y-1/2 w-24 h-24 border border-gray-300 flex items-center justify-center p-1">
-                 <img src={business.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
-               </div>
-            )}
-            <h1 className="text-2xl font-bold text-black">{business.businessName || business.name}</h1>
-            <p className="mt-1">{business.address?.street}, {business.address?.city}, {business.address?.state} {business.address?.pinCode}</p>
-            <p>Mobile: +91 {business.mobile || business.phone} | Email: {business.email}</p>
-            <p className="font-bold mt-1">
-               {business.gstin ? `GSTIN - ${business.gstin}` : ''} 
-               {business.gstin && business.pan ? ' | ' : ''} 
-               {business.pan ? `PAN - ${business.pan}` : ''}
-            </p>
+          <div className="grid grid-cols-2 border-b border-black text-[10px] font-bold">
+             <div className="border-r border-black grid grid-cols-[1fr_25%]">
+                 <div className="border-r border-black p-1 flex flex-col justify-between">
+                    <p>Reverse Charge : {invoice.isReverseCharge ? 'YES' : 'NO'}</p>
+                    <p>Invoice No : {invoice.invoiceNumber}</p>
+                    <p>Invoice Date : {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}</p>
+                    <div className="flex justify-between items-center pr-2 mt-1">
+                       <span>State : {business.address?.state?.toUpperCase() || 'GUJARAT'}</span>
+                       <div className="flex items-center">
+                         <span className="border border-black px-1 text-[8px] py-[1px]">State Code</span>
+                         <span className="border border-black px-1 text-[8px] border-l-0 py-[1px]">{business.address?.state ? '24' : '24'}</span>
+                       </div>
+                    </div>
+                 </div>
+                 <div className="p-1">
+                    <p>E-Way Bill No : </p>
+                 </div>
+             </div>
+             <div className="grid grid-cols-[1fr_25%]">
+                 <div className="border-r border-black p-1 flex flex-col justify-between">
+                    <p>Transport : {invoice.deliveryTerms || 'S.M.COURIER SURFACE'}</p>
+                    <p>L.R. No : </p>
+                    <p>L.R. Date : {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}</p>
+                    <p className="mt-1">Place Of Supply : {invoice.placeOfSupply?.toUpperCase() || 'SURAT'}</p>
+                 </div>
+                 <div className="p-1">
+                    <p>Parcel : 1</p>
+                 </div>
+             </div>
           </div>
 
-          {/* Billing & Invoice Details */}
-          <div className="flex border-b border-black">
-            {/* Left Col: Billing Details */}
-            <div className="w-[55%] border-r border-black p-2 flex flex-col gap-1">
-              <h2 className="font-bold">Billing Details</h2>
-              <p><strong>Name:</strong> {invoice.customerSnapshot.name}</p>
-              <p>
-                {invoice.customerSnapshot.gstin && <span><strong>GSTIN:</strong> {invoice.customerSnapshot.gstin} | </span>}
-                <span><strong>Mobile:</strong> {invoice.customerSnapshot.mobile || 'N/A'} | </span>
-                <span><strong>Email:</strong> {invoice.customerSnapshot.email || 'N/A'}</span>
-              </p>
-              <p className="whitespace-pre-wrap">{invoice.customerSnapshot.billingAddress || 'Address not provided'}</p>
-            </div>
-            {/* Right Col: Invoice Details */}
-            <div className="w-[45%] p-2 grid grid-cols-[100px_1fr] gap-y-1 items-start">
-              <span className="font-bold">Invoice Number</span>
-              <span>: {invoice.invoiceNumber}</span>
-              
-              <span className="font-bold">Invoice Date</span>
-              <span>: {new Date(invoice.invoiceDate).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'})}</span>
-              
-              <span className="font-bold">Due date</span>
-              <span>: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : 'N/A'}</span>
-              
-              <span className="font-bold">Place of Supply</span>
-              <span>: {invoice.placeOfSupply || 'N/A'}</span>
-            </div>
+          <div className="flex border-b border-black text-[10px]">
+             <div className="w-1/2 border-r border-black flex flex-col">
+                 <div className="border-b border-black px-1 font-bold bg-gray-100">Details of Receiver (Billed to)</div>
+                 <div className="p-1 grid grid-cols-[50px_1fr] gap-x-1 font-bold h-full">
+                    <span>Name</span><span>: {invoice.customerSnapshot.name?.toUpperCase()}</span>
+                    <span>Address</span><span className="whitespace-pre-wrap leading-tight">: {invoice.customerSnapshot.address?.toUpperCase() || ''}</span>
+                    <span>Mobile</span><span>: {invoice.customerSnapshot.mobile || invoice.contactNo || ''}</span>
+                    <span className="mt-auto">GSTIN</span><span className="mt-auto">: {invoice.customerSnapshot.gstin || ''}</span>
+                    <span className="mt-1">State</span>
+                    <div className="flex justify-between items-center pr-2 mt-1">
+                      <span>: {invoice.placeOfSupply?.toUpperCase() || 'GUJARAT'}</span>
+                      <div className="flex items-center">
+                        <span className="border border-black px-1 text-[8px] py-[1px]">State Code</span>
+                        <span className="border border-black px-1 text-[8px] border-l-0 py-[1px]">24</span>
+                      </div>
+                    </div>
+                 </div>
+             </div>
+             <div className="w-1/2 flex flex-col">
+                 <div className="border-b border-black px-1 font-bold bg-gray-100">Details of Consignee (Shipped to)</div>
+                 <div className="p-1 grid grid-cols-[50px_1fr] gap-x-1 font-bold h-full">
+                    <span>Name</span><span>: {invoice.customerSnapshot.name?.toUpperCase()}</span>
+                    <span>Address</span><span className="whitespace-pre-wrap leading-tight">: {invoice.customerSnapshot.address?.toUpperCase() || ''}</span>
+                    <span>Agent</span><span>: {invoice.soldBy?.toUpperCase() || ''}</span>
+                    <span className="mt-auto">State</span>
+                    <div className="flex justify-between items-center pr-2 mt-auto">
+                      <span>: {invoice.placeOfSupply?.toUpperCase() || 'GUJARAT'}</span>
+                      <div className="flex items-center">
+                        <span className="border border-black px-1 text-[8px] py-[1px]">State Code</span>
+                        <span className="border border-black px-1 text-[8px] border-l-0 py-[1px]">24</span>
+                      </div>
+                    </div>
+                 </div>
+             </div>
           </div>
 
-          {/* Items Table */}
-          <div className="flex-1 flex flex-col">
-            <table className="w-full text-center border-collapse h-full">
+          <div className="flex-1 flex flex-col h-[200px] overflow-hidden">
+            <table className="w-full text-center border-collapse h-full text-[10px] font-bold table-fixed">
               <thead>
-                <tr className="border-b border-black font-bold">
-                  <th className="border-r border-black p-2 w-10">Sr.</th>
-                  <th className="border-r border-black p-2 text-left">Item Description</th>
-                  <th className="border-r border-black p-2 w-20">HSN/SAC</th>
-                  <th className="border-r border-black p-2 w-16">Qty</th>
-                  <th className="border-r border-black p-2 w-16">Unit</th>
-                  <th className="border-r border-black p-2 w-24 text-right">List Price</th>
-                  <th className="border-r border-black p-2 w-16 text-right">Disc. (%)</th>
-                  <th className="border-r border-black p-2 w-16 text-right">Tax %</th>
-                  <th className="p-2 w-28 text-right">Amount (₹)</th>
+                <tr className="border-b border-black bg-gray-100">
+                  <th className="border-r border-black p-1 w-[4%]">SR<br/>No</th>
+                  <th className="border-r border-black p-1 w-[40%] text-left">Description of Goods</th>
+                  <th className="border-r border-black p-1 w-[12%]">HSN<br/>Code<br/>(GST)</th>
+                  <th className="border-r border-black p-1 w-[8%]">Pcs</th>
+                  <th className="border-r border-black p-1 w-[8%]">Weight</th>
+                  <th className="border-r border-black p-1 w-[8%]">Meters</th>
+                  <th className="border-r border-black p-1 w-[4%]">U<br/>O<br/>M</th>
+                  <th className="border-r border-black p-1 w-[10%]">Rate</th>
+                  <th className="p-1 w-[16%]">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.lineItems.map((item: any, idx: number) => {
-                  const amt = (item.quantity * item.rate).toFixed(2);
+                  const amt = item.rate * item.quantity;
                   return (
                     <tr key={idx} className="align-top">
-                      <td className="border-r border-black px-2 py-1">{idx + 1}</td>
-                      <td className="border-r border-black px-2 py-1 text-left">
-                        <span className="font-bold">{item.productName}</span>
-                        {item.description && <span className="block text-[9px] text-gray-700 leading-tight">{item.description}</span>}
+                      <td className="border-r border-black px-1 py-1">{idx + 1}</td>
+                      <td className="border-r border-black px-1 py-1 text-left">
+                        {item.productName?.toUpperCase()}
+                        {item.description && <span className="block text-[8px] text-gray-700">{item.description.toUpperCase()}</span>}
                       </td>
-                      <td className="border-r border-black px-2 py-1">{item.hsnCode || '-'}</td>
-                      <td className="border-r border-black px-2 py-1">{item.quantity}</td>
-                      <td className="border-r border-black px-2 py-1">{item.unit || 'Nos'}</td>
-                      <td className="border-r border-black px-2 py-1 text-right">{item.rate.toFixed(2)}</td>
-                      <td className="border-r border-black px-2 py-1 text-right">{item.discount || 0}</td>
-                      <td className="border-r border-black px-2 py-1 text-right">{item.gstRate}</td>
-                      <td className="px-2 py-1 text-right">{(item.taxableAmount + item.cgst + item.sgst + item.igst).toFixed(2)}</td>
+                      <td className="border-r border-black px-1 py-1">{item.hsnCode || '-'}</td>
+                      <td className="border-r border-black px-1 py-1">{item.unit === 'Nos' || item.unit === 'Pcs' ? item.quantity : '-'}</td>
+                      <td className="border-r border-black px-1 py-1">{item.unit === 'Kgs' ? item.quantity.toFixed(2) : '0.00'}</td>
+                      <td className="border-r border-black px-1 py-1">{item.unit === 'Mtr' ? item.quantity.toFixed(2) : '0.00'}</td>
+                      <td className="border-r border-black px-1 py-1">{item.unit?.[0]?.toUpperCase()}</td>
+                      <td className="border-r border-black px-1 py-1 text-right">{item.rate.toFixed(2)}</td>
+                      <td className="px-1 py-1 text-right">{amt.toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -261,79 +299,92 @@ export default function PrintableInvoicePage() {
                   <td className="border-r border-black"></td><td className="border-r border-black"></td>
                   <td></td>
                 </tr>
+                {/* Total Row */}
+                <tr className="border-t border-black bg-gray-50 h-6">
+                  <td className="border-r border-black"></td>
+                  <td className="border-r border-black text-right pr-2">Total :</td>
+                  <td className="border-r border-black"></td>
+                  <td className="border-r border-black">{invoice.lineItems.reduce((s:any, i:any)=>s + (i.unit==='Nos'||i.unit==='Pcs'?i.quantity:0), 0) || '-'}</td>
+                  <td className="border-r border-black">{invoice.lineItems.reduce((s:any, i:any)=>s + (i.unit==='Kgs'?i.quantity:0), 0).toFixed(2)}</td>
+                  <td className="border-r border-black">{invoice.lineItems.reduce((s:any, i:any)=>s + (i.unit==='Mtr'?i.quantity:0), 0).toFixed(2)}</td>
+                  <td className="border-r border-black"></td><td className="border-r border-black"></td>
+                  <td></td>
+                </tr>
               </tbody>
             </table>
           </div>
 
-          {/* Subtotals & Totals */}
-          <div className="border-t border-black">
-             {invoice.totalDiscount > 0 && (
-               <div className="flex justify-between border-b border-black px-2 py-1">
-                 <span className="ml-[80%] pl-2 text-right">Discount</span>
-                 <span className="w-28 text-right">- {invoice.totalDiscount.toFixed(2)}</span>
+          <div className="flex border-t border-black text-[10px] font-bold h-48">
+            <div className="w-[65%] flex flex-col border-r border-black">
+               <div className="border-b border-black px-1 pb-4">
+                 Remarks <span className="block italic text-[8px] mt-1">{invoice.remarks}</span>
                </div>
-             )}
-             {invoice.shippingCharge > 0 && (
-               <div className="flex justify-between border-b border-black px-2 py-1">
-                 <span className="ml-[80%] pl-2 text-right">Shipping</span>
-                 <span className="w-28 text-right">+ {invoice.shippingCharge.toFixed(2)}</span>
+               <div className="border-b border-black px-1 py-0.5 bg-gray-50">
+                 Total Invoice Amount in Words :
                </div>
-             )}
-             <div className="flex justify-between border-b border-black px-2 py-1 font-bold">
-               <span className="text-center flex-1">Total</span>
-               <span className="w-28 text-right">{invoice.grandTotal.toFixed(2)}</span>
-             </div>
-          </div>
-
-          {/* Amount in Words */}
-          <div className="border-b border-black p-2">
-             <p className="font-bold">Rs. {numberToWords(Math.round(invoice.grandTotal))} Only</p>
-             <p className="font-bold text-[10px] mt-1">
-                Settled by - {invoice.paymentMode} : {invoice.amountReceived.toFixed(2)} | Invoice Balance : {invoice.balance.toFixed(2)}
-             </p>
-          </div>
-
-          {/* Footer Blocks */}
-          <div className="flex h-48">
-            {/* Terms and Conditions */}
-            <div className="w-[35%] border-r border-black p-2 flex flex-col">
-              <h3 className="font-bold">Terms and Conditions</h3>
-              <p className="text-[10px] mb-1">E & O.E</p>
-              <div className="text-[10px] font-bold whitespace-pre-wrap leading-tight pr-2 flex-1">
-                {tAndC}
-              </div>
+               <div className="border-b border-black px-1 py-1 italic">
+                 Rs. {numberToWords(Math.round(invoice.grandTotal))} Only
+               </div>
+               <div className="flex border-b border-black flex-1 relative">
+                 <div className="w-1/2 p-1 border-r border-black flex flex-col gap-0.5">
+                   <p className="underline mb-1 text-center font-bold">Bank Details</p>
+                   <div className="grid grid-cols-[80px_1fr] gap-x-1 leading-tight text-[9px]">
+                     <span>Bank Name</span><span>: {business.bankDetails?.bankName}</span>
+                     <span>Bank Account Number</span><span>: {business.bankDetails?.accountNumber}</span>
+                     <span>Bank Account IFSC</span><span>: {business.bankDetails?.ifsc}</span>
+                   </div>
+                 </div>
+                 <div className="w-1/2 p-1 relative flex flex-col justify-center items-center">
+                    {business.bankDetails?.upiId && (
+                       <>
+                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(`upi://pay?pa=${business.bankDetails.upiId}&pn=${business.ownerName || business.businessName}&am=${invoice.grandTotal.toFixed(2)}&cu=INR`)}`} alt="UPI QR" className="w-16 h-16 border border-gray-200 rounded p-1" />
+                         <span className="text-[7px] mt-0.5">Scan to Pay (UPI)</span>
+                       </>
+                    )}
+                 </div>
+               </div>
+               <div className="p-1 text-[8px]">
+                  <p className="underline font-bold text-[9px] mb-1">TERMS & CONDITION</p>
+                  <div className="whitespace-pre-wrap leading-tight">{tAndC}</div>
+               </div>
             </div>
             
-            {/* Bank Details */}
-            <div className="w-[30%] border-r border-black p-2 flex flex-col justify-center gap-1">
-               {business.bankDetails?.upiId && (
-                 <div className="flex flex-col items-center mb-1">
-                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`upi://pay?pa=${business.bankDetails.upiId}&pn=${business.ownerName || business.businessName}&am=${invoice.grandTotal.toFixed(2)}&cu=INR`)}`} alt="UPI QR" className="w-16 h-16" />
-                   <span className="text-[8px] mt-0.5 font-bold">Scan to Pay ₹{invoice.grandTotal.toFixed(2)}</span>
-                 </div>
-               )}
-               {business.bankDetails?.accountNumber ? (
-                 <div className="text-center">
-                   <p className="font-bold text-[9px]">A/c: {business.bankDetails.accountNumber}</p>
-                   <p className="font-bold text-[9px]">IFSC: {business.bankDetails.ifsc} | {business.bankDetails.bankName}</p>
-                 </div>
-               ) : (
-                 !business.bankDetails?.upiId && <div className="text-gray-400 italic text-center w-full">Bank details not provided</div>
-               )}
-            </div>
-
-            {/* Signature Box */}
-            <div className="w-[35%] p-2 flex flex-col justify-between items-end relative">
-               <p className="font-bold text-center w-full">For {business.businessName || business.name}</p>
-               <p className="font-bold absolute bottom-2 right-2">Signature</p>
+            <div className="w-[35%] flex flex-col font-bold">
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>Gross Amount :-</span><span>{(invoice.totalTaxableAmount + invoice.totalDiscount).toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>Discount Total :- </span><span>{invoice.totalDiscount.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>Other Charge :-</span><span>{invoice.shippingCharge.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>CGST Total :- {(invoice.lineItems[0]?.gstRate / 2).toFixed(2)}%</span><span>{invoice.totalCGST.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>SGST Total :- {(invoice.lineItems[0]?.gstRate / 2).toFixed(2)}%</span><span>{invoice.totalSGST.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>IGST Total :- {invoice.lineItems[0]?.gstRate.toFixed(2)}%</span><span>{invoice.totalIGST.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>Tax Amount :- GST</span><span>{invoice.totalGST.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-1.5 bg-gray-100 text-[11px]">
+                 <span>Total Amount After Tax</span><span>{invoice.grandTotal.toFixed(2)}</span>
+               </div>
+               <div className="flex justify-between border-b border-black px-1 py-[3px]">
+                 <span>GST Payable on Reverse Charge</span><span>0.00</span>
+               </div>
+               <div className="p-1 flex-1 flex flex-col justify-between items-center text-center">
+                 <p className="text-[7px] mt-1 text-gray-700">Certified that the particulars given above are true and correct.</p>
+                 <p className="font-bold text-[11px] mt-1">{business.businessName || business.name}</p>
+                 <p className="text-[10px] mt-auto">Authorised Signatory</p>
+               </div>
             </div>
           </div>
 
-        </div>
-
-        {/* Outer Footer Tag */}
-        <div className="text-center text-[10px] mt-1 text-blue-600 print:text-black">
-          Invoice Created by <a href="#" className="underline">ERP Software</a>
         </div>
 
       </div>
