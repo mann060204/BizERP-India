@@ -190,12 +190,12 @@ export default function NewInvoicePage() {
     <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
       <Topbar title="New Invoice" />
 
-      <main className="flex-1 overflow-y-auto p-2 space-y-2 pb-20">
+      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
         {/* Section 1: Invoice Information */}
         <div className="erp-container">
-          <div className="erp-header">Invoice Information</div>
-          <div className="p-2 grid grid-cols-6 gap-x-4 gap-y-2">
+          <div className="erp-header py-1 text-xs">Invoice Information</div>
+          <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label">Invoice Type</label>
               <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
@@ -262,8 +262,8 @@ export default function NewInvoicePage() {
 
         {/* Section 2: Particulars Input */}
         <div className="erp-container">
-          <div className="erp-header">Particulars</div>
-          <div className="p-2 space-y-2">
+          <div className="erp-header py-1 text-xs">Particulars</div>
+          <div className="p-1.5 space-y-1">
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
@@ -346,7 +346,7 @@ export default function NewInvoicePage() {
         </div>
 
         {/* Section 3: Item Grid */}
-        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[300px]">
+        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div className="grid grid-cols-12 erp-grid-header border-b border-[#1A1A1A]">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
@@ -405,12 +405,12 @@ export default function NewInvoicePage() {
 
            <div className="erp-footer-box">
               <label className="erp-label block mb-1">Delivery Terms</label>
-              <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-20 resize-none" />
+              <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-10 resize-none" />
            </div>
 
            <div className="erp-footer-box">
               <label className="erp-label block mb-1">Remarks (Private Use)</label>
-              <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-20 resize-none" />
+              <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" />
            </div>
 
            <div className="erp-footer-box space-y-2">

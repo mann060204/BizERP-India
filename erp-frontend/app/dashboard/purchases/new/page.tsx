@@ -208,12 +208,12 @@ export default function NewPurchasePage() {
          <div className="px-4 py-2 text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer">Batch Numbers</div>
       </div>
 
-      <main className="flex-1 overflow-y-auto p-2 space-y-2 pb-20 bg-[#000000]">
+      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 bg-[#000000]">
         
         {/* Section 1: Purchase bill information */}
         <div className="erp-container">
-          <div className="erp-header">Purchase bill information</div>
-          <div className="p-3 grid grid-cols-5 gap-x-4 gap-y-3">
+          <div className="erp-header py-1 text-xs">Purchase bill information</div>
+          <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
             {/* Row 1 */}
             <div>
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
@@ -284,10 +284,10 @@ export default function NewPurchasePage() {
 
         {/* Section 2: Particulars Input */}
         <div className="erp-container">
-          <div className="erp-header flex justify-between items-center">
+          <div className="erp-header py-1 text-xs flex justify-between items-center">
             <span>Particulars</span>
           </div>
-          <div className="p-2 space-y-2">
+          <div className="p-1.5 space-y-1">
             <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
@@ -375,7 +375,7 @@ export default function NewPurchasePage() {
         </div>
 
         {/* Section 3: Item Grid */}
-        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[300px]">
+        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div className="grid grid-cols-[30px_3fr_1fr_1fr_1.5fr_1fr_1fr_1fr_1.5fr] bg-[#2563eb] text-white text-[11px] font-medium border-b border-[#1A1A1A]">
              <div className="border-r border-[#1a1a1a]/30 px-2 py-1.5 text-center">S. No.</div>
              <div className="border-r border-[#1a1a1a]/30 px-2 py-1.5 text-center">Item Name</div>
@@ -418,7 +418,7 @@ export default function NewPurchasePage() {
         </div>
 
         {/* Section 4: Footer */}
-        <div className="grid grid-cols-4 gap-4 mt-2">
+        <div className="grid grid-cols-4 gap-4 mt-1">
            <div className="col-span-1 space-y-2">
               <label className="flex items-center gap-2 text-xs cursor-pointer">
                 <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-white" />
@@ -446,7 +446,7 @@ export default function NewPurchasePage() {
            <div className="col-span-1">
               <div className="erp-container border-[#1A1A1A]">
                 <div className="erp-header bg-transparent border-none py-1">Remarks (Private Use)</div>
-                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-20 resize-none border-none border-t border-[#1A1A1A]" />
+                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-12 resize-none border-none border-t border-[#1A1A1A]" />
               </div>
            </div>
 
