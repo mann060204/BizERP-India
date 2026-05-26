@@ -25,9 +25,15 @@ const LineItemSchema = new Schema<ILineItem>({
 
 export interface IPurchaseBill extends Document {
   businessId: mongoose.Types.ObjectId;
+  purchaseType: string;
   billNumber: string; // Supplier's invoice number
   billDate: Date;
   dueDate?: Date;
+  placeOfSupply: string;
+  purchaseOrderNo?: string;
+  purchaseOrderDate?: Date;
+  paymentTerms?: string;
+  ewayBillNo?: string;
   supplierId?: mongoose.Types.ObjectId;
   supplierSnapshot: { name: string; gstin?: string; address?: string; mobile?: string };
   isInterState: boolean;
@@ -40,6 +46,8 @@ export interface IPurchaseBill extends Document {
   totalIGST: number;
   totalGST: number;
   grandTotal: number;
+  additionalDiscount: number;
+  shippingCharge: number;
   amountPaid: number;
   balance: number;
   paymentMode: string;
@@ -59,9 +67,15 @@ export interface IPurchaseBill extends Document {
 const PurchaseBillSchema = new Schema<IPurchaseBill>(
   {
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
+    purchaseType: { type: String, default: 'GST' },
     billNumber: { type: String, required: true, index: true },
     billDate: { type: Date, required: true, index: true, default: Date.now },
     dueDate: { type: Date },
+    placeOfSupply: { type: String, default: '' },
+    purchaseOrderNo: String,
+    purchaseOrderDate: Date,
+    paymentTerms: String,
+    ewayBillNo: String,
     supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', index: true },
     supplierSnapshot: {
       name: { type: String, required: true },
@@ -79,6 +93,8 @@ const PurchaseBillSchema = new Schema<IPurchaseBill>(
     totalIGST: { type: Number, default: 0 },
     totalGST: { type: Number, default: 0 },
     grandTotal: { type: Number, default: 0 },
+    additionalDiscount: { type: Number, default: 0 },
+    shippingCharge: { type: Number, default: 0 },
     amountPaid: { type: Number, default: 0 },
     balance: { type: Number, default: 0 },
     paymentMode: { type: String, default: 'Cash' },
