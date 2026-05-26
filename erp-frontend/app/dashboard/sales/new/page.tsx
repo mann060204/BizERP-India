@@ -91,7 +91,24 @@ export default function NewInvoicePage() {
     setSelectedCustomer(c);
     setCustomerSearch(c.name);
     setContactNo(c.mobile || '');
-    setCustomerAddress(c.billingAddress || '');
+    
+    let addrStr = '';
+    if (c.billingAddress) {
+      if (typeof c.billingAddress === 'string') {
+        addrStr = c.billingAddress;
+      } else {
+        const parts = [
+          (c.billingAddress as any).street,
+          (c.billingAddress as any).city,
+          (c.billingAddress as any).state,
+          (c.billingAddress as any).pinCode,
+          (c.billingAddress as any).country
+        ].filter(Boolean);
+        addrStr = parts.join(', ');
+      }
+    }
+    setCustomerAddress(addrStr);
+    
     setCustomerGstin(c.gstin || '');
     setShowCustomerDD(false);
   };
