@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Topbar from '../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../lib/erp-api';
 import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings } from 'lucide-react';
@@ -63,6 +64,9 @@ const Checkbox = ({ label, keyName, form, setForm, danger = false }: any) => (
 );
 
 export default function MastersPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -100,6 +104,15 @@ export default function MastersPage() {
     fetchSettings();
     fetchProducts(); 
   }, [fetchProducts, fetchSettings]);
+
+  useEffect(() => {
+    const action = searchParams.get('action');
+    if (action === 'add-product') {
+      setEditing(null); setForm({ ...emptyForm, type: 'product' }); setActiveTab('basic'); setShowModal(true);
+    } else if (action === 'add-service') {
+      setEditing(null); setForm({ ...emptyForm, type: 'service' }); setActiveTab('basic'); setShowModal(true);
+    }
+  }, [searchParams]);
 
   const openCreate = () => { setEditing(null); setForm(emptyForm); setActiveTab('basic'); setShowModal(true); };
   const openEdit = (p: Product) => {
