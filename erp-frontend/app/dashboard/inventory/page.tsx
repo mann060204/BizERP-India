@@ -53,7 +53,7 @@ export default function InventoryPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="glass rounded-2xl p-4">
             <p className="dark:text-[#94a3b8] text-gray-600 text-xs font-medium uppercase tracking-wider mb-1">Total Stock Value</p>
-            <p className="text-xl font-bold text-emerald-400">₹{(summary.totalStockValue || 0).toFixed(2)}</p>
+            <p className="text-xl font-bold dark:text-emerald-400 text-emerald-600">₹{(summary.totalStockValue || 0).toFixed(2)}</p>
             <p className="dark:text-[#475569] text-gray-500 text-xs mt-0.5">Based on purchase price</p>
           </div>
           <div className="glass rounded-2xl p-4">
@@ -114,7 +114,7 @@ export default function InventoryPage() {
                         <td className="px-5 py-4 dark:text-[#94a3b8] text-gray-600 font-mono text-xs">{p.sku || '—'}</td>
                         <td className="px-5 py-4 dark:text-[#94a3b8] text-gray-600">{p.category || '—'}</td>
                         <td className="px-5 py-4 font-bold dark:text-white text-gray-900">{p.currentStock} {p.unit}</td>
-                        <td className="px-5 py-4 text-emerald-400">₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
+                        <td className="px-5 py-4 dark:text-emerald-400 text-emerald-600">₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
                         <td className="px-5 py-4">
                           {isLow ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-400 bg-red-400/10"><AlertCircle className="w-3 h-3" /> Low Stock</span>

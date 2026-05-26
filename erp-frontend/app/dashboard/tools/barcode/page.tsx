@@ -59,7 +59,7 @@ export default function BarcodeGeneratorPage() {
                 {filteredProducts.slice(0, 10).map(p => (
                   <button key={p._id} onClick={() => selectProduct(p)} className="w-full text-left px-4 py-3 hover:dark:bg-[#111111] bg-gray-50 transition text-sm flex justify-between">
                     <span className="dark:text-white text-gray-900 font-medium">{p.name}</span>
-                    <span className="text-emerald-400 font-medium">₹{p.sellingPrice}</span>
+                    <span className="dark:text-emerald-400 text-emerald-600 font-medium">₹{p.sellingPrice}</span>
                   </button>
                 ))}
               </div>

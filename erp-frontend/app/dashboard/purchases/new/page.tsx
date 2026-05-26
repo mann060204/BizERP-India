@@ -234,7 +234,7 @@ export default function NewPurchasePage() {
                 {showSupplierDD && filteredSuppliers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredSuppliers.map(s => (
-                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300">
+                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:dark:bg-[#262626] bg-gray-200 cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300">
                         {s.name}
                       </div>
                     ))}
@@ -291,7 +291,7 @@ export default function NewPurchasePage() {
             <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a1a00] text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full dark:bg-[#1a1a00] bg-yellow-50 text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -303,7 +303,7 @@ export default function NewPurchasePage() {
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 dark:bg-[#0A0A0A] bg-white border dark:border-[#1A1A1A] border-gray-300 z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300 flex justify-between">
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:dark:bg-[#262626] bg-gray-200 cursor-pointer border-b dark:border-[#1A1A1A] border-gray-300 flex justify-between">
                           <span>{p.name}</span>
                           <span className="dark:text-[#475569] text-gray-500">₹{p.purchasePrice}</span>
                         </div>

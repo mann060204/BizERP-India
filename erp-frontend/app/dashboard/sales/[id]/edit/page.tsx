@@ -298,7 +298,7 @@ export default function EditInvoicePage() {
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a0000]" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full dark:bg-[#1a0000] bg-red-50" />
               </div>
               <div className="col-span-3">
                 <label className="erp-label">Item Name <span className="text-red-500">*</span></label>
@@ -367,7 +367,7 @@ export default function EditInvoicePage() {
                </div>
                <div className="col-span-2">
                   <label className="erp-label">Amount</label>
-                  <div className="erp-input w-full bg-[#001a00] text-emerald-400 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
+                  <div className="erp-input w-full dark:bg-[#001a00] bg-emerald-50 dark:text-emerald-400 text-emerald-600 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
                </div>
                <button onClick={addItem} className="bg-green-600 hover:bg-green-700 dark:text-white text-gray-900 p-1 rounded flex items-center justify-center">
                  <Plus className="w-5 h-5" />
@@ -389,7 +389,7 @@ export default function EditInvoicePage() {
              <div className="col-span-1 erp-grid-cell text-center">Cess%</div>
              <div className="col-span-2 erp-grid-cell text-right">Total</div>
            </div>
-           <div className="flex-1 overflow-y-auto bg-[#020202]">
+           <div className="flex-1 overflow-y-auto dark:bg-[#020202] bg-gray-50">
               {lineItems.length === 0 ? (
                 <div className="p-10 text-center text-[#262626] italic text-sm">No items added yet...</div>
               ) : (
@@ -406,7 +406,7 @@ export default function EditInvoicePage() {
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
                     <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>
-                    <div className="col-span-2 erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center">
+                    <div className="col-span-2 erp-grid-cell text-right font-bold dark:text-emerald-400 text-emerald-600 flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded">
                         <Trash2 className="w-3 h-3" />
@@ -423,7 +423,7 @@ export default function EditInvoicePage() {
            <div className="erp-footer-box flex flex-col justify-between">
               <div>
                 <label className="erp-label block mb-1">Total Quantity</label>
-                <div className="text-xl font-bold bg-[#1a1a00] p-1 border border-yellow-900/30 text-yellow-400">{totalQty}</div>
+                <div className="text-xl font-bold dark:bg-[#1a1a00] bg-yellow-50 p-1 border dark:border-yellow-900/30 border-yellow-200 dark:text-yellow-400 text-yellow-600">{totalQty}</div>
               </div>
               <div>
                 <label className="erp-label block mb-1">Sold By</label>
@@ -460,12 +460,12 @@ export default function EditInvoicePage() {
                 <span className="erp-label">Amount Received</span>
                 <div className="relative w-2/3">
                    <span className="absolute left-1 top-1 text-[10px] dark:text-[#475569] text-gray-500">₹</span>
-                   <input type="number" value={amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold text-emerald-400" />
+                   <input type="number" value={amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold dark:text-emerald-400 text-emerald-600" />
                 </div>
               </div>
               <div className="pt-2 border-t dark:border-[#1A1A1A] border-gray-300 flex justify-between font-bold">
                 <span className="text-xs">GRAND TOTAL</span>
-                <span className="text-emerald-400">₹{grandTotal.toFixed(2)}</span>
+                <span className="dark:text-emerald-400 text-emerald-600">₹{grandTotal.toFixed(2)}</span>
               </div>
            </div>
         </div>

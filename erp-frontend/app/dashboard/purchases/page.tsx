@@ -12,7 +12,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   draft:     { label: 'Draft',    color: 'dark:text-[#94a3b8] text-gray-600 bg-[#94a3b8]/10', icon: FileText },
   received:  { label: 'Received', color: 'text-blue-400 bg-blue-400/10',    icon: Clock },
   paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
-  partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
+  partial:   { label: 'Partial',  color: 'dark:text-yellow-400 text-yellow-600 bg-yellow-400/10',icon: AlertCircle },
   overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
   cancelled: { label: 'Cancelled',color: 'dark:text-[#475569] text-gray-500 bg-[#475569]/10', icon: XCircle },
 };
@@ -52,7 +52,7 @@ export default function PurchasesPage() {
         {/* KPI Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'This Month', value: `₹${(summary.monthPurchases || 0).toFixed(2)}`, sub: `${summary.monthPurchaseCount || 0} bills`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+            { label: 'This Month', value: `₹${(summary.monthPurchases || 0).toFixed(2)}`, sub: `${summary.monthPurchaseCount || 0} bills`, color: 'dark:text-emerald-400 text-emerald-600', bg: 'bg-emerald-400/10' },
             { label: 'Total Paid', value: `₹${(summary.totalPaid || 0).toFixed(2)}`, sub: 'Total payments made', color: 'text-blue-400', bg: 'bg-blue-400/10' },
             { label: 'Outstanding Payables', value: `₹${(summary.outstanding || 0).toFixed(2)}`, sub: 'Pending to suppliers', color: 'text-orange-400', bg: 'bg-orange-400/10' },
           ].map(({ label, value, sub, color, bg }) => (

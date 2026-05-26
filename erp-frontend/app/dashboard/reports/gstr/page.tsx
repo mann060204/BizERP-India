@@ -71,7 +71,7 @@ export default function GstReportPage() {
               {/* Inward (ITC) */}
               <div className="glass rounded-2xl border dark:border-[#1A1A1A] border-gray-300 overflow-hidden">
                 <div className="p-4 dark:bg-[#0A0A0A] bg-white border-b dark:border-[#1A1A1A] border-gray-300 flex items-center gap-2">
-                  <FileStack className="w-5 h-5 text-emerald-400" />
+                  <FileStack className="w-5 h-5 dark:text-emerald-400 text-emerald-600" />
                   <h3 className="font-semibold dark:text-white text-gray-900">4. Eligible ITC (Purchases & Exp.)</h3>
                 </div>
                 <div className="p-4 space-y-3">
@@ -80,7 +80,7 @@ export default function GstReportPage() {
                   <div className="flex justify-between text-sm"><span className="dark:text-[#94a3b8] text-gray-600">SGST Paid</span><span className="dark:text-white text-gray-900">₹{data.inward.sgst.toFixed(2)}</span></div>
                   <div className="flex justify-between text-sm"><span className="dark:text-[#94a3b8] text-gray-600">IGST Paid</span><span className="dark:text-white text-gray-900">₹{data.inward.igst.toFixed(2)}</span></div>
                   <div className="border-t dark:border-[#1A1A1A] border-gray-300 pt-2 flex justify-between font-bold text-sm">
-                    <span className="dark:text-white text-gray-900">Total ITC Available</span><span className="text-emerald-400">₹{data.inward.totalTax.toFixed(2)}</span>
+                    <span className="dark:text-white text-gray-900">Total ITC Available</span><span className="dark:text-emerald-400 text-emerald-600">₹{data.inward.totalTax.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

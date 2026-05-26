@@ -60,12 +60,12 @@ export default function DashboardPage() {
   }, []);
 
   const KPI_CARDS = [
-    { label: 'Total Sales (Month)', value: `₹${stats.sales.toFixed(2)}`, sub: 'Taxable value of sales', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { label: 'Total Sales (Month)', value: `₹${stats.sales.toFixed(2)}`, sub: 'Taxable value of sales', icon: TrendingUp, color: 'dark:text-emerald-400 text-emerald-600', bg: 'bg-emerald-400/10' },
     { label: 'Total Purchases (Month)', value: `₹${stats.purchases.toFixed(2)}`, sub: 'Taxable value of purchases', icon: ShoppingCart, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { label: 'Amount Received', value: `₹${stats.received.toFixed(2)}`, sub: 'Total payments in', icon: Wallet, color: 'text-violet-400', bg: 'bg-violet-400/10' },
     { label: 'Outstanding (To Receive)', value: `₹${stats.salesOutstanding.toFixed(2)}`, sub: 'Pending from customers', icon: CreditCard, color: 'text-orange-400', bg: 'bg-orange-400/10' },
     { label: 'Amount Paid', value: `₹${stats.paid.toFixed(2)}`, sub: 'Total payments out', icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-400/10' },
-    { label: 'Low Stock Alerts', value: `${stats.lowStock}`, sub: 'Products below reorder', icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
+    { label: 'Low Stock Alerts', value: `${stats.lowStock}`, sub: 'Products below reorder', icon: AlertTriangle, color: 'dark:text-yellow-400 text-yellow-600', bg: 'bg-yellow-400/10' },
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {

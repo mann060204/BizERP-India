@@ -32,7 +32,7 @@ export default function ToolsPage() {
                 <h3 className="font-semibold dark:text-white text-gray-900 text-lg mb-1">{tool.name}</h3>
                 <p className="dark:text-[#94a3b8] text-gray-600 text-sm mb-4">{tool.desc}</p>
                 <div className={`inline-block px-3 py-1 rounded-lg border ${isLive ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-[#D4D4D4]/10 border-[#D4D4D4]/20'}`}>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'text-emerald-400' : 'text-[#D4D4D4]'}`}>
+                  <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'dark:text-emerald-400 text-emerald-600' : 'text-[#D4D4D4]'}`}>
                     {isLive ? 'Access Tool' : 'Coming Soon'}
                   </span>
                 </div>

@@ -138,12 +138,12 @@ export default function BulkImportPage() {
                   {importType === 'products' ? (
                     <div className="text-xs dark:text-[#94a3b8] text-gray-600 font-mono dark:bg-[#000000] bg-white p-3 rounded-lg border dark:border-[#1A1A1A] border-gray-300">
                       Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, SKU, Category, Unit, <span className="text-emerald-400">Selling Price</span>, Purchase Price, GST %, HSN Code, Stock
+                      <span className="dark:text-emerald-400 text-emerald-600">Name</span>, SKU, Category, Unit, <span className="dark:text-emerald-400 text-emerald-600">Selling Price</span>, Purchase Price, GST %, HSN Code, Stock
                     </div>
                   ) : (
                     <div className="text-xs dark:text-[#94a3b8] text-gray-600 font-mono dark:bg-[#000000] bg-white p-3 rounded-lg border dark:border-[#1A1A1A] border-gray-300">
                       Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, Street, City, State, Pincode
+                      <span className="dark:text-emerald-400 text-emerald-600">Name</span>, Mobile, Email, GSTIN, Street, City, State, Pincode
                     </div>
                   )}
                 </div>
@@ -168,10 +168,10 @@ export default function BulkImportPage() {
               ) : (
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 mx-auto">
-                    <CheckCircle className="w-8 h-8 text-emerald-400" />
+                    <CheckCircle className="w-8 h-8 dark:text-emerald-400 text-emerald-600" />
                   </div>
                   <h3 className="dark:text-white text-gray-900 font-semibold text-lg mb-1">{file.name}</h3>
-                  <p className="text-emerald-400 text-sm font-medium">{data.length} records parsed successfully</p>
+                  <p className="dark:text-emerald-400 text-emerald-600 text-sm font-medium">{data.length} records parsed successfully</p>
                   <button onClick={(e) => { e.stopPropagation(); setFile(null); setData([]); if(fileInputRef.current) fileInputRef.current.value=''; }} 
                     className="mt-4 dark:text-[#94a3b8] text-gray-600 hover:dark:text-white text-gray-900 text-xs underline">
                     Remove and select another file

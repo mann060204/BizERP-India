@@ -67,12 +67,12 @@ export default function PnlReportPage() {
               </div>
               <div className={`glass rounded-2xl p-5 border ${data.netProfit >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`p-1.5 rounded-lg ${data.netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'}`}>
+                  <div className={`p-1.5 rounded-lg ${data.netProfit >= 0 ? 'bg-emerald-400/10 dark:text-emerald-400 text-emerald-600' : 'bg-red-400/10 text-red-400'}`}>
                     <TrendingUp className="w-4 h-4" />
                   </div>
                   <p className="dark:text-[#94a3b8] text-gray-600 text-xs font-semibold uppercase tracking-wider">Net Profit</p>
                 </div>
-                <p className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className={`text-2xl font-bold ${data.netProfit >= 0 ? 'dark:text-emerald-400 text-emerald-600' : 'text-red-400'}`}>
                   ₹{data.netProfit.toFixed(2)}
                 </p>
               </div>
@@ -93,8 +93,8 @@ export default function PnlReportPage() {
                       <td className="px-5 py-3.5 text-right font-medium dark:text-white text-gray-900">₹{data.totalSales.toFixed(2)}</td>
                     </tr>
                     <tr className="dark:bg-[#0A0A0A] bg-white">
-                      <td className="px-5 py-3 text-emerald-400 font-semibold pl-8">Total Income (A)</td>
-                      <td className="px-5 py-3 text-right font-bold text-emerald-400">₹{data.totalSales.toFixed(2)}</td>
+                      <td className="px-5 py-3 dark:text-emerald-400 text-emerald-600 font-semibold pl-8">Total Income (A)</td>
+                      <td className="px-5 py-3 text-right font-bold dark:text-emerald-400 text-emerald-600">₹{data.totalSales.toFixed(2)}</td>
                     </tr>
 
                     {/* Expenses */}

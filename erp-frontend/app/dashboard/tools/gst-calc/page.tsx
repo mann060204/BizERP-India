@@ -96,7 +96,7 @@ export default function GstCalculatorPage() {
               </div>
               <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mt-4">
                 <span className="text-emerald-500 font-bold uppercase tracking-wider text-xs">Grand Total</span>
-                <span className="text-2xl font-black text-emerald-400">₹{result.total.toFixed(2)}</span>
+                <span className="text-2xl font-black dark:text-emerald-400 text-emerald-600">₹{result.total.toFixed(2)}</span>
               </div>
             </div>
           </div>

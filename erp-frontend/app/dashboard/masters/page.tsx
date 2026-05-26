@@ -41,7 +41,7 @@ export default function MasterDashboard() {
       title: 'Miscellaneous',
       description: 'Other essential configurations including units, holidays, and expense types.',
       icon: Settings2,
-      color: 'text-emerald-400',
+      color: 'dark:text-emerald-400 text-emerald-600',
       bg: 'bg-emerald-500/10',
       actions: [
         { label: 'Unit Master', href: '/dashboard/masters/units', icon: Settings2 },
