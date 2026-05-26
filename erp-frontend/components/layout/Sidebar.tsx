@@ -17,10 +17,10 @@ const NAV_ITEMS = [
   { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },
   { label: 'Customers',       href: '/dashboard/customers',icon: Users },
   { label: 'Suppliers',       href: '/dashboard/suppliers',icon: Truck },
-  { label: 'Items & Services',href: '/dashboard/masters',  icon: Package },
   { label: 'Expenses',        href: '/dashboard/expenses', icon: Receipt },
   { label: 'Reports',         href: '/dashboard/reports',  icon: FileText },
   { label: 'Tools',           href: '/dashboard/tools',    icon: Wrench },
+  { label: 'Master',          href: '/dashboard/masters',  icon: Package },
   { label: 'Settings',        href: '/dashboard/settings', icon: Settings },
 ];
 

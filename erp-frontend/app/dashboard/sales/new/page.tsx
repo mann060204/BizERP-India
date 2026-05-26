@@ -11,7 +11,7 @@ import {
 import toast from 'react-hot-toast';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; location?: string; currentStock?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
@@ -274,7 +274,12 @@ export default function NewInvoicePage() {
             <div className="col-span-2">
               <label className="erp-label">Customer <span className="text-red-500">*</span></label>
               <div className="relative">
-                <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full" placeholder="Search customer..." />
+                <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
+                {selectedCustomer && (
+                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-900/40 text-purple-400' : 'bg-blue-900/40 text-blue-400'}`}>
+                      {selectedCustomer.priceCategory === 'Wholesale' ? 'Wholesaler' : 'Retailer'}
+                   </span>
+                )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredCustomers.map(c => (
@@ -323,8 +328,15 @@ export default function NewInvoicePage() {
                 <label className="erp-label">Batch No.</label>
                 <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a0000]" />
               </div>
-              <div className="col-span-3">
-                <label className="erp-label">Item Name <span className="text-red-500">*</span></label>
+              <div className="col-span-3 flex flex-col justify-end">
+                <div className="flex justify-between items-end mb-1">
+                  <label className="erp-label !mb-0">Item Name <span className="text-red-500">*</span></label>
+                  {itemInput.productId && (
+                    <span className="text-[9px] text-[#94a3b8]">
+                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-white">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
                   {showItemDD && filteredProducts.length > 0 && (

@@ -32,6 +32,36 @@ const emptyForm = {
   enableTracking: false, printExpiryDate: false, notForSale: false,
 };
 
+// Reusable styling components defined OUTSIDE to prevent focus loss
+const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '' }: any) => (
+  <div>
+    <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
+    <input type={type}
+      value={form[keyName] === 0 && type === 'number' ? '' : form[keyName]}
+      onChange={e => setForm({ ...form, [keyName]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
+      placeholder={placeholder}
+      className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+  </div>
+);
+
+const Select = ({ label, required = false, keyName, form, setForm, options }: any) => (
+  <div>
+    <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
+    <select value={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.value })}
+      className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none">
+      {options.map((o: string) => <option key={o} value={o}>{o || 'Select...'}</option>)}
+    </select>
+  </div>
+);
+
+const Checkbox = ({ label, keyName, form, setForm, danger = false }: any) => (
+  <label className={`flex items-center gap-2 text-sm cursor-pointer ${danger ? 'text-red-400 font-medium' : 'text-white'}`}>
+    <input type="checkbox" checked={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.checked })}
+      className="w-4 h-4 rounded border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+    {label}
+  </label>
+);
+
 export default function MastersPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
@@ -112,36 +142,6 @@ export default function MastersPage() {
     try { await productsApi.delete(id); toast.success('Item deleted'); fetchProducts(); }
     catch { toast.error('Failed to delete'); }
   };
-
-  // Reusable styling components for the dark theme
-  const Input = ({ label, required = false, type = 'text', keyName, placeholder = '' }: any) => (
-    <div>
-      <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
-      <input type={type}
-        value={form[keyName] === 0 && type === 'number' ? '' : form[keyName]}
-        onChange={e => setForm({ ...form, [keyName]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
-        placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
-    </div>
-  );
-
-  const Select = ({ label, required = false, keyName, options }: any) => (
-    <div>
-      <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
-      <select value={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.value })}
-        className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none">
-        {options.map((o: string) => <option key={o} value={o}>{o || 'Select...'}</option>)}
-      </select>
-    </div>
-  );
-
-  const Checkbox = ({ label, keyName, danger = false }: any) => (
-    <label className={`flex items-center gap-2 text-sm cursor-pointer ${danger ? 'text-red-400 font-medium' : 'text-white'}`}>
-      <input type="checkbox" checked={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.checked })}
-        className="w-4 h-4 rounded border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
-      {label}
-    </label>
-  );
 
   const tabs = [
     { id: 'basic', label: 'Basic Details', icon: Tag },
@@ -284,15 +284,15 @@ export default function MastersPage() {
                 {activeTab === 'basic' && (
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Basic Details</h4>
-                    <Input label="Product Name" keyName="name" required />
-                    <Input label="Print Name (Optional)" keyName="printName" />
+                    <Input label="Product Name" keyName="name" required form={form} setForm={setForm} />
+                    <Input label="Print Name (Optional)" keyName="printName" form={form} setForm={setForm} />
                     <div className="grid grid-cols-2 gap-4">
-                      <Select label="Group" keyName="group" options={['', ...productGroups]} />
-                      <Select label="Brand" keyName="brand" options={['', ...productBrands]} />
+                      <Select label="Group" keyName="group" options={['', ...productGroups]} form={form} setForm={setForm} />
+                      <Select label="Brand" keyName="brand" options={['', ...productBrands]} form={form} setForm={setForm} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input label="Item Code / SKU" keyName="sku" />
-                      <Select label="Type" keyName="type" options={['product', 'service']} />
+                      <Input label="Item Code / SKU" keyName="sku" form={form} setForm={setForm} />
+                      <Select label="Type" keyName="type" options={['product', 'service']} form={form} setForm={setForm} />
                     </div>
                   </div>
                 )}
@@ -301,14 +301,14 @@ export default function MastersPage() {
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Pricing</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" />
-                      <Input label="MRP (₹)" type="number" keyName="mrp" />
-                      <Input label="Sale Price 1 (Retail) (₹)" type="number" keyName="sellingPrice" required />
-                      <Input label="Sale Price 2 (Wholesale) (₹)" type="number" keyName="sellingPrice2" />
-                      <Input label="Sale Price 3 (₹)" type="number" keyName="sellingPrice3" />
-                      <Input label="Min Sale Price (₹)" type="number" keyName="minSalePrice" />
+                      <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" form={form} setForm={setForm} />
+                      <Input label="MRP (₹)" type="number" keyName="mrp" form={form} setForm={setForm} />
+                      <Input label="Sale Price 1 (Retail) (₹)" type="number" keyName="sellingPrice" required form={form} setForm={setForm} />
+                      <Input label="Sale Price 2 (Wholesale) (₹)" type="number" keyName="sellingPrice2" form={form} setForm={setForm} />
+                      <Input label="Sale Price 3 (₹)" type="number" keyName="sellingPrice3" form={form} setForm={setForm} />
+                      <Input label="Min Sale Price (₹)" type="number" keyName="minSalePrice" form={form} setForm={setForm} />
                       <div className="col-span-2">
-                        <Input label="Sale Discount (%)" type="number" keyName="saleDiscount" />
+                        <Input label="Sale Discount (%)" type="number" keyName="saleDiscount" form={form} setForm={setForm} />
                       </div>
                     </div>
                   </div>
@@ -318,8 +318,8 @@ export default function MastersPage() {
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Stock & Units</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <Select label="Primary Unit" keyName="unit" options={UNITS} required />
-                      <Select label="Secondary Unit" keyName="secondaryUnit" options={['', ...UNITS]} />
+                      <Select label="Primary Unit" keyName="unit" options={UNITS} required form={form} setForm={setForm} />
+                      <Select label="Secondary Unit" keyName="secondaryUnit" options={['', ...UNITS]} form={form} setForm={setForm} />
                       
                       {form.secondaryUnit && form.secondaryUnit !== form.unit && (
                         <div className="col-span-2 p-3 bg-[#111111] border border-[#1e3a8a]/30 rounded-lg flex items-center justify-between">
@@ -334,10 +334,10 @@ export default function MastersPage() {
 
                       {form.type === 'product' && (
                         <>
-                          <Input label="Opening Stock" type="number" keyName="openingStock" />
-                          <Input label="Opening Stock Value (₹)" type="number" keyName="openingStockValue" />
-                          <Input label="Reorder Level" type="number" keyName="reorderLevel" />
-                          <Input label="Low Level Limit" type="number" keyName="lowLevelLimit" />
+                          <Input label="Opening Stock" type="number" keyName="openingStock" form={form} setForm={setForm} />
+                          <Input label="Opening Stock Value (₹)" type="number" keyName="openingStockValue" form={form} setForm={setForm} />
+                          <Input label="Reorder Level" type="number" keyName="reorderLevel" form={form} setForm={setForm} />
+                          <Input label="Low Level Limit" type="number" keyName="lowLevelLimit" form={form} setForm={setForm} />
                         </>
                       )}
                     </div>
@@ -348,12 +348,12 @@ export default function MastersPage() {
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Tax & Location</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input label="HSN / SAC Code" keyName="hsnCode" />
-                      <Select label="Total GST Rate (%)" keyName="gstRate" options={GST_RATES} />
-                      <Input label="CESS Rate (%)" type="number" keyName="cessRate" />
-                      <Input label="IGST Rate (%)" type="number" keyName="igstRate" />
-                      <Input label="Location / Rack" keyName="location" />
-                      <Input label="Batch No." keyName="batchNo" />
+                      <Input label="HSN / SAC Code" keyName="hsnCode" form={form} setForm={setForm} />
+                      <Select label="Total GST Rate (%)" keyName="gstRate" options={GST_RATES} form={form} setForm={setForm} />
+                      <Input label="CESS Rate (%)" type="number" keyName="cessRate" form={form} setForm={setForm} />
+                      <Input label="IGST Rate (%)" type="number" keyName="igstRate" form={form} setForm={setForm} />
+                      <Input label="Location / Rack" keyName="location" form={form} setForm={setForm} />
+                      <Input label="Batch No." keyName="batchNo" form={form} setForm={setForm} />
                     </div>
                     <div>
                       <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">Description</label>
@@ -367,13 +367,13 @@ export default function MastersPage() {
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2">Item Settings</h4>
                     <div className="grid grid-cols-1 gap-y-4 bg-[#111111] border border-[#1A1A1A] rounded-xl p-5">
-                      <Checkbox label="Print Description on Invoice" keyName="printDescription" />
-                      <Checkbox label="One Click Sale (POS)" keyName="oneClickSale" />
-                      <Checkbox label="Enable Batch/Serial Tracking" keyName="enableTracking" />
-                      <Checkbox label="Print Batch No on Invoice" keyName="printBatchNo" />
-                      <Checkbox label="Print Expiry Date on Invoice" keyName="printExpiryDate" />
+                      <Checkbox label="Print Description on Invoice" keyName="printDescription" form={form} setForm={setForm} />
+                      <Checkbox label="One Click Sale (POS)" keyName="oneClickSale" form={form} setForm={setForm} />
+                      <Checkbox label="Enable Batch/Serial Tracking" keyName="enableTracking" form={form} setForm={setForm} />
+                      <Checkbox label="Print Batch No on Invoice" keyName="printBatchNo" form={form} setForm={setForm} />
+                      <Checkbox label="Print Expiry Date on Invoice" keyName="printExpiryDate" form={form} setForm={setForm} />
                       <div className="pt-2 border-t border-[#1A1A1A]">
-                        <Checkbox label="Not For Sale" keyName="notForSale" danger />
+                        <Checkbox label="Not For Sale" keyName="notForSale" danger form={form} setForm={setForm} />
                       </div>
                     </div>
                   </div>
