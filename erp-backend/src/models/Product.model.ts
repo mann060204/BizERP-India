@@ -15,8 +15,11 @@ export interface IProduct extends Document {
   secondaryUnit?: string;
   purchasePrice: number;
   sellingPrice: number;
+  sellingPrice2?: number;
+  sellingPrice3?: number;
   minSalePrice?: number;
   mrp?: number;
+  conversionRate?: number;
   openingStock: number;
   openingStockValue?: number;
   currentStock: number;
@@ -58,8 +61,11 @@ const ProductSchema = new Schema<IProduct>(
     secondaryUnit: { type: String, trim: true },
     purchasePrice: { type: Number, default: 0 },
     sellingPrice: { type: Number, required: true },
+    sellingPrice2: { type: Number },
+    sellingPrice3: { type: Number },
     minSalePrice: { type: Number, default: 0 },
     mrp: { type: Number },
+    conversionRate: { type: Number, default: 1 },
     openingStock: { type: Number, default: 0 },
     openingStockValue: { type: Number, default: 0 },
     currentStock: { type: Number, default: 0 },
