@@ -280,7 +280,7 @@ export default function PrintableInvoicePage() {
           </div>
 
           {/* Footer */}
-          <div className="flex border-t-2 border-gray-800 text-[10px] font-bold h-56 bg-white">
+          <div className="flex border-t-2 border-gray-800 text-[10px] font-bold min-h-[14rem] bg-white">
             {/* Left Side (Bank, Amount in Words, T&C) */}
             <div className="w-[65%] flex flex-col border-r-2 border-gray-800">
                <div className="border-b-2 border-gray-800 px-2 py-1 flex justify-between bg-blue-50 text-blue-900">
