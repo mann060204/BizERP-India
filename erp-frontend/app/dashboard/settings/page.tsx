@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../../../components/layout/Topbar';
 import { businessApi } from '../../../lib/erp-api';
-import { Loader2, Save, Building2, ShieldCheck } from 'lucide-react';
+import { Loader2, Save, Building2, ShieldCheck, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -37,7 +37,9 @@ export default function SettingsPage() {
           city: form.address?.city,
           state: form.address?.state,
           pinCode: form.address?.pinCode
-        }
+        },
+        termsAndConditions: form.termsAndConditions,
+        invoiceTemplate: form.invoiceTemplate || 'A4'
       });
       toast.success('Settings updated successfully');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
@@ -146,6 +148,30 @@ export default function SettingsPage() {
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">PIN Code</label>
                   <input value={form.address?.pinCode || ''} onChange={e => setForm({ ...form, address: { ...form.address, pinCode: e.target.value } })}
                     className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                </div>
+              </div>
+            </div>
+
+            {/* Invoice Settings */}
+            <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
+              <div className="flex items-center gap-2 border-b border-[#1A1A1A] pb-3">
+                <FileText className="w-5 h-5 text-[#D4D4D4]" />
+                <h3 className="font-semibold text-white">Invoice Settings</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Invoice Print Template</label>
+                  <select value={form.invoiceTemplate || 'A4'} onChange={e => setForm({ ...form, invoiceTemplate: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition">
+                    <option value="A4">A4 Standard Format</option>
+                    <option value="POS">Thermal Receipt (POS)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Default Terms & Conditions</label>
+                  <textarea value={form.termsAndConditions || ''} onChange={e => setForm({ ...form, termsAndConditions: e.target.value })}
+                    placeholder="Enter default terms and conditions to print on invoices..."
+                    className="w-full h-32 resize-none px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
             </div>

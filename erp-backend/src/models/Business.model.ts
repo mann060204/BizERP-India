@@ -25,6 +25,8 @@ export interface IBusiness extends Document {
     upiId?: string;
     branch?: string;
   };
+  termsAndConditions?: string;
+  invoiceTemplate: 'A4' | 'POS';
   isCompositionScheme: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -60,6 +62,8 @@ const BusinessSchema = new Schema<IBusiness>(
       upiId: String,
       branch: String,
     },
+    termsAndConditions: { type: String, default: '' },
+    invoiceTemplate: { type: String, enum: ['A4', 'POS'], default: 'A4' },
     isCompositionScheme: { type: Boolean, default: false },
   },
   { timestamps: true }

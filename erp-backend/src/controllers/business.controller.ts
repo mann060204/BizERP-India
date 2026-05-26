@@ -14,10 +14,10 @@ export const getBusinessProfile = async (req: AuthRequest, res: Response): Promi
 // PUT /api/v1/business
 export const updateBusinessProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, businessName, gstin, pan, email, phone, mobile, address, financialYearStart, logo } = req.body;
+    const { name, businessName, gstin, pan, email, phone, mobile, address, financialYearStart, logo, termsAndConditions, invoiceTemplate } = req.body;
     
     // Map frontend fields to backend model fields
-    const updateData: any = { gstin, pan, email, address, financialYearStart, logo };
+    const updateData: any = { gstin, pan, email, address, financialYearStart, logo, termsAndConditions, invoiceTemplate };
     if (name || businessName) updateData.businessName = name || businessName;
     if (phone || mobile) updateData.mobile = phone || mobile;
 
