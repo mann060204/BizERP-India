@@ -20,7 +20,7 @@ interface Product {
 }
 
 const GST_RATES = [0, 5, 12, 18, 28];
-const UNITS = ['Nos', 'Kg', 'Gm', 'L', 'Ml', 'Box', 'Pcs', 'Mtr', 'Cm', 'Sqft', 'Hours', 'Job', 'Dozen', 'Set'];
+const UNITS = ['Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
 
 const emptyForm = {
   name: '', printName: '', group: '', brand: '', type: 'product', sku: '', hsnCode: '',
@@ -313,9 +313,11 @@ export default function MastersPage() {
                       <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Price Details</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" form={form} setForm={setForm} />
-                        <Input label="Sale Price (Retail) (₹)" type="number" keyName="sellingPrice" required form={form} setForm={setForm} />
-                        <Input label="Min. Sale Price (₹)" type="number" keyName="minSalePrice" form={form} setForm={setForm} />
                         <Input label="M.R.P. (₹)" type="number" keyName="mrp" form={form} setForm={setForm} />
+                        <Input label="Sale Price 1 (Retail) (₹)" type="number" keyName="sellingPrice" required form={form} setForm={setForm} />
+                        <Input label="Sale Price 2 (Wholesale) (₹)" type="number" keyName="sellingPrice2" form={form} setForm={setForm} />
+                        <Input label="Sale Price 3 (₹)" type="number" keyName="sellingPrice3" form={form} setForm={setForm} />
+                        <Input label="Min. Sale Price (₹)" type="number" keyName="minSalePrice" form={form} setForm={setForm} />
                       </div>
                     </div>
 
@@ -414,92 +416,96 @@ export default function MastersPage() {
         </div>
       )}
 
-      {/* Unit Settings Modal - Exact Match */}
+      {/* Unit Settings Modal - Dark Theme */}
       {showUnitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white text-black border border-[#999999] w-full max-w-[340px] flex flex-col shadow-2xl font-sans">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#050505] text-white border border-[#1A1A1A] w-full max-w-[440px] flex flex-col shadow-2xl rounded-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-2 border-b border-[#CCCCCC] bg-white">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full border border-blue-600 text-blue-600 flex items-center justify-center text-[10px] font-bold">H</div>
-                <h3 className="font-medium text-sm">Unit Settings</h3>
+            <div className="flex items-center justify-between p-5 border-b border-[#1A1A1A] bg-[#0A0A0A]">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Layers className="w-4 h-4 text-blue-400" />
+                </div>
+                <h3 className="font-bold text-base text-white">Unit Settings</h3>
               </div>
-              <button onClick={() => setShowUnitModal(false)} className="text-gray-600 hover:text-black"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowUnitModal(false)} className="p-2 rounded-xl hover:bg-[#111111] text-[#94a3b8] hover:text-white transition"><X className="w-5 h-5" /></button>
             </div>
             
-            <div className="p-4 space-y-3 bg-[#F9F9F9]">
+            <div className="p-6 space-y-6 bg-[#050505]">
               {/* Base Unit & Secondary Unit */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-[13px] mb-1">Base Unit</label>
-                   <input type="text" disabled value={form.unit || 'PCS'} className="w-full px-2 py-1 bg-[#F0F0F0] border border-[#CCCCCC] text-gray-500 focus:outline-none text-[13px]" />
+                   <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Base Unit</label>
+                   <input type="text" disabled value={form.unit || 'Pieces'} className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#475569] focus:outline-none text-sm cursor-not-allowed" />
                 </div>
                 <div>
-                   <label className="block text-[13px] mb-1">Secondary Unit <span className="text-red-500">*</span></label>
-                   <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-2 py-1 border border-[#0078D7] focus:outline-none bg-white text-[13px]">
+                   <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Secondary Unit <span className="text-red-500">*</span></label>
+                   <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none cursor-pointer">
                       {['', ...UNITS].map(u => <option key={u} value={u}>{u}</option>)}
                    </select>
                 </div>
               </div>
 
               {/* Inventory Conversion Factor */}
-              <div>
-                 <label className="block text-[13px] mb-1">Inventory Conversion Factor <span className="text-red-500">*</span></label>
-                 <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-2 py-1 border border-[#999999] focus:border-[#0078D7] focus:outline-none text-[13px]" />
-                 <div className="text-right text-[11px] text-gray-500 mt-1">1 {form.unit || 'PCS'} = {form.conversionRate || 1} {form.secondaryUnit || 'FT'}</div>
+              <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-[#0A0A0A]">
+                 <div className="flex justify-between items-center mb-3">
+                   <label className="block text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Conversion Factor</label>
+                   <div className="text-[11px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">1 {form.unit || 'Pieces'} = {form.conversionRate || 1} {form.secondaryUnit || 'Feet'}</div>
+                 </div>
+                 <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
               </div>
 
-              {/* Sale Price Fieldset */}
-              <fieldset className="border border-[#CCCCCC] p-3 pt-2 relative mt-1 bg-[#F9F9F9]">
-                <legend className="text-[13px] px-1 text-black font-medium bg-[#F9F9F9]">Sale Price</legend>
-                <div className="flex items-center gap-4 mb-2">
-                  <label className="flex items-center gap-1.5 text-[13px] cursor-pointer">
-                    <input type="radio" checked={form.secSalePriceType !== 'margin'} onChange={() => setForm({...form, secSalePriceType: 'fixed'})} className="w-3.5 h-3.5" />
+              {/* Sale Price */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 text-sm text-white cursor-pointer group">
+                    <input type="radio" checked={form.secSalePriceType !== 'margin'} onChange={() => setForm({...form, secSalePriceType: 'fixed'})} className="w-4 h-4 rounded-full border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
                     Fixed Per Unit
                   </label>
-                  <label className="flex items-center gap-1.5 text-[13px] cursor-pointer">
-                    <input type="radio" checked={form.secSalePriceType === 'margin'} onChange={() => setForm({...form, secSalePriceType: 'margin'})} className="w-3.5 h-3.5" />
+                  <label className="flex items-center gap-2 text-sm text-[#94a3b8] cursor-pointer hover:text-white transition group">
+                    <input type="radio" checked={form.secSalePriceType === 'margin'} onChange={() => setForm({...form, secSalePriceType: 'margin'})} className="w-4 h-4 rounded-full border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
                     Margin Per Unit
                   </label>
                 </div>
-                <div className="flex border border-[#999999] focus-within:border-[#0078D7] bg-white">
-                  <div className="bg-[#1976D2] text-white px-2.5 py-1 flex items-center justify-center text-[13px]">₹</div>
-                  <input type="number" value={form.secSalePrice || ''} onChange={e => setForm({...form, secSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 focus:outline-none text-[13px]" />
-                </div>
-              </fieldset>
-
-              {/* MRP */}
-              <div className="pt-1">
-                 <label className="block text-[13px] mb-1">M.R.P.</label>
-                 <div className="flex border border-[#999999] focus-within:border-[#0078D7] bg-white">
-                  <div className="bg-[#1976D2] text-white px-2.5 py-1 flex items-center justify-center text-[13px]">₹</div>
-                  <input type="number" value={form.secMrp || ''} onChange={e => setForm({...form, secMrp: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 focus:outline-none text-[13px]" />
+                <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] focus-within:border-[#D4D4D4] transition">
+                  <div className="bg-[#111111] text-[#94a3b8] px-4 py-2.5 border-r border-[#1A1A1A] flex items-center justify-center text-sm font-medium">₹</div>
+                  <input type="number" value={form.secSalePrice || ''} onChange={e => setForm({...form, secSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2.5 bg-[#0A0A0A] text-white focus:outline-none text-sm" placeholder="Secondary Sale Price" />
                 </div>
               </div>
 
-              {/* Min. Sale Price */}
-              <div className="pt-1">
-                 <label className="block text-[13px] mb-1">Min. Sale Price</label>
-                 <div className="flex border border-[#999999] focus-within:border-[#0078D7] bg-white">
-                  <div className="bg-[#1976D2] text-white px-2.5 py-1 flex items-center justify-center text-[13px]">₹</div>
-                  <input type="number" value={form.secMinSalePrice || ''} onChange={e => setForm({...form, secMinSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 focus:outline-none text-[13px]" />
+              {/* MRP & Min. Sale Price */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">M.R.P.</label>
+                  <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] focus-within:border-[#D4D4D4] transition">
+                    <div className="bg-[#111111] text-[#94a3b8] px-3 py-2.5 border-r border-[#1A1A1A] flex items-center justify-center text-sm">₹</div>
+                    <input type="number" value={form.secMrp || ''} onChange={e => setForm({...form, secMrp: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-[#0A0A0A] text-white focus:outline-none text-sm" placeholder="0.00" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Min. Sale Price</label>
+                  <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] focus-within:border-[#D4D4D4] transition">
+                    <div className="bg-[#111111] text-[#94a3b8] px-3 py-2.5 border-r border-[#1A1A1A] flex items-center justify-center text-sm">₹</div>
+                    <input type="number" value={form.secMinSalePrice || ''} onChange={e => setForm({...form, secMinSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-[#0A0A0A] text-white focus:outline-none text-sm" placeholder="0.00" />
+                  </div>
                 </div>
               </div>
 
               {/* Default Sales Unit Checkbox */}
-              <div className="pt-2">
-                 <label className="flex items-center gap-2 text-[13px] cursor-pointer">
-                   <input type="checkbox" checked={form.isDefaultSecondaryUnit || false} onChange={e => setForm({...form, isDefaultSecondaryUnit: e.target.checked})} className="w-3.5 h-3.5 border-[#999999]" />
-                   Set as default sales unit
-                 </label>
-              </div>
+              <label className="flex items-center gap-3 text-sm text-[#94a3b8] cursor-pointer hover:text-white transition pt-2">
+                <input type="checkbox" checked={form.isDefaultSecondaryUnit || false} onChange={e => setForm({...form, isDefaultSecondaryUnit: e.target.checked})} className="w-4 h-4 rounded border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+                Set as default sales unit
+              </label>
 
             </div>
 
             {/* Footer */}
-            <div className="p-4 flex justify-end bg-[#F9F9F9]">
-              <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-1.5 px-6 py-1.5 bg-[#1976D2] hover:bg-[#1565C0] text-white text-[13px] transition">
-                <Plus className="w-3.5 h-3.5" /> Set
+            <div className="p-5 border-t border-[#1A1A1A] bg-[#0A0A0A] flex justify-end gap-3">
+              <button onClick={() => setShowUnitModal(false)} className="px-5 py-2.5 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] font-medium text-sm transition">
+                Cancel
+              </button>
+              <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/20">
+                <Plus className="w-4 h-4" /> Save Settings
               </button>
             </div>
           </div>
