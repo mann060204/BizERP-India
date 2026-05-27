@@ -6,7 +6,7 @@ import { customersApi, productsApi, invoicesApi } from '../../../../../lib/erp-a
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
-  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon
+  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
