@@ -13,6 +13,8 @@ export default function EditCustomerPage() {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('Profile');
+  const tabs = ['Profile', 'Accounts', 'Payment History', 'Invoices', 'Quotations', 'Cheque / Cash Alerts'];
 
   // --- Photo State ---
   const [photo, setPhoto] = useState<string | null>(null);
@@ -169,9 +171,6 @@ export default function EditCustomerPage() {
       </div>
     </div>
   );
-
-  const [activeTab, setActiveTab] = useState('Profile');
-  const tabs = ['Profile', 'Accounts', 'Payment History', 'Invoices', 'Quotations', 'Cheque / Cash Alerts'];
 
   return (
     <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
