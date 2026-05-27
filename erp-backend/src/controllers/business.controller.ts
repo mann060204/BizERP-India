@@ -14,7 +14,7 @@ export const getBusinessProfile = async (req: AuthRequest, res: Response): Promi
 // PUT /api/v1/business
 export const updateBusinessProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, businessName, gstin, pan, email, phone, mobile, address, financialYearStart, logo, termsAndConditions, invoiceTemplate, bankDetails, invoicePrefix, nonGstInvoicePrefix, productGroups, productBrands } = req.body;
+    const { name, businessName, gstin, pan, email, phone, mobile, address, financialYearStart, logo, termsAndConditions, invoiceTemplate, bankDetails, invoicePrefix, nonGstInvoicePrefix, productGroups, productBrands, productCategories } = req.body;
     
     // Map frontend fields to backend model fields
     const updateData: any = { gstin, pan, email, address, financialYearStart, logo, termsAndConditions, invoiceTemplate, bankDetails };
@@ -24,6 +24,7 @@ export const updateBusinessProfile = async (req: AuthRequest, res: Response): Pr
     if (phone || mobile) updateData.mobile = phone || mobile;
     if (productGroups) updateData.productGroups = productGroups;
     if (productBrands) updateData.productBrands = productBrands;
+    if (productCategories) updateData.productCategories = productCategories;
 
     const business = await Business.findByIdAndUpdate(
       req.user!.businessId,
