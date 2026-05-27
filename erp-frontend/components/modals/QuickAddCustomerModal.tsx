@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { customersApi } from '../../../lib/erp-api';
+import { customersApi } from '../../lib/erp-api';
 
 const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '' }: any) => (
   <div>

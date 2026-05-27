@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { productsApi } from '../../../lib/erp-api';
+import { productsApi } from '../../lib/erp-api';
 
 const GST_RATES = [0, 5, 12, 18, 28];
 const UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];

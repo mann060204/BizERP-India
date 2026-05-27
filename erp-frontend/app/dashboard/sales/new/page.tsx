@@ -704,6 +704,7 @@ export default function NewInvoicePage() {
                        <th className="p-2 font-medium border-b border-[#1A1A1A]">Item Name</th>
                        <th className="p-2 font-medium border-b border-[#1A1A1A]">Group</th>
                        <th className="p-2 font-medium border-b border-[#1A1A1A]">Brand</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Location</th>
                        <th className="p-2 font-medium border-b border-[#1A1A1A]">Stock</th>
                        <th className="p-2 font-medium border-b border-[#1A1A1A]">Price</th>
                      </tr>
@@ -714,6 +715,7 @@ export default function NewInvoicePage() {
                          <td className="p-2 text-white font-medium">{p.name}</td>
                          <td className="p-2 text-[#94a3b8]">{p.group || '—'}</td>
                          <td className="p-2 text-[#94a3b8]">{p.brand || '—'}</td>
+                         <td className="p-2 text-[#94a3b8]">{p.location || '—'}</td>
                          <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
                          <td className="p-2 text-[#94a3b8]">₹{p.sellingPrice}</td>
                        </tr>
