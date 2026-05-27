@@ -1,21 +1,25 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useParams } from "next/navigation";
 import Topbar from '../../../../../components/layout/Topbar';
 import { customersApi, productsApi, invoicesApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
-  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil
+  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil, UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
+import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; }
-interface Product { _id: string; name: string; sellingPrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
+  primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
+  selectedBaseRate?: number;
 }
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
@@ -23,7 +27,7 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function EditInvoicePage() {
+export default function NewInvoicePage() {
   const router = useRouter();
   const { id } = useParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -33,9 +37,9 @@ export default function EditInvoicePage() {
 
   // Header State
   const [invoiceType, setInvoiceType] = useState('GST');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [invoiceDate, setInvoiceDate] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
   const [contactNo, setContactNo] = useState('');
@@ -45,6 +49,8 @@ export default function EditInvoicePage() {
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
   const [isInterState, setIsInterState] = useState(false);
+  const [useShippingAddress, setUseShippingAddress] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState('');
 
   // Particulars (Input Row) State
   const [itemInput, setItemInput] = useState<LineItem>({
@@ -54,6 +60,16 @@ export default function EditInvoicePage() {
   });
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
+  const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
+
+  // Advanced Search Modal State
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [showQuickAddCustomerModal, setShowQuickAddCustomerModal] = useState(false);
+  const [advGroup, setAdvGroup] = useState('');
+  const [advBrand, setAdvBrand] = useState('');
+  const [advLocation, setAdvLocation] = useState('');
+  const [advText, setAdvText] = useState('');
 
   // Main List
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -62,90 +78,120 @@ export default function EditInvoicePage() {
   const [soldBy, setSoldBy] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [paymentMode, setPaymentMode] = useState('Cash');
-  const [amountReceived, setAmountReceived] = useState(0);
-  const [txnId, setTxnId] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentMode1, setPaymentMode1] = useState('Cash');
+  const [amountReceived1, setAmountReceived1] = useState(0);
+  const [txnId1, setTxnId1] = useState('');
+  const [paymentDate1, setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
+
+  const [paymentMode2, setPaymentMode2] = useState('');
+  const [amountReceived2, setAmountReceived2] = useState(0);
+  const [txnId2, setTxnId2] = useState('');
+  const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
+
   const [shippingCharge, setShippingCharge] = useState(0);
+  
+  const totalAmountReceived = amountReceived1 + amountReceived2;
+  const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
+  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} (Date: ${paymentDate1}) | ${txnId2} (Date: ${paymentDate2})` : (txnId1 ? `${txnId1} (Date: ${paymentDate1})` : (txnId2 ? `${txnId2} (Date: ${paymentDate2})` : ''));
 
   useEffect(() => {
-    const init = async () => {
+    const fetchData = async () => {
       try {
-        const [cRes, pRes, iRes] = await Promise.all([
+        const [cRes, pRes] = await Promise.all([
           customersApi.list({ limit: 200 }),
-          productsApi.list({ limit: 500 }),
-          invoicesApi.get(id as string)
+          productsApi.list({ limit: 500 })
         ]);
-        
         setCustomers(cRes.data.customers);
         setProducts(pRes.data.products);
-        
-        const inv = iRes.data.invoice;
-        setInvoiceNumber(inv.invoiceNumber);
-        setInvoiceDate(new Date(inv.invoiceDate).toISOString().split('T')[0]);
-        if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);
-        setPlaceOfSupply(inv.placeOfSupply);
-        setIsInterState(inv.isInterState);
-        setBillTo(inv.billTo || 'Customer');
-        setCustomerSearch(inv.customerSnapshot.name);
-        setContactNo(inv.customerSnapshot.mobile || '');
-        setCustomerAddress(inv.customerSnapshot.address || '');
-        setCustomerGstin(inv.customerSnapshot.gstin || '');
-        if (inv.customerId) setSelectedCustomer(cRes.data.customers.find((c: Customer) => c._id === (inv.customerId._id || inv.customerId)));
-        
-        setLineItems(inv.lineItems.map((item: any) => ({
-          ...item,
-          batchNo: item.batchNo || '',
-          tag: item.tag || '',
-          description: item.description || '',
-          cess: item.cess || 0,
-          mrp: item.mrp || item.rate
-        })));
-        
-        setPaymentMode(inv.paymentMode);
-        setAmountReceived(inv.amountReceived);
-        setTxnId(inv.txnId || '');
-        if (inv.paymentDate) setPaymentDate(new Date(inv.paymentDate).toISOString().split('T')[0]);
-        setShippingCharge(inv.shippingCharge || 0);
-        setRemarks(inv.notes || '');
-        setDeliveryTerms(inv.deliveryTerms || '');
-        setSoldBy(inv.soldBy || '');
-        
-      } catch (e) {
-        toast.error('Failed to load invoice');
-        router.push('/dashboard/sales');
+      } catch (err) {
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
-    if (id) init();
-  }, [id]);
+    fetchData();
+  }, []);
 
   const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+
+  const uniqueGroups = Array.from(new Set(products.map(p => p.group).filter(Boolean))) as string[];
+  const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))) as string[];
+  const uniqueLocations = Array.from(new Set(products.map(p => p.location).filter(Boolean))) as string[];
+
+  const advFilteredProducts = products.filter(p => {
+    if (advGroup && p.group !== advGroup) return false;
+    if (advBrand && p.brand !== advBrand) return false;
+    if (advLocation && p.location !== advLocation) return false;
+    if (advText && !p.name.toLowerCase().includes(advText.toLowerCase()) && !p.hsnCode?.includes(advText)) return false;
+    return true;
+  });
 
   const pickCustomer = (c: Customer) => {
     setSelectedCustomer(c);
     setCustomerSearch(c.name);
     setContactNo(c.mobile || '');
-    setCustomerAddress(c.billingAddress || '');
+    
+    let addrStr = '';
+    if (c.billingAddress) {
+      if (typeof c.billingAddress === 'string') {
+        addrStr = c.billingAddress;
+      } else {
+        const parts = [
+          (c.billingAddress as any).street,
+          (c.billingAddress as any).city,
+          (c.billingAddress as any).state,
+          (c.billingAddress as any).pinCode,
+          (c.billingAddress as any).country
+        ].filter(Boolean);
+        addrStr = parts.join(', ');
+      }
+    }
+    setCustomerAddress(addrStr);
+    
     setCustomerGstin(c.gstin || '');
     setShowCustomerDD(false);
   };
 
-  const pickProduct = (p: Product) => {
+  const pickProduct = async (p: Product) => {
+    const isWholesale = selectedCustomer?.priceCategory === 'Wholesale';
+    const primaryRate = isWholesale ? (p.sellingPrice2 || p.sellingPrice) : p.sellingPrice;
+    const defaultUnit = p.isDefaultSecondaryUnit && p.secondaryUnit ? p.secondaryUnit : p.unit;
+    const initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
+
     setItemInput(prev => ({
       ...prev,
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
-      rate: p.sellingPrice,
+      rate: initialRate,
       mrp: p.mrp || p.sellingPrice,
       gstRate: p.gstRate,
-      unit: p.unit
+      unit: defaultUnit,
+      primaryUnit: p.unit,
+      secondaryUnit: p.secondaryUnit,
+      primaryRate: primaryRate,
+      sellingPrice2: p.sellingPrice2,
+      sellingPrice3: p.sellingPrice3,
+      secSalePrice: p.secSalePrice,
+      conversionRate: p.conversionRate,
+      selectedBaseRate: primaryRate
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
+
+    if (selectedCustomer?._id) {
+      try {
+        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
+        if (data && data.lastPrice !== null) {
+          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.invoiceDate).toLocaleDateString() });
+        } else {
+          setLastPriceInfo(null);
+        }
+      } catch (e) {
+        setLastPriceInfo(null);
+      }
+    }
   };
 
   const calculateItem = (item: LineItem, invType = invoiceType, interState = isInterState) => {
@@ -172,12 +218,14 @@ export default function EditInvoicePage() {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
     const newItem = calculateItem(itemInput);
     setLineItems([...lineItems, newItem]);
+    // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
       quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 18, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
+    setLastPriceInfo(null);
   };
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
@@ -197,7 +245,7 @@ export default function EditInvoicePage() {
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
   const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge);
-  const balance = round2(grandTotal - amountReceived);
+  const balance = round2(grandTotal - totalAmountReceived);
 
   const handleUpdate = async (saveStatus: 'draft' | 'sent' | 'paid') => {
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
@@ -216,23 +264,25 @@ export default function EditInvoicePage() {
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
+        invoiceType,
         lineItems,
-        paymentMode,
-        amountReceived,
-        txnId,
-        paymentDate,
+        paymentMode: combinedPaymentMode,
+        amountReceived: totalAmountReceived,
+        txnId: combinedTxnId,
         shippingCharge,
+        subtotal,
+        shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
         soldBy,
         billTo,
-        status: saveStatus === 'paid' ? 'paid' : amountReceived > 0 ? 'partial' : saveStatus,
+        status: saveStatus === 'paid' ? 'paid' : totalAmountReceived > 0 ? 'partial' : saveStatus,
       };
-      await invoicesApi.update(id as string, payload);
-      toast.success(`Invoice Updated!`);
+      const { data } = await invoicesApi.update(id, payload);
+      toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);
       router.push('/dashboard/sales');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to update invoice');
+      toast.error(e.response?.data?.message || 'Failed to save invoice');
     } finally {
       setSaving(false);
     }
@@ -242,14 +292,14 @@ export default function EditInvoicePage() {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
-      <Topbar title="Edit Invoice" />
+      <Topbar title="New Invoice" />
 
-      <main className="flex-1 overflow-y-auto p-2 space-y-2 pb-20">
+      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
         {/* Section 1: Invoice Information */}
         <div className="erp-container">
-          <div className="erp-header">Edit Invoice Information</div>
-          <div className="p-2 grid grid-cols-6 gap-x-4 gap-y-2">
+          <div className="erp-header py-1 text-xs">Invoice Information</div>
+          <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label">Invoice Type</label>
               <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
@@ -285,9 +335,26 @@ export default function EditInvoicePage() {
             </div>
 
             <div className="col-span-2">
-              <label className="erp-label">Customer <span className="text-red-500">*</span></label>
+              <div className="flex justify-between items-center mb-1">
+                 <label className="erp-label !mb-0 flex items-center gap-1.5">
+                   Customer <span className="text-red-500">*</span>
+                   <button onClick={() => setShowQuickAddCustomerModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-0.5 rounded transition" title="Add Customer">
+                     <UserPlus className="w-3.5 h-3.5" />
+                   </button>
+                 </label>
+                 {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
+                   <div className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30' : selectedCustomer.openingBalance < 0 ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'}`}>
+                     A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
+                   </div>
+                 )}
+              </div>
               <div className="relative">
-                <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full" placeholder="Search customer..." />
+                <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
+                {selectedCustomer && (
+                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-900/40 text-purple-400' : 'bg-blue-900/40 text-blue-400'}`}>
+                      {selectedCustomer.priceCategory === 'Wholesale' ? 'Wholesaler' : 'Retailer'}
+                   </span>
+                )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredCustomers.map(c => (
@@ -311,28 +378,65 @@ export default function EditInvoicePage() {
               <label className="erp-label">Customer GSTIN</label>
               <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
             </div>
+            
+            <div className="col-span-6 border-t border-[#1A1A1A] mt-2 pt-2">
+              <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                <input type="checkbox" checked={useShippingAddress} onChange={e => setUseShippingAddress(e.target.checked)} className="accent-white" />
+                Custom Shipping Address
+              </label>
+              {useShippingAddress && (
+                <div className="mt-2">
+                  <label className="erp-label">Shipping Address</label>
+                  <textarea value={shippingAddress} onChange={e => setShippingAddress(e.target.value)} className="erp-input w-full resize-none h-12" placeholder="Enter complete shipping address..." />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Section 2: Particulars Input */}
         <div className="erp-container">
-          <div className="erp-header">Particulars</div>
-          <div className="p-2 space-y-2">
+          <div className="erp-header py-1 text-xs">Particulars</div>
+          <div className="p-1.5 space-y-1">
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
                 <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a0000]" />
               </div>
-              <div className="col-span-3">
-                <label className="erp-label">Item Name <span className="text-red-500">*</span></label>
+              <div className="col-span-3 flex flex-col justify-end">
+                <div className="flex justify-between items-end mb-1">
+                  <label className="erp-label !mb-0 flex items-center gap-1.5">
+                    Item Name <span className="text-red-500">*</span>
+                    <button onClick={() => setShowAdvancedSearch(true)} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-1 rounded transition" title="Advanced Search">
+                      <Search className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-white bg-[#1A1A1A] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  </label>
+                  {itemInput.productId && (
+                    <span className="text-[9px] text-[#94a3b8]">
+                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-white">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between">
-                          <span>{p.name}</span>
-                          <span className="text-[#475569]">₹{p.sellingPrice}</span>
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between items-center group">
+                          <div className="flex flex-col">
+                            <span className="text-white font-medium">{p.name}</span>
+                            <span className="text-[9px] text-[#94a3b8]">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                             {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
+                             <span className="text-[#475569] font-semibold text-xs">₹{p.sellingPrice}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -341,20 +445,65 @@ export default function EditInvoicePage() {
               </div>
               <div className="col-span-1">
                 <label className="erp-label">Unit <span className="text-red-500">*</span></label>
-                <select value={itemInput.unit} onChange={e => setItemInput({...itemInput, unit: e.target.value})} className="erp-input w-full">
-                  <option>Nos</option><option>Kgs</option><option>Pcs</option><option>Mtr</option><option>Box</option>
+                <select 
+                  value={itemInput.unit}
+                  onChange={e => {
+                    const newUnit = e.target.value;
+                    let newRate = itemInput.rate;
+                    if (newUnit === itemInput.secondaryUnit) {
+                       newRate = itemInput.conversionRate ? (itemInput.selectedBaseRate || 0) / itemInput.conversionRate : (itemInput.secSalePrice || itemInput.rate);
+                    } else if (newUnit === itemInput.primaryUnit) {
+                       newRate = itemInput.selectedBaseRate || itemInput.primaryRate || 0;
+                    }
+                    setItemInput({...itemInput, unit: newUnit, rate: newRate});
+                  }} 
+                  className="erp-input w-full"
+                >
+                  {itemInput.primaryUnit ? (
+                    <>
+                      <option value={itemInput.primaryUnit}>{itemInput.primaryUnit}</option>
+                      {itemInput.secondaryUnit && <option value={itemInput.secondaryUnit}>{itemInput.secondaryUnit}</option>}
+                    </>
+                  ) : (
+                    <><option>Nos</option><option>Kgs</option><option>Pcs</option><option>Mtr</option><option>Box</option></>
+                  )}
                 </select>
               </div>
               <div>
                 <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
                 <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
-              <div>
-                <label className="erp-label">Sale Price</label>
+              <div className="relative group">
+                <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
+                
+                {/* Price Options Dropdown on hover */}
+                {itemInput.productId && (
+                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#050505] border border-[#1A1A1A] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
+                     <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#1A1A1A] mb-1">Available Prices</div>
+                     
+                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-white' },
+                       { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-400' },
+                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-400' },
+                       { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-400' },
+                       ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-400', isLast: true }] : [])
+                     ].map((opt, i) => opt.price ? (
+                        <div key={i} onClick={() => {
+                           const basePrice = opt.price!;
+                           let newRate = basePrice;
+                           if (itemInput.unit === itemInput.secondaryUnit && itemInput.conversionRate) {
+                             newRate = basePrice / itemInput.conversionRate;
+                           }
+                           setItemInput({...itemInput, rate: newRate, selectedBaseRate: basePrice});
+                        }} className={`px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer flex justify-between gap-4 rounded ${opt.color} ${(opt as any).isLast ? 'border-t border-[#1A1A1A] mt-1 pt-2' : ''}`}>
+                          <span>{opt.label}</span> <span>₹{opt.price}</span>
+                        </div>
+                     ) : null)}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="erp-label">MRP</label>
@@ -400,7 +549,7 @@ export default function EditInvoicePage() {
         </div>
 
         {/* Section 3: Item Grid */}
-        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[300px]">
+        <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div className="grid grid-cols-12 erp-grid-header border-b border-[#1A1A1A]">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
@@ -473,31 +622,33 @@ export default function EditInvoicePage() {
               
               <div className="grid grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
-                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT MODE</div>
-                  <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 1</div>
+                  <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
-                    <input type="number" value={amountReceived === 0 ? '' : amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt" />
+                    <input type="number" value={amountReceived1 === 0 ? '' : amountReceived1} onChange={e => setAmountReceived1(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 1" />
                   </div>
                   <div className="flex gap-1">
-                    <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
-                    <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" />
+                    <input value={txnId1} onChange={e => setTxnId1(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
+                    <input type="date" value={paymentDate1} onChange={e => setPaymentDate1(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" />
                   </div>
                 </div>
                 
-                <div className="space-y-1 opacity-50 pointer-events-none">
-                  {/* Kept for visual balance, since edit page has only 1 payment logic for now */}
+                <div className="space-y-1">
                   <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 2 (Opt)</div>
-                  <select className="erp-input w-full text-xs p-1 h-7"><option>None</option></select>
+                  <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                    <option value="">None</option>
+                    {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                  </select>
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
-                    <input type="number" disabled className="erp-input w-full pl-3 text-xs p-1 h-7" />
+                    <input type="number" value={amountReceived2 === 0 ? '' : amountReceived2} onChange={e => setAmountReceived2(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 2" />
                   </div>
                   <div className="flex gap-1">
-                    <input disabled className="erp-input w-1/2 text-xs p-1 h-7" />
-                    <input type="date" disabled className="erp-input w-1/2 text-xs p-1 h-7" />
+                    <input value={txnId2} onChange={e => setTxnId2(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
+                    <input type="date" value={paymentDate2} onChange={e => setPaymentDate2(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" />
                   </div>
                 </div>
               </div>
@@ -563,13 +714,104 @@ export default function EditInvoicePage() {
                  </div>
                  <div className="flex justify-between text-[11px] font-bold text-[#94a3b8] mt-2 border-t border-[#1A1A1A] pt-2">
                     <span>Total Received</span>
-                    <span>₹{amountReceived.toFixed(2)}</span>
+                    <span>₹{totalAmountReceived.toFixed(2)}</span>
                  </div>
               </div>
            </div>
         </div>
 
       </main>
+
+      {/* Advanced Item Search Modal */}
+      {showAdvancedSearch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-3 border-b border-[#1A1A1A] bg-[#0A0A0A]">
+              <h3 className="text-white font-bold text-sm">Item Search</h3>
+              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#111111] text-[#94a3b8] hover:text-white transition"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-3 bg-[#0A0A0A] border-b border-[#1A1A1A] grid grid-cols-5 gap-3 items-end">
+               <div className="col-span-1">
+                 <label className="erp-label">Group</label>
+                 <select value={advGroup} onChange={e => setAdvGroup(e.target.value)} className="erp-input w-full"><option value="">All Groups</option>{uniqueGroups.map(g => <option key={g} value={g}>{g}</option>)}</select>
+               </div>
+               <div className="col-span-1">
+                 <label className="erp-label">Brand</label>
+                 <select value={advBrand} onChange={e => setAdvBrand(e.target.value)} className="erp-input w-full"><option value="">All Brands</option>{uniqueBrands.map(g => <option key={g} value={g}>{g}</option>)}</select>
+               </div>
+               <div className="col-span-1">
+                 <label className="erp-label">Location/Rack</label>
+                 <select value={advLocation} onChange={e => setAdvLocation(e.target.value)} className="erp-input w-full"><option value="">All Locations</option>{uniqueLocations.map(g => <option key={g} value={g}>{g}</option>)}</select>
+               </div>
+               <div className="col-span-2 relative">
+                 <label className="erp-label">Enter text to search</label>
+                 <div className="relative">
+                   <input value={advText} onChange={e => setAdvText(e.target.value)} className="erp-input w-full pr-10" placeholder="Search by name or code..." />
+                   <Search className="w-4 h-4 text-[#475569] absolute right-3 top-1/2 -translate-y-1/2" />
+                 </div>
+               </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 bg-[#050505]">
+              <div className="text-[10px] text-[#475569] uppercase font-bold mb-2 ml-1">Search Result(s) - {advFilteredProducts.length} items</div>
+              {advFilteredProducts.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center py-20 text-[#475569]">
+                   <Search className="w-10 h-10 mb-2 opacity-50" />
+                   <p className="text-xs">No items found.</p>
+                 </div>
+              ) : (
+                 <table className="w-full text-xs text-left">
+                   <thead className="bg-[#0A0A0A] text-[#94a3b8] sticky top-0">
+                     <tr>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Item Name</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Group</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Brand</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Location</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Stock</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Price</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {advFilteredProducts.map(p => (
+                       <tr key={p._id} onClick={() => { pickProduct(p); setShowAdvancedSearch(false); }} className="border-b border-[#1A1A1A]/50 hover:bg-[#111111] cursor-pointer transition">
+                         <td className="p-2 text-white font-medium">{p.name}</td>
+                         <td className="p-2 text-[#94a3b8]">{p.group || '—'}</td>
+                         <td className="p-2 text-[#94a3b8]">{p.brand || '—'}</td>
+                         <td className="p-2 text-[#94a3b8]">{p.location || '—'}</td>
+                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
+                         <td className="p-2 text-[#94a3b8]">₹{p.sellingPrice}</td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Add Item Modal */}
+      {showQuickAddModal && (
+        <QuickAddItemModal 
+          onClose={() => setShowQuickAddModal(false)}
+          onAdded={(newProduct) => {
+            setShowQuickAddModal(false);
+            setProducts([...products, newProduct]);
+            pickProduct(newProduct);
+          }}
+        />
+      )}
+
+      {/* Quick Add Customer Modal */}
+      {showQuickAddCustomerModal && (
+        <QuickAddCustomerModal 
+          onClose={() => setShowQuickAddCustomerModal(false)}
+          onAdded={(newCustomer) => {
+            setShowQuickAddCustomerModal(false);
+            setCustomers([...customers, newCustomer]);
+            pickCustomer(newCustomer);
+          }}
+        />
+      )}
 
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
@@ -588,8 +830,11 @@ export default function EditInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleUpdate('sent')} disabled={saving} className="bg-white text-black hover:bg-gray-200 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
-            <Save className="w-4 h-4" /> Update Invoice
+          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+            <Printer className="w-4 h-4" /> Save and Print
+          </button>
+          <button onClick={() => handleUpdate('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <Save className="w-4 h-4" /> Save
           </button>
         </div>
       </footer>
