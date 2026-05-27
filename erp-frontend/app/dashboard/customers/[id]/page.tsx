@@ -170,17 +170,28 @@ export default function EditCustomerPage() {
     </div>
   );
 
+  const [activeTab, setActiveTab] = useState('Profile');
+  const tabs = ['Profile', 'Accounts', 'Payment History', 'Invoices', 'Quotations', 'Cheque / Cash Alerts'];
+
   return (
     <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
       <Topbar title="Edit Customer" />
       <div className="flex px-4 pt-2 border-b border-[#1A1A1A] bg-[#050505]">
-         <div className="px-4 py-2 text-xs font-semibold bg-[#111111] border border-b-0 border-[#1A1A1A] rounded-t text-white">Profile</div>
+         {tabs.map(tab => (
+           <button 
+             key={tab} 
+             onClick={() => setActiveTab(tab)}
+             className={`px-4 py-2 text-xs font-semibold border ${activeTab === tab ? 'bg-[#111111] border-[#1A1A1A] border-b-0 rounded-t text-white' : 'border-transparent text-[#475569] hover:text-[#94a3b8]'}`}
+           >
+             {tab}
+           </button>
+         ))}
       </div>
       
       <main className="flex-1 overflow-y-auto p-4 bg-[#050505]">
-         <div className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto">
-            {/* Left Panel - Photo */}
-            <div className="w-full md:w-64 shrink-0">
+         <div className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto h-full">
+            {/* Left Panel - Photo & Actions */}
+            <div className="w-full md:w-72 shrink-0 flex flex-col gap-4">
                <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-6 shadow-sm">
                  <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Profile Pic</legend>
                  
@@ -232,11 +243,47 @@ export default function EditCustomerPage() {
                  {photo && !showCamera && <p className="text-center text-[10px] text-green-400 mt-2">✓ Photo set</p>}
                  <p className="text-center text-[9px] text-[#475569] mt-1">Upload or take a photo (max 2MB)</p>
                </fieldset>
+
+               {/* Account Information */}
+               <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
+                 <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Account Information</legend>
+                 <div className="space-y-3 text-xs">
+                   <div className="flex justify-between">
+                     <span className="text-[#94a3b8]">Customer ID</span>
+                     <span className="font-semibold text-white">{id?.slice(-6).toUpperCase() || 'NEW'}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-[#94a3b8]">Account Balance</span>
+                     <span className={`font-bold ${form.openingBalance > 0 ? 'text-green-500' : 'text-white'}`}>₹{form.openingBalance.toFixed(2)}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span className="text-[#94a3b8]">Account Status</span>
+                     <span className="font-bold text-green-500 uppercase tracking-wider">ACTIVE</span>
+                   </div>
+                 </div>
+               </fieldset>
+
+               {/* Account Actions */}
+               <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm flex-1">
+                 <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Account Actions</legend>
+                 <div className="grid grid-cols-2 gap-2 mb-4">
+                   <button className="py-2 text-xs border border-[#1A1A1A] rounded text-[#94a3b8] hover:text-white hover:bg-[#111111] transition bg-[#0A0A0A]">New Invoice</button>
+                   <button className="py-2 text-xs border border-[#1A1A1A] rounded text-[#94a3b8] hover:text-white hover:bg-[#111111] transition bg-[#0A0A0A]">New Quotation</button>
+                   <button className="py-2 text-xs border border-[#1A1A1A] rounded text-[#94a3b8] hover:text-white hover:bg-[#111111] transition bg-[#0A0A0A]">Send SMS</button>
+                   <button className="py-2 text-xs border border-[#1A1A1A] rounded text-[#94a3b8] hover:text-white hover:bg-[#111111] transition bg-[#0A0A0A]">Send Email</button>
+                 </div>
+                 <button className="w-full py-2 text-xs border border-[#1A1A1A] rounded text-orange-400 hover:text-orange-300 hover:bg-[#111111] transition mb-3 bg-[#0A0A0A]">Disable A/c</button>
+                 <button className="w-full py-2 text-xs font-semibold rounded text-white bg-red-600 hover:bg-red-700 transition flex items-center justify-center gap-2">
+                   <X className="w-4 h-4" /> Delete Account
+                 </button>
+               </fieldset>
             </div>
             
             {/* Right Panel */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4">
-               {/* Column 1 */}
+            <div className="flex-1 bg-black rounded border border-[#1A1A1A] p-4 shadow-sm min-h-0 overflow-y-auto">
+               {activeTab === 'Profile' ? (
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                   {/* Column 1 */}
                <div className="space-y-4">
                  <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
                    <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Customer Details</legend>
@@ -358,7 +405,12 @@ export default function EditCustomerPage() {
                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
                    </button>
                  </div>
-               </div>
+               ) : (
+                 <div className="flex h-full items-center justify-center flex-col text-[#475569] gap-4">
+                   <div className="text-4xl">🚧</div>
+                   <p className="text-sm font-semibold">{activeTab} details coming soon...</p>
+                 </div>
+               )}
             </div>
          </div>
       </main>

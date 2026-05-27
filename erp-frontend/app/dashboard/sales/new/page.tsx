@@ -11,11 +11,12 @@ import {
 import toast from 'react-hot-toast';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; location?: string; currentStock?: number; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
+  primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; secSalePrice?: number; conversionRate?: number;
 }
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
@@ -118,17 +119,24 @@ export default function NewInvoicePage() {
 
   const pickProduct = async (p: Product) => {
     const isWholesale = selectedCustomer?.priceCategory === 'Wholesale';
-    const rate = isWholesale ? (p.sellingPrice2 || p.sellingPrice) : p.sellingPrice;
+    const primaryRate = isWholesale ? (p.sellingPrice2 || p.sellingPrice) : p.sellingPrice;
+    const defaultUnit = p.isDefaultSecondaryUnit && p.secondaryUnit ? p.secondaryUnit : p.unit;
+    const initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
 
     setItemInput(prev => ({
       ...prev,
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
-      rate: rate,
+      rate: initialRate,
       mrp: p.mrp || p.sellingPrice,
       gstRate: p.gstRate,
-      unit: p.unit
+      unit: defaultUnit,
+      primaryUnit: p.unit,
+      secondaryUnit: p.secondaryUnit,
+      primaryRate: primaryRate,
+      secSalePrice: p.secSalePrice,
+      conversionRate: p.conversionRate
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
@@ -353,8 +361,30 @@ export default function NewInvoicePage() {
               </div>
               <div className="col-span-1">
                 <label className="erp-label">Unit <span className="text-red-500">*</span></label>
-                <select value={itemInput.unit} onChange={e => setItemInput({...itemInput, unit: e.target.value})} className="erp-input w-full">
-                  <option>Nos</option><option>Kgs</option><option>Pcs</option><option>Mtr</option><option>Box</option>
+                <select 
+                  value={itemInput.unit} 
+                  onChange={e => {
+                    const newUnit = e.target.value;
+                    let newRate = itemInput.rate;
+                    if (newUnit === itemInput.secondaryUnit && itemInput.secSalePrice) {
+                      newRate = itemInput.secSalePrice;
+                    } else if (newUnit === itemInput.primaryUnit && itemInput.primaryRate) {
+                      newRate = itemInput.primaryRate;
+                    } else if (newUnit === itemInput.secondaryUnit && itemInput.conversionRate) {
+                      newRate = (itemInput.primaryRate || 0) / itemInput.conversionRate;
+                    }
+                    setItemInput({...itemInput, unit: newUnit, rate: newRate});
+                  }} 
+                  className="erp-input w-full"
+                >
+                  {itemInput.primaryUnit ? (
+                    <>
+                      <option value={itemInput.primaryUnit}>{itemInput.primaryUnit}</option>
+                      {itemInput.secondaryUnit && <option value={itemInput.secondaryUnit}>{itemInput.secondaryUnit}</option>}
+                    </>
+                  ) : (
+                    <><option>Nos</option><option>Kgs</option><option>Pcs</option><option>Mtr</option><option>Box</option></>
+                  )}
                 </select>
               </div>
               <div>
