@@ -241,10 +241,17 @@ export default function NewInvoicePage() {
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
   const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
-  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
-  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
-  const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge);
+  const shippingCGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
+  const shippingSGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
+  const shippingIGST = (invoiceType === 'GST' && isInterState) ? round2(shippingCharge * 0.18) : 0;
+
+  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shippingCGST;
+  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shippingSGST;
+  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shippingIGST;
+  
+  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge;
+  const grandTotal = Math.round(preRoundTotal);
+  const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
 
   const handleUpdate = async (saveStatus: 'draft' | 'sent' | 'paid') => {
@@ -270,7 +277,8 @@ export default function NewInvoicePage() {
         amountReceived: totalAmountReceived,
         txnId: combinedTxnId,
         shippingCharge,
-        subtotal,
+          roundOff,
+          subtotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
@@ -708,6 +716,12 @@ export default function NewInvoicePage() {
               </div>
 
               <div className="mt-4 pt-3 border-t-2 border-[#262626] space-y-1 bg-[#0A0A0A] -mx-2 -mb-2 p-3 rounded-b-lg">
+                 {roundOff !== 0 && (
+                   <div className="flex justify-between text-xs font-medium text-[#94a3b8] mb-1">
+                     <span>Round Off</span>
+                     <span>{roundOff > 0 ? '+' : ''}{roundOff.toFixed(2)}</span>
+                   </div>
+                 )}
                  <div className="flex justify-between items-end">
                     <span className="text-sm font-bold text-yellow-400">GRAND TOTAL</span>
                     <span className="text-3xl font-black text-emerald-400 tracking-tight">₹{grandTotal.toFixed(2)}</span>
@@ -830,7 +844,7 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleUpdate('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
           <button onClick={() => handleUpdate('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
