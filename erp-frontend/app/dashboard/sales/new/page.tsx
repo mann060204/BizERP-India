@@ -11,12 +11,13 @@ import {
 import toast from 'react-hot-toast';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
   primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
+  selectedBaseRate?: number;
 }
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
@@ -58,6 +59,13 @@ export default function NewInvoicePage() {
   const [showItemDD, setShowItemDD] = useState(false);
   const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
 
+  // Advanced Search Modal State
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [advGroup, setAdvGroup] = useState('');
+  const [advBrand, setAdvBrand] = useState('');
+  const [advLocation, setAdvLocation] = useState('');
+  const [advText, setAdvText] = useState('');
+
   // Main List
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
@@ -90,6 +98,18 @@ export default function NewInvoicePage() {
 
   const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+
+  const uniqueGroups = Array.from(new Set(products.map(p => p.group).filter(Boolean))) as string[];
+  const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))) as string[];
+  const uniqueLocations = Array.from(new Set(products.map(p => p.location).filter(Boolean))) as string[];
+
+  const advFilteredProducts = products.filter(p => {
+    if (advGroup && p.group !== advGroup) return false;
+    if (advBrand && p.brand !== advBrand) return false;
+    if (advLocation && p.location !== advLocation) return false;
+    if (advText && !p.name.toLowerCase().includes(advText.toLowerCase()) && !p.hsnCode?.includes(advText)) return false;
+    return true;
+  });
 
   const pickCustomer = (c: Customer) => {
     setSelectedCustomer(c);
@@ -138,7 +158,8 @@ export default function NewInvoicePage() {
       sellingPrice2: p.sellingPrice2,
       sellingPrice3: p.sellingPrice3,
       secSalePrice: p.secSalePrice,
-      conversionRate: p.conversionRate
+      conversionRate: p.conversionRate,
+      selectedBaseRate: primaryRate
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
@@ -340,7 +361,12 @@ export default function NewInvoicePage() {
               </div>
               <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
-                  <label className="erp-label !mb-0">Item Name <span className="text-red-500">*</span></label>
+                  <label className="erp-label !mb-0 flex items-center gap-1.5">
+                    Item Name <span className="text-red-500">*</span>
+                    <button onClick={() => setShowAdvancedSearch(true)} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-0.5 rounded transition" title="Advanced Search">
+                      <Search className="w-3 h-3" />
+                    </button>
+                  </label>
                   {itemInput.productId && (
                     <span className="text-[9px] text-[#94a3b8]">
                       Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-white">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
@@ -370,16 +396,14 @@ export default function NewInvoicePage() {
               <div className="col-span-1">
                 <label className="erp-label">Unit <span className="text-red-500">*</span></label>
                 <select 
-                  value={itemInput.unit} 
+                  value={itemInput.unit}
                   onChange={e => {
                     const newUnit = e.target.value;
                     let newRate = itemInput.rate;
-                    if (newUnit === itemInput.secondaryUnit && itemInput.secSalePrice) {
-                      newRate = itemInput.secSalePrice;
-                    } else if (newUnit === itemInput.primaryUnit && itemInput.primaryRate) {
-                      newRate = itemInput.primaryRate;
-                    } else if (newUnit === itemInput.secondaryUnit && itemInput.conversionRate) {
-                      newRate = (itemInput.primaryRate || 0) / itemInput.conversionRate;
+                    if (newUnit === itemInput.secondaryUnit) {
+                       newRate = itemInput.conversionRate ? (itemInput.selectedBaseRate || 0) / itemInput.conversionRate : (itemInput.secSalePrice || itemInput.rate);
+                    } else if (newUnit === itemInput.primaryUnit) {
+                       newRate = itemInput.selectedBaseRate || itemInput.primaryRate || 0;
                     }
                     setItemInput({...itemInput, unit: newUnit, rate: newRate});
                   }} 
@@ -410,13 +434,24 @@ export default function NewInvoicePage() {
                 {itemInput.productId && (
                   <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#050505] border border-[#1A1A1A] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
                      <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#1A1A1A] mb-1">Available Prices</div>
-                     {itemInput.primaryRate && <div onClick={() => setItemInput({...itemInput, rate: itemInput.primaryRate!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-white flex justify-between gap-4 rounded"><span>Retail</span> <span>₹{itemInput.primaryRate}</span></div>}
-                     {itemInput.sellingPrice2 && <div onClick={() => setItemInput({...itemInput, rate: itemInput.sellingPrice2!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-purple-400 flex justify-between gap-4 rounded"><span>Wholesale</span> <span>₹{itemInput.sellingPrice2}</span></div>}
-                     {itemInput.sellingPrice3 && <div onClick={() => setItemInput({...itemInput, rate: itemInput.sellingPrice3!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-blue-400 flex justify-between gap-4 rounded"><span>Price 3</span> <span>₹{itemInput.sellingPrice3}</span></div>}
-                     {itemInput.mrp && <div onClick={() => setItemInput({...itemInput, rate: itemInput.mrp!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-orange-400 flex justify-between gap-4 rounded"><span>M.R.P.</span> <span>₹{itemInput.mrp}</span></div>}
-                     {lastPriceInfo && <div onClick={() => setItemInput({...itemInput, rate: lastPriceInfo.price})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-emerald-400 flex justify-between gap-4 rounded border-t border-[#1A1A1A] mt-1 pt-2">
-                       <span>Last Sold ({lastPriceInfo.date})</span> <span>₹{lastPriceInfo.price}</span>
-                     </div>}
+                     
+                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-white' },
+                       { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-400' },
+                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-400' },
+                       { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-400' },
+                       ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-400', isLast: true }] : [])
+                     ].map((opt, i) => opt.price ? (
+                        <div key={i} onClick={() => {
+                           const basePrice = opt.price!;
+                           let newRate = basePrice;
+                           if (itemInput.unit === itemInput.secondaryUnit && itemInput.conversionRate) {
+                             newRate = basePrice / itemInput.conversionRate;
+                           }
+                           setItemInput({...itemInput, rate: newRate, selectedBaseRate: basePrice});
+                        }} className={`px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer flex justify-between gap-4 rounded ${opt.color} ${(opt as any).isLast ? 'border-t border-[#1A1A1A] mt-1 pt-2' : ''}`}>
+                          <span>{opt.label}</span> <span>₹{opt.price}</span>
+                        </div>
+                     ) : null)}
                   </div>
                 )}
               </div>
@@ -565,6 +600,71 @@ export default function NewInvoicePage() {
         </div>
 
       </main>
+
+      {/* Advanced Item Search Modal */}
+      {showAdvancedSearch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-3 border-b border-[#1A1A1A] bg-[#0A0A0A]">
+              <h3 className="text-white font-bold text-sm">Item Search</h3>
+              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#111111] text-[#94a3b8] hover:text-white transition"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-3 bg-[#0A0A0A] border-b border-[#1A1A1A] grid grid-cols-5 gap-3 items-end">
+               <div className="col-span-1">
+                 <label className="erp-label">Group</label>
+                 <select value={advGroup} onChange={e => setAdvGroup(e.target.value)} className="erp-input w-full"><option value="">All Groups</option>{uniqueGroups.map(g => <option key={g} value={g}>{g}</option>)}</select>
+               </div>
+               <div className="col-span-1">
+                 <label className="erp-label">Brand</label>
+                 <select value={advBrand} onChange={e => setAdvBrand(e.target.value)} className="erp-input w-full"><option value="">All Brands</option>{uniqueBrands.map(g => <option key={g} value={g}>{g}</option>)}</select>
+               </div>
+               <div className="col-span-1">
+                 <label className="erp-label">Location/Rack</label>
+                 <select value={advLocation} onChange={e => setAdvLocation(e.target.value)} className="erp-input w-full"><option value="">All Locations</option>{uniqueLocations.map(g => <option key={g} value={g}>{g}</option>)}</select>
+               </div>
+               <div className="col-span-2 relative">
+                 <label className="erp-label">Enter text to search</label>
+                 <div className="relative">
+                   <input value={advText} onChange={e => setAdvText(e.target.value)} className="erp-input w-full pr-10" placeholder="Search by name or code..." />
+                   <Search className="w-4 h-4 text-[#475569] absolute right-3 top-1/2 -translate-y-1/2" />
+                 </div>
+               </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 bg-[#050505]">
+              <div className="text-[10px] text-[#475569] uppercase font-bold mb-2 ml-1">Search Result(s) - {advFilteredProducts.length} items</div>
+              {advFilteredProducts.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center py-20 text-[#475569]">
+                   <Search className="w-10 h-10 mb-2 opacity-50" />
+                   <p className="text-xs">No items found.</p>
+                 </div>
+              ) : (
+                 <table className="w-full text-xs text-left">
+                   <thead className="bg-[#0A0A0A] text-[#94a3b8] sticky top-0">
+                     <tr>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Item Name</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Group</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Brand</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Stock</th>
+                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Price</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {advFilteredProducts.map(p => (
+                       <tr key={p._id} onClick={() => { pickProduct(p); setShowAdvancedSearch(false); }} className="border-b border-[#1A1A1A]/50 hover:bg-[#111111] cursor-pointer transition">
+                         <td className="p-2 text-white font-medium">{p.name}</td>
+                         <td className="p-2 text-[#94a3b8]">{p.group || '—'}</td>
+                         <td className="p-2 text-[#94a3b8]">{p.brand || '—'}</td>
+                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
+                         <td className="p-2 text-[#94a3b8]">₹{p.sellingPrice}</td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
