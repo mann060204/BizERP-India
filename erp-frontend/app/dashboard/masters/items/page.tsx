@@ -11,7 +11,7 @@ interface Product {
   type: string; sku?: string; hsnCode?: string; unit: string; secondaryUnit?: string;
   sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number;
   purchasePrice: number; minSalePrice?: number; mrp?: number; conversionRate?: number;
-  gstRate: number; cessRate?: number; igstRate?: number; saleDiscount?: number;
+  gstRate: number; cessRate?: number; igstRate?: number; saleDiscount?: number; saleDiscountType?: 'percentage' | 'amount';
   currentStock: number; reorderLevel: number; openingStock: number; openingStockValue?: number;
   lowLevelLimit?: number; location?: string; batchNo?: string; description?: string;
   productType?: string; category?: string;
@@ -27,7 +27,7 @@ const emptyForm = {
   category: '', unit: 'Nos', secondaryUnit: '', conversionRate: 1,
   purchasePrice: 0, sellingPrice: 0, sellingPrice2: 0, sellingPrice3: 0, minSalePrice: 0, mrp: 0,
   openingStock: 0, openingStockValue: 0, reorderLevel: 5, lowLevelLimit: 0,
-  gstRate: 18, cessRate: 0, igstRate: 0, saleDiscount: 0,
+  gstRate: 18, cessRate: 0, igstRate: 0, saleDiscount: 0, saleDiscountType: 'percentage',
   location: '', batchNo: '', description: '', productType: 'General',
   printDescription: false, printBatchNo: false, oneClickSale: false,
   enableTracking: false, printExpiryDate: false, notForSale: false,
@@ -73,6 +73,7 @@ export default function MastersPage() {
   const [loading, setLoading] = useState(true);
   
   const [showModal, setShowModal] = useState(false);
+  const [showUnitModal, setShowUnitModal] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
@@ -130,7 +131,8 @@ export default function MastersPage() {
       openingStock: p.openingStock || 0, openingStockValue: p.openingStockValue || 0,
       reorderLevel: p.reorderLevel || 5, lowLevelLimit: p.lowLevelLimit || 0,
       gstRate: p.gstRate || 18, cessRate: p.cessRate || 0, igstRate: p.igstRate || 0,
-      saleDiscount: p.saleDiscount || 0, location: p.location || '', batchNo: p.batchNo || '',
+      saleDiscount: p.saleDiscount || 0, saleDiscountType: p.saleDiscountType || 'percentage',
+      location: p.location || '', batchNo: p.batchNo || '',
       description: p.description || '', productType: p.productType || 'General',
       printDescription: p.printDescription || false, printBatchNo: p.printBatchNo || false,
       oneClickSale: p.oneClickSale || false, enableTracking: p.enableTracking || false,
@@ -259,142 +261,178 @@ export default function MastersPage() {
         )}
       </main>
 
-      {/* New Modern Dark Modal - Tabbed */}
+      {/* New Modern Dark Modal - Expanded Two-Column Layout */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black backdrop-blur-sm">
-          <div className="bg-[#050505] border border-[#1A1A1A] rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col h-[600px]">
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#050505] border border-[#1A1A1A] rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
             
-            <div className="flex items-center justify-between p-6 border-b border-[#1A1A1A] shrink-0">
+            <div className="flex items-center justify-between p-5 border-b border-[#1A1A1A] shrink-0">
               <div>
-                <h3 className="text-white font-bold text-xl">{editing ? 'Edit Item' : 'Add New Item'}</h3>
-                <p className="text-sm text-[#94a3b8] mt-1">Fill in the product details below</p>
+                <h3 className="text-white font-bold text-lg">{editing ? 'Edit Item' : 'Add New Item'}</h3>
+                <p className="text-xs text-[#94a3b8] mt-0.5">Fill in the product details below</p>
               </div>
               <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-[#111111] text-[#94a3b8] hover:text-white transition"><X className="w-5 h-5" /></button>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-              <div className="flex-1 p-6 overflow-y-auto space-y-8 bg-[#0A0A0A]">
-                
-                {/* Basic Details */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-[#94a3b8]" /> Basic Details
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Product Name" keyName="name" required form={form} setForm={setForm} />
-                    <Input label="Print Name (Optional)" keyName="printName" form={form} setForm={setForm} />
-                    {(() => {
-                      const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
-                      const currentCat = productCategories.find(c => c.name === form.group);
-                      const availableBrands = currentCat ? currentCat.brands : (productCategories.length > 0 && form.group ? [] : productBrands);
-                      return (
-                        <>
-                          <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
-                             if (newForm.group !== form.group) newForm.brand = '';
-                             setForm(newForm);
-                          }} />
-                          <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} setForm={setForm} />
-                        </>
-                      );
-                    })()}
-                    <Input label="Item Code / SKU" keyName="sku" form={form} setForm={setForm} />
-                    <Select label="Type" keyName="type" options={['product', 'service']} form={form} setForm={setForm} />
-                  </div>
-                </div>
+              <div className="flex-1 p-5 overflow-y-auto bg-[#0A0A0A]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* Left Column */}
+                  <div className="space-y-6">
+                    {/* Product Details Section */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Product Details</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        {(() => {
+                          const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
+                          const currentCat = productCategories.find(c => c.name === form.group);
+                          const availableBrands = currentCat ? currentCat.brands : (productCategories.length > 0 && form.group ? [] : productBrands);
+                          return (
+                            <>
+                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
+                                 if (newForm.group !== form.group) newForm.brand = '';
+                                 setForm(newForm);
+                              }} />
+                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} setForm={setForm} />
+                            </>
+                          );
+                        })()}
+                        <Input label="Item Code / SKU" keyName="sku" form={form} setForm={setForm} />
+                        <Input label="Product Name" keyName="name" required form={form} setForm={setForm} />
+                        <div className="col-span-2">
+                          <Input label="Print Name (Optional)" keyName="printName" form={form} setForm={setForm} />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Price Details Section */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Price Details</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" form={form} setForm={setForm} />
+                        <Input label="Sale Price (Retail) (₹)" type="number" keyName="sellingPrice" required form={form} setForm={setForm} />
+                        <Input label="Min. Sale Price (₹)" type="number" keyName="minSalePrice" form={form} setForm={setForm} />
+                        <Input label="M.R.P. (₹)" type="number" keyName="mrp" form={form} setForm={setForm} />
+                      </div>
+                    </div>
 
-                {/* Pricing */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-[#94a3b8]" /> Pricing
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" form={form} setForm={setForm} />
-                    <Input label="MRP (₹)" type="number" keyName="mrp" form={form} setForm={setForm} />
-                    <Input label="Sale Price 1 (Retail) (₹)" type="number" keyName="sellingPrice" required form={form} setForm={setForm} />
-                    <Input label="Sale Price 2 (Wholesale) (₹)" type="number" keyName="sellingPrice2" form={form} setForm={setForm} />
-                    <Input label="Sale Price 3 (₹)" type="number" keyName="sellingPrice3" form={form} setForm={setForm} />
-                    <Input label="Min Sale Price (₹)" type="number" keyName="minSalePrice" form={form} setForm={setForm} />
-                    <div className="col-span-2">
-                      <Input label="Sale Discount (%)" type="number" keyName="saleDiscount" form={form} setForm={setForm} />
+                    {/* Stock and Unit Details */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Stock and Unit Details</h4>
+                      <div className="grid grid-cols-2 gap-4 items-end">
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Select label="Unit" keyName="unit" options={UNITS} required form={form} setForm={setForm} />
+                          </div>
+                          <button onClick={() => setShowUnitModal(true)} className="px-3 py-2 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 text-xs font-semibold whitespace-nowrap transition mt-5">
+                            Secondary Unit
+                          </button>
+                        </div>
+                        <div className="flex items-center h-9 text-xs text-[#94a3b8]">
+                          {form.secondaryUnit && form.secondaryUnit !== form.unit && `1 ${form.unit} = ${form.conversionRate} ${form.secondaryUnit}`}
+                        </div>
+                        {form.type === 'product' && (
+                          <>
+                            <Input label="Opening Stock" type="number" keyName="openingStock" form={form} setForm={setForm} />
+                            <Input label="Opening Stock Value (₹)" type="number" keyName="openingStockValue" form={form} setForm={setForm} />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-6">
+                    {/* GST Details */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">GST Details</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input label="HSN / SAC Code" keyName="hsnCode" form={form} setForm={setForm} />
+                        <Select label="GST Rate (%)" keyName="gstRate" options={GST_RATES} form={form} setForm={setForm} />
+                      </div>
+                    </div>
+
+                    {/* Other Details */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Other Details</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">Sale Discount</label>
+                          <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A]">
+                            <input type="number" value={form.saleDiscount === 0 ? '' : form.saleDiscount} onChange={e => setForm({ ...form, saleDiscount: parseFloat(e.target.value) || 0 })} placeholder="0" className="w-full px-3 py-2 bg-[#0A0A0A] text-white focus:outline-none text-sm" />
+                            <select value={form.saleDiscountType} onChange={e => setForm({ ...form, saleDiscountType: e.target.value })} className="bg-[#1A1A1A] text-white px-2 py-2 text-sm focus:outline-none cursor-pointer border-l border-[#1A1A1A]">
+                              <option value="percentage">%</option>
+                              <option value="amount">₹</option>
+                            </select>
+                          </div>
+                        </div>
+                        <Input label="Low Level Limit" type="number" keyName="lowLevelLimit" form={form} setForm={setForm} />
+                        <Select label="Product Type" keyName="productType" options={['General', 'Raw Material', 'Finished Good', 'Consumable']} form={form} setForm={setForm} />
+                        <Input label="Location/Rack" keyName="location" form={form} setForm={setForm} />
+                        <div className="col-span-2">
+                          <Input label="Batch No." keyName="batchNo" form={form} setForm={setForm} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Product Description */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Product Description</h4>
+                      <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3}
+                        className="w-full px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
+                    </div>
+
+                    {/* Product Settings */}
+                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
+                      <h4 className="text-sm font-semibold text-white mb-4 border-b border-[#262626] pb-2">Product Settings</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Checkbox label="Print Description" keyName="printDescription" form={form} setForm={setForm} />
+                        <Checkbox label="One Click Sale" keyName="oneClickSale" form={form} setForm={setForm} />
+                        <Checkbox label="Enable Tracking" keyName="enableTracking" form={form} setForm={setForm} />
+                        <Checkbox label="Print Batch No" keyName="printBatchNo" form={form} setForm={setForm} />
+                        <Checkbox label="Print Expiry Date" keyName="printExpiryDate" form={form} setForm={setForm} />
+                        <Checkbox label="Not For Sale" keyName="notForSale" danger form={form} setForm={setForm} />
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Stock & Units */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2 flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-[#94a3b8]" /> Stock & Units
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Select label="Primary Unit" keyName="unit" options={UNITS} required form={form} setForm={setForm} />
-                    <Select label="Secondary Unit" keyName="secondaryUnit" options={['', ...UNITS]} form={form} setForm={setForm} />
-                    
-                    {form.secondaryUnit && form.secondaryUnit !== form.unit && (
-                      <div className="col-span-2 p-3 bg-[#111111] border border-[#1e3a8a]/30 rounded-lg flex items-center justify-between">
-                        <span className="text-sm text-[#94a3b8]">1 {form.unit} equals to:</span>
-                        <div className="flex items-center gap-2">
-                          <input type="number" value={form.conversionRate || 1} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 1})} 
-                            className="w-20 px-2 py-1.5 rounded-md bg-black border border-[#1A1A1A] text-white text-center text-sm focus:border-[#D4D4D4] outline-none" />
-                          <span className="text-sm text-white font-medium">{form.secondaryUnit}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {form.type === 'product' && (
-                      <>
-                        <Input label="Opening Stock" type="number" keyName="openingStock" form={form} setForm={setForm} />
-                        <Input label="Opening Stock Value (₹)" type="number" keyName="openingStockValue" form={form} setForm={setForm} />
-                        <Input label="Reorder Level" type="number" keyName="reorderLevel" form={form} setForm={setForm} />
-                        <Input label="Low Level Limit" type="number" keyName="lowLevelLimit" form={form} setForm={setForm} />
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Tax & Location */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#94a3b8]" /> Tax & Location
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="HSN / SAC Code" keyName="hsnCode" form={form} setForm={setForm} />
-                    <Select label="Total GST Rate (%)" keyName="gstRate" options={GST_RATES} form={form} setForm={setForm} />
-                    <Input label="CESS Rate (%)" type="number" keyName="cessRate" form={form} setForm={setForm} />
-                    <Input label="IGST Rate (%)" type="number" keyName="igstRate" form={form} setForm={setForm} />
-                    <Input label="Location / Rack" keyName="location" form={form} setForm={setForm} />
-                    <Input label="Batch No." keyName="batchNo" form={form} setForm={setForm} />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">Description</label>
-                    <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3}
-                      className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
-                  </div>
-                </div>
-
-                {/* Item Settings */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-white mb-2 border-b border-[#1A1A1A] pb-2 flex items-center gap-2">
-                    <Settings className="w-4 h-4 text-[#94a3b8]" /> Item Settings
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#111111] border border-[#1A1A1A] rounded-xl p-5">
-                    <Checkbox label="Print Description on Invoice" keyName="printDescription" form={form} setForm={setForm} />
-                    <Checkbox label="One Click Sale (POS)" keyName="oneClickSale" form={form} setForm={setForm} />
-                    <Checkbox label="Enable Batch/Serial Tracking" keyName="enableTracking" form={form} setForm={setForm} />
-                    <Checkbox label="Print Batch No on Invoice" keyName="printBatchNo" form={form} setForm={setForm} />
-                    <Checkbox label="Print Expiry Date on Invoice" keyName="printExpiryDate" form={form} setForm={setForm} />
-                    <Checkbox label="Not For Sale" keyName="notForSale" danger form={form} setForm={setForm} />
-                  </div>
-                </div>
-
               </div>
             </div>
 
-            <div className="flex gap-3 p-6 border-t border-[#1A1A1A] bg-[#0A0A0A] shrink-0 rounded-b-2xl">
-              <button onClick={() => setShowModal(false)} className="px-6 py-2.5 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] font-medium text-sm transition">
+            <div className="flex justify-end gap-3 p-5 border-t border-[#1A1A1A] bg-[#0A0A0A] shrink-0 rounded-b-2xl">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
-              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-white/10">
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Save Changes' : 'Create Item'}
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-500 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update Item' : 'Create Item'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unit Settings Modal */}
+      {showUnitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-sm shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-[#1A1A1A]">
+              <h3 className="text-white font-bold text-sm">Unit Settings</h3>
+              <button onClick={() => setShowUnitModal(false)} className="text-[#94a3b8] hover:text-white"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="p-5 space-y-5 bg-[#0A0A0A]">
+              <div className="grid grid-cols-2 gap-3">
+                <Select label="Base Unit" keyName="unit" options={UNITS} form={form} setForm={setForm} />
+                <Select label="Secondary Unit" keyName="secondaryUnit" options={['', ...UNITS]} form={form} setForm={setForm} />
+              </div>
+              <Input label="Inventory Conversion Factor" type="number" keyName="conversionRate" form={form} setForm={setForm} />
+              <div className="text-center text-xs text-blue-400 font-medium bg-blue-500/10 py-1.5 rounded-lg border border-blue-500/20">
+                1 {form.unit} = {form.conversionRate || 1} {form.secondaryUnit || '?'}
+              </div>
+            </div>
+            <div className="p-4 border-t border-[#1A1A1A] flex justify-end">
+              <button onClick={() => setShowUnitModal(false)} className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold">
+                Set Units
               </button>
             </div>
           </div>

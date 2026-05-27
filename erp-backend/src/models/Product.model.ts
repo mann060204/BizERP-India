@@ -29,6 +29,7 @@ export interface IProduct extends Document {
   cessRate?: number;
   igstRate?: number;
   saleDiscount?: number;
+  saleDiscountType?: 'percentage' | 'amount';
   barcode?: string;
   location?: string;
   batchNo?: string;
@@ -75,6 +76,7 @@ const ProductSchema = new Schema<IProduct>(
     cessRate: { type: Number, default: 0 },
     igstRate: { type: Number, default: 0 },
     saleDiscount: { type: Number, default: 0 },
+    saleDiscountType: { type: String, enum: ['percentage', 'amount'], default: 'percentage' },
     barcode: { type: String, trim: true },
     location: { type: String, trim: true },
     batchNo: { type: String, trim: true },
