@@ -6,11 +6,11 @@ import { customersApi, productsApi, invoicesApi } from '../../../../lib/erp-api'
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
-  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon
+  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
@@ -205,6 +205,11 @@ export default function NewInvoicePage() {
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
 
+  const editItem = (idx: number) => {
+    setItemInput(lineItems[idx]);
+    setLineItems(lineItems.filter((_, i) => i !== idx));
+  };
+
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
@@ -303,7 +308,14 @@ export default function NewInvoicePage() {
             </div>
 
             <div className="col-span-2">
-              <label className="erp-label">Customer <span className="text-red-500">*</span></label>
+              <div className="flex justify-between items-center mb-1">
+                 <label className="erp-label !mb-0">Customer <span className="text-red-500">*</span></label>
+                 {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
+                   <div className="bg-yellow-500/20 text-yellow-500 text-[10px] px-2 py-0.5 rounded font-bold border border-yellow-500/30">
+                     A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
+                   </div>
+                 )}
+              </div>
               <div className="relative">
                 <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
                 {selectedCustomer && (
@@ -363,8 +375,14 @@ export default function NewInvoicePage() {
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
-                    <button onClick={() => setShowAdvancedSearch(true)} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-0.5 rounded transition" title="Advanced Search">
-                      <Search className="w-3 h-3" />
+                    <button onClick={() => setShowAdvancedSearch(true)} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-1 rounded transition" title="Advanced Search">
+                      <Search className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => window.open('/dashboard/masters/items?action=new', '_blank')} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-white bg-[#1A1A1A] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
+                      <RotateCcw className="w-4 h-4" />
                     </button>
                   </label>
                   {itemInput.productId && (
@@ -530,9 +548,14 @@ export default function NewInvoicePage() {
                     <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>
                     <div className="col-span-2 erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
-                      <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                        <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-blue-500/10 rounded">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
