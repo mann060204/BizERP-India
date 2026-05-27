@@ -507,7 +507,7 @@ export default function NewPurchasePage() {
              <Barcode className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('printed')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
             <button onClick={() => handleSave('received')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">

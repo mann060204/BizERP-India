@@ -80,16 +80,18 @@ export default function NewInvoicePage() {
   const [paymentMode1, setPaymentMode1] = useState('Cash');
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');
+  const [paymentDate1, setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
 
   const [paymentMode2, setPaymentMode2] = useState('');
   const [amountReceived2, setAmountReceived2] = useState(0);
   const [txnId2, setTxnId2] = useState('');
+  const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
 
   const [shippingCharge, setShippingCharge] = useState(0);
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
-  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} | ${txnId2}` : (txnId1 || txnId2);
+  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} (Date: ${paymentDate1}) | ${txnId2} (Date: ${paymentDate2})` : (txnId1 ? `${txnId1} (Date: ${paymentDate1})` : (txnId2 ? `${txnId2} (Date: ${paymentDate2})` : ''));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -263,7 +265,7 @@ export default function NewInvoicePage() {
         deliveryTerms,
         soldBy,
         billTo,
-        status: saveStatus === 'paid' ? 'paid' : amountReceived > 0 ? 'partial' : saveStatus,
+        status: saveStatus === 'paid' ? 'paid' : totalAmountReceived > 0 ? 'partial' : saveStatus,
       };
       const { data } = await invoicesApi.create(payload);
       toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);
@@ -621,7 +623,10 @@ export default function NewInvoicePage() {
                     <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                     <input type="number" value={amountReceived1 || ''} onChange={e => setAmountReceived1(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 1" />
                   </div>
-                  <input value={txnId1} onChange={e => setTxnId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID 1" />
+                  <div className="flex gap-1">
+                    <input value={txnId1} onChange={e => setTxnId1(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
+                    <input type="date" value={paymentDate1} onChange={e => setPaymentDate1(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" />
+                  </div>
                 </div>
                 
                 <div className="space-y-1">
@@ -634,7 +639,10 @@ export default function NewInvoicePage() {
                     <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                     <input type="number" value={amountReceived2 || ''} onChange={e => setAmountReceived2(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 2" />
                   </div>
-                  <input value={txnId2} onChange={e => setTxnId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID 2" />
+                  <div className="flex gap-1">
+                    <input value={txnId2} onChange={e => setTxnId2(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
+                    <input type="date" value={paymentDate2} onChange={e => setPaymentDate2(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" />
+                  </div>
                 </div>
               </div>
 

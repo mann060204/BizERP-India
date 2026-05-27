@@ -259,7 +259,7 @@ export default function EditCustomerPage() {
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between">
                   <span className="text-[#94a3b8]">Customer ID</span>
-                  <span className="font-semibold text-white">{id?.slice(-6).toUpperCase() || 'NEW'}</span>
+                  <span className="font-semibold text-white">{(typeof id === 'string' ? id : id?.[0])?.slice(-6).toUpperCase() || 'NEW'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#94a3b8]">Account Balance</span>
