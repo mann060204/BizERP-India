@@ -65,6 +65,8 @@ export default function EditInvoicePage() {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountReceived, setAmountReceived] = useState(0);
   const [txnId, setTxnId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [shippingCharge, setShippingCharge] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -103,6 +105,8 @@ export default function EditInvoicePage() {
         setPaymentMode(inv.paymentMode);
         setAmountReceived(inv.amountReceived);
         setTxnId(inv.txnId || '');
+        if (inv.paymentDate) setPaymentDate(new Date(inv.paymentDate).toISOString().split('T')[0]);
+        setShippingCharge(inv.shippingCharge || 0);
         setRemarks(inv.notes || '');
         setDeliveryTerms(inv.deliveryTerms || '');
         setSoldBy(inv.soldBy || '');
@@ -186,11 +190,13 @@ export default function EditInvoicePage() {
 
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
+  const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
+  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
-  const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST);
+  const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge);
   const balance = round2(grandTotal - amountReceived);
 
   const handleUpdate = async (saveStatus: 'draft' | 'sent' | 'paid') => {
@@ -214,6 +220,8 @@ export default function EditInvoicePage() {
         paymentMode,
         amountReceived,
         txnId,
+        paymentDate,
+        shippingCharge,
         notes: remarks,
         deliveryTerms,
         soldBy,
@@ -475,7 +483,7 @@ export default function EditInvoicePage() {
                   </div>
                   <div className="flex gap-1">
                     <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
-                    <input type="date" className="erp-input w-1/2 text-xs p-1 h-7" />
+                    <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" />
                   </div>
                 </div>
                 
@@ -513,6 +521,12 @@ export default function EditInvoicePage() {
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
+                {totalDiscount > 0 && (
+                  <div className="flex justify-between text-red-400">
+                    <span>Discount</span>
+                    <span>-₹{totalDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 
                 {invoiceType === 'GST' && (
                   <>
@@ -535,6 +549,11 @@ export default function EditInvoicePage() {
                     )}
                   </>
                 )}
+
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-[#1A1A1A]">
+                  <span className="erp-label">Shipping</span>
+                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right h-7" />
+                </div>
               </div>
 
               <div className="mt-4 pt-3 border-t-2 border-[#262626] space-y-1 bg-[#0A0A0A] -mx-2 -mb-2 p-3 rounded-b-lg">
