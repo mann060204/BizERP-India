@@ -144,16 +144,25 @@ export default function EditInvoicePage() {
     setShowItemDD(false);
   };
 
-  const calculateItem = (item: LineItem) => {
+  const calculateItem = (item: LineItem, invType = invoiceType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
     const discountAmt = (gross * item.discount) / 100;
     const taxableAmount = round2(gross - discountAmt);
-    const cgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
-    const sgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
-    const igst = isInterState ? round2((taxableAmount * item.gstRate) / 100) : 0;
-    const cessAmt = round2((taxableAmount * item.cess) / 100);
+    const cgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
+    const sgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
+    const igst = (invType === 'GST' && interState) ? round2((taxableAmount * item.gstRate) / 100) : 0;
+    const cessAmt = invType === 'GST' ? round2((taxableAmount * item.cess) / 100) : 0;
     return { ...item, taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
   };
+
+  useEffect(() => {
+    setLineItems(prev => prev.map(item => calculateItem(item, invoiceType, isInterState)));
+    setInvoiceNumber(prev => {
+      if (invoiceType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
+      if (invoiceType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
+      return prev;
+    });
+  }, [invoiceType, isInterState]);
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
@@ -168,6 +177,12 @@ export default function EditInvoicePage() {
   };
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
+
+  const editItem = (idx: number) => {
+    setItemInput(lineItems[idx]);
+    setItemSearch(lineItems[idx].productName);
+    setLineItems(lineItems.filter((_, i) => i !== idx));
+  };
 
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
@@ -324,29 +339,29 @@ export default function EditInvoicePage() {
               </div>
               <div>
                 <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
-                <input type="number" value={itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div>
                 <label className="erp-label">Sale Price</label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
-                   <input type="number" value={itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
               </div>
               <div>
                 <label className="erp-label">MRP</label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
-                   <input type="number" value={itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                   <input type="number" value={itemInput.mrp === 0 ? '' : itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
               </div>
               <div>
                 <label className="erp-label">Disc. (%)</label>
-                <input type="number" value={itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div>
                 <label className="erp-label">Tax (%)</label>
-                <input type="number" value={itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
             </div>
             
@@ -363,7 +378,7 @@ export default function EditInvoicePage() {
                </div>
                <div>
                  <label className="erp-label">Cess (%)</label>
-                 <input type="number" value={itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                 <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
                </div>
                <div className="col-span-2">
                   <label className="erp-label">Amount</label>
@@ -396,9 +411,12 @@ export default function EditInvoicePage() {
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 erp-grid-row group">
                     <div className="col-span-1 erp-grid-cell text-[#475569]">{idx + 1}</div>
-                    <div className="col-span-3 erp-grid-cell font-medium">
-                      {item.productName}
-                      {item.tag && <span className="ml-2 text-[9px] bg-[#1A1A1A] px-1 rounded text-[#94a3b8]">{item.tag}</span>}
+                    <div className="col-span-3 erp-grid-cell font-medium flex flex-col justify-center">
+                      <div>
+                        {item.productName}
+                        {item.tag && <span className="ml-2 text-[9px] bg-[#1A1A1A] px-1 rounded text-[#94a3b8]">{item.tag}</span>}
+                      </div>
+                      {item.description && <div className="text-[10px] text-[#475569] font-normal leading-tight mt-0.5">{item.description}</div>}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
@@ -408,9 +426,14 @@ export default function EditInvoicePage() {
                     <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>
                     <div className="col-span-2 erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
-                      <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                        <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-blue-500/10 rounded">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -420,6 +443,8 @@ export default function EditInvoicePage() {
 
         {/* Section 4: Footer */}
         <div className="grid grid-cols-4 gap-2">
+           
+           {/* Column 1: Summary */}
            <div className="erp-footer-box flex flex-col justify-between">
               <div>
                 <label className="erp-label block mb-1">Total Quantity</label>
@@ -434,38 +459,93 @@ export default function EditInvoicePage() {
               </div>
            </div>
 
-           <div className="erp-footer-box">
-              <label className="erp-label block mb-1">Delivery Terms</label>
-              <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-20 resize-none" />
-           </div>
-
-           <div className="erp-footer-box">
-              <label className="erp-label block mb-1">Remarks (Private Use)</label>
-              <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-20 resize-none" />
-           </div>
-
-           <div className="erp-footer-box space-y-2">
+           {/* Column 2 & 3: Payment Details & Remarks */}
+           <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
               <div className="bg-[#111111] p-1 text-[10px] font-bold text-center border border-[#1A1A1A]">PAYMENT DETAILS</div>
-              <div className="flex justify-between items-center">
-                <span className="erp-label">Mode</span>
-                <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-2/3">
-                  {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
-                </select>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="erp-label">Txn ID</span>
-                <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-2/3" />
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="erp-label">Amount Received</span>
-                <div className="relative w-2/3">
-                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
-                   <input type="number" value={amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold text-emerald-400" />
+              
+              <div className="grid grid-cols-2 gap-4 flex-1">
+                <div className="space-y-1">
+                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT MODE</div>
+                  <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                    {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                  <div className="relative">
+                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                    <input type="number" value={amountReceived === 0 ? '' : amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt" />
+                  </div>
+                  <div className="flex gap-1">
+                    <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-1/2 text-xs p-1 h-7" placeholder="Txn ID" />
+                    <input type="date" className="erp-input w-1/2 text-xs p-1 h-7" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1 opacity-50 pointer-events-none">
+                  {/* Kept for visual balance, since edit page has only 1 payment logic for now */}
+                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 2 (Opt)</div>
+                  <select className="erp-input w-full text-xs p-1 h-7"><option>None</option></select>
+                  <div className="relative">
+                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                    <input type="number" disabled className="erp-input w-full pl-3 text-xs p-1 h-7" />
+                  </div>
+                  <div className="flex gap-1">
+                    <input disabled className="erp-input w-1/2 text-xs p-1 h-7" />
+                    <input type="date" disabled className="erp-input w-1/2 text-xs p-1 h-7" />
+                  </div>
                 </div>
               </div>
-              <div className="pt-2 border-t border-[#1A1A1A] flex justify-between font-bold">
-                <span className="text-xs">GRAND TOTAL</span>
-                <span className="text-emerald-400">₹{grandTotal.toFixed(2)}</span>
+
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                 <div>
+                    <label className="erp-label block mb-1">Delivery Terms</label>
+                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                 </div>
+                 <div>
+                    <label className="erp-label block mb-1">Remarks (Private)</label>
+                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                 </div>
+              </div>
+           </div>
+
+           {/* Column 4: Totals & Grand Total */}
+           <div className="erp-footer-box flex flex-col justify-between">
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between text-[#94a3b8]">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
+                </div>
+                
+                {invoiceType === 'GST' && (
+                  <>
+                    {!isInterState ? (
+                      <>
+                        <div className="flex justify-between text-[#94a3b8]">
+                          <span>CGST</span>
+                          <span>₹{totalCGST.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-[#94a3b8]">
+                          <span>SGST</span>
+                          <span>₹{totalSGST.toFixed(2)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between text-[#94a3b8]">
+                        <span>IGST</span>
+                        <span>₹{totalIGST.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="mt-4 pt-3 border-t-2 border-[#262626] space-y-1 bg-[#0A0A0A] -mx-2 -mb-2 p-3 rounded-b-lg">
+                 <div className="flex justify-between items-end">
+                    <span className="text-sm font-bold text-yellow-400">GRAND TOTAL</span>
+                    <span className="text-3xl font-black text-emerald-400 tracking-tight">₹{grandTotal.toFixed(2)}</span>
+                 </div>
+                 <div className="flex justify-between text-[11px] font-bold text-[#94a3b8] mt-2 border-t border-[#1A1A1A] pt-2">
+                    <span>Total Received</span>
+                    <span>₹{amountReceived.toFixed(2)}</span>
+                 </div>
               </div>
            </div>
         </div>
