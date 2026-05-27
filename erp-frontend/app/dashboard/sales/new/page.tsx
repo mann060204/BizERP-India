@@ -6,9 +6,11 @@ import { customersApi, productsApi, invoicesApi } from '../../../../lib/erp-api'
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
-  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil
+  Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil, UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
+import QuickAddCustomerModal from '../../../../components/modals/QuickAddCustomerModal';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
@@ -61,6 +63,8 @@ export default function NewInvoicePage() {
 
   // Advanced Search Modal State
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [showQuickAddCustomerModal, setShowQuickAddCustomerModal] = useState(false);
   const [advGroup, setAdvGroup] = useState('');
   const [advBrand, setAdvBrand] = useState('');
   const [advLocation, setAdvLocation] = useState('');
@@ -73,10 +77,19 @@ export default function NewInvoicePage() {
   const [soldBy, setSoldBy] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [paymentMode, setPaymentMode] = useState('Cash');
-  const [amountReceived, setAmountReceived] = useState(0);
+  const [paymentMode1, setPaymentMode1] = useState('Cash');
+  const [amountReceived1, setAmountReceived1] = useState(0);
+  const [txnId1, setTxnId1] = useState('');
+
+  const [paymentMode2, setPaymentMode2] = useState('');
+  const [amountReceived2, setAmountReceived2] = useState(0);
+  const [txnId2, setTxnId2] = useState('');
+
   const [shippingCharge, setShippingCharge] = useState(0);
-  const [txnId, setTxnId] = useState('');
+  
+  const totalAmountReceived = amountReceived1 + amountReceived2;
+  const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
+  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} | ${txnId2}` : (txnId1 || txnId2);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -219,7 +232,7 @@ export default function NewInvoicePage() {
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
   const grandTotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge);
-  const balance = round2(grandTotal - amountReceived);
+  const balance = round2(grandTotal - totalAmountReceived);
 
   const handleSave = async (saveStatus: 'draft' | 'sent' | 'paid') => {
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
@@ -240,10 +253,11 @@ export default function NewInvoicePage() {
         isInterState,
         invoiceType,
         lineItems,
-        paymentMode,
-        amountReceived,
+        paymentMode: combinedPaymentMode,
+        amountReceived: totalAmountReceived,
+        txnId: combinedTxnId,
         shippingCharge,
-        txnId,
+        subtotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
@@ -309,9 +323,14 @@ export default function NewInvoicePage() {
 
             <div className="col-span-2">
               <div className="flex justify-between items-center mb-1">
-                 <label className="erp-label !mb-0">Customer <span className="text-red-500">*</span></label>
+                 <label className="erp-label !mb-0 flex items-center gap-1.5">
+                   Customer <span className="text-red-500">*</span>
+                   <button onClick={() => setShowQuickAddCustomerModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-0.5 rounded transition" title="Add Customer">
+                     <UserPlus className="w-3.5 h-3.5" />
+                   </button>
+                 </label>
                  {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
-                   <div className="bg-yellow-500/20 text-yellow-500 text-[10px] px-2 py-0.5 rounded font-bold border border-yellow-500/30">
+                   <div className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30' : selectedCustomer.openingBalance < 0 ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'}`}>
                      A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
                    </div>
                  )}
@@ -378,7 +397,7 @@ export default function NewInvoicePage() {
                     <button onClick={() => setShowAdvancedSearch(true)} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-1 rounded transition" title="Advanced Search">
                       <Search className="w-4 h-4" />
                     </button>
-                    <button onClick={() => window.open('/dashboard/masters/items?action=new', '_blank')} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
+                    <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
                       <Plus className="w-4 h-4" />
                     </button>
                     <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-white bg-[#1A1A1A] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
@@ -591,16 +610,34 @@ export default function NewInvoicePage() {
 
            <div className="erp-footer-box space-y-2">
               <div className="bg-[#111111] p-1 text-[10px] font-bold text-center border border-[#1A1A1A]">PAYMENT DETAILS</div>
-              <div className="flex justify-between items-center">
-                <span className="erp-label">Mode</span>
-                <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-2/3">
-                  {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
-                </select>
+              
+              <div className="grid grid-cols-2 gap-2 border-b border-[#1A1A1A] pb-2">
+                <div className="space-y-1">
+                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 1</div>
+                  <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                    {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                  <div className="relative">
+                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                    <input type="number" value={amountReceived1 || ''} onChange={e => setAmountReceived1(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 1" />
+                  </div>
+                  <input value={txnId1} onChange={e => setTxnId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID 1" />
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 2 (Opt)</div>
+                  <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                    <option value="">None</option>
+                    {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                  <div className="relative">
+                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                    <input type="number" value={amountReceived2 || ''} onChange={e => setAmountReceived2(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 2" />
+                  </div>
+                  <input value={txnId2} onChange={e => setTxnId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID 2" />
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="erp-label">Txn ID</span>
-                <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-2/3" />
-              </div>
+
               <div className="flex justify-between items-center">
                 <span className="erp-label">Shipping</span>
                 <div className="relative w-2/3">
@@ -609,10 +646,10 @@ export default function NewInvoicePage() {
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="erp-label">Amount</span>
+                <span className="erp-label">Total Rcvd</span>
                 <div className="relative w-2/3">
                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
-                   <input type="number" value={amountReceived} onChange={e => setAmountReceived(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 font-bold text-emerald-400" />
+                   <div className="erp-input w-full pl-3 font-bold text-emerald-400 bg-[#001a00] border-emerald-900/50">{totalAmountReceived.toFixed(2)}</div>
                 </div>
               </div>
               <div className="pt-2 border-t border-[#1A1A1A] flex justify-between font-bold">
@@ -687,6 +724,30 @@ export default function NewInvoicePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quick Add Item Modal */}
+      {showQuickAddModal && (
+        <QuickAddItemModal 
+          onClose={() => setShowQuickAddModal(false)}
+          onAdded={(newProduct) => {
+            setShowQuickAddModal(false);
+            setProducts([...products, newProduct]);
+            pickProduct(newProduct);
+          }}
+        />
+      )}
+
+      {/* Quick Add Customer Modal */}
+      {showQuickAddCustomerModal && (
+        <QuickAddCustomerModal 
+          onClose={() => setShowQuickAddCustomerModal(false)}
+          onAdded={(newCustomer) => {
+            setShowQuickAddCustomerModal(false);
+            setCustomers([...customers, newCustomer]);
+            pickCustomer(newCustomer);
+          }}
+        />
       )}
 
       {/* Bottom Toolbar */}
