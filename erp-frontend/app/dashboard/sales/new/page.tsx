@@ -11,12 +11,12 @@ import {
 import toast from 'react-hot-toast';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
-  primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; secSalePrice?: number; conversionRate?: number;
+  primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
 }
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
@@ -135,6 +135,8 @@ export default function NewInvoicePage() {
       primaryUnit: p.unit,
       secondaryUnit: p.secondaryUnit,
       primaryRate: primaryRate,
+      sellingPrice2: p.sellingPrice2,
+      sellingPrice3: p.sellingPrice3,
       secSalePrice: p.secSalePrice,
       conversionRate: p.conversionRate
     }));
@@ -350,9 +352,15 @@ export default function NewInvoicePage() {
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between">
-                          <span>{p.name}</span>
-                          <span className="text-[#475569]">₹{p.sellingPrice}</span>
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between items-center group">
+                          <div className="flex flex-col">
+                            <span className="text-white font-medium">{p.name}</span>
+                            <span className="text-[9px] text-[#94a3b8]">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                             {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
+                             <span className="text-[#475569] font-semibold text-xs">₹{p.sellingPrice}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -391,15 +399,24 @@ export default function NewInvoicePage() {
                 <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
                 <input type="number" value={itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
-              <div className="relative">
-                <label className="erp-label">Sale Price</label>
+              <div className="relative group">
+                <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
                    <input type="number" value={itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
-                {lastPriceInfo && (
-                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-black px-1 rounded shadow cursor-pointer hover:bg-[#111111] whitespace-nowrap" onClick={() => setItemInput({...itemInput, rate: lastPriceInfo.price})}>
-                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                
+                {/* Price Options Dropdown on hover */}
+                {itemInput.productId && (
+                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#050505] border border-[#1A1A1A] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
+                     <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#1A1A1A] mb-1">Available Prices</div>
+                     {itemInput.primaryRate && <div onClick={() => setItemInput({...itemInput, rate: itemInput.primaryRate!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-white flex justify-between gap-4 rounded"><span>Retail</span> <span>₹{itemInput.primaryRate}</span></div>}
+                     {itemInput.sellingPrice2 && <div onClick={() => setItemInput({...itemInput, rate: itemInput.sellingPrice2!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-purple-400 flex justify-between gap-4 rounded"><span>Wholesale</span> <span>₹{itemInput.sellingPrice2}</span></div>}
+                     {itemInput.sellingPrice3 && <div onClick={() => setItemInput({...itemInput, rate: itemInput.sellingPrice3!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-blue-400 flex justify-between gap-4 rounded"><span>Price 3</span> <span>₹{itemInput.sellingPrice3}</span></div>}
+                     {itemInput.mrp && <div onClick={() => setItemInput({...itemInput, rate: itemInput.mrp!})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-orange-400 flex justify-between gap-4 rounded"><span>M.R.P.</span> <span>₹{itemInput.mrp}</span></div>}
+                     {lastPriceInfo && <div onClick={() => setItemInput({...itemInput, rate: lastPriceInfo.price})} className="px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer text-emerald-400 flex justify-between gap-4 rounded border-t border-[#1A1A1A] mt-1 pt-2">
+                       <span>Last Sold ({lastPriceInfo.date})</span> <span>₹{lastPriceInfo.price}</span>
+                     </div>}
                   </div>
                 )}
               </div>
