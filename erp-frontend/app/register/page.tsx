@@ -99,14 +99,14 @@ export default function RegisterPage() {
     label: string; name: string; type?: string; placeholder?: string; required?: boolean;
   }) => (
     <div>
-      <label className="block text-sm font-medium text-[#64748B] mb-2">
+      <label className="block text-sm font-medium text-slate-600 mb-2">
         {label}{required && <span className="text-red-400 ml-1">*</span>}
       </label>
       <input
         {...register(name as any)}
         type={type}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition text-sm"
+        className="w-full px-4 py-3 rounded-xl bg-[#F1F5F9] border border-slate-200 text-slate-900 placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition text-sm"
       />
       {(errors as any)[name] && (
         <p className="mt-1 text-xs text-red-400">{(errors as any)[name]?.message}</p>
@@ -115,14 +115,14 @@ export default function RegisterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8 justify-center">
           <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-[#0F172A]" />
+            <BarChart3 className="w-5 h-5 text-slate-900" />
           </div>
-          <span className="text-[#0F172A] font-bold text-lg">BizERP India</span>
+          <span className="text-slate-900 font-bold text-lg">BizERP India</span>
         </div>
 
         {/* Stepper */}
@@ -131,10 +131,10 @@ export default function RegisterPage() {
             <div key={s} className="flex items-center">
               <div className="flex flex-col items-center gap-1">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300
-                  ${i < step ? 'bg-white text-black hover:bg-gray-200' : i === step ? 'border-2 border-[#D4D4D4] text-[#334155]' : 'border-2 border-[#E2E8F0] text-[#475569]'}`}>
+                  ${i < step ? 'bg-blue-600 text-white hover:bg-blue-700' : i === step ? 'border-2 border-[#D4D4D4] text-slate-700' : 'border-2 border-slate-200 text-slate-600'}`}>
                   {i < step ? <CheckCircle2 className="w-5 h-5" /> : i + 1}
                 </div>
-                <span className={`text-xs font-medium hidden sm:block ${i === step ? 'text-[#334155]' : i < step ? 'text-[#0F172A]' : 'text-[#475569]'}`}>
+                <span className={`text-xs font-medium hidden sm:block ${i === step ? 'text-slate-700' : i < step ? 'text-slate-900' : 'text-slate-600'}`}>
                   {s}
                 </span>
               </div>
@@ -147,7 +147,7 @@ export default function RegisterPage() {
 
         {/* Card */}
         <div className="glass rounded-2xl p-8 shadow-2xl">
-          <h2 className="text-xl font-bold text-[#0F172A] mb-6">{STEPS[step]}</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-6">{STEPS[step]}</h2>
 
           <form onSubmit={handleSubmit(onNext)} className="space-y-4">
             {/* Step 1 — Business Info */}
@@ -156,9 +156,9 @@ export default function RegisterPage() {
                 <Field label="Business Name" name="businessName" placeholder="e.g. Sharma Enterprises" required />
                 <Field label="Owner Name" name="ownerName" placeholder="e.g. Rajesh Sharma" required />
                 <div>
-                  <label className="block text-sm font-medium text-[#64748B] mb-2">Business Type <span className="text-red-400">*</span></label>
+                  <label className="block text-sm font-medium text-slate-600 mb-2">Business Type <span className="text-red-400">*</span></label>
                   <select {...register('businessType')}
-                    className="w-full px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] transition text-sm">
+                    className="w-full px-4 py-3 rounded-xl bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] transition text-sm">
                     {['Retail', 'Wholesale', 'Service', 'Medical', 'Manufacturing', 'Other'].map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
@@ -172,9 +172,9 @@ export default function RegisterPage() {
               <>
                 <Field label="GSTIN (optional)" name="gstin" placeholder="22AAAAA0000A1Z5" />
                 <Field label="PAN Number (optional)" name="pan" placeholder="ABCDE1234F" />
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0]">
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-[#F1F5F9] border border-slate-200">
                   <input type="checkbox" {...register('isCompositionScheme')} id="comp" className="w-4 h-4 accent-[#D4D4D4]" />
-                  <label htmlFor="comp" className="text-sm text-[#64748B] cursor-pointer">
+                  <label htmlFor="comp" className="text-sm text-slate-600 cursor-pointer">
                     Registered under GST Composition Scheme
                   </label>
                 </div>
@@ -189,9 +189,9 @@ export default function RegisterPage() {
                 <Field label="Password" name="password" type="password" placeholder="Min 6 characters" required />
                 <Field label="City" name="city" placeholder="Mumbai" />
                 <div>
-                  <label className="block text-sm font-medium text-[#64748B] mb-2">State <span className="text-red-400">*</span></label>
+                  <label className="block text-sm font-medium text-slate-600 mb-2">State <span className="text-red-400">*</span></label>
                   <select {...register('state')}
-                    className="w-full px-4 py-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] transition text-sm">
+                    className="w-full px-4 py-3 rounded-xl bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] transition text-sm">
                     <option value="">— Select State —</option>
                     {STATES.map(st => <option key={st} value={st}>{st}</option>)}
                   </select>
@@ -207,12 +207,12 @@ export default function RegisterPage() {
             <div className="flex gap-3 pt-2">
               {step > 0 && (
                 <button type="button" onClick={() => { setStep(step - 1); reset(); }}
-                  className="flex-1 py-3 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:border-[#D4D4D4] hover:text-[#0F172A] font-medium flex items-center justify-center gap-2 transition">
+                  className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 hover:border-[#D4D4D4] hover:text-slate-900 font-medium flex items-center justify-center gap-2 transition">
                   <ChevronLeft className="w-4 h-4" /> Back
                 </button>
               )}
               <button type="submit" disabled={loading}
-                className="flex-1 py-3 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60 transition shadow-lg shadow-white/10/30">
+                className="flex-1 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60 transition shadow-lg shadow-white/10/30">
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {step < STEPS.length - 1
                   ? (<>Next <ChevronRight className="w-4 h-4" /></>)
@@ -222,9 +222,9 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        <p className="text-center text-[#64748B] mt-6 text-sm">
+        <p className="text-center text-slate-600 mt-6 text-sm">
           Already have an account?{' '}
-          <Link href="/login" className="text-[#334155] hover:text-[#60A5FA] font-medium transition">
+          <Link href="/login" className="text-slate-700 hover:text-[#60A5FA] font-medium transition">
             Sign in →
           </Link>
         </p>

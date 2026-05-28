@@ -196,19 +196,19 @@ export default function NewPurchasePage() {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-[#F8FAFC]"><Loader2 className="w-10 h-10 animate-spin text-[#0F172A]" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 animate-spin text-slate-900" /></div>;
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
       <Topbar title="Unsaved Purchase Bill" />
 
       {/* Tabs */}
-      <div className="flex px-4 pt-2 border-b border-[#E2E8F0] bg-[#F1F5F9]">
-         <div className="px-4 py-2 text-xs font-semibold bg-[#F1F5F9] border border-b-0 border-[#E2E8F0] rounded-t text-[#0F172A]">Purchase Bill</div>
-         <div className="px-4 py-2 text-xs font-semibold text-[#64748B] hover:text-[#0F172A] cursor-pointer">Batch Numbers</div>
+      <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9]">
+         <div className="px-4 py-2 text-xs font-semibold bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900">Purchase Bill</div>
+         <div className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Batch Numbers</div>
       </div>
 
-      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 bg-[#F8FAFC]">
+      <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 bg-slate-50">
         
         {/* Section 1: Purchase bill information */}
         <div className="erp-container">
@@ -232,9 +232,9 @@ export default function NewPurchasePage() {
               <div className="relative">
                 <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); }} onFocus={() => setShowSupplierDD(true)} className="erp-input w-full" placeholder="Select or type..." />
                 {showSupplierDD && filteredSuppliers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-[#E2E8F0] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                  <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredSuppliers.map(s => (
-                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#E2E8F0]">
+                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
                         {s.name}
                       </div>
                     ))}
@@ -301,11 +301,11 @@ export default function NewPurchasePage() {
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Select item..." />
                   {showItemDD && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-[#E2E8F0] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#E2E8F0] flex justify-between">
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between">
                           <span>{p.name}</span>
-                          <span className="text-[#475569]">₹{p.purchasePrice}</span>
+                          <span className="text-slate-600">₹{p.purchasePrice}</span>
                         </div>
                       ))}
                     </div>
@@ -325,7 +325,7 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function NewPurchasePage() {
                 <label className="erp-label block mb-1">Disc. (%)</label>
                 <div className="flex">
                   <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
-                  <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#E2E8F0] border-l-0 flex items-center">%</span>
+                  <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-l-0 flex items-center">%</span>
                 </div>
               </div>
               <div>
@@ -347,12 +347,12 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
-                   <div className="erp-input w-full rounded-none bg-[#0a0a0a] flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
+                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
               <div className="flex items-center justify-center pb-[2px]">
-                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-[#0F172A] p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
+                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
                    <Plus className="w-5 h-5" />
                  </button>
               </div>
@@ -376,35 +376,35 @@ export default function NewPurchasePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="grid grid-cols-11 bg-[#F1F5F9] text-[#64748B] text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-[#E2E8F0]">
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">S. No.</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Item Name</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Quantity</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Unit</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Price/Unit</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Disc (%)</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Tax (%)</div>
-             <div className="border-r border-[#E2E8F0] px-2 py-1.5 text-center">Cess (%)</div>
+           <div className="grid grid-cols-11 bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200">
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Disc (%)</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
              <div className="col-span-3 px-2 py-1.5 text-center">Amount</div>
            </div>
            
-           <div className="flex-1 overflow-y-auto bg-[#1a1a1a]">
+           <div className="flex-1 overflow-y-auto bg-[#E2E8F0]">
               {lineItems.length === 0 ? (
-                <div className="p-10 text-center text-[#475569] italic text-sm"></div>
+                <div className="p-10 text-center text-slate-600 italic text-sm"></div>
               ) : (
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-11 erp-grid-row group text-[11px]">
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center text-[#475569]">{idx + 1}</div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 font-medium">
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 font-medium">
                       {item.productName}
-                      {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-[#64748B]">{item.tag}</span>}
+                      {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
                     </div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">{item.quantity}</div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">{item.discount || ''}</div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">{item.gstRate}</div>
-                    <div className="border-r border-[#1a1a1a] px-2 py-1.5 text-center">{item.cess || ''}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.quantity}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.unit}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
                     <div className="col-span-3 px-2 py-1.5 text-right font-medium flex justify-between items-center group-hover:bg-[#1a1a1a]">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
@@ -422,60 +422,60 @@ export default function NewPurchasePage() {
            <div className="col-span-1 space-y-2">
               <label className="flex items-center gap-2 text-xs cursor-pointer">
                 <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-white" />
-                <span className="text-[#d4d4d4]">Add'l Discount</span>
+                <span className="text-slate-700">Add'l Discount</span>
               </label>
               {showAdditionalDiscount && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
 
               <label className="flex items-center gap-2 text-xs cursor-pointer pt-2">
                 <input type="checkbox" checked={showShipping} onChange={e => setShowShipping(e.target.checked)} className="accent-white" />
-                <span className="text-[#d4d4d4]">Add Shipping</span>
+                <span className="text-slate-700">Add Shipping</span>
               </label>
               {showShipping && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
            </div>
 
            <div className="col-span-1">
-              <div className="erp-container border-[#E2E8F0]">
+              <div className="erp-container border-slate-200">
                 <div className="erp-header bg-transparent border-none py-1">Remarks (Private Use)</div>
-                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-12 resize-none border-none border-t border-[#E2E8F0]" />
+                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-12 resize-none border-none border-t border-slate-200" />
               </div>
            </div>
 
            <div className="col-span-1">
-              <div className="erp-container border-[#E2E8F0]">
+              <div className="erp-container border-slate-200">
                 <div className="erp-header bg-transparent border-none py-1">Payments</div>
-                <div className="p-2 space-y-2 border-t border-[#E2E8F0]">
+                <div className="p-2 space-y-2 border-t border-slate-200">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#64748B] w-12">Mode</span>
+                    <span className="text-xs text-slate-600 w-12">Mode</span>
                     <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input flex-1">
                       {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#64748B] w-12">Txn. ID</span>
+                    <span className="text-xs text-slate-600 w-12">Txn. ID</span>
                     <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input flex-1" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#64748B] w-12">Amount</span>
+                    <span className="text-xs text-slate-600 w-12">Amount</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-[10px] border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
+                       <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#64748B] w-12">Balance</span>
+                    <span className="text-xs text-slate-600 w-12">Balance</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-[10px] border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
-                       <div className="erp-input w-full rounded-none bg-[#0a0a0a] flex items-center">{balance.toFixed(2)}</div>
+                       <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -483,7 +483,7 @@ export default function NewPurchasePage() {
            </div>
 
            <div className="col-span-1">
-              <div className="erp-container border-[#E2E8F0] h-full flex flex-col p-3 space-y-2">
+              <div className="erp-container border-slate-200 h-full flex flex-col p-3 space-y-2">
                  <div className="flex justify-between items-center">
                    <span className="text-xs font-bold">Sub Total</span>
                    <span className="text-sm font-bold">₹ {subtotal.toFixed(2)}</span>
@@ -499,18 +499,18 @@ export default function NewPurchasePage() {
       </main>
 
       {/* Bottom Toolbar */}
-      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-[#E2E8F0] flex items-center justify-between px-4 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-50">
           <div className="flex gap-4">
-             <Bell className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-             <Calculator className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-             <Truck className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-             <Barcode className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+             <Bell className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+             <Calculator className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+             <Truck className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+             <Barcode className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-[#0F172A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-[#0F172A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Save className="w-4 h-4" /> Save
             </button>
           </div>

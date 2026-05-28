@@ -37,11 +37,11 @@ export default function Sidebar() {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-[#E2E8F0] ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 rounded-xl bg-[#2563EB] flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-          <BarChart3 className="w-5 h-5 text-[#0F172A]" />
+      <div className={`flex items-center gap-3 px-4 py-5 border-b border-slate-200 ${collapsed ? 'justify-center' : ''}`}>
+        <div className="w-9 h-9 rounded-xl bg-[#1E3A5F] flex items-center justify-center flex-shrink-0 shadow-md">
+          <BarChart3 className="w-5 h-5 text-white" />
         </div>
-        {!collapsed && <span className="text-[#0F172A] font-bold text-base tracking-tight">BizERP India</span>}
+        {!collapsed && <span className="text-slate-900 font-bold text-base tracking-tight">BizERP India</span>}
       </div>
 
       {/* Nav */}
@@ -50,24 +50,24 @@ export default function Sidebar() {
           <Link key={href} href={href} onClick={() => setMobileOpen(false)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
               ${isActive(href)
-                ? 'bg-[#FFFFFF]/10 text-[#334155] border border-[#FFFFFF]/30 shadow-[0_0_15px_rgba(255,255,255,0.15)]'
-                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] border border-transparent'}`}>
-            <Icon className="w-5 h-5 flex-shrink-0" />
+                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}>
+            <Icon className={`w-5 h-5 flex-shrink-0 ${isActive(href) ? 'text-blue-600' : ''}`} />
             {!collapsed && <span className="text-sm font-medium">{label}</span>}
           </Link>
         ))}
       </nav>
 
       {/* User + Logout */}
-      <div className="p-3 border-t border-[#E2E8F0]">
+      <div className="p-3 border-t border-slate-200">
         {!collapsed && (
           <div className="px-3 py-2 mb-2">
-            <p className="text-[#0F172A] text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
-            <p className="text-[#64748B] text-xs capitalize">{user?.role}</p>
+            <p className="text-slate-900 text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
+            <p className="text-slate-600 text-xs capitalize">{user?.role}</p>
           </div>
         )}
         <button onClick={() => dispatch(logout())}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#64748B] hover:text-red-400 hover:bg-red-900/10 transition-all ${collapsed ? 'justify-center' : ''}`}>
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:text-red-400 hover:bg-red-900/10 transition-all ${collapsed ? 'justify-center' : ''}`}>
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Logout</span>}
         </button>
@@ -78,12 +78,12 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-[#E2E8F0] transition-all duration-300 z-40
+      <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-slate-200 transition-all duration-300 z-40
         ${collapsed ? 'w-[68px]' : 'w-60'}`}>
         <SidebarContent />
         {/* Collapse toggle */}
         <button onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white border border-[#E2E8F0] flex items-center justify-center text-[#64748B] hover:text-[#0F172A] transition">
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition">
           {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
         </button>
       </aside>
@@ -91,7 +91,7 @@ export default function Sidebar() {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-[#F8FAFC]" onClick={() => setMobileOpen(false)} />
+          <div className="fixed inset-0 bg-slate-50" onClick={() => setMobileOpen(false)} />
           <aside className="relative w-64 bg-white h-full shadow-2xl z-50">
             <SidebarContent />
           </aside>
@@ -99,7 +99,7 @@ export default function Sidebar() {
       )}
 
       {/* Mobile menu button (inside topbar — exported via context, or just repeat) */}
-      <button className="lg:hidden fixed top-3.5 left-4 z-40 p-2 rounded-lg bg-white border border-[#E2E8F0] text-[#64748B]"
+      <button className="lg:hidden fixed top-3.5 left-4 z-40 p-2 rounded-lg bg-white border border-slate-200 text-slate-600"
         onClick={() => setMobileOpen(true)}>
         <Menu className="w-5 h-5" />
       </button>

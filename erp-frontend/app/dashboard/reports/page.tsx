@@ -28,30 +28,30 @@ export default function ReportsPage() {
       <Topbar title="Reports Center" />
       <main className="flex-1 p-6 space-y-8 max-w-6xl mx-auto w-full">
         <div>
-          <h2 className="text-xl font-bold text-[#0F172A]">Reports Center</h2>
-          <p className="text-[#64748B] text-sm mt-1">Real-time financial and compliance reports for your business.</p>
+          <h2 className="text-xl font-bold text-slate-900">Reports Center</h2>
+          <p className="text-slate-600 text-sm mt-1">Real-time financial and compliance reports for your business.</p>
         </div>
 
         <div className="space-y-8">
           {REPORTS.map(section => (
             <div key={section.category} className="space-y-4">
-              <h3 className="text-[#334155] font-semibold text-sm uppercase tracking-wider">{section.category}</h3>
+              <h3 className="text-slate-700 font-semibold text-sm uppercase tracking-wider">{section.category}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {section.items.map(item => (
                   item.disabled ? (
-                    <div key={item.name} className="glass rounded-2xl p-5 border border-[#E2E8F0] opacity-50 cursor-not-allowed">
-                      <item.icon className="w-8 h-8 text-[#475569] mb-3" />
-                      <h4 className="text-[#0F172A] font-medium text-base mb-1">{item.name}</h4>
-                      <p className="text-[#475569] text-xs">{item.desc}</p>
-                      <span className="inline-block mt-3 px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#64748B] border border-[#E2E8F0]">COMING SOON</span>
+                    <div key={item.name} className="glass rounded-2xl p-5 border border-slate-200 opacity-50 cursor-not-allowed">
+                      <item.icon className="w-8 h-8 text-slate-600 mb-3" />
+                      <h4 className="text-slate-900 font-medium text-base mb-1">{item.name}</h4>
+                      <p className="text-slate-600 text-xs">{item.desc}</p>
+                      <span className="inline-block mt-3 px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-600 border border-slate-200">COMING SOON</span>
                     </div>
                   ) : (
                     <Link key={item.name} href={item.href} className="glass ngrok-card-hover rounded-2xl p-5 transition group">
                       <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center mb-3 group-hover:bg-orange-500/20 transition">
-                        <item.icon className="w-5 h-5 text-[#64748B] group-hover:text-[#D4D4D4] transition" />
+                        <item.icon className="w-5 h-5 text-slate-600 group-hover:text-[#D4D4D4] transition" />
                       </div>
-                      <h4 className="text-[#0F172A] font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
-                      <p className="text-[#64748B] text-xs">{item.desc}</p>
+                      <h4 className="text-slate-900 font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
+                      <p className="text-slate-600 text-xs">{item.desc}</p>
                     </Link>
                   )
                 ))}

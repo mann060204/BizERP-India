@@ -31,8 +31,8 @@ export default function MasterDashboard() {
       title: 'Category & Brand Master',
       description: 'Define your product groups and link specific brands to each group.',
       icon: Layers,
-      color: 'text-indigo-400',
-      bg: 'bg-indigo-500/10',
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
       actions: [
         { label: 'Manage Categories', href: '/dashboard/masters/categories', icon: Database },
       ]
@@ -52,39 +52,39 @@ export default function MasterDashboard() {
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#F8FAFC]">
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
       <Topbar title="Master Dashboard" />
       <main className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           
           <div>
-            <h2 className="text-3xl font-bold text-[#0F172A] tracking-tight">Master Configurations</h2>
-            <p className="text-[#64748B] mt-2">Centralized hub for all your core business entities and settings.</p>
+            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Master Configurations</h2>
+            <p className="text-slate-600 mt-2">Centralized hub for all your core business entities and settings.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {masterModules.map((module, idx) => (
-              <div key={idx} className="bg-white border border-[#E2E8F0] rounded-2xl p-6 flex flex-col hover:border-[#333333] transition-colors shadow-xl">
+              <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col hover:border-[#333333] transition-colors shadow-xl">
                 <div className="flex items-center gap-4 mb-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${module.bg}`}>
                     <module.icon className={`w-6 h-6 ${module.color}`} />
                   </div>
-                  <h3 className="text-lg font-bold text-[#0F172A]">{module.title}</h3>
+                  <h3 className="text-lg font-bold text-slate-900">{module.title}</h3>
                 </div>
                 
-                <p className="text-sm text-[#64748B] mb-6 flex-1">
+                <p className="text-sm text-slate-600 mb-6 flex-1">
                   {module.description}
                 </p>
 
                 <div className="space-y-2">
                   {module.actions.map((action, aIdx) => (
                     <Link key={aIdx} href={action.href} 
-                      className="w-full flex items-center justify-between p-3 rounded-xl bg-[#F1F5F9] border border-transparent hover:border-[#262626] hover:bg-[#E2E8F0] text-sm text-[#0F172A] font-medium transition group">
-                      <div className="flex items-center gap-2.5 text-[#334155] group-hover:text-[#0F172A]">
-                        <action.icon className="w-4 h-4 text-[#475569] group-hover:text-[#0F172A] transition-colors" />
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-[#F1F5F9] border border-transparent hover:border-[#262626] hover:bg-[#E2E8F0] text-sm text-slate-900 font-medium transition group">
+                      <div className="flex items-center gap-2.5 text-slate-700 group-hover:text-slate-900">
+                        <action.icon className="w-4 h-4 text-slate-600 group-hover:text-slate-900 transition-colors" />
                         {action.label}
                       </div>
-                      <span className="text-[#475569] group-hover:text-[#0F172A] transition-colors">→</span>
+                      <span className="text-slate-600 group-hover:text-slate-900 transition-colors">→</span>
                     </Link>
                   ))}
                 </div>

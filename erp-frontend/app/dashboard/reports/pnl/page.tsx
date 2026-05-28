@@ -34,43 +34,43 @@ export default function PnlReportPage() {
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-bold text-[#0F172A]">Profit & Loss Summary</h2>
-            <p className="text-[#64748B] text-sm mt-0.5">Revenue and Expense breakdown</p>
+            <h2 className="text-xl font-bold text-slate-900">Profit & Loss Summary</h2>
+            <p className="text-slate-600 text-sm mt-0.5">Revenue and Expense breakdown</p>
           </div>
           <div className="flex gap-3">
             <input type="date" value={dateRange.from} onChange={e => setDateRange({ ...dateRange, from: e.target.value })}
-              className="px-3 py-2 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
+              className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
             <input type="date" value={dateRange.to} onChange={e => setDateRange({ ...dateRange, to: e.target.value })}
-              className="px-3 py-2 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
+              className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#334155] animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-slate-700 animate-spin" /></div>
         ) : data ? (
           <div className="space-y-6">
             {/* Top KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="glass rounded-2xl p-5 border border-[#E2E8F0]">
+              <div className="glass rounded-2xl p-5 border border-slate-200">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="p-1.5 rounded-lg bg-green-400/10 text-green-400"><ArrowUpRight className="w-4 h-4" /></div>
-                  <p className="text-[#64748B] text-xs font-semibold uppercase tracking-wider">Total Sales</p>
+                  <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Sales</p>
                 </div>
-                <p className="text-2xl font-bold text-[#0F172A]">₹{data.totalSales.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900">₹{data.totalSales.toFixed(2)}</p>
               </div>
-              <div className="glass rounded-2xl p-5 border border-[#E2E8F0]">
+              <div className="glass rounded-2xl p-5 border border-slate-200">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="p-1.5 rounded-lg bg-red-400/10 text-red-400"><ArrowDownRight className="w-4 h-4" /></div>
-                  <p className="text-[#64748B] text-xs font-semibold uppercase tracking-wider">Purchases & Expenses</p>
+                  <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Purchases & Expenses</p>
                 </div>
-                <p className="text-2xl font-bold text-[#0F172A]">₹{(data.totalPurchases + data.totalExpenses).toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900">₹{(data.totalPurchases + data.totalExpenses).toFixed(2)}</p>
               </div>
               <div className={`glass rounded-2xl p-5 border ${data.netProfit >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`p-1.5 rounded-lg ${data.netProfit >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'}`}>
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <p className="text-[#64748B] text-xs font-semibold uppercase tracking-wider">Net Profit</p>
+                  <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Net Profit</p>
                 </div>
                 <p className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   ₹{data.netProfit.toFixed(2)}
@@ -79,18 +79,18 @@ export default function PnlReportPage() {
             </div>
 
             {/* P&L Statement */}
-            <div className="glass rounded-2xl border border-[#E2E8F0] overflow-hidden">
-              <div className="p-4 bg-white border-b border-[#E2E8F0]">
-                <h3 className="font-semibold text-[#0F172A]">Statement of Profit & Loss</h3>
+            <div className="glass rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="p-4 bg-white border-b border-slate-200">
+                <h3 className="font-semibold text-slate-900">Statement of Profit & Loss</h3>
               </div>
               <div className="p-0">
                 <table className="w-full text-sm">
                   <tbody className="divide-y divide-[#1A1A1A]">
                     {/* Revenue */}
-                    <tr className="bg-[#F8FAFC]"><td colSpan={2} className="px-5 py-3 text-xs font-semibold text-[#64748B] uppercase">Income</td></tr>
+                    <tr className="bg-slate-50"><td colSpan={2} className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Income</td></tr>
                     <tr className="hover:bg-[#0A0A0A] transition">
-                      <td className="px-5 py-3.5 text-[#0F172A] pl-8">Operating Revenue (Sales)</td>
-                      <td className="px-5 py-3.5 text-right font-medium text-[#0F172A]">₹{data.totalSales.toFixed(2)}</td>
+                      <td className="px-5 py-3.5 text-slate-900 pl-8">Operating Revenue (Sales)</td>
+                      <td className="px-5 py-3.5 text-right font-medium text-slate-900">₹{data.totalSales.toFixed(2)}</td>
                     </tr>
                     <tr className="bg-white">
                       <td className="px-5 py-3 text-emerald-400 font-semibold pl-8">Total Income (A)</td>
@@ -98,14 +98,14 @@ export default function PnlReportPage() {
                     </tr>
 
                     {/* Expenses */}
-                    <tr className="bg-[#F8FAFC]"><td colSpan={2} className="px-5 py-3 text-xs font-semibold text-[#64748B] uppercase">Expenses</td></tr>
+                    <tr className="bg-slate-50"><td colSpan={2} className="px-5 py-3 text-xs font-semibold text-slate-600 uppercase">Expenses</td></tr>
                     <tr className="hover:bg-[#0A0A0A] transition">
-                      <td className="px-5 py-3.5 text-[#0F172A] pl-8">Cost of Goods Sold (Purchases)</td>
-                      <td className="px-5 py-3.5 text-right font-medium text-[#0F172A]">₹{data.totalPurchases.toFixed(2)}</td>
+                      <td className="px-5 py-3.5 text-slate-900 pl-8">Cost of Goods Sold (Purchases)</td>
+                      <td className="px-5 py-3.5 text-right font-medium text-slate-900">₹{data.totalPurchases.toFixed(2)}</td>
                     </tr>
                     <tr className="hover:bg-[#0A0A0A] transition">
-                      <td className="px-5 py-3.5 text-[#0F172A] pl-8">Indirect Expenses</td>
-                      <td className="px-5 py-3.5 text-right font-medium text-[#0F172A]">₹{data.totalExpenses.toFixed(2)}</td>
+                      <td className="px-5 py-3.5 text-slate-900 pl-8">Indirect Expenses</td>
+                      <td className="px-5 py-3.5 text-right font-medium text-slate-900">₹{data.totalExpenses.toFixed(2)}</td>
                     </tr>
                     <tr className="bg-white">
                       <td className="px-5 py-3 text-red-400 font-semibold pl-8">Total Expenses (B)</td>
@@ -114,8 +114,8 @@ export default function PnlReportPage() {
 
                     {/* Profit */}
                     <tr className="bg-gradient-to-r from-orange-500/10 to-transparent">
-                      <td className="px-5 py-4 text-[#334155] font-bold text-base uppercase">Net Profit / Loss (A - B)</td>
-                      <td className="px-5 py-4 text-right font-bold text-xl text-[#334155]">₹{data.netProfit.toFixed(2)}</td>
+                      <td className="px-5 py-4 text-slate-700 font-bold text-base uppercase">Net Profit / Loss (A - B)</td>
+                      <td className="px-5 py-4 text-right font-bold text-xl text-slate-700">₹{data.netProfit.toFixed(2)}</td>
                     </tr>
                   </tbody>
                 </table>

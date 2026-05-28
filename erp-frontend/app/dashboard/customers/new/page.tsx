@@ -137,23 +137,23 @@ export default function NewCustomerPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
       <Topbar title="Customer Information" />
-      <div className="flex px-4 pt-2 border-b border-[#E2E8F0] bg-[#F1F5F9]">
-         <div className="px-4 py-2 text-xs font-semibold bg-[#F1F5F9] border border-b-0 border-[#E2E8F0] rounded-t text-[#0F172A]">Profile</div>
+      <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9]">
+         <div className="px-4 py-2 text-xs font-semibold bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900">Profile</div>
       </div>
       
       <main className="flex-1 overflow-y-auto p-4 bg-[#F1F5F9]">
          <div className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto">
             {/* Left Panel - Photo */}
             <div className="w-full md:w-64 shrink-0">
-               <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-6 shadow-sm">
-                 <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Profile Pic</legend>
+               <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-6 shadow-sm">
+                 <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Profile Pic</legend>
                  
                  {/* Photo Preview or Camera */}
                  <div className="w-40 h-40 mx-auto mb-4 relative">
                    {showCamera ? (
-                     <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-[#F8FAFC] flex items-center justify-center relative">
+                     <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-slate-50 flex items-center justify-center relative">
                        {cameraError ? (
                          <div className="text-center p-2">
                            <VideoOff className="w-8 h-8 text-red-400 mx-auto mb-1" />
@@ -190,11 +190,11 @@ export default function NewCustomerPage() {
                  {showCamera ? (
                    <div className="flex justify-center gap-3 px-2 mt-2">
                      {!cameraError && (
-                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-[#0F172A] bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                          <Camera className="w-4 h-4" /> Capture
                        </button>
                      )}
-                     <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-[#1a0000] py-1.5 rounded border border-[#E2E8F0] transition">
+                     <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-[#1a0000] py-1.5 rounded border border-slate-200 transition">
                        <X className="w-4 h-4" /> Cancel
                      </button>
                    </div>
@@ -202,21 +202,21 @@ export default function NewCustomerPage() {
                    <div className="flex justify-between px-2 items-center mt-2">
                      <button
                        onClick={() => fileInputRef.current?.click()}
-                       className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition"
+                       className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition"
                        title="Upload from File"
                      >
                        <Upload className="w-5 h-5" />
                      </button>
                      <button
                        onClick={startCamera}
-                       className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition"
+                       className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition"
                        title="Take Photo with Camera"
                      >
                        <Camera className="w-5 h-5" />
                      </button>
                      <button
                        onClick={() => setPhoto(null)}
-                       className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition"
+                       className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-slate-200 transition"
                        title="Reset Photo"
                        disabled={!photo}
                      >
@@ -224,7 +224,7 @@ export default function NewCustomerPage() {
                      </button>
                      <button
                        onClick={() => setPhoto(null)}
-                       className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition"
+                       className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-slate-200 transition"
                        title="Delete Photo"
                        disabled={!photo}
                      >
@@ -236,7 +236,7 @@ export default function NewCustomerPage() {
                  {photo && !showCamera && (
                    <p className="text-center text-[10px] text-green-400 mt-2">✓ Photo set</p>
                  )}
-                 <p className="text-center text-[9px] text-[#475569] mt-1">Upload or take a photo (max 2MB)</p>
+                 <p className="text-center text-[9px] text-slate-600 mt-1">Upload or take a photo (max 2MB)</p>
                </fieldset>
             </div>
             
@@ -245,58 +245,58 @@ export default function NewCustomerPage() {
                {/* Column 1 */}
                <div className="space-y-4">
                  
-                 <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Customer Details</legend>
+                 <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Customer Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                     <label className="text-[#64748B]">Full Name <span className="text-red-500">*</span></label>
+                     <label className="text-slate-600">Full Name <span className="text-red-500">*</span></label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
                      
-                     <label className="self-start mt-2 text-[#64748B]">Billing Address <span className="text-red-500">*</span></label>
+                     <label className="self-start mt-2 text-slate-600">Billing Address <span className="text-red-500">*</span></label>
                      <textarea className="erp-input w-full h-16 resize-none bg-[#F1F5F9]" value={form.billingAddress} onChange={e=>setForm({...form, billingAddress: e.target.value})} />
                      
-                     <label className="text-[#64748B]">City</label>
+                     <label className="text-slate-600">City</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.city} onChange={e=>setForm({...form, city: e.target.value})} />
                      
-                     <label className="text-[#64748B]">State <span className="text-red-500">*</span></label>
+                     <label className="text-slate-600">State <span className="text-red-500">*</span></label>
                      <select className="erp-input w-full bg-[#F1F5F9]" value={form.state} onChange={e=>setForm({...form, state: e.target.value})}>
                        <option value=""></option>
                        {INDIAN_STATES.map(s => <option key={s}>{s}</option>)}
                      </select>
                      
-                     <label className="text-[#64748B]">PIN Code</label>
+                     <label className="text-slate-600">PIN Code</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.pinCode} onChange={e=>setForm({...form, pinCode: e.target.value})} />
                      
-                     <label className="text-[#64748B]">Country</label>
+                     <label className="text-slate-600">Country</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.country} onChange={e=>setForm({...form, country: e.target.value})} />
                      
-                     <label className="text-[#64748B]">Email ID</label>
+                     <label className="text-slate-600">Email ID</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} />
                      
-                     <label className="text-[#64748B]">Phone No</label>
+                     <label className="text-slate-600">Phone No</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.phoneNo} onChange={e=>setForm({...form, phoneNo: e.target.value})} />
                      
-                     <label className="text-[#64748B]">Contact No <span className="text-red-500">*</span></label>
+                     <label className="text-slate-600">Contact No <span className="text-red-500">*</span></label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.mobile} onChange={e=>setForm({...form, mobile: e.target.value})} />
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Tax Details</legend>
+                 <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Tax Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                     <label className="text-[#64748B]">PAN No.</label>
+                     <label className="text-slate-600">PAN No.</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.panNo} onChange={e=>setForm({...form, panNo: e.target.value})} />
                      
-                     <label className="text-[#64748B]">GSTIN</label>
+                     <label className="text-slate-600">GSTIN</label>
                      <input className="erp-input w-full uppercase bg-[#F1F5F9]" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} />
                      
-                     <label className="text-[#64748B]">GST Type</label>
+                     <label className="text-slate-600">GST Type</label>
                      <select className="erp-input w-full bg-[#F1F5F9]" value={form.gstType} onChange={e=>setForm({...form, gstType: e.target.value})}>
                        <option>Unregistered</option>
                        <option>Regular</option>
                        <option>Composition</option>
                      </select>
                      
-                     <label className="text-[#64748B]">Trade Name</label>
+                     <label className="text-slate-600">Trade Name</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.tradeName} onChange={e=>setForm({...form, tradeName: e.target.value})} />
                    </div>
                    <div className="mt-3 pl-[118px]">
@@ -309,10 +309,10 @@ export default function NewCustomerPage() {
                {/* Column 2 */}
                <div className="space-y-4">
                  
-                 <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Account Details</legend>
+                 <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Account Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                     <label className="text-[#64748B]">Type</label>
+                     <label className="text-slate-600">Type</label>
                      <div className="flex gap-4">
                         <label className="flex items-center gap-1.5 cursor-pointer">
                            <input type="radio" name="balType" checked={form.balanceType === 'Debit'} onChange={() => setForm({...form, balanceType: 'Debit'})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Debit
@@ -322,32 +322,32 @@ export default function NewCustomerPage() {
                         </label>
                      </div>
                      
-                     <label className="text-[#64748B]">Opening Balance</label>
+                     <label className="text-slate-600">Opening Balance</label>
                      <div className="flex">
-                        <span className="bg-[#1e3a8a] text-[#0F172A] px-2.5 py-1 border border-[#E2E8F0] border-r-0 flex items-center shadow-inner">₹</span>
+                        <span className="bg-[#1e3a8a] text-slate-900 px-2.5 py-1 border border-slate-200 border-r-0 flex items-center shadow-inner">₹</span>
                         <input type="number" className="erp-input w-full rounded-l-none bg-[#F1F5F9]" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e=>setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} />
                      </div>
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Identity Details</legend>
+                 <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Identity Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                     <label className="text-[#64748B]">Document Type</label>
+                     <label className="text-slate-600">Document Type</label>
                      <select className="erp-input w-full bg-[#F1F5F9]" value={form.documentType} onChange={e=>setForm({...form, documentType: e.target.value})}>
                        <option></option>
                        <option>Aadhar</option><option>Passport</option><option>Driving License</option>
                      </select>
                      
-                     <label className="text-[#64748B]">Document No.</label>
+                     <label className="text-slate-600">Document No.</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.documentNo} onChange={e=>setForm({...form, documentNo: e.target.value})} />
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Anniversary</legend>
+                 <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Anniversary</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                     <label className="text-[#64748B]">Date of Birth</label>
+                     <label className="text-slate-600">Date of Birth</label>
                      <div className="flex items-center gap-2">
                         <label className="flex items-center gap-1.5 cursor-pointer w-20">
                            <input type="checkbox" checked={form.dobApplicable} onChange={e=>setForm({...form, dobApplicable: e.target.checked})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Applicable
@@ -355,7 +355,7 @@ export default function NewCustomerPage() {
                         <input type="date" disabled={!form.dobApplicable} className="erp-input flex-1 disabled:opacity-40 bg-[#F1F5F9]" value={form.dob} onChange={e=>setForm({...form, dob: e.target.value})} />
                      </div>
                      
-                     <label className="text-[#64748B]">Anniversary</label>
+                     <label className="text-slate-600">Anniversary</label>
                      <div className="flex items-center gap-2">
                         <label className="flex items-center gap-1.5 cursor-pointer w-20">
                            <input type="checkbox" checked={form.anniversaryApplicable} onChange={e=>setForm({...form, anniversaryApplicable: e.target.checked})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Applicable
@@ -365,34 +365,34 @@ export default function NewCustomerPage() {
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Other Details</legend>
+                 <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Other Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                     <label className="text-[#64748B]">Credit Allowed</label>
+                     <label className="text-slate-600">Credit Allowed</label>
                      <div className="flex gap-4">
                         <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={form.creditAllowed} onChange={()=>setForm({...form, creditAllowed: true})} name="ca" className="accent-[#1e3a8a] w-3.5 h-3.5" /> Yes</label>
                         <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={!form.creditAllowed} onChange={()=>setForm({...form, creditAllowed: false})} name="ca" className="accent-[#1e3a8a] w-3.5 h-3.5" /> No</label>
                      </div>
                      
-                     <label className="text-[#64748B]">Credit Limit</label>
+                     <label className="text-slate-600">Credit Limit</label>
                      <div className="flex">
-                        <span className="bg-[#1e3a8a] text-[#0F172A] px-2.5 py-1 border border-[#E2E8F0] border-r-0 flex items-center shadow-inner opacity-[var(--tw-opacity)]" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
+                        <span className="bg-[#1e3a8a] text-slate-900 px-2.5 py-1 border border-slate-200 border-r-0 flex items-center shadow-inner opacity-[var(--tw-opacity)]" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
                         <input type="number" className="erp-input w-full rounded-l-none disabled:opacity-40 bg-[#F1F5F9]" disabled={!form.creditAllowed} value={form.creditLimit === 0 ? '' : form.creditLimit} onChange={e=>setForm({...form, creditLimit: parseFloat(e.target.value) || 0})} />
                      </div>
                      
-                     <label className="text-[#64748B]">Price Category</label>
+                     <label className="text-slate-600">Price Category</label>
                      <select className="erp-input w-full bg-[#F1F5F9]" value={form.priceCategory} onChange={e=>setForm({...form, priceCategory: e.target.value})}>
                        <option>Retail</option>
                        <option>Wholesale</option>
                      </select>
                      
-                     <label className="self-start mt-2 text-[#64748B]">Remark / Note</label>
+                     <label className="self-start mt-2 text-slate-600">Remark / Note</label>
                      <textarea className="erp-input w-full h-16 resize-none bg-[#F1F5F9]" value={form.remark} onChange={e=>setForm({...form, remark: e.target.value})} />
                    </div>
                  </fieldset>
                  
                  <div className="flex justify-end pt-4 pb-12 lg:pb-0">
-                   <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-[#0F172A] px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
+                   <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
                      <Save className="w-4 h-4" /> Save
                    </button>
                  </div>

@@ -175,23 +175,23 @@ export default function EditCustomerPage() {
   }, [id]);
 
   if (loading) return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A]">
+    <div className="flex flex-col h-screen bg-slate-50 text-slate-900">
       <Topbar title="Edit Customer" />
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[#64748B]" />
+        <Loader2 className="w-10 h-10 animate-spin text-slate-600" />
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
       <Topbar title="Edit Customer" />
-      <div className="flex px-4 pt-2 border-b border-[#E2E8F0] bg-[#F1F5F9]">
+      <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9]">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-xs font-semibold border ${activeTab === tab ? 'bg-[#F1F5F9] border-[#E2E8F0] border-b-0 rounded-t text-[#0F172A]' : 'border-transparent text-[#475569] hover:text-[#94a3b8]'}`}
+            className={`px-4 py-2 text-xs font-semibold border ${activeTab === tab ? 'bg-[#F1F5F9] border-slate-200 border-b-0 rounded-t text-slate-900' : 'border-transparent text-slate-600 hover:text-[#94a3b8]'}`}
           >
             {tab}
           </button>
@@ -202,12 +202,12 @@ export default function EditCustomerPage() {
         <div className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto h-full">
           {/* Left Panel - Photo & Actions */}
           <div className="w-full md:w-72 shrink-0 flex flex-col gap-4">
-            <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-6 shadow-sm">
-              <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Profile Pic</legend>
+            <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-6 shadow-sm">
+              <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Profile Pic</legend>
 
               <div className="w-40 h-40 mx-auto mb-4 relative">
                 {showCamera ? (
-                  <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-[#F8FAFC] flex items-center justify-center">
+                  <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-slate-50 flex items-center justify-center">
                     {cameraError ? (
                       <div className="text-center p-2">
                         <VideoOff className="w-8 h-8 text-red-400 mx-auto mb-1" />
@@ -234,143 +234,143 @@ export default function EditCustomerPage() {
               {showCamera ? (
                 <div className="flex justify-center gap-3 px-2 mt-2">
                   {!cameraError && (
-                    <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-[#0F172A] bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                    <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                       <Camera className="w-4 h-4" /> Capture
                     </button>
                   )}
-                  <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-[#1a0000] py-1.5 rounded border border-[#E2E8F0] transition">
+                  <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-[#1a0000] py-1.5 rounded border border-slate-200 transition">
                     <X className="w-4 h-4" /> Cancel
                   </button>
                 </div>
               ) : (
                 <div className="flex justify-between px-2 items-center mt-2">
-                  <button onClick={() => fileInputRef.current?.click()} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition" title="Upload from File"><Upload className="w-5 h-5" /></button>
-                  <button onClick={startCamera} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition" title="Take Photo"><Camera className="w-5 h-5" /></button>
-                  <button onClick={() => setPhoto(null)} disabled={!photo} className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition disabled:opacity-40" title="Reset"><RefreshCw className="w-5 h-5" /></button>
-                  <button onClick={() => setPhoto(null)} disabled={!photo} className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-[#E2E8F0] transition disabled:opacity-40" title="Delete"><X className="w-5 h-5" /></button>
+                  <button onClick={() => fileInputRef.current?.click()} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition" title="Upload from File"><Upload className="w-5 h-5" /></button>
+                  <button onClick={startCamera} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition" title="Take Photo"><Camera className="w-5 h-5" /></button>
+                  <button onClick={() => setPhoto(null)} disabled={!photo} className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-slate-200 transition disabled:opacity-40" title="Reset"><RefreshCw className="w-5 h-5" /></button>
+                  <button onClick={() => setPhoto(null)} disabled={!photo} className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-slate-200 transition disabled:opacity-40" title="Delete"><X className="w-5 h-5" /></button>
                 </div>
               )}
               {photo && !showCamera && <p className="text-center text-[10px] text-green-400 mt-2">✓ Photo set</p>}
-              <p className="text-center text-[9px] text-[#475569] mt-1">Upload or take a photo (max 2MB)</p>
+              <p className="text-center text-[9px] text-slate-600 mt-1">Upload or take a photo (max 2MB)</p>
             </fieldset>
 
-            <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-              <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Account Information</legend>
+            <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+              <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Account Information</legend>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-[#64748B]">Customer ID</span>
-                  <span className="font-semibold text-[#0F172A]">{(typeof id === 'string' ? id : id?.[0])?.slice(-6).toUpperCase() || 'NEW'}</span>
+                  <span className="text-slate-600">Customer ID</span>
+                  <span className="font-semibold text-slate-900">{(typeof id === 'string' ? id : id?.[0])?.slice(-6).toUpperCase() || 'NEW'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#64748B]">Account Balance</span>
-                  <span className={`font-bold ${form.openingBalance > 0 ? 'text-green-500' : 'text-[#0F172A]'}`}>₹{form.openingBalance.toFixed(2)}</span>
+                  <span className="text-slate-600">Account Balance</span>
+                  <span className={`font-bold ${form.openingBalance > 0 ? 'text-green-500' : 'text-slate-900'}`}>₹{form.openingBalance.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#64748B]">Account Status</span>
+                  <span className="text-slate-600">Account Status</span>
                   <span className="font-bold text-green-500 uppercase tracking-wider">ACTIVE</span>
                 </div>
               </div>
             </fieldset>
 
-            <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm flex-1">
-              <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Account Actions</legend>
+            <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm flex-1">
+              <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Account Actions</legend>
               <div className="grid grid-cols-2 gap-2 mb-4">
-                <button className="py-2 text-xs border border-[#E2E8F0] rounded text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition bg-white">New Invoice</button>
-                <button className="py-2 text-xs border border-[#E2E8F0] rounded text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition bg-white">New Quotation</button>
-                <button className="py-2 text-xs border border-[#E2E8F0] rounded text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition bg-white">Send SMS</button>
-                <button className="py-2 text-xs border border-[#E2E8F0] rounded text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9] transition bg-white">Send Email</button>
+                <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">New Invoice</button>
+                <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">New Quotation</button>
+                <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send SMS</button>
+                <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send Email</button>
               </div>
-              <button className="w-full py-2 text-xs border border-[#E2E8F0] rounded text-orange-400 hover:text-orange-300 hover:bg-[#F1F5F9] transition mb-3 bg-white">Disable A/c</button>
-              <button className="w-full py-2 text-xs font-semibold rounded text-[#0F172A] bg-red-600 hover:bg-red-700 transition flex items-center justify-center gap-2"><X className="w-4 h-4" /> Delete Account</button>
+              <button className="w-full py-2 text-xs border border-slate-200 rounded text-orange-400 hover:text-orange-300 hover:bg-[#F1F5F9] transition mb-3 bg-white">Disable A/c</button>
+              <button className="w-full py-2 text-xs font-semibold rounded text-slate-900 bg-red-600 hover:bg-red-700 transition flex items-center justify-center gap-2"><X className="w-4 h-4" /> Delete Account</button>
             </fieldset>
           </div>
 
-          <div className="flex-1 bg-[#F8FAFC] rounded border border-[#E2E8F0] p-4 shadow-sm min-h-0 overflow-y-auto">
+          <div className="flex-1 bg-slate-50 rounded border border-slate-200 p-4 shadow-sm min-h-0 overflow-y-auto">
                {activeTab === 'Profile' && (
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                    <div className="space-y-4">
-                     <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                       <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Customer Details</legend>
+                     <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                       <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Customer Details</legend>
                        <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                         <label className="text-[#64748B]">Full Name <span className="text-red-500">*</span></label>
+                         <label className="text-slate-600">Full Name <span className="text-red-500">*</span></label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
-                         <label className="self-start mt-2 text-[#64748B]">Billing Address</label>
+                         <label className="self-start mt-2 text-slate-600">Billing Address</label>
                          <textarea className="erp-input w-full h-16 resize-none bg-[#F1F5F9]" value={form.billingAddress} onChange={e=>setForm({...form, billingAddress: e.target.value})} />
-                         <label className="text-[#64748B]">City</label>
+                         <label className="text-slate-600">City</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.city} onChange={e=>setForm({...form, city: e.target.value})} />
-                         <label className="text-[#64748B]">State</label>
+                         <label className="text-slate-600">State</label>
                          <select className="erp-input w-full bg-[#F1F5F9]" value={form.state} onChange={e=>setForm({...form, state: e.target.value})}>
                            <option value=""></option>
                            {INDIAN_STATES.map(s => <option key={s}>{s}</option>)}
                          </select>
-                         <label className="text-[#64748B]">PIN Code</label>
+                         <label className="text-slate-600">PIN Code</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.pinCode} onChange={e=>setForm({...form, pinCode: e.target.value})} />
-                         <label className="text-[#64748B]">Country</label>
+                         <label className="text-slate-600">Country</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.country} onChange={e=>setForm({...form, country: e.target.value})} />
-                         <label className="text-[#64748B]">Email ID</label>
+                         <label className="text-slate-600">Email ID</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} />
-                         <label className="text-[#64748B]">Phone No</label>
+                         <label className="text-slate-600">Phone No</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.phoneNo} onChange={e=>setForm({...form, phoneNo: e.target.value})} />
-                         <label className="text-[#64748B]">Contact No <span className="text-red-500">*</span></label>
+                         <label className="text-slate-600">Contact No <span className="text-red-500">*</span></label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.mobile} onChange={e=>setForm({...form, mobile: e.target.value})} />
                        </div>
                      </fieldset>
 
-                     <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                       <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Tax Details</legend>
+                     <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                       <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Tax Details</legend>
                        <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                         <label className="text-[#64748B]">PAN No.</label>
+                         <label className="text-slate-600">PAN No.</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.panNo} onChange={e=>setForm({...form, panNo: e.target.value})} />
-                         <label className="text-[#64748B]">GSTIN</label>
+                         <label className="text-slate-600">GSTIN</label>
                          <input className="erp-input w-full uppercase bg-[#F1F5F9]" value={form.gstin} onChange={e=>setForm({...form, gstin: e.target.value})} />
-                         <label className="text-[#64748B]">GST Type</label>
+                         <label className="text-slate-600">GST Type</label>
                          <select className="erp-input w-full bg-[#F1F5F9]" value={form.gstType} onChange={e=>setForm({...form, gstType: e.target.value})}>
                            <option>Unregistered</option><option>Regular</option><option>Composition</option>
                          </select>
-                         <label className="text-[#64748B]">Trade Name</label>
+                         <label className="text-slate-600">Trade Name</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.tradeName} onChange={e=>setForm({...form, tradeName: e.target.value})} />
                        </div>
                      </fieldset>
                    </div>
                    
                    <div className="space-y-4">
-                     <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                       <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Account Details</legend>
+                     <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                       <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Account Details</legend>
                        <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                         <label className="text-[#64748B]">Type</label>
+                         <label className="text-slate-600">Type</label>
                          <div className="flex gap-4">
                             <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="balType" checked={form.balanceType === 'Debit'} onChange={() => setForm({...form, balanceType: 'Debit'})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Debit</label>
                             <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" name="balType" checked={form.balanceType === 'Credit'} onChange={() => setForm({...form, balanceType: 'Credit'})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Credit</label>
                          </div>
-                         <label className="text-[#64748B]">Opening Balance</label>
+                         <label className="text-slate-600">Opening Balance</label>
                          <div className="flex">
-                            <span className="bg-[#1e3a8a] text-[#0F172A] px-2.5 py-1 border border-[#E2E8F0] border-r-0 flex items-center">₹</span>
+                            <span className="bg-[#1e3a8a] text-slate-900 px-2.5 py-1 border border-slate-200 border-r-0 flex items-center">₹</span>
                             <input type="number" className="erp-input w-full rounded-l-none bg-[#F1F5F9]" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e=>setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} />
                          </div>
                        </div>
                      </fieldset>
 
-                     <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                       <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Identity Details</legend>
+                     <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                       <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Identity Details</legend>
                        <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                         <label className="text-[#64748B]">Document Type</label>
+                         <label className="text-slate-600">Document Type</label>
                          <select className="erp-input w-full bg-[#F1F5F9]" value={form.documentType} onChange={e=>setForm({...form, documentType: e.target.value})}>
                            <option></option><option>Aadhar</option><option>Passport</option><option>Driving License</option>
                          </select>
-                         <label className="text-[#64748B]">Document No.</label>
+                         <label className="text-slate-600">Document No.</label>
                          <input className="erp-input w-full bg-[#F1F5F9]" value={form.documentNo} onChange={e=>setForm({...form, documentNo: e.target.value})} />
                        </div>
                      </fieldset>
 
-                     <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                       <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Anniversary</legend>
+                     <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                       <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Anniversary</legend>
                        <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                         <label className="text-[#64748B]">Date of Birth</label>
+                         <label className="text-slate-600">Date of Birth</label>
                          <div className="flex items-center gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer w-20"><input type="checkbox" checked={form.dobApplicable} onChange={e=>setForm({...form, dobApplicable: e.target.checked})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Applicable</label>
                             <input type="date" disabled={!form.dobApplicable} className="erp-input flex-1 disabled:opacity-40 bg-[#F1F5F9]" value={form.dob} onChange={e=>setForm({...form, dob: e.target.value})} />
                          </div>
-                         <label className="text-[#64748B]">Anniversary</label>
+                         <label className="text-slate-600">Anniversary</label>
                          <div className="flex items-center gap-2">
                             <label className="flex items-center gap-1.5 cursor-pointer w-20"><input type="checkbox" checked={form.anniversaryApplicable} onChange={e=>setForm({...form, anniversaryApplicable: e.target.checked})} className="accent-[#1e3a8a] w-3.5 h-3.5" /> Applicable</label>
                             <input type="date" disabled={!form.anniversaryApplicable} className="erp-input flex-1 disabled:opacity-40 bg-[#F1F5F9]" value={form.anniversary} onChange={e=>setForm({...form, anniversary: e.target.value})} />
@@ -378,33 +378,33 @@ export default function EditCustomerPage() {
                        </div>
                      </fieldset>
 
-                     <fieldset className="border border-[#E2E8F0] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
-                       <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#64748B] absolute -top-2 left-2">Other Details</legend>
+                     <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm">
+                       <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Other Details</legend>
                        <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
-                         <label className="text-[#64748B]">Credit Allowed</label>
+                         <label className="text-slate-600">Credit Allowed</label>
                          <div className="flex gap-4">
                             <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={form.creditAllowed} onChange={()=>setForm({...form, creditAllowed: true})} name="ca" className="accent-[#1e3a8a] w-3.5 h-3.5" /> Yes</label>
                             <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={!form.creditAllowed} onChange={()=>setForm({...form, creditAllowed: false})} name="ca" className="accent-[#1e3a8a] w-3.5 h-3.5" /> No</label>
                          </div>
-                         <label className="text-[#64748B]">Credit Limit</label>
+                         <label className="text-slate-600">Credit Limit</label>
                          <div className="flex">
-                            <span className="bg-[#1e3a8a] text-[#0F172A] px-2.5 py-1 border border-[#E2E8F0] border-r-0 flex items-center" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
+                            <span className="bg-[#1e3a8a] text-slate-900 px-2.5 py-1 border border-slate-200 border-r-0 flex items-center" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
                             <input type="number" className="erp-input w-full rounded-l-none disabled:opacity-40 bg-[#F1F5F9]" disabled={!form.creditAllowed} value={form.creditLimit === 0 ? '' : form.creditLimit} onChange={e=>setForm({...form, creditLimit: parseFloat(e.target.value) || 0})} />
                          </div>
-                         <label className="text-[#64748B]">Price Category</label>
+                         <label className="text-slate-600">Price Category</label>
                          <select className="erp-input w-full bg-[#F1F5F9]" value={form.priceCategory} onChange={e=>setForm({...form, priceCategory: e.target.value})}>
                            <option>Retail</option><option>Wholesale</option>
                          </select>
-                         <label className="self-start mt-2 text-[#64748B]">Remark / Note</label>
+                         <label className="self-start mt-2 text-slate-600">Remark / Note</label>
                          <textarea className="erp-input w-full h-16 resize-none bg-[#F1F5F9]" value={form.remark} onChange={e=>setForm({...form, remark: e.target.value})} />
                        </div>
                      </fieldset>
 
                      <div className="flex justify-end gap-3 pt-4 pb-12 lg:pb-0">
-                       <button onClick={() => router.push('/dashboard/customers')} className="px-6 py-2 rounded border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#D4D4D4] text-sm font-medium transition">
+                       <button onClick={() => router.push('/dashboard/customers')} className="px-6 py-2 rounded border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] text-sm font-medium transition">
                          Cancel
                        </button>
-                       <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-[#0F172A] px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
+                       <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
                        </button>
                      </div>
@@ -414,17 +414,17 @@ export default function EditCustomerPage() {
 
                {activeTab === 'Invoices' && (
                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-[#0F172A] mb-4">Customer Invoices</h3>
+                    <h3 className="font-semibold text-slate-900 mb-4">Customer Invoices</h3>
                     {invoices.length > 0 ? (
-                      <div className="overflow-x-auto border border-[#E2E8F0] rounded-xl flex-1">
+                      <div className="overflow-x-auto border border-slate-200 rounded-xl flex-1">
                         <table className="w-full text-sm text-left">
-                          <thead className="bg-[#F1F5F9] text-[#64748B] text-xs uppercase">
+                          <thead className="bg-[#F1F5F9] text-slate-600 text-xs uppercase">
                             <tr>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Invoice No</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Date</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Items</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Status</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0] text-right">Total</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Invoice No</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Date</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Items</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Status</th>
+                              <th className="px-4 py-3 border-b border-slate-200 text-right">Total</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#1A1A1A]">
@@ -436,14 +436,14 @@ export default function EditCustomerPage() {
                                  <td className="px-4 py-3">
                                    <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide ${inv.status === 'paid' ? 'bg-emerald-900/40 text-emerald-400' : inv.status === 'partial' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>{inv.status}</span>
                                  </td>
-                                 <td className="px-4 py-3 text-right font-bold text-[#0F172A]">₹{inv.totalAmount?.toFixed(2) || '0.00'}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.totalAmount?.toFixed(2) || '0.00'}</td>
                                </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
                     ) : (
-                      <div className="flex h-full items-center justify-center flex-col text-[#475569] gap-3">
+                      <div className="flex h-full items-center justify-center flex-col text-slate-600 gap-3">
                         <div className="text-4xl">📄</div>
                         <p className="text-sm">No invoices found for this customer.</p>
                       </div>
@@ -453,16 +453,16 @@ export default function EditCustomerPage() {
 
                {activeTab === 'Payment History' && (
                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-[#0F172A] mb-4">Payment History</h3>
+                    <h3 className="font-semibold text-slate-900 mb-4">Payment History</h3>
                     {invoices.filter((inv: any) => inv.amountReceived > 0).length > 0 ? (
-                      <div className="overflow-x-auto border border-[#E2E8F0] rounded-xl flex-1">
+                      <div className="overflow-x-auto border border-slate-200 rounded-xl flex-1">
                         <table className="w-full text-sm text-left">
-                          <thead className="bg-[#F1F5F9] text-[#64748B] text-xs uppercase">
+                          <thead className="bg-[#F1F5F9] text-slate-600 text-xs uppercase">
                             <tr>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Date</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Reference (Invoice No)</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0]">Mode</th>
-                              <th className="px-4 py-3 border-b border-[#E2E8F0] text-right">Amount Received</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Date</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Reference (Invoice No)</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Mode</th>
+                              <th className="px-4 py-3 border-b border-slate-200 text-right">Amount Received</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#1A1A1A]">
@@ -478,7 +478,7 @@ export default function EditCustomerPage() {
                         </table>
                       </div>
                     ) : (
-                      <div className="flex h-full items-center justify-center flex-col text-[#475569] gap-3">
+                      <div className="flex h-full items-center justify-center flex-col text-slate-600 gap-3">
                         <div className="text-4xl">💳</div>
                         <p className="text-sm">No payments recorded yet.</p>
                       </div>
@@ -488,30 +488,30 @@ export default function EditCustomerPage() {
 
                {activeTab === 'Accounts' && (
                  <div className="flex flex-col h-full">
-                    <h3 className="font-semibold text-[#0F172A] mb-4">Customer Ledger (Statement of Account)</h3>
+                    <h3 className="font-semibold text-slate-900 mb-4">Customer Ledger (Statement of Account)</h3>
                     <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="bg-[#F1F5F9] border border-[#E2E8F0] p-4 rounded-xl">
-                         <div className="text-xs text-[#64748B] uppercase">Opening Balance</div>
-                         <div className="text-xl font-bold mt-1 text-[#0F172A]">₹{form.openingBalance.toFixed(2)}</div>
+                      <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
+                         <div className="text-xs text-slate-600 uppercase">Opening Balance</div>
+                         <div className="text-xl font-bold mt-1 text-slate-900">₹{form.openingBalance.toFixed(2)}</div>
                       </div>
-                      <div className="bg-[#F1F5F9] border border-[#E2E8F0] p-4 rounded-xl">
-                         <div className="text-xs text-[#64748B] uppercase">Total Billed</div>
+                      <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
+                         <div className="text-xs text-slate-600 uppercase">Total Billed</div>
                          <div className="text-xl font-bold mt-1 text-orange-400">₹{invoices.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0).toFixed(2)}</div>
                       </div>
-                      <div className="bg-[#F1F5F9] border border-[#E2E8F0] p-4 rounded-xl">
-                         <div className="text-xs text-[#64748B] uppercase">Total Received</div>
+                      <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
+                         <div className="text-xs text-slate-600 uppercase">Total Received</div>
                          <div className="text-xl font-bold mt-1 text-emerald-400">₹{invoices.reduce((acc, inv) => acc + (inv.amountReceived || 0), 0).toFixed(2)}</div>
                       </div>
                     </div>
                     
-                    <div className="text-sm text-[#475569] bg-[#F1F5F9] p-6 rounded-xl border border-[#E2E8F0] flex items-center justify-center italic">
+                    <div className="text-sm text-slate-600 bg-[#F1F5F9] p-6 rounded-xl border border-slate-200 flex items-center justify-center italic">
                        Full transaction ledger will be generated here in future updates.
                     </div>
                  </div>
                )}
 
                {activeTab === 'Quotations' && (
-                 <div className="flex flex-col h-full items-center justify-center text-[#475569] gap-3">
+                 <div className="flex flex-col h-full items-center justify-center text-slate-600 gap-3">
                     <div className="text-4xl">📝</div>
                     <p className="text-sm">No quotations generated.</p>
                     <button className="mt-2 text-blue-500 hover:text-blue-400 text-xs font-semibold underline">Create Quotation</button>
@@ -519,7 +519,7 @@ export default function EditCustomerPage() {
                )}
 
                {activeTab === 'Cheque / Cash Alerts' && (
-                 <div className="flex flex-col h-full items-center justify-center text-[#475569] gap-3">
+                 <div className="flex flex-col h-full items-center justify-center text-slate-600 gap-3">
                     <div className="text-4xl">🔔</div>
                     <p className="text-sm">No pending alerts for this account.</p>
                  </div>

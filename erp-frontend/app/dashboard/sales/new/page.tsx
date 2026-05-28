@@ -305,10 +305,10 @@ export default function NewInvoicePage() {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-[#F8FAFC]"><Loader2 className="w-10 h-10 animate-spin text-[#0F172A]" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 animate-spin text-slate-900" /></div>;
 
   return (
-    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
       <Topbar title="New Invoice" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
@@ -373,9 +373,9 @@ export default function NewInvoicePage() {
                    </span>
                 )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-[#E2E8F0] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                  <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredCustomers.map(c => (
-                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#E2E8F0]">
+                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
                         {c.name}
                       </div>
                     ))}
@@ -396,7 +396,7 @@ export default function NewInvoicePage() {
               <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
             </div>
             
-            <div className="col-span-6 border-t border-[#E2E8F0] mt-2 pt-2">
+            <div className="col-span-6 border-t border-slate-200 mt-2 pt-2">
               <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
                 <input type="checkbox" checked={useShippingAddress} onChange={e => setUseShippingAddress(e.target.checked)} className="accent-white" />
                 Custom Shipping Address
@@ -430,29 +430,29 @@ export default function NewInvoicePage() {
                     <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
                       <Plus className="w-4 h-4" />
                     </button>
-                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-[#0F172A] bg-[#E2E8F0] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
+                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-slate-600 hover:text-slate-900 bg-[#E2E8F0] hover:bg-slate-100 p-1 rounded transition ml-1" title="Refresh Items">
                       <RotateCcw className="w-4 h-4" />
                     </button>
                   </label>
                   {itemInput.productId && (
-                    <span className="text-[9px] text-[#64748B]">
-                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-[#0F172A]">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                    <span className="text-[9px] text-slate-600">
+                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
                   {showItemDD && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-[#E2E8F0] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#E2E8F0] flex justify-between items-center group">
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
                           <div className="flex flex-col">
-                            <span className="text-[#0F172A] font-medium">{p.name}</span>
-                            <span className="text-[9px] text-[#64748B]">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
+                            <span className="text-slate-900 font-medium">{p.name}</span>
+                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
                              {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
-                             <span className="text-[#475569] font-semibold text-xs">₹{p.sellingPrice}</span>
+                             <span className="text-slate-600 font-semibold text-xs">₹{p.sellingPrice}</span>
                           </div>
                         </div>
                       ))}
@@ -493,16 +493,16 @@ export default function NewInvoicePage() {
               <div className="relative group">
                 <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
                 <div className="relative">
-                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
                 
                 {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
-                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#F1F5F9] border border-[#E2E8F0] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
-                     <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#E2E8F0] mb-1">Available Prices</div>
+                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#F1F5F9] border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
+                     <div className="text-[9px] px-2 py-1.5 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 mb-1">Available Prices</div>
                      
-                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-[#0F172A]' },
+                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-slate-900' },
                        { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-400' },
                        { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-400' },
                        { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-400' },
@@ -515,7 +515,7 @@ export default function NewInvoicePage() {
                              newRate = basePrice / itemInput.conversionRate;
                            }
                            setItemInput({...itemInput, rate: newRate, selectedBaseRate: basePrice});
-                        }} className={`px-3 py-1.5 text-xs hover:bg-[#F1F5F9] cursor-pointer flex justify-between gap-4 rounded ${opt.color} ${(opt as any).isLast ? 'border-t border-[#E2E8F0] mt-1 pt-2' : ''}`}>
+                        }} className={`px-3 py-1.5 text-xs hover:bg-[#F1F5F9] cursor-pointer flex justify-between gap-4 rounded ${opt.color} ${(opt as any).isLast ? 'border-t border-slate-200 mt-1 pt-2' : ''}`}>
                           <span>{opt.label}</span> <span>₹{opt.price}</span>
                         </div>
                      ) : null)}
@@ -525,7 +525,7 @@ export default function NewInvoicePage() {
               <div>
                 <label className="erp-label">MRP</label>
                 <div className="relative">
-                   <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                   <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                    <input type="number" value={itemInput.mrp === 0 ? '' : itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
               </div>
@@ -558,7 +558,7 @@ export default function NewInvoicePage() {
                   <label className="erp-label">Amount</label>
                   <div className="erp-input w-full bg-[#001a00] text-emerald-400 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
                </div>
-               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-[#0F172A] p-1 rounded flex items-center justify-center">
+               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded flex items-center justify-center">
                  <Plus className="w-5 h-5" />
                </button>
             </div>
@@ -567,7 +567,7 @@ export default function NewInvoicePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="grid grid-cols-12 erp-grid-header border-b border-[#E2E8F0]">
+           <div className="grid grid-cols-12 erp-grid-header border-b border-slate-200">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
              <div className="col-span-1 erp-grid-cell text-center">Qty</div>
@@ -584,13 +584,13 @@ export default function NewInvoicePage() {
               ) : (
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 erp-grid-row group">
-                    <div className="col-span-1 erp-grid-cell text-[#475569]">{idx + 1}</div>
+                    <div className="col-span-1 erp-grid-cell text-slate-600">{idx + 1}</div>
                     <div className="col-span-3 erp-grid-cell font-medium flex flex-col justify-center">
                       <div>
                         {item.productName}
-                        {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-[#64748B]">{item.tag}</span>}
+                        {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
                       </div>
-                      {item.description && <div className="text-[10px] text-[#475569] font-normal leading-tight mt-0.5">{item.description}</div>}
+                      {item.description && <div className="text-[10px] text-slate-600 font-normal leading-tight mt-0.5">{item.description}</div>}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
@@ -635,16 +635,16 @@ export default function NewInvoicePage() {
 
            {/* Column 2 & 3: Payment Details & Remarks */}
            <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
-              <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-[#E2E8F0]">PAYMENT DETAILS</div>
+              <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
               
               <div className="grid grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
-                  <div className="text-[9px] text-[#64748B] font-bold">PAYMENT 1</div>
+                  <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
                   <div className="relative">
-                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                     <input type="number" value={amountReceived1 === 0 ? '' : amountReceived1} onChange={e => setAmountReceived1(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 1" />
                   </div>
                   <div className="flex gap-1">
@@ -654,13 +654,13 @@ export default function NewInvoicePage() {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="text-[9px] text-[#64748B] font-bold">PAYMENT 2 (Opt)</div>
+                  <div className="text-[9px] text-slate-600 font-bold">PAYMENT 2 (Opt)</div>
                   <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
                     <option value="">None</option>
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
                   <div className="relative">
-                    <span className="absolute left-1 top-1 text-[10px] text-[#475569]">₹</span>
+                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                     <input type="number" value={amountReceived2 === 0 ? '' : amountReceived2} onChange={e => setAmountReceived2(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 2" />
                   </div>
                   <div className="flex gap-1">
@@ -685,7 +685,7 @@ export default function NewInvoicePage() {
            {/* Column 4: Totals & Grand Total */}
            <div className="erp-footer-box flex flex-col justify-between">
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between text-[#64748B]">
+                <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
@@ -700,17 +700,17 @@ export default function NewInvoicePage() {
                   <>
                     {!isInterState ? (
                       <>
-                        <div className="flex justify-between text-[#64748B]">
+                        <div className="flex justify-between text-slate-600">
                           <span>CGST</span>
                           <span>₹{totalCGST.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-[#64748B]">
+                        <div className="flex justify-between text-slate-600">
                           <span>SGST</span>
                           <span>₹{totalSGST.toFixed(2)}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="flex justify-between text-[#64748B]">
+                      <div className="flex justify-between text-slate-600">
                         <span>IGST</span>
                         <span>₹{totalIGST.toFixed(2)}</span>
                       </div>
@@ -718,15 +718,15 @@ export default function NewInvoicePage() {
                   </>
                 )}
 
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-[#E2E8F0]">
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
                   <span className="erp-label">Shipping</span>
                   <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right h-7" />
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t-2 border-[#CBD5E1] space-y-1 bg-white -mx-2 -mb-2 p-3 rounded-b-lg">
+              <div className="mt-4 pt-3 border-t-2 border-slate-300 space-y-1 bg-white -mx-2 -mb-2 p-3 rounded-b-lg">
                  {roundOff !== 0 && (
-                   <div className="flex justify-between text-xs font-medium text-[#64748B] mb-1">
+                   <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
                      <span>Round Off</span>
                      <span>{roundOff > 0 ? '+' : ''}{roundOff.toFixed(2)}</span>
                    </div>
@@ -735,7 +735,7 @@ export default function NewInvoicePage() {
                     <span className="text-sm font-bold text-yellow-400">GRAND TOTAL</span>
                     <span className="text-3xl font-black text-emerald-400 tracking-tight">₹{grandTotal.toFixed(2)}</span>
                  </div>
-                 <div className="flex justify-between text-[11px] font-bold text-[#64748B] mt-2 border-t border-[#E2E8F0] pt-2">
+                 <div className="flex justify-between text-[11px] font-bold text-slate-600 mt-2 border-t border-slate-200 pt-2">
                     <span>Total Received</span>
                     <span>₹{totalAmountReceived.toFixed(2)}</span>
                  </div>
@@ -747,13 +747,13 @@ export default function NewInvoicePage() {
 
       {/* Advanced Item Search Modal */}
       {showAdvancedSearch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC]/60 backdrop-blur-sm">
-          <div className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between p-3 border-b border-[#E2E8F0] bg-white">
-              <h3 className="text-[#0F172A] font-bold text-sm">Item Search</h3>
-              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] transition"><X className="w-4 h-4" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm">
+          <div className="bg-[#F1F5F9] border border-slate-200 rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-3 border-b border-slate-200 bg-white">
+              <h3 className="text-slate-900 font-bold text-sm">Item Search</h3>
+              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#F1F5F9] text-slate-600 hover:text-slate-900 transition"><X className="w-4 h-4" /></button>
             </div>
-            <div className="p-3 bg-white border-b border-[#E2E8F0] grid grid-cols-5 gap-3 items-end">
+            <div className="p-3 bg-white border-b border-slate-200 grid grid-cols-5 gap-3 items-end">
                <div className="col-span-1">
                  <label className="erp-label">Group</label>
                  <select value={advGroup} onChange={e => setAdvGroup(e.target.value)} className="erp-input w-full"><option value="">All Groups</option>{uniqueGroups.map(g => <option key={g} value={g}>{g}</option>)}</select>
@@ -770,38 +770,38 @@ export default function NewInvoicePage() {
                  <label className="erp-label">Enter text to search</label>
                  <div className="relative">
                    <input value={advText} onChange={e => setAdvText(e.target.value)} className="erp-input w-full pr-10" placeholder="Search by name or code..." />
-                   <Search className="w-4 h-4 text-[#475569] absolute right-3 top-1/2 -translate-y-1/2" />
+                   <Search className="w-4 h-4 text-slate-600 absolute right-3 top-1/2 -translate-y-1/2" />
                  </div>
                </div>
             </div>
             <div className="flex-1 overflow-y-auto p-2 bg-[#F1F5F9]">
-              <div className="text-[10px] text-[#475569] uppercase font-bold mb-2 ml-1">Search Result(s) - {advFilteredProducts.length} items</div>
+              <div className="text-[10px] text-slate-600 uppercase font-bold mb-2 ml-1">Search Result(s) - {advFilteredProducts.length} items</div>
               {advFilteredProducts.length === 0 ? (
-                 <div className="flex flex-col items-center justify-center py-20 text-[#475569]">
+                 <div className="flex flex-col items-center justify-center py-20 text-slate-600">
                    <Search className="w-10 h-10 mb-2 opacity-50" />
                    <p className="text-xs">No items found.</p>
                  </div>
               ) : (
                  <table className="w-full text-xs text-left">
-                   <thead className="bg-white text-[#64748B] sticky top-0">
+                   <thead className="bg-white text-slate-600 sticky top-0">
                      <tr>
-                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Item Name</th>
-                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Group</th>
-                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Brand</th>
-                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Location</th>
-                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Stock</th>
-                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Price</th>
+                       <th className="p-2 font-medium border-b border-slate-200">Item Name</th>
+                       <th className="p-2 font-medium border-b border-slate-200">Group</th>
+                       <th className="p-2 font-medium border-b border-slate-200">Brand</th>
+                       <th className="p-2 font-medium border-b border-slate-200">Location</th>
+                       <th className="p-2 font-medium border-b border-slate-200">Stock</th>
+                       <th className="p-2 font-medium border-b border-slate-200">Price</th>
                      </tr>
                    </thead>
                    <tbody>
                      {advFilteredProducts.map(p => (
                        <tr key={p._id} onClick={() => { pickProduct(p); setShowAdvancedSearch(false); }} className="border-b border-[#1A1A1A]/50 hover:bg-[#F1F5F9] cursor-pointer transition">
-                         <td className="p-2 text-[#0F172A] font-medium">{p.name}</td>
-                         <td className="p-2 text-[#64748B]">{p.group || '—'}</td>
-                         <td className="p-2 text-[#64748B]">{p.brand || '—'}</td>
-                         <td className="p-2 text-[#64748B]">{p.location || '—'}</td>
+                         <td className="p-2 text-slate-900 font-medium">{p.name}</td>
+                         <td className="p-2 text-slate-600">{p.group || '—'}</td>
+                         <td className="p-2 text-slate-600">{p.brand || '—'}</td>
+                         <td className="p-2 text-slate-600">{p.location || '—'}</td>
                          <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
-                         <td className="p-2 text-[#64748B]">₹{p.sellingPrice}</td>
+                         <td className="p-2 text-slate-600">₹{p.sellingPrice}</td>
                        </tr>
                      ))}
                    </tbody>
@@ -837,26 +837,26 @@ export default function NewInvoicePage() {
       )}
 
       {/* Bottom Toolbar */}
-      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-[#E2E8F0] flex items-center justify-between px-4 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-50">
         <div className="flex gap-4">
-           <Bell className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-           <Calculator className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-           <Truck className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-           <Wallet className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-           <Hand className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-           <Search className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
-           <RotateCcw className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <Bell className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+           <Calculator className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+           <Truck className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+           <Wallet className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+           <Hand className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+           <Search className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
+           <RotateCcw className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
         </div>
         
-        <div className="text-xs font-mono text-[#475569]">
+        <div className="text-xs font-mono text-slate-600">
           Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(2)}</span>
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-[#0F172A] px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-slate-900 px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-[#0F172A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>
