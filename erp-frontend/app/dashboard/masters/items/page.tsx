@@ -37,20 +37,20 @@ const emptyForm = {
 // Reusable styling components defined OUTSIDE to prevent focus loss
 const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '' }: any) => (
   <div>
-    <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
+    <label className="block text-[11px] font-medium text-[#64748B] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
     <input type={type}
       value={form[keyName] === 0 && type === 'number' ? '' : form[keyName]}
       onChange={e => setForm({ ...form, [keyName]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
       placeholder={placeholder}
-      className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+      className="w-full px-3 py-2 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
   </div>
 );
 
 const Select = ({ label, required = false, keyName, form, setForm, options }: any) => (
   <div>
-    <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
+    <label className="block text-[11px] font-medium text-[#64748B] mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
     <select value={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.value })}
-      className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none">
+      className="w-full px-3 py-2 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none">
       {options.map((o: string) => <option key={o} value={o}>{o || 'Select...'}</option>)}
     </select>
   </div>
@@ -59,7 +59,7 @@ const Select = ({ label, required = false, keyName, form, setForm, options }: an
 const Checkbox = ({ label, keyName, form, setForm, danger = false }: any) => (
   <label className={`flex items-center gap-2 text-sm cursor-pointer ${danger ? 'text-red-400 font-medium' : 'text-[#0F172A]'}`}>
     <input type="checkbox" checked={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.checked })}
-      className="w-4 h-4 rounded border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+      className="w-4 h-4 rounded border-[#E2E8F0] bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
     {label}
   </label>
 );
@@ -171,7 +171,7 @@ export default function MastersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-[#0F172A]">Items & Services</h2>
-            <p className="text-[#94a3b8] text-sm mt-0.5">{products.length} item{products.length !== 1 ? 's' : ''} in master</p>
+            <p className="text-[#64748B] text-sm mt-0.5">{products.length} item{products.length !== 1 ? 's' : ''} in master</p>
           </div>
           <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Add Item
@@ -183,11 +183,11 @@ export default function MastersPage() {
           <div className="relative flex-1 min-w-52">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
           </div>
           {['', 'product', 'service'].map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${typeFilter === t ? 'bg-white text-black hover:bg-gray-200 border-transparent' : 'border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4]'}`}>
+              className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${typeFilter === t ? 'bg-white text-black hover:bg-gray-200 border-transparent' : 'border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#D4D4D4]'}`}>
               {t === '' ? 'All' : t === 'product' ? 'Products' : 'Services'}
             </button>
           ))}
@@ -195,7 +195,7 @@ export default function MastersPage() {
 
         {/* Table */}
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#D4D4D4] animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#334155] animate-spin" /></div>
         ) : products.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <Package className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
@@ -208,15 +208,15 @@ export default function MastersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#1A1A1A]">
+                  <tr className="border-b border-[#E2E8F0]">
                     {['Item Name', 'Group/Brand', 'Unit', 'Purchase', 'Sale Price 1', 'MRP', 'GST%', 'Stock', 'Actions'].map(h => (
-                      <th key={h} className="text-left px-5 py-3.5 text-[#94a3b8] font-medium text-xs uppercase tracking-wider">{h}</th>
+                      <th key={h} className="text-left px-5 py-3.5 text-[#64748B] font-medium text-xs uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A1A1A]">
                   {products.map((p) => (
-                    <tr key={p._id} className="hover:bg-[#111111] transition-colors group">
+                    <tr key={p._id} className="hover:bg-[#F1F5F9] transition-colors group">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${p.type === 'service' ? 'bg-violet-500/20 text-violet-300' : 'bg-blue-500/20 text-blue-300'}`}>
@@ -228,18 +228,18 @@ export default function MastersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-[#94a3b8] text-xs">
+                      <td className="px-5 py-4 text-[#64748B] text-xs">
                         {p.group && <div className="text-[#0F172A]">{p.group}</div>}
                         {p.brand && <div>{p.brand}</div>}
                         {!p.group && !p.brand && '—'}
                       </td>
-                      <td className="px-5 py-4 text-[#94a3b8]">
+                      <td className="px-5 py-4 text-[#64748B]">
                         <span className="text-[#0F172A]">{p.unit}</span>
                         {p.secondaryUnit && <div className="text-xs">1 = {p.conversionRate} {p.secondaryUnit}</div>}
                       </td>
-                      <td className="px-5 py-4 text-[#94a3b8]">₹{p.purchasePrice.toFixed(2)}</td>
+                      <td className="px-5 py-4 text-[#64748B]">₹{p.purchasePrice.toFixed(2)}</td>
                       <td className="px-5 py-4 text-[#0F172A] font-semibold">₹{p.sellingPrice.toFixed(2)}</td>
-                      <td className="px-5 py-4 text-[#94a3b8]">{p.mrp ? `₹${p.mrp.toFixed(2)}` : '—'}</td>
+                      <td className="px-5 py-4 text-[#64748B]">{p.mrp ? `₹${p.mrp.toFixed(2)}` : '—'}</td>
                       <td className="px-5 py-4"><span className="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-300">{p.gstRate}%</span></td>
                       <td className="px-5 py-4">
                         {p.type === 'product' ? (
@@ -250,8 +250,8 @@ export default function MastersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] transition"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(p._id, p.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-[#94a3b8] hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(p._id, p.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-[#64748B] hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -266,25 +266,25 @@ export default function MastersPage() {
       {/* New Modern Dark Modal - Expanded Two-Column Layout */}
       {showModal && (
         <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-[#F8FAFC]/60 backdrop-blur-sm">
-          <div className="bg-[#050505] border border-[#1A1A1A] rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
             
-            <div className="flex items-center justify-between p-5 border-b border-[#1A1A1A] shrink-0">
+            <div className="flex items-center justify-between p-5 border-b border-[#E2E8F0] shrink-0">
               <div>
                 <h3 className="text-[#0F172A] font-bold text-lg">{editing ? 'Edit Item' : 'Add New Item'}</h3>
-                <p className="text-xs text-[#94a3b8] mt-0.5">Fill in the product details below</p>
+                <p className="text-xs text-[#64748B] mt-0.5">Fill in the product details below</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-[#111111] text-[#94a3b8] hover:text-[#0F172A] transition"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowModal(false)} className="p-2 rounded-xl hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] transition"><X className="w-5 h-5" /></button>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-              <div className="flex-1 p-5 overflow-y-auto bg-[#0A0A0A]">
+              <div className="flex-1 p-5 overflow-y-auto bg-white">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
                   {/* Left Column */}
                   <div className="space-y-6">
                     {/* Product Details Section */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">Product Details</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">Product Details</h4>
                       <div className="grid grid-cols-2 gap-4">
                         {(() => {
                           const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
@@ -309,8 +309,8 @@ export default function MastersPage() {
                     </div>
                     
                     {/* Price Details Section */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">Price Details</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">Price Details</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" form={form} setForm={setForm} />
                         <Input label="M.R.P. (₹)" type="number" keyName="mrp" form={form} setForm={setForm} />
@@ -322,8 +322,8 @@ export default function MastersPage() {
                     </div>
 
                     {/* Stock and Unit Details */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">Stock and Unit Details</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">Stock and Unit Details</h4>
                       <div className="grid grid-cols-2 gap-4 items-end">
                         <div className="flex gap-2">
                           <div className="flex-1">
@@ -333,7 +333,7 @@ export default function MastersPage() {
                             Secondary Unit
                           </button>
                         </div>
-                        <div className="flex items-center h-9 text-xs text-[#94a3b8]">
+                        <div className="flex items-center h-9 text-xs text-[#64748B]">
                           {form.secondaryUnit && form.secondaryUnit !== form.unit && `1 ${form.unit} = ${form.conversionRate} ${form.secondaryUnit}`}
                         </div>
                         {form.type === 'product' && (
@@ -349,8 +349,8 @@ export default function MastersPage() {
                   {/* Right Column */}
                   <div className="space-y-6">
                     {/* GST Details */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">GST Details</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">GST Details</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <Input label="HSN / SAC Code" keyName="hsnCode" form={form} setForm={setForm} />
                         <Select label="GST Rate (%)" keyName="gstRate" options={GST_RATES} form={form} setForm={setForm} />
@@ -358,14 +358,14 @@ export default function MastersPage() {
                     </div>
 
                     {/* Other Details */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">Other Details</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">Other Details</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[11px] font-medium text-[#94a3b8] mb-1 uppercase tracking-wider">Sale Discount</label>
-                          <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A]">
-                            <input type="number" value={form.saleDiscount === 0 ? '' : form.saleDiscount} onChange={e => setForm({ ...form, saleDiscount: parseFloat(e.target.value) || 0 })} placeholder="0" className="w-full px-3 py-2 bg-[#0A0A0A] text-[#0F172A] focus:outline-none text-sm" />
-                            <select value={form.saleDiscountType} onChange={e => setForm({ ...form, saleDiscountType: e.target.value })} className="bg-[#1A1A1A] text-[#0F172A] px-2 py-2 text-sm focus:outline-none cursor-pointer border-l border-[#1A1A1A]">
+                          <label className="block text-[11px] font-medium text-[#64748B] mb-1 uppercase tracking-wider">Sale Discount</label>
+                          <div className="flex rounded-lg overflow-hidden border border-[#E2E8F0]">
+                            <input type="number" value={form.saleDiscount === 0 ? '' : form.saleDiscount} onChange={e => setForm({ ...form, saleDiscount: parseFloat(e.target.value) || 0 })} placeholder="0" className="w-full px-3 py-2 bg-white text-[#0F172A] focus:outline-none text-sm" />
+                            <select value={form.saleDiscountType} onChange={e => setForm({ ...form, saleDiscountType: e.target.value })} className="bg-[#E2E8F0] text-[#0F172A] px-2 py-2 text-sm focus:outline-none cursor-pointer border-l border-[#E2E8F0]">
                               <option value="percentage">%</option>
                               <option value="amount">₹</option>
                             </select>
@@ -381,15 +381,15 @@ export default function MastersPage() {
                     </div>
 
                     {/* Product Description */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">Product Description</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">Product Description</h4>
                       <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={3}
-                        className="w-full px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
+                        className="w-full px-3 py-2 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
                     </div>
 
                     {/* Product Settings */}
-                    <div className="border border-[#1A1A1A] rounded-xl p-4 bg-[#111111]">
-                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#262626] pb-2">Product Settings</h4>
+                    <div className="border border-[#E2E8F0] rounded-xl p-4 bg-[#F1F5F9]">
+                      <h4 className="text-sm font-semibold text-[#0F172A] mb-4 border-b border-[#CBD5E1] pb-2">Product Settings</h4>
                       <div className="grid grid-cols-2 gap-3">
                         <Checkbox label="Print Description" keyName="printDescription" form={form} setForm={setForm} />
                         <Checkbox label="One Click Sale" keyName="oneClickSale" form={form} setForm={setForm} />
@@ -404,8 +404,8 @@ export default function MastersPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 p-5 border-t border-[#1A1A1A] bg-[#0A0A0A] shrink-0 rounded-b-2xl">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4] font-medium text-sm transition">
+            <div className="flex justify-end gap-3 p-5 border-t border-[#E2E8F0] bg-white shrink-0 rounded-b-2xl">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
               <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-xl bg-blue-600 text-[#0F172A] hover:bg-blue-500 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
@@ -419,89 +419,89 @@ export default function MastersPage() {
       {/* Unit Settings Modal - Dark Theme */}
       {showUnitModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC]/60 backdrop-blur-sm">
-          <div className="bg-[#050505] text-[#0F172A] border border-[#1A1A1A] w-full max-w-[440px] flex flex-col shadow-2xl rounded-2xl overflow-hidden">
+          <div className="bg-[#F1F5F9] text-[#0F172A] border border-[#E2E8F0] w-full max-w-[440px] flex flex-col shadow-2xl rounded-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-[#1A1A1A] bg-[#0A0A0A]">
+            <div className="flex items-center justify-between p-5 border-b border-[#E2E8F0] bg-white">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Layers className="w-4 h-4 text-blue-400" />
                 </div>
                 <h3 className="font-bold text-base text-[#0F172A]">Unit Settings</h3>
               </div>
-              <button onClick={() => setShowUnitModal(false)} className="p-2 rounded-xl hover:bg-[#111111] text-[#94a3b8] hover:text-[#0F172A] transition"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowUnitModal(false)} className="p-2 rounded-xl hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] transition"><X className="w-5 h-5" /></button>
             </div>
             
-            <div className="p-6 space-y-6 bg-[#050505]">
+            <div className="p-6 space-y-6 bg-[#F1F5F9]">
               {/* Base Unit & Secondary Unit */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Base Unit</label>
-                   <input type="text" disabled value={form.unit || 'Pieces'} className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#475569] focus:outline-none text-sm cursor-not-allowed" />
+                   <label className="block text-[11px] font-medium text-[#64748B] mb-1.5 uppercase tracking-wider">Base Unit</label>
+                   <input type="text" disabled value={form.unit || 'Pieces'} className="w-full px-3 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#475569] focus:outline-none text-sm cursor-not-allowed" />
                 </div>
                 <div>
-                   <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Secondary Unit <span className="text-red-500">*</span></label>
-                   <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none cursor-pointer">
+                   <label className="block text-[11px] font-medium text-[#64748B] mb-1.5 uppercase tracking-wider">Secondary Unit <span className="text-red-500">*</span></label>
+                   <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none cursor-pointer">
                       {['', ...UNITS].map(u => <option key={u} value={u}>{u}</option>)}
                    </select>
                 </div>
               </div>
 
               {/* Inventory Conversion Factor */}
-              <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-[#0A0A0A]">
+              <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-white">
                  <div className="flex justify-between items-center mb-3">
-                   <label className="block text-[11px] font-medium text-[#94a3b8] uppercase tracking-wider">Conversion Factor</label>
+                   <label className="block text-[11px] font-medium text-[#64748B] uppercase tracking-wider">Conversion Factor</label>
                    <div className="text-[11px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">1 {form.unit || 'Pieces'} = {form.conversionRate || 1} {form.secondaryUnit || 'Feet'}</div>
                  </div>
-                 <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
+                 <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] text-[#0F172A] focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
               </div>
 
               {/* Sale Price */}
               <div className="space-y-3">
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 text-sm text-[#0F172A] cursor-pointer group">
-                    <input type="radio" checked={form.secSalePriceType !== 'margin'} onChange={() => setForm({...form, secSalePriceType: 'fixed'})} className="w-4 h-4 rounded-full border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+                    <input type="radio" checked={form.secSalePriceType !== 'margin'} onChange={() => setForm({...form, secSalePriceType: 'fixed'})} className="w-4 h-4 rounded-full border-[#E2E8F0] bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
                     Fixed Per Unit
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-[#94a3b8] cursor-pointer hover:text-[#0F172A] transition group">
-                    <input type="radio" checked={form.secSalePriceType === 'margin'} onChange={() => setForm({...form, secSalePriceType: 'margin'})} className="w-4 h-4 rounded-full border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+                  <label className="flex items-center gap-2 text-sm text-[#64748B] cursor-pointer hover:text-[#0F172A] transition group">
+                    <input type="radio" checked={form.secSalePriceType === 'margin'} onChange={() => setForm({...form, secSalePriceType: 'margin'})} className="w-4 h-4 rounded-full border-[#E2E8F0] bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
                     Margin Per Unit
                   </label>
                 </div>
-                <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] focus-within:border-[#D4D4D4] transition">
-                  <div className="bg-[#111111] text-[#94a3b8] px-4 py-2.5 border-r border-[#1A1A1A] flex items-center justify-center text-sm font-medium">₹</div>
-                  <input type="number" value={form.secSalePrice || ''} onChange={e => setForm({...form, secSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2.5 bg-[#0A0A0A] text-[#0F172A] focus:outline-none text-sm" placeholder="Secondary Sale Price" />
+                <div className="flex rounded-lg overflow-hidden border border-[#E2E8F0] focus-within:border-[#D4D4D4] transition">
+                  <div className="bg-[#F1F5F9] text-[#64748B] px-4 py-2.5 border-r border-[#E2E8F0] flex items-center justify-center text-sm font-medium">₹</div>
+                  <input type="number" value={form.secSalePrice || ''} onChange={e => setForm({...form, secSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2.5 bg-white text-[#0F172A] focus:outline-none text-sm" placeholder="Secondary Sale Price" />
                 </div>
               </div>
 
               {/* MRP & Min. Sale Price */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">M.R.P.</label>
-                  <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] focus-within:border-[#D4D4D4] transition">
-                    <div className="bg-[#111111] text-[#94a3b8] px-3 py-2.5 border-r border-[#1A1A1A] flex items-center justify-center text-sm">₹</div>
-                    <input type="number" value={form.secMrp || ''} onChange={e => setForm({...form, secMrp: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-[#0A0A0A] text-[#0F172A] focus:outline-none text-sm" placeholder="0.00" />
+                  <label className="block text-[11px] font-medium text-[#64748B] mb-1.5 uppercase tracking-wider">M.R.P.</label>
+                  <div className="flex rounded-lg overflow-hidden border border-[#E2E8F0] focus-within:border-[#D4D4D4] transition">
+                    <div className="bg-[#F1F5F9] text-[#64748B] px-3 py-2.5 border-r border-[#E2E8F0] flex items-center justify-center text-sm">₹</div>
+                    <input type="number" value={form.secMrp || ''} onChange={e => setForm({...form, secMrp: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-white text-[#0F172A] focus:outline-none text-sm" placeholder="0.00" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-[#94a3b8] mb-1.5 uppercase tracking-wider">Min. Sale Price</label>
-                  <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A] focus-within:border-[#D4D4D4] transition">
-                    <div className="bg-[#111111] text-[#94a3b8] px-3 py-2.5 border-r border-[#1A1A1A] flex items-center justify-center text-sm">₹</div>
-                    <input type="number" value={form.secMinSalePrice || ''} onChange={e => setForm({...form, secMinSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-[#0A0A0A] text-[#0F172A] focus:outline-none text-sm" placeholder="0.00" />
+                  <label className="block text-[11px] font-medium text-[#64748B] mb-1.5 uppercase tracking-wider">Min. Sale Price</label>
+                  <div className="flex rounded-lg overflow-hidden border border-[#E2E8F0] focus-within:border-[#D4D4D4] transition">
+                    <div className="bg-[#F1F5F9] text-[#64748B] px-3 py-2.5 border-r border-[#E2E8F0] flex items-center justify-center text-sm">₹</div>
+                    <input type="number" value={form.secMinSalePrice || ''} onChange={e => setForm({...form, secMinSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-white text-[#0F172A] focus:outline-none text-sm" placeholder="0.00" />
                   </div>
                 </div>
               </div>
 
               {/* Default Sales Unit Checkbox */}
-              <label className="flex items-center gap-3 text-sm text-[#94a3b8] cursor-pointer hover:text-[#0F172A] transition pt-2">
-                <input type="checkbox" checked={form.isDefaultSecondaryUnit || false} onChange={e => setForm({...form, isDefaultSecondaryUnit: e.target.checked})} className="w-4 h-4 rounded border-[#1A1A1A] bg-[#111111] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+              <label className="flex items-center gap-3 text-sm text-[#64748B] cursor-pointer hover:text-[#0F172A] transition pt-2">
+                <input type="checkbox" checked={form.isDefaultSecondaryUnit || false} onChange={e => setForm({...form, isDefaultSecondaryUnit: e.target.checked})} className="w-4 h-4 rounded border-[#E2E8F0] bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
                 Set as default sales unit
               </label>
 
             </div>
 
             {/* Footer */}
-            <div className="p-5 border-t border-[#1A1A1A] bg-[#0A0A0A] flex justify-end gap-3">
-              <button onClick={() => setShowUnitModal(false)} className="px-5 py-2.5 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4] font-medium text-sm transition">
+            <div className="p-5 border-t border-[#E2E8F0] bg-white flex justify-end gap-3">
+              <button onClick={() => setShowUnitModal(false)} className="px-5 py-2.5 rounded-xl border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
               <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-[#0F172A] rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/20">

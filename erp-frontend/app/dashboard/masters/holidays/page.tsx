@@ -127,7 +127,7 @@ export default function HolidayMasterPage() {
                 <Calendar className="w-8 h-8 text-amber-500" />
                 Holiday Master
               </h2>
-              <p className="text-[#94a3b8] mt-2">Manage official business holidays</p>
+              <p className="text-[#64748B] mt-2">Manage official business holidays</p>
             </div>
             <button
               onClick={handleSave}
@@ -139,13 +139,13 @@ export default function HolidayMasterPage() {
             </button>
           </div>
 
-          <div className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6">
-            <div className="flex flex-col md:flex-row gap-4 mb-6 bg-[#111111] p-4 rounded-xl border border-[#262626]">
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
+            <div className="flex flex-col md:flex-row gap-4 mb-6 bg-[#F1F5F9] p-4 rounded-xl border border-[#CBD5E1]">
               <input 
                 type="date"
                 value={newDate}
                 onChange={e => setNewDate(e.target.value)}
-                className="bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-2.5 text-[#0F172A] focus:outline-none focus:border-amber-500 transition [color-scheme:dark]"
+                className="bg-[#E2E8F0] border border-[#94A3B8] rounded-xl px-4 py-2.5 text-[#0F172A] focus:outline-none focus:border-amber-500 transition [color-scheme:dark]"
               />
               <input 
                 type="text"
@@ -153,7 +153,7 @@ export default function HolidayMasterPage() {
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addHoliday()}
-                className="flex-1 bg-[#1A1A1A] border border-[#333333] rounded-xl px-4 py-2.5 text-[#0F172A] focus:outline-none focus:border-amber-500 transition"
+                className="flex-1 bg-[#E2E8F0] border border-[#94A3B8] rounded-xl px-4 py-2.5 text-[#0F172A] focus:outline-none focus:border-amber-500 transition"
               />
               <button 
                 onClick={addHoliday}
@@ -168,21 +168,21 @@ export default function HolidayMasterPage() {
                 const isEditing = editingIndex === idx;
                 
                 return (
-                  <div key={idx} className="flex items-center justify-between p-4 rounded-xl bg-[#111111] border border-[#1A1A1A] group">
+                  <div key={idx} className="flex items-center justify-between p-4 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] group">
                     {isEditing ? (
                       <div className="flex items-center gap-3 w-full">
                         <input 
                           type="date"
                           value={editDateInput}
                           onChange={e => setEditDateInput(e.target.value)}
-                          className="bg-[#1A1A1A] border border-amber-500 rounded px-3 py-1.5 text-[#0F172A] focus:outline-none [color-scheme:dark]"
+                          className="bg-[#E2E8F0] border border-amber-500 rounded px-3 py-1.5 text-[#0F172A] focus:outline-none [color-scheme:dark]"
                         />
                         <input 
                           autoFocus
                           value={editNameInput}
                           onChange={e => setEditNameInput(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') saveEdit(); else if (e.key === 'Escape') setEditingIndex(null); }}
-                          className="bg-[#1A1A1A] border border-amber-500 rounded px-3 py-1.5 flex-1 text-[#0F172A] font-bold focus:outline-none"
+                          className="bg-[#E2E8F0] border border-amber-500 rounded px-3 py-1.5 flex-1 text-[#0F172A] font-bold focus:outline-none"
                         />
                         <button onClick={saveEdit} className="p-2 text-green-400 hover:bg-green-400/10 rounded-lg"><Check className="w-5 h-5"/></button>
                         <button onClick={() => setEditingIndex(null)} className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg"><X className="w-5 h-5"/></button>
@@ -190,20 +190,20 @@ export default function HolidayMasterPage() {
                     ) : (
                       <>
                         <div className="flex items-center gap-4">
-                          <div className="bg-[#1A1A1A] border border-[#333333] px-4 py-2 rounded-lg text-center min-w-[80px]">
-                            <div className="text-xs text-[#94a3b8] uppercase font-bold tracking-wider">{new Date(h.date).toLocaleDateString('en-US', { month: 'short' })}</div>
+                          <div className="bg-[#E2E8F0] border border-[#94A3B8] px-4 py-2 rounded-lg text-center min-w-[80px]">
+                            <div className="text-xs text-[#64748B] uppercase font-bold tracking-wider">{new Date(h.date).toLocaleDateString('en-US', { month: 'short' })}</div>
                             <div className="text-xl font-bold text-[#0F172A]">{new Date(h.date).getDate()}</div>
                           </div>
                           <div>
                             <span className="text-lg font-bold text-[#0F172A] block">{h.name}</span>
-                            <span className="text-sm text-[#64748b]">{new Date(h.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric' })}</span>
+                            <span className="text-sm text-[#475569]">{new Date(h.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric' })}</span>
                           </div>
                         </div>
                         <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                          <button onClick={() => startEdit(idx, h)} className="p-2 text-[#64748b] hover:text-amber-400 hover:bg-amber-500/10 rounded-xl mr-2 transition">
+                          <button onClick={() => startEdit(idx, h)} className="p-2 text-[#475569] hover:text-amber-400 hover:bg-amber-500/10 rounded-xl mr-2 transition">
                             <Edit3 className="w-5 h-5" />
                           </button>
-                          <button onClick={() => removeHoliday(idx)} className="p-2 text-[#64748b] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition">
+                          <button onClick={() => removeHoliday(idx)} className="p-2 text-[#475569] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition">
                             <X className="w-5 h-5" />
                           </button>
                         </div>
@@ -214,7 +214,7 @@ export default function HolidayMasterPage() {
               })}
               
               {holidays.length === 0 && (
-                <div className="py-12 text-center border-2 border-dashed border-[#1A1A1A] rounded-xl text-[#64748b]">
+                <div className="py-12 text-center border-2 border-dashed border-[#E2E8F0] rounded-xl text-[#475569]">
                   <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
                   No holidays added yet.
                 </div>

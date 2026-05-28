@@ -99,26 +99,26 @@ export default function BulkImportPage() {
       <main className="flex-1 p-6 space-y-6 max-w-5xl mx-auto w-full">
         <div>
           <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <Upload className="w-5 h-5 text-[#D4D4D4]" /> Bulk Import
+            <Upload className="w-5 h-5 text-[#334155]" /> Bulk Import
           </h2>
-          <p className="text-[#94a3b8] text-sm mt-1">Upload CSV files to securely add hundreds of records at once.</p>
+          <p className="text-[#64748B] text-sm mt-1">Upload CSV files to securely add hundreds of records at once.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-6">
             {/* Import Type */}
-            <div className="glass rounded-2xl p-6 border border-[#1A1A1A]">
-              <label className="block text-xs font-medium text-[#94a3b8] mb-3 uppercase tracking-wider">Select Entity to Import</label>
+            <div className="glass rounded-2xl p-6 border border-[#E2E8F0]">
+              <label className="block text-xs font-medium text-[#64748B] mb-3 uppercase tracking-wider">Select Entity to Import</label>
               <div className="flex flex-col gap-3">
                 <button onClick={() => { setImportType('products'); setFile(null); setData([]); }} 
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${importType === 'products' ? 'bg-[#D4D4D4]/10 border-[#D4D4D4] text-[#D4D4D4]' : 'bg-[#0A0A0A] border-[#1A1A1A] text-[#0F172A] hover:border-[#475569]'}`}>
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${importType === 'products' ? 'bg-[#D4D4D4]/10 border-[#D4D4D4] text-[#334155]' : 'bg-white border-[#E2E8F0] text-[#0F172A] hover:border-[#475569]'}`}>
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${importType === 'products' ? 'border-[#D4D4D4]' : 'border-[#475569]'}`}>
                     {importType === 'products' && <div className="w-2 h-2 rounded-full bg-[#D4D4D4]" />}
                   </div>
                   <span className="font-medium">Products / Inventory</span>
                 </button>
                 <button onClick={() => { setImportType('customers'); setFile(null); setData([]); }} 
-                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${importType === 'customers' ? 'bg-[#D4D4D4]/10 border-[#D4D4D4] text-[#D4D4D4]' : 'bg-[#0A0A0A] border-[#1A1A1A] text-[#0F172A] hover:border-[#475569]'}`}>
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${importType === 'customers' ? 'bg-[#D4D4D4]/10 border-[#D4D4D4] text-[#334155]' : 'bg-white border-[#E2E8F0] text-[#0F172A] hover:border-[#475569]'}`}>
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${importType === 'customers' ? 'border-[#D4D4D4]' : 'border-[#475569]'}`}>
                     {importType === 'customers' && <div className="w-2 h-2 rounded-full bg-[#D4D4D4]" />}
                   </div>
@@ -128,20 +128,20 @@ export default function BulkImportPage() {
             </div>
 
             {/* Formatting Info */}
-            <div className="glass rounded-2xl p-6 border border-[#1A1A1A] bg-blue-500/5">
+            <div className="glass rounded-2xl p-6 border border-[#E2E8F0] bg-blue-500/5">
               <div className="flex items-start gap-3">
                 <Info className="w-5 h-5 text-blue-400 mt-0.5" />
                 <div>
                   <h4 className="text-[#0F172A] font-medium text-sm mb-1">CSV Formatting Guide</h4>
-                  <p className="text-[#94a3b8] text-xs leading-relaxed mb-3">Ensure your CSV contains column headers in the first row. The system will automatically attempt to match common header names.</p>
+                  <p className="text-[#64748B] text-xs leading-relaxed mb-3">Ensure your CSV contains column headers in the first row. The system will automatically attempt to match common header names.</p>
                   
                   {importType === 'products' ? (
-                    <div className="text-xs text-[#94a3b8] font-mono bg-[#000000] p-3 rounded-lg border border-[#1A1A1A]">
+                    <div className="text-xs text-[#64748B] font-mono bg-[#F8FAFC] p-3 rounded-lg border border-[#E2E8F0]">
                       Expected Headers:<br/>
                       <span className="text-emerald-400">Name</span>, SKU, Category, Unit, <span className="text-emerald-400">Selling Price</span>, Purchase Price, GST %, HSN Code, Stock
                     </div>
                   ) : (
-                    <div className="text-xs text-[#94a3b8] font-mono bg-[#000000] p-3 rounded-lg border border-[#1A1A1A]">
+                    <div className="text-xs text-[#64748B] font-mono bg-[#F8FAFC] p-3 rounded-lg border border-[#E2E8F0]">
                       Expected Headers:<br/>
                       <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, Street, City, State, Pincode
                     </div>
@@ -159,11 +159,11 @@ export default function BulkImportPage() {
               
               {!file ? (
                 <>
-                  <div className="w-16 h-16 rounded-full bg-[#0A0A0A] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <FileText className="w-8 h-8 text-[#94a3b8] group-hover:text-[#D4D4D4] transition-colors" />
+                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <FileText className="w-8 h-8 text-[#64748B] group-hover:text-[#D4D4D4] transition-colors" />
                   </div>
                   <h3 className="text-[#0F172A] font-semibold text-lg mb-1">Click to Upload CSV</h3>
-                  <p className="text-[#94a3b8] text-sm">or drag and drop here</p>
+                  <p className="text-[#64748B] text-sm">or drag and drop here</p>
                 </>
               ) : (
                 <div className="text-center">
@@ -173,7 +173,7 @@ export default function BulkImportPage() {
                   <h3 className="text-[#0F172A] font-semibold text-lg mb-1">{file.name}</h3>
                   <p className="text-emerald-400 text-sm font-medium">{data.length} records parsed successfully</p>
                   <button onClick={(e) => { e.stopPropagation(); setFile(null); setData([]); if(fileInputRef.current) fileInputRef.current.value=''; }} 
-                    className="mt-4 text-[#94a3b8] hover:text-[#0F172A] text-xs underline">
+                    className="mt-4 text-[#64748B] hover:text-[#0F172A] text-xs underline">
                     Remove and select another file
                   </button>
                 </div>
@@ -182,7 +182,7 @@ export default function BulkImportPage() {
 
             {/* Preview & Action */}
             {data.length > 0 && (
-              <div className="glass rounded-2xl p-6 border border-[#1A1A1A]">
+              <div className="glass rounded-2xl p-6 border border-[#E2E8F0]">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[#0F172A] font-semibold text-sm uppercase tracking-wider">Data Preview (Top 3)</h3>
                   <button onClick={processImport} disabled={loading}
@@ -192,9 +192,9 @@ export default function BulkImportPage() {
                   </button>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border border-[#1A1A1A]">
-                  <table className="w-full text-left text-sm text-[#94a3b8]">
-                    <thead className="bg-[#0A0A0A] text-[#0F172A]">
+                <div className="overflow-x-auto rounded-xl border border-[#E2E8F0]">
+                  <table className="w-full text-left text-sm text-[#64748B]">
+                    <thead className="bg-white text-[#0F172A]">
                       <tr>
                         {Object.keys(data[0] || {}).slice(0, 5).map(header => (
                           <th key={header} className="px-4 py-3 font-medium">{header}</th>
@@ -212,7 +212,7 @@ export default function BulkImportPage() {
                     </tbody>
                   </table>
                   {data.length > 3 && (
-                    <div className="p-3 text-center text-xs text-[#475569] bg-[#0A0A0A]">
+                    <div className="p-3 text-center text-xs text-[#475569] bg-white">
                       ... and {data.length - 3} more records
                     </div>
                   )}

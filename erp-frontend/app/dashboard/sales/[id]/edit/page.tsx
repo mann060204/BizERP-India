@@ -414,9 +414,9 @@ export default function NewInvoicePage() {
                    </span>
                 )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                  <div className="absolute top-full left-0 right-0 bg-white border border-[#E2E8F0] z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredCustomers.map(c => (
-                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A]">
+                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#E2E8F0]">
                         {c.name}
                       </div>
                     ))}
@@ -437,7 +437,7 @@ export default function NewInvoicePage() {
               <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
             </div>
             
-            <div className="col-span-6 border-t border-[#1A1A1A] mt-2 pt-2">
+            <div className="col-span-6 border-t border-[#E2E8F0] mt-2 pt-2">
               <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
                 <input type="checkbox" checked={useShippingAddress} onChange={e => setUseShippingAddress(e.target.checked)} className="accent-white" />
                 Custom Shipping Address
@@ -471,12 +471,12 @@ export default function NewInvoicePage() {
                     <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
                       <Plus className="w-4 h-4" />
                     </button>
-                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-[#0F172A] bg-[#1A1A1A] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
+                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-[#0F172A] bg-[#E2E8F0] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
                       <RotateCcw className="w-4 h-4" />
                     </button>
                   </label>
                   {itemInput.productId && (
-                    <span className="text-[9px] text-[#94a3b8]">
+                    <span className="text-[9px] text-[#64748B]">
                       Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-[#0F172A]">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
@@ -484,12 +484,12 @@ export default function NewInvoicePage() {
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
                   {showItemDD && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-[#0A0A0A] border border-[#1A1A1A] z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-[#E2E8F0] z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between items-center group">
+                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#E2E8F0] flex justify-between items-center group">
                           <div className="flex flex-col">
                             <span className="text-[#0F172A] font-medium">{p.name}</span>
-                            <span className="text-[9px] text-[#94a3b8]">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
+                            <span className="text-[9px] text-[#64748B]">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
                              {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
@@ -539,7 +539,7 @@ export default function NewInvoicePage() {
                 </div>
                 
                 {lastPriceInfo && (
-                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-[#F8FAFC]/80 px-1 rounded shadow cursor-pointer hover:bg-[#111111] whitespace-nowrap z-40" onClick={() => {
+                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-[#F8FAFC]/80 px-1 rounded shadow cursor-pointer hover:bg-[#F1F5F9] whitespace-nowrap z-40" onClick={() => {
                      let newRate = lastPriceInfo.price;
                      if (itemInput.unit === itemInput.secondaryUnit && itemInput.conversionRate) {
                        newRate = lastPriceInfo.price / itemInput.conversionRate;
@@ -552,8 +552,8 @@ export default function NewInvoicePage() {
 
                 {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
-                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#050505] border border-[#1A1A1A] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
-                     <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#1A1A1A] mb-1">Available Prices</div>
+                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#F1F5F9] border border-[#E2E8F0] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
+                     <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#E2E8F0] mb-1">Available Prices</div>
                      
                      {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-[#0F172A]' },
                        { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-400' },
@@ -568,7 +568,7 @@ export default function NewInvoicePage() {
                              newRate = basePrice / itemInput.conversionRate;
                            }
                            setItemInput({...itemInput, rate: newRate, selectedBaseRate: basePrice});
-                        }} className={`px-3 py-1.5 text-xs hover:bg-[#111111] cursor-pointer flex justify-between gap-4 rounded ${opt.color} ${(opt as any).isLast ? 'border-t border-[#1A1A1A] mt-1 pt-2' : ''}`}>
+                        }} className={`px-3 py-1.5 text-xs hover:bg-[#F1F5F9] cursor-pointer flex justify-between gap-4 rounded ${opt.color} ${(opt as any).isLast ? 'border-t border-[#E2E8F0] mt-1 pt-2' : ''}`}>
                           <span>{opt.label}</span> <span>₹{opt.price}</span>
                         </div>
                      ) : null)}
@@ -620,7 +620,7 @@ export default function NewInvoicePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="grid grid-cols-12 erp-grid-header border-b border-[#1A1A1A]">
+           <div className="grid grid-cols-12 erp-grid-header border-b border-[#E2E8F0]">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
              <div className="col-span-1 erp-grid-cell text-center">Qty</div>
@@ -641,7 +641,7 @@ export default function NewInvoicePage() {
                     <div className="col-span-3 erp-grid-cell font-medium flex flex-col justify-center">
                       <div>
                         {item.productName}
-                        {item.tag && <span className="ml-2 text-[9px] bg-[#1A1A1A] px-1 rounded text-[#94a3b8]">{item.tag}</span>}
+                        {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-[#64748B]">{item.tag}</span>}
                       </div>
                       {item.description && <div className="text-[10px] text-[#475569] font-normal leading-tight mt-0.5">{item.description}</div>}
                     </div>
@@ -688,11 +688,11 @@ export default function NewInvoicePage() {
 
            {/* Column 2 & 3: Payment Details & Remarks */}
            <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
-              <div className="bg-[#111111] p-1 text-[10px] font-bold text-center border border-[#1A1A1A]">PAYMENT DETAILS</div>
+              <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-[#E2E8F0]">PAYMENT DETAILS</div>
               
               <div className="grid grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
-                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 1</div>
+                  <div className="text-[9px] text-[#64748B] font-bold">PAYMENT 1</div>
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
@@ -707,7 +707,7 @@ export default function NewInvoicePage() {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="text-[9px] text-[#94a3b8] font-bold">PAYMENT 2 (Opt)</div>
+                  <div className="text-[9px] text-[#64748B] font-bold">PAYMENT 2 (Opt)</div>
                   <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
                     <option value="">None</option>
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
@@ -738,7 +738,7 @@ export default function NewInvoicePage() {
            {/* Column 4: Totals & Grand Total */}
            <div className="erp-footer-box flex flex-col justify-between">
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between text-[#94a3b8]">
+                <div className="flex justify-between text-[#64748B]">
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
@@ -753,17 +753,17 @@ export default function NewInvoicePage() {
                   <>
                     {!isInterState ? (
                       <>
-                        <div className="flex justify-between text-[#94a3b8]">
+                        <div className="flex justify-between text-[#64748B]">
                           <span>CGST</span>
                           <span>₹{totalCGST.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-[#94a3b8]">
+                        <div className="flex justify-between text-[#64748B]">
                           <span>SGST</span>
                           <span>₹{totalSGST.toFixed(2)}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="flex justify-between text-[#94a3b8]">
+                      <div className="flex justify-between text-[#64748B]">
                         <span>IGST</span>
                         <span>₹{totalIGST.toFixed(2)}</span>
                       </div>
@@ -771,15 +771,15 @@ export default function NewInvoicePage() {
                   </>
                 )}
 
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-[#1A1A1A]">
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-[#E2E8F0]">
                   <span className="erp-label">Shipping</span>
                   <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right h-7" />
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t-2 border-[#262626] space-y-1 bg-[#0A0A0A] -mx-2 -mb-2 p-3 rounded-b-lg">
+              <div className="mt-4 pt-3 border-t-2 border-[#CBD5E1] space-y-1 bg-white -mx-2 -mb-2 p-3 rounded-b-lg">
                  {roundOff !== 0 && (
-                   <div className="flex justify-between text-xs font-medium text-[#94a3b8] mb-1">
+                   <div className="flex justify-between text-xs font-medium text-[#64748B] mb-1">
                      <span>Round Off</span>
                      <span>{roundOff > 0 ? '+' : ''}{roundOff.toFixed(2)}</span>
                    </div>
@@ -788,7 +788,7 @@ export default function NewInvoicePage() {
                     <span className="text-sm font-bold text-yellow-400">GRAND TOTAL</span>
                     <span className="text-3xl font-black text-emerald-400 tracking-tight">₹{grandTotal.toFixed(2)}</span>
                  </div>
-                 <div className="flex justify-between text-[11px] font-bold text-[#94a3b8] mt-2 border-t border-[#1A1A1A] pt-2">
+                 <div className="flex justify-between text-[11px] font-bold text-[#64748B] mt-2 border-t border-[#E2E8F0] pt-2">
                     <span>Total Received</span>
                     <span>₹{totalAmountReceived.toFixed(2)}</span>
                  </div>
@@ -801,12 +801,12 @@ export default function NewInvoicePage() {
       {/* Advanced Item Search Modal */}
       {showAdvancedSearch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC]/60 backdrop-blur-sm">
-          <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between p-3 border-b border-[#1A1A1A] bg-[#0A0A0A]">
+          <div className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between p-3 border-b border-[#E2E8F0] bg-white">
               <h3 className="text-[#0F172A] font-bold text-sm">Item Search</h3>
-              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#111111] text-[#94a3b8] hover:text-[#0F172A] transition"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] transition"><X className="w-4 h-4" /></button>
             </div>
-            <div className="p-3 bg-[#0A0A0A] border-b border-[#1A1A1A] grid grid-cols-5 gap-3 items-end">
+            <div className="p-3 bg-white border-b border-[#E2E8F0] grid grid-cols-5 gap-3 items-end">
                <div className="col-span-1">
                  <label className="erp-label">Group</label>
                  <select value={advGroup} onChange={e => setAdvGroup(e.target.value)} className="erp-input w-full"><option value="">All Groups</option>{uniqueGroups.map(g => <option key={g} value={g}>{g}</option>)}</select>
@@ -827,7 +827,7 @@ export default function NewInvoicePage() {
                  </div>
                </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 bg-[#050505]">
+            <div className="flex-1 overflow-y-auto p-2 bg-[#F1F5F9]">
               <div className="text-[10px] text-[#475569] uppercase font-bold mb-2 ml-1">Search Result(s) - {advFilteredProducts.length} items</div>
               {advFilteredProducts.length === 0 ? (
                  <div className="flex flex-col items-center justify-center py-20 text-[#475569]">
@@ -836,25 +836,25 @@ export default function NewInvoicePage() {
                  </div>
               ) : (
                  <table className="w-full text-xs text-left">
-                   <thead className="bg-[#0A0A0A] text-[#94a3b8] sticky top-0">
+                   <thead className="bg-white text-[#64748B] sticky top-0">
                      <tr>
-                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Item Name</th>
-                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Group</th>
-                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Brand</th>
-                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Location</th>
-                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Stock</th>
-                       <th className="p-2 font-medium border-b border-[#1A1A1A]">Price</th>
+                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Item Name</th>
+                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Group</th>
+                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Brand</th>
+                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Location</th>
+                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Stock</th>
+                       <th className="p-2 font-medium border-b border-[#E2E8F0]">Price</th>
                      </tr>
                    </thead>
                    <tbody>
                      {advFilteredProducts.map(p => (
-                       <tr key={p._id} onClick={() => { pickProduct(p); setShowAdvancedSearch(false); }} className="border-b border-[#1A1A1A]/50 hover:bg-[#111111] cursor-pointer transition">
+                       <tr key={p._id} onClick={() => { pickProduct(p); setShowAdvancedSearch(false); }} className="border-b border-[#1A1A1A]/50 hover:bg-[#F1F5F9] cursor-pointer transition">
                          <td className="p-2 text-[#0F172A] font-medium">{p.name}</td>
-                         <td className="p-2 text-[#94a3b8]">{p.group || '—'}</td>
-                         <td className="p-2 text-[#94a3b8]">{p.brand || '—'}</td>
-                         <td className="p-2 text-[#94a3b8]">{p.location || '—'}</td>
+                         <td className="p-2 text-[#64748B]">{p.group || '—'}</td>
+                         <td className="p-2 text-[#64748B]">{p.brand || '—'}</td>
+                         <td className="p-2 text-[#64748B]">{p.location || '—'}</td>
                          <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
-                         <td className="p-2 text-[#94a3b8]">₹{p.sellingPrice}</td>
+                         <td className="p-2 text-[#64748B]">₹{p.sellingPrice}</td>
                        </tr>
                      ))}
                    </tbody>
@@ -890,7 +890,7 @@ export default function NewInvoicePage() {
       )}
 
       {/* Bottom Toolbar */}
-      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-[#E2E8F0] flex items-center justify-between px-4 z-50">
         <div className="flex gap-4">
            <Bell className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
            <Calculator className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />

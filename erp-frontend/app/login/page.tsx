@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="relative space-y-6">
           <h1 className="text-4xl font-bold text-[#0F172A] leading-tight">
             Complete Business<br />
-            <span className="text-[#D4D4D4]">Management</span> for<br />
+            <span className="text-[#334155]">Management</span> for<br />
             Indian Enterprises
           </h1>
           <p className="text-blue-200 text-lg leading-relaxed">
@@ -85,7 +85,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right Panel — Login Form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-[#000000]">
+      <div className="flex-1 flex items-center justify-center p-6 bg-[#F8FAFC]">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
@@ -97,31 +97,31 @@ export default function LoginPage() {
 
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-[#0F172A] mb-2">Welcome back</h2>
-            <p className="text-[#94a3b8]">Sign in to your business account</p>
+            <p className="text-[#64748B]">Sign in to your business account</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-[#94a3b8] mb-2">Email address</label>
+              <label className="block text-sm font-medium text-[#64748B] mb-2">Email address</label>
               <input
                 {...register('email')}
                 type="email"
                 placeholder="owner@yourbusiness.com"
-                className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
               />
               {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-[#94a3b8] mb-2">Password</label>
+              <label className="block text-sm font-medium text-[#64748B] mb-2">Password</label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPass ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-12 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-white border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-[#0F172A] transition">
@@ -142,9 +142,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-[#94a3b8] mt-8 text-sm">
+          <p className="text-center text-[#64748B] mt-8 text-sm">
             New to BizERP?{' '}
-            <Link href="/register" className="text-[#D4D4D4] hover:text-[#60A5FA] font-medium transition">
+            <Link href="/register" className="text-[#334155] hover:text-[#60A5FA] font-medium transition">
               Register your business →
             </Link>
           </p>

@@ -39,25 +39,25 @@ export default function BarcodeGeneratorPage() {
       <main className="flex-1 p-6 space-y-6 max-w-5xl mx-auto w-full print:p-0 print:m-0 print:w-full print:max-w-none">
         <div className="print:hidden">
           <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#D4D4D4]" /> Barcode Generator
+            <FileText className="w-5 h-5 text-[#334155]" /> Barcode Generator
           </h2>
-          <p className="text-[#94a3b8] text-sm mt-1">Generate and print barcode sticker grids for your products.</p>
+          <p className="text-[#64748B] text-sm mt-1">Generate and print barcode sticker grids for your products.</p>
         </div>
 
         {/* Controls - Hidden during print */}
-        <div className="glass rounded-2xl p-6 border border-[#1A1A1A] grid grid-cols-1 md:grid-cols-3 gap-6 print:hidden">
+        <div className="glass rounded-2xl p-6 border border-[#E2E8F0] grid grid-cols-1 md:grid-cols-3 gap-6 print:hidden">
           <div className="md:col-span-2 relative">
-            <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Select Product</label>
+            <label className="block text-xs font-medium text-[#64748B] mb-1.5">Select Product</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
               <input value={search} onChange={e => { setSearch(e.target.value); setShowDropdown(true); if(!e.target.value) setSelectedProduct(null); }}
                 onFocus={() => setShowDropdown(true)} placeholder="Search inventory..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
             </div>
             {showDropdown && filteredProducts.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-[#0A0A0A] border border-[#1A1A1A] rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
                 {filteredProducts.slice(0, 10).map(p => (
-                  <button key={p._id} onClick={() => selectProduct(p)} className="w-full text-left px-4 py-3 hover:bg-[#111111] transition text-sm flex justify-between">
+                  <button key={p._id} onClick={() => selectProduct(p)} className="w-full text-left px-4 py-3 hover:bg-[#F1F5F9] transition text-sm flex justify-between">
                     <span className="text-[#0F172A] font-medium">{p.name}</span>
                     <span className="text-emerald-400 font-medium">₹{p.sellingPrice}</span>
                   </button>
@@ -67,9 +67,9 @@ export default function BarcodeGeneratorPage() {
           </div>
           
           <div>
-            <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Quantity (Stickers)</label>
+            <label className="block text-xs font-medium text-[#64748B] mb-1.5">Quantity (Stickers)</label>
             <input type="number" value={quantity} onChange={e => setQuantity(parseInt(e.target.value) || 0)} min="1" max="100"
-              className="w-full px-4 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+              className="w-full px-4 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
           </div>
 
           <div className="md:col-span-3 flex justify-end">
@@ -81,7 +81,7 @@ export default function BarcodeGeneratorPage() {
         </div>
 
         {/* Print Preview Grid */}
-        <div className="glass rounded-2xl p-6 border border-[#1A1A1A] print:glass-none print:border-none print:p-0 print:block">
+        <div className="glass rounded-2xl p-6 border border-[#E2E8F0] print:glass-none print:border-none print:p-0 print:block">
           <h3 className="text-[#0F172A] font-semibold text-sm uppercase tracking-wider mb-6 print:hidden">Print Preview</h3>
           
           {selectedProduct ? (

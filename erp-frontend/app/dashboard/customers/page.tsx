@@ -47,7 +47,7 @@ export default function CustomersPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-[#0F172A]">Customer Directory</h2>
-            <p className="text-[#94a3b8] text-sm mt-0.5">{customers.length} customer{customers.length !== 1 ? 's' : ''} total</p>
+            <p className="text-[#64748B] text-sm mt-0.5">{customers.length} customer{customers.length !== 1 ? 's' : ''} total</p>
           </div>
           <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Add Customer
@@ -58,12 +58,12 @@ export default function CustomersPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, mobile, address, GSTIN..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-[#E2E8F0] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
         </div>
 
         {/* Table */}
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#D4D4D4] animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#334155] animate-spin" /></div>
         ) : customers.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <Users className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
@@ -76,29 +76,29 @@ export default function CustomersPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#1A1A1A]">
+                  <tr className="border-b border-[#E2E8F0]">
                     {['Name', 'Mobile', 'Email', 'GSTIN', 'City / State', 'Balance', 'Actions'].map(h => (
-                      <th key={h} className="text-left px-5 py-3.5 text-[#94a3b8] font-medium text-xs uppercase tracking-wider">{h}</th>
+                      <th key={h} className="text-left px-5 py-3.5 text-[#64748B] font-medium text-xs uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A1A1A]">
                   {customers.map((c) => (
-                    <tr key={c._id} className="hover:bg-[#111111] transition-colors group">
+                    <tr key={c._id} className="hover:bg-[#F1F5F9] transition-colors group">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           {c.photo ? (
-                            <img src={c.photo} alt={c.name} className="w-8 h-8 rounded-lg object-cover border border-[#1A1A1A]" />
+                            <img src={c.photo} alt={c.name} className="w-8 h-8 rounded-lg object-cover border border-[#E2E8F0]" />
                           ) : (
                             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center text-[#0F172A] text-xs font-bold">{c.name.charAt(0).toUpperCase()}</div>
                           )}
                           <span className="text-[#0F172A] font-medium">{c.name}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-[#94a3b8]">{c.mobile || '—'}</td>
-                      <td className="px-5 py-4 text-[#94a3b8]">{c.email || '—'}</td>
-                      <td className="px-5 py-4 text-[#94a3b8] font-mono text-xs">{c.gstin || '—'}</td>
-                      <td className="px-5 py-4 text-[#94a3b8]">{[c.billingAddress?.city, c.billingAddress?.state].filter(Boolean).join(', ') || '—'}</td>
+                      <td className="px-5 py-4 text-[#64748B]">{c.mobile || '—'}</td>
+                      <td className="px-5 py-4 text-[#64748B]">{c.email || '—'}</td>
+                      <td className="px-5 py-4 text-[#64748B] font-mono text-xs">{c.gstin || '—'}</td>
+                      <td className="px-5 py-4 text-[#64748B]">{[c.billingAddress?.city, c.billingAddress?.state].filter(Boolean).join(', ') || '—'}</td>
                       <td className="px-5 py-4">
                         <span className={c.openingBalance > 0 ? 'text-green-400' : c.openingBalance < 0 ? 'text-red-400' : 'text-[#475569]'}>
                           ₹{c.openingBalance?.toFixed(2) || '0.00'}
@@ -106,8 +106,8 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => router.push(`/dashboard/customers/${c._id}`)} className="p-1.5 rounded-lg hover:bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] transition"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(c._id, c.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-[#94a3b8] hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => router.push(`/dashboard/customers/${c._id}`)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(c._id, c.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-[#64748B] hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>

@@ -93,7 +93,7 @@ export default function CategoryMasterPage() {
     }));
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#D4D4D4] animate-spin" /></div>;
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-[#334155] animate-spin" /></div>;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -108,34 +108,34 @@ export default function CategoryMasterPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-[#0F172A]">Category & Brand Master</h2>
-            <p className="text-[#94a3b8] text-sm mt-0.5">Define your product groups and assign specific brands to them.</p>
+            <p className="text-[#64748B] text-sm mt-0.5">Define your product groups and assign specific brands to them.</p>
           </div>
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
           </button>
         </div>
 
-        <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-6">
+        <div className="glass rounded-2xl p-6 border border-[#E2E8F0] space-y-6">
           
-          <div className="flex items-center gap-3 border-b border-[#1A1A1A] pb-4">
+          <div className="flex items-center gap-3 border-b border-[#E2E8F0] pb-4">
             <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
               <Layers className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
               <h3 className="font-semibold text-[#0F172A]">Product Groups</h3>
-              <p className="text-[#94a3b8] text-xs mt-0.5">Create top-level groups (e.g. T-Shirts, Electronics)</p>
+              <p className="text-[#64748B] text-xs mt-0.5">Create top-level groups (e.g. T-Shirts, Electronics)</p>
             </div>
           </div>
 
           <div className="flex gap-2 max-w-md">
             <input value={newGroup} onChange={e => setNewGroup(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGroup(); } }} 
-              className="flex-1 px-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new group (e.g. T-Shirts)..." />
+              className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-[#E2E8F0] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new group (e.g. T-Shirts)..." />
             <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-[#0F172A] rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-indigo-600/20"><Plus className="w-5 h-5" /></button>
           </div>
 
           <div className="space-y-4 pt-4">
             {categories.length === 0 && (
-              <div className="text-center p-8 border border-dashed border-[#262626] rounded-xl text-[#64748b]">
+              <div className="text-center p-8 border border-dashed border-[#CBD5E1] rounded-xl text-[#475569]">
                 No categories defined yet. Create a group to get started.
               </div>
             )}
@@ -144,14 +144,14 @@ export default function CategoryMasterPage() {
               const isExpanded = expandedGroup === cat.name;
               
               return (
-                <div key={cat.name} className="border border-[#1A1A1A] rounded-xl overflow-hidden bg-[#0A0A0A]">
+                <div key={cat.name} className="border border-[#E2E8F0] rounded-xl overflow-hidden bg-white">
                   {/* Group Header */}
                   <div 
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#111111] transition group"
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#F1F5F9] transition group"
                     onClick={() => { if (!editingGroup) setExpandedGroup(isExpanded ? null : cat.name); }}
                   >
                     <div className="flex items-center gap-3">
-                      {isExpanded ? <ChevronDown className="w-5 h-5 text-[#64748b]" /> : <ChevronRight className="w-5 h-5 text-[#64748b]" />}
+                      {isExpanded ? <ChevronDown className="w-5 h-5 text-[#475569]" /> : <ChevronRight className="w-5 h-5 text-[#475569]" />}
                       
                       {editingGroup === cat.name ? (
                         <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
@@ -160,7 +160,7 @@ export default function CategoryMasterPage() {
                             value={editGroupInput} 
                             onChange={e => setEditGroupInput(e.target.value)} 
                             onKeyDown={e => { if (e.key === 'Enter') saveGroupEdit(cat.name, e); else if (e.key === 'Escape') setEditingGroup(null); }}
-                            className="bg-[#1A1A1A] border border-indigo-500 rounded px-2 py-1 text-[#0F172A] text-lg font-bold focus:outline-none"
+                            className="bg-[#E2E8F0] border border-indigo-500 rounded px-2 py-1 text-[#0F172A] text-lg font-bold focus:outline-none"
                           />
                           <button onClick={(e) => saveGroupEdit(cat.name, e)} className="p-1 text-green-400 hover:bg-green-400/10 rounded"><Check className="w-4 h-4"/></button>
                           <button onClick={() => setEditingGroup(null)} className="p-1 text-red-400 hover:bg-red-400/10 rounded"><X className="w-4 h-4"/></button>
@@ -168,7 +168,7 @@ export default function CategoryMasterPage() {
                       ) : (
                         <>
                           <span className="font-bold text-[#0F172A] text-lg">{cat.name}</span>
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#1A1A1A] text-[#94a3b8]">{cat.brands.length} Brands</span>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#E2E8F0] text-[#64748B]">{cat.brands.length} Brands</span>
                         </>
                       )}
                     </div>
@@ -177,14 +177,14 @@ export default function CategoryMasterPage() {
                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
                         <button 
                           onClick={(e) => startEditGroup(cat.name, e)} 
-                          className="p-1.5 text-[#64748b] hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition mr-1"
+                          className="p-1.5 text-[#475569] hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition mr-1"
                           title="Edit Group"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); removeGroup(cat.name); }} 
-                          className="p-1.5 text-[#64748b] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                          className="p-1.5 text-[#475569] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
                           title="Delete Group"
                         >
                           <X className="w-4 h-4" />
@@ -195,17 +195,17 @@ export default function CategoryMasterPage() {
 
                   {/* Brands List (Nested) */}
                   {isExpanded && (
-                    <div className="p-4 pt-0 border-t border-[#1A1A1A] bg-[#050505]">
+                    <div className="p-4 pt-0 border-t border-[#E2E8F0] bg-[#F1F5F9]">
                       <div className="mt-4 mb-3 flex items-center gap-2">
-                        <Tag className="w-4 h-4 text-[#94a3b8]" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-[#94a3b8]">Connected Brands</span>
+                        <Tag className="w-4 h-4 text-[#64748B]" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">Connected Brands</span>
                       </div>
                       
                       <div className="flex flex-wrap gap-2 mb-4">
                         {cat.brands.map((brand, idx) => {
                               const isEditing = editingBrand?.group === cat.name && editingBrand?.idx === idx;
                               return (
-                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#111111] border border-[#1A1A1A] group">
+                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] group">
                                   {isEditing ? (
                                     <div className="flex items-center gap-2 w-full">
                                       <input 
@@ -213,19 +213,19 @@ export default function CategoryMasterPage() {
                                         value={editBrandInput}
                                         onChange={e => setEditBrandInput(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') saveBrandEdit(); else if (e.key === 'Escape') setEditingBrand(null); }}
-                                        className="bg-[#1A1A1A] border border-indigo-500 rounded px-2 py-1 flex-1 text-sm text-[#0F172A] focus:outline-none"
+                                        className="bg-[#E2E8F0] border border-indigo-500 rounded px-2 py-1 flex-1 text-sm text-[#0F172A] focus:outline-none"
                                       />
                                       <button onClick={saveBrandEdit} className="p-1 text-green-400 hover:bg-green-400/10 rounded"><Check className="w-3.5 h-3.5"/></button>
                                       <button onClick={() => setEditingBrand(null)} className="p-1 text-red-400 hover:bg-red-400/10 rounded"><X className="w-3.5 h-3.5"/></button>
                                     </div>
                                   ) : (
                                     <>
-                                      <span className="text-sm font-medium text-[#D4D4D4]">{brand}</span>
+                                      <span className="text-sm font-medium text-[#334155]">{brand}</span>
                                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                                        <button onClick={() => startEditBrand(cat.name, idx, brand)} className="p-1 text-[#64748b] hover:text-indigo-400 hover:bg-indigo-500/10 rounded mr-1">
+                                        <button onClick={() => startEditBrand(cat.name, idx, brand)} className="p-1 text-[#475569] hover:text-indigo-400 hover:bg-indigo-500/10 rounded mr-1">
                                           <Edit3 className="w-3.5 h-3.5" />
                                         </button>
-                                        <button onClick={() => removeBrand(cat.name, idx)} className="p-1 text-[#64748b] hover:text-red-400 hover:bg-red-500/10 rounded">
+                                        <button onClick={() => removeBrand(cat.name, idx)} className="p-1 text-[#475569] hover:text-red-400 hover:bg-red-500/10 rounded">
                                           <X className="w-3.5 h-3.5" />
                                         </button>
                                       </div>
@@ -244,10 +244,10 @@ export default function CategoryMasterPage() {
                           value={newBrandInputs[cat.name] || ''} 
                           onChange={e => setNewBrandInputs({...newBrandInputs, [cat.name]: e.target.value})} 
                           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBrand(cat.name); } }} 
-                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-[#262626] text-[#0F172A] focus:outline-none focus:border-indigo-500 text-xs transition" 
+                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-[#CBD5E1] text-[#0F172A] focus:outline-none focus:border-indigo-500 text-xs transition" 
                           placeholder={`Add brand to ${cat.name} (e.g. ZARA)...`} 
                         />
-                        <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 bg-[#1A1A1A] hover:bg-[#262626] text-[#0F172A] rounded-lg text-xs font-semibold transition">Add Brand</button>
+                        <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 bg-[#E2E8F0] hover:bg-[#262626] text-[#0F172A] rounded-lg text-xs font-semibold transition">Add Brand</button>
                       </div>
                     </div>
                   )}

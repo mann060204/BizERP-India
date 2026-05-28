@@ -71,7 +71,7 @@ export default function DashboardPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#0A0A0A] border border-[#1A1A1A] p-3 rounded-lg shadow-xl">
+        <div className="bg-white border border-[#E2E8F0] p-3 rounded-lg shadow-xl">
           <p className="text-[#0F172A] font-medium text-sm mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm font-semibold flex justify-between gap-4" style={{ color: entry.color }}>
@@ -96,12 +96,12 @@ export default function DashboardPage() {
             Good {greeting},{' '}
             <span className="text-[#0F172A]">{user?.name?.split(' ')[0] || 'Admin'}</span> 👋
           </h2>
-          <p className="text-[#94a3b8] mt-1 text-sm">Here's your business snapshot for today.</p>
+          <p className="text-[#64748B] mt-1 text-sm">Here's your business snapshot for today.</p>
         </div>
 
         {/* KPI Grid */}
         {loading ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-[#D4D4D4]" /></div>
+          <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-[#334155]" /></div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                     </div>
                     <ArrowUpRight className="w-4 h-4 text-[#475569] group-hover:text-[#D4D4D4] transition" />
                   </div>
-                  <p className="text-[#94a3b8] text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
+                  <p className="text-[#64748B] text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
                   <p className="text-[#0F172A] text-2xl font-bold">{value}</p>
                   <p className="text-[#475569] text-xs mt-1">{sub}</p>
                 </div>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               <div className="glass rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-[#0F172A] font-semibold">Sales Overview</h3>
-                  <span className="text-xs text-[#94a3b8] bg-[#000000] px-3 py-1 rounded-full border border-[#1A1A1A]">Last 30 days</span>
+                  <span className="text-xs text-[#64748B] bg-[#F8FAFC] px-3 py-1 rounded-full border border-[#E2E8F0]">Last 30 days</span>
                 </div>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -154,7 +154,7 @@ export default function DashboardPage() {
               <div className="glass rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-[#0F172A] font-semibold">Revenue vs Profit</h3>
-                  <span className="text-xs text-[#94a3b8] bg-[#000000] px-3 py-1 rounded-full border border-[#1A1A1A]">Last 6 Months</span>
+                  <span className="text-xs text-[#64748B] bg-[#F8FAFC] px-3 py-1 rounded-full border border-[#E2E8F0]">Last 6 Months</span>
                 </div>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -181,8 +181,8 @@ export default function DashboardPage() {
             {QUICK_ACTIONS.map(({ label, href, icon: ActionIcon, desc }) => (
               <a key={label} href={href}
                 className="glass ngrok-card-hover rounded-2xl p-5 group cursor-pointer flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-xl bg-[#111111] border border-[#1A1A1A] flex items-center justify-center mb-4 group-hover:bg-[#2563EB]/10 group-hover:border-[#2563EB]/30 transition">
-                  {ActionIcon && <ActionIcon className="w-5 h-5 text-[#94a3b8] group-hover:text-[#2563EB] transition" />}
+                <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] flex items-center justify-center mb-4 group-hover:bg-[#2563EB]/10 group-hover:border-[#2563EB]/30 transition">
+                  {ActionIcon && <ActionIcon className="w-5 h-5 text-[#64748B] group-hover:text-[#2563EB] transition" />}
                 </div>
                 <div>
                   <p className="text-[#0F172A] text-sm font-semibold group-hover:text-[#FFFFFF] transition">{label}</p>

@@ -83,7 +83,7 @@ export default function DiscountSchemesPage() {
                 <Tag className="w-8 h-8 text-rose-500" />
                 Discount Schemes
               </h2>
-              <p className="text-[#94a3b8] mt-2">Manage all active promotional and bulk discount rules</p>
+              <p className="text-[#64748B] mt-2">Manage all active promotional and bulk discount rules</p>
             </div>
             <Link
               href="/dashboard/discounts/new"
@@ -94,25 +94,25 @@ export default function DiscountSchemesPage() {
             </Link>
           </div>
 
-          <div className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl overflow-hidden">
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#1A1A1A] bg-[#111111]">
-                  <th className="p-4 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Scheme Name</th>
-                  <th className="p-4 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Type</th>
-                  <th className="p-4 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Value</th>
-                  <th className="p-4 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Status</th>
-                  <th className="p-4 text-xs font-semibold text-[#64748b] uppercase tracking-wider text-right">Actions</th>
+                <tr className="border-b border-[#E2E8F0] bg-[#F1F5F9]">
+                  <th className="p-4 text-xs font-semibold text-[#475569] uppercase tracking-wider">Scheme Name</th>
+                  <th className="p-4 text-xs font-semibold text-[#475569] uppercase tracking-wider">Type</th>
+                  <th className="p-4 text-xs font-semibold text-[#475569] uppercase tracking-wider">Value</th>
+                  <th className="p-4 text-xs font-semibold text-[#475569] uppercase tracking-wider">Status</th>
+                  <th className="p-4 text-xs font-semibold text-[#475569] uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1A1A1A]">
                 {schemes.map((scheme, idx) => (
-                  <tr key={idx} className="hover:bg-[#111111] transition group">
+                  <tr key={idx} className="hover:bg-[#F1F5F9] transition group">
                     <td className="p-4">
                       <span className="font-bold text-[#0F172A] text-base block">{scheme.name}</span>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-[#1A1A1A] text-[#D4D4D4]">
+                      <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-[#E2E8F0] text-[#334155]">
                         {scheme.type}
                       </span>
                     </td>
@@ -133,7 +133,7 @@ export default function DiscountSchemesPage() {
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
                         <button 
                           onClick={() => deleteScheme(idx)}
-                          className="p-2 text-[#64748b] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition"
+                          className="p-2 text-[#475569] hover:text-red-400 hover:bg-red-500/10 rounded-xl transition"
                           title="Delete Scheme"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -146,7 +146,7 @@ export default function DiscountSchemesPage() {
             </table>
 
             {schemes.length === 0 && (
-              <div className="p-12 text-center text-[#64748b]">
+              <div className="p-12 text-center text-[#475569]">
                 <Tag className="w-12 h-12 mx-auto mb-3 opacity-20" />
                 <p>No discount schemes found.</p>
                 <Link href="/dashboard/discounts/new" className="text-rose-500 hover:underline mt-2 inline-block">Create one now</Link>

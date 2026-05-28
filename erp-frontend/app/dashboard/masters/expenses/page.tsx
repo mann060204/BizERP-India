@@ -100,7 +100,7 @@ export default function ExpenseMasterPage() {
                 <HandCoins className="w-8 h-8 text-emerald-500" />
                 Expense Master
               </h2>
-              <p className="text-[#94a3b8] mt-2">Manage categories for your business expenses (Rent, Salary, Travel, etc.)</p>
+              <p className="text-[#64748B] mt-2">Manage categories for your business expenses (Rent, Salary, Travel, etc.)</p>
             </div>
             <button
               onClick={handleSave}
@@ -112,7 +112,7 @@ export default function ExpenseMasterPage() {
             </button>
           </div>
 
-          <div className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6">
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6">
             <div className="flex gap-4 mb-6">
               <input 
                 type="text"
@@ -120,11 +120,11 @@ export default function ExpenseMasterPage() {
                 value={newExpense}
                 onChange={e => setNewExpense(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addExpense()}
-                className="flex-1 bg-[#111111] border border-[#262626] rounded-xl px-4 text-[#0F172A] focus:outline-none focus:border-emerald-500 transition"
+                className="flex-1 bg-[#F1F5F9] border border-[#CBD5E1] rounded-xl px-4 text-[#0F172A] focus:outline-none focus:border-emerald-500 transition"
               />
               <button 
                 onClick={addExpense}
-                className="px-5 py-2.5 bg-[#1A1A1A] text-[#0F172A] font-medium rounded-xl hover:bg-[#262626] border border-[#333333] transition flex items-center gap-2"
+                className="px-5 py-2.5 bg-[#E2E8F0] text-[#0F172A] font-medium rounded-xl hover:bg-[#262626] border border-[#94A3B8] transition flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" /> Add Category
               </button>
@@ -135,7 +135,7 @@ export default function ExpenseMasterPage() {
                 const isEditing = editingIndex === idx;
                 
                 return (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[#111111] border border-[#1A1A1A] group">
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] group">
                     {isEditing ? (
                       <div className="flex items-center gap-2 w-full">
                         <input 
@@ -143,7 +143,7 @@ export default function ExpenseMasterPage() {
                           value={editInput}
                           onChange={e => setEditInput(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') saveEdit(); else if (e.key === 'Escape') setEditingIndex(null); }}
-                          className="bg-[#1A1A1A] border border-emerald-500 rounded px-2 py-1 flex-1 text-[#0F172A] font-bold focus:outline-none"
+                          className="bg-[#E2E8F0] border border-emerald-500 rounded px-2 py-1 flex-1 text-[#0F172A] font-bold focus:outline-none"
                         />
                         <button onClick={saveEdit} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded-lg"><Check className="w-4 h-4"/></button>
                         <button onClick={() => setEditingIndex(null)} className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg"><X className="w-4 h-4"/></button>
@@ -152,10 +152,10 @@ export default function ExpenseMasterPage() {
                       <>
                         <span className="font-bold text-[#0F172A]">{expense}</span>
                         <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                          <button onClick={() => startEdit(idx, expense)} className="p-1.5 text-[#64748b] hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg mr-1 transition">
+                          <button onClick={() => startEdit(idx, expense)} className="p-1.5 text-[#475569] hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg mr-1 transition">
                             <Edit3 className="w-4 h-4" />
                           </button>
-                          <button onClick={() => removeExpense(idx)} className="p-1.5 text-[#64748b] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                          <button onClick={() => removeExpense(idx)} className="p-1.5 text-[#475569] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
                             <X className="w-4 h-4" />
                           </button>
                         </div>
@@ -166,7 +166,7 @@ export default function ExpenseMasterPage() {
               })}
               
               {expenseCategories.length === 0 && (
-                <div className="col-span-full py-8 text-center border-2 border-dashed border-[#1A1A1A] rounded-xl text-[#64748b]">
+                <div className="col-span-full py-8 text-center border-2 border-dashed border-[#E2E8F0] rounded-xl text-[#475569]">
                   No expense categories added yet. Add your first category above.
                 </div>
               )}
