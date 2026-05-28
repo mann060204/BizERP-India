@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Topbar from '../../components/layout/Topbar';
 import { useAppSelector } from '../../hooks/useRedux';
 import { invoicesApi, purchasesApi, inventoryApi, reportsApi } from '../../lib/erp-api';
@@ -18,6 +19,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user } = useAppSelector((s) => s.auth);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';

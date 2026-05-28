@@ -101,7 +101,7 @@ export default function NewInvoicePage() {
         const [cRes, pRes, iRes] = await Promise.all([
           customersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
-          invoicesApi.get(id)
+          invoicesApi.get(id as string)
         ]);
         
         setCustomers(cRes.data.customers);
@@ -121,9 +121,9 @@ export default function NewInvoicePage() {
         setContactNo(inv.customerSnapshot.mobile || '');
         setCustomerAddress(inv.customerSnapshot.address || '');
         setCustomerGstin(inv.customerSnapshot.gstin || '');
-        if (inv.customerId) setSelectedCustomer(cRes.data.customers.find(c => c._id === (inv.customerId._id || inv.customerId)));
+        if (inv.customerId) setSelectedCustomer(cRes.data.customers.find((c: any) => c._id === (inv.customerId._id || inv.customerId)));
         
-        setLineItems(inv.lineItems.map(item => ({
+        setLineItems(inv.lineItems.map((item: any) => ({
           ...item,
           batchNo: item.batchNo || '',
           tag: item.tag || '',
@@ -336,7 +336,7 @@ export default function NewInvoicePage() {
         billTo,
         status: saveStatus === 'paid' ? 'paid' : totalAmountReceived > 0 ? 'partial' : saveStatus,
       };
-      const { data } = await invoicesApi.update(id, payload);
+      const { data } = await invoicesApi.update(id as string, payload);
       toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);
       router.push('/dashboard/sales');
     } catch (e: any) {
