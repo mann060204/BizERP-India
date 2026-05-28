@@ -51,13 +51,13 @@ export default function LoginPage() {
         <div className="relative">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-white" />
+              <BarChart3 className="w-6 h-6 text-[#0F172A]" />
             </div>
-            <span className="text-white font-bold text-xl tracking-tight">BizERP India</span>
+            <span className="text-[#0F172A] font-bold text-xl tracking-tight">BizERP India</span>
           </div>
         </div>
         <div className="relative space-y-6">
-          <h1 className="text-4xl font-bold text-white leading-tight">
+          <h1 className="text-4xl font-bold text-[#0F172A] leading-tight">
             Complete Business<br />
             <span className="text-[#D4D4D4]">Management</span> for<br />
             Indian Enterprises
@@ -74,7 +74,7 @@ export default function LoginPage() {
             ].map((f) => (
               <div key={f.label} className="glass rounded-xl p-4 flex items-center gap-3">
                 <span className="text-2xl">{f.icon}</span>
-                <span className="text-white text-sm font-medium">{f.label}</span>
+                <span className="text-[#0F172A] text-sm font-medium">{f.label}</span>
               </div>
             ))}
           </div>
@@ -90,13 +90,13 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" />
+              <BarChart3 className="w-5 h-5 text-[#0F172A]" />
             </div>
-            <span className="text-white font-bold text-lg">BizERP India</span>
+            <span className="text-[#0F172A] font-bold text-lg">BizERP India</span>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
+            <h2 className="text-3xl font-bold text-[#0F172A] mb-2">Welcome back</h2>
             <p className="text-[#94a3b8]">Sign in to your business account</p>
           </div>
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 {...register('email')}
                 type="email"
                 placeholder="owner@yourbusiness.com"
-                className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
+                className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
               />
               {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email.message}</p>}
             </div>
@@ -121,10 +121,10 @@ export default function LoginPage() {
                   {...register('password')}
                   type={showPass ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-12 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
+                  className="w-full px-4 py-3 pr-12 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition"
                 />
                 <button type="button" onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-white transition">
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] hover:text-[#0F172A] transition">
                   {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>

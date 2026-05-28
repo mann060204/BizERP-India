@@ -34,14 +34,14 @@ export default function GstReportPage() {
       <main className="flex-1 p-6 space-y-6 max-w-5xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-bold text-white">GSTR-3B Summary</h2>
+            <h2 className="text-xl font-bold text-[#0F172A]">GSTR-3B Summary</h2>
             <p className="text-[#94a3b8] text-sm mt-0.5">Outward supplies and ITC claim summary</p>
           </div>
           <div className="flex gap-3">
             <input type="date" value={dateRange.from} onChange={e => setDateRange({ ...dateRange, from: e.target.value })}
-              className="px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
+              className="px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
             <input type="date" value={dateRange.to} onChange={e => setDateRange({ ...dateRange, to: e.target.value })}
-              className="px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
+              className="px-3 py-2 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] text-sm focus:outline-none focus:border-[#D4D4D4] transition" />
           </div>
         </div>
 
@@ -55,15 +55,15 @@ export default function GstReportPage() {
               <div className="glass rounded-2xl border border-[#1A1A1A] overflow-hidden">
                 <div className="p-4 bg-[#0A0A0A] border-b border-[#1A1A1A] flex items-center gap-2">
                   <FileStack className="w-5 h-5 text-blue-400" />
-                  <h3 className="font-semibold text-white">3.1 Outward Supplies (Sales)</h3>
+                  <h3 className="font-semibold text-[#0F172A]">3.1 Outward Supplies (Sales)</h3>
                 </div>
                 <div className="p-4 space-y-3">
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">Taxable Value</span><span className="text-white font-medium">₹{data.outward.taxableValue.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">CGST Collected</span><span className="text-white">₹{data.outward.cgst.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">SGST Collected</span><span className="text-white">₹{data.outward.sgst.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">IGST Collected</span><span className="text-white">₹{data.outward.igst.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">Taxable Value</span><span className="text-[#0F172A] font-medium">₹{data.outward.taxableValue.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">CGST Collected</span><span className="text-[#0F172A]">₹{data.outward.cgst.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">SGST Collected</span><span className="text-[#0F172A]">₹{data.outward.sgst.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">IGST Collected</span><span className="text-[#0F172A]">₹{data.outward.igst.toFixed(2)}</span></div>
                   <div className="border-t border-[#1A1A1A] pt-2 flex justify-between font-bold text-sm">
-                    <span className="text-white">Total Output Tax</span><span className="text-blue-400">₹{data.outward.totalTax.toFixed(2)}</span>
+                    <span className="text-[#0F172A]">Total Output Tax</span><span className="text-blue-400">₹{data.outward.totalTax.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -72,15 +72,15 @@ export default function GstReportPage() {
               <div className="glass rounded-2xl border border-[#1A1A1A] overflow-hidden">
                 <div className="p-4 bg-[#0A0A0A] border-b border-[#1A1A1A] flex items-center gap-2">
                   <FileStack className="w-5 h-5 text-emerald-400" />
-                  <h3 className="font-semibold text-white">4. Eligible ITC (Purchases & Exp.)</h3>
+                  <h3 className="font-semibold text-[#0F172A]">4. Eligible ITC (Purchases & Exp.)</h3>
                 </div>
                 <div className="p-4 space-y-3">
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">Taxable Value</span><span className="text-white font-medium">₹{data.inward.taxableValue.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">CGST Paid</span><span className="text-white">₹{data.inward.cgst.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">SGST Paid</span><span className="text-white">₹{data.inward.sgst.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">IGST Paid</span><span className="text-white">₹{data.inward.igst.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">Taxable Value</span><span className="text-[#0F172A] font-medium">₹{data.inward.taxableValue.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">CGST Paid</span><span className="text-[#0F172A]">₹{data.inward.cgst.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">SGST Paid</span><span className="text-[#0F172A]">₹{data.inward.sgst.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-sm"><span className="text-[#94a3b8]">IGST Paid</span><span className="text-[#0F172A]">₹{data.inward.igst.toFixed(2)}</span></div>
                   <div className="border-t border-[#1A1A1A] pt-2 flex justify-between font-bold text-sm">
-                    <span className="text-white">Total ITC Available</span><span className="text-emerald-400">₹{data.inward.totalTax.toFixed(2)}</span>
+                    <span className="text-[#0F172A]">Total ITC Available</span><span className="text-emerald-400">₹{data.inward.totalTax.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -90,21 +90,21 @@ export default function GstReportPage() {
             <div className="glass rounded-2xl border border-orange-500/30 overflow-hidden bg-gradient-to-r from-orange-500/5 to-transparent">
               <div className="p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
-                  <h3 className="font-bold text-white text-lg">Net GST Payable (Cash Ledger)</h3>
+                  <h3 className="font-bold text-[#0F172A] text-lg">Net GST Payable (Cash Ledger)</h3>
                   <p className="text-[#94a3b8] text-sm mt-1">Output Tax minus Eligible ITC</p>
                 </div>
                 <div className="flex gap-6">
                   <div>
                     <p className="text-[#94a3b8] text-xs uppercase tracking-wider mb-1">CGST</p>
-                    <p className="text-white font-semibold">₹{data.netGstPayable.cgst.toFixed(2)}</p>
+                    <p className="text-[#0F172A] font-semibold">₹{data.netGstPayable.cgst.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-[#94a3b8] text-xs uppercase tracking-wider mb-1">SGST</p>
-                    <p className="text-white font-semibold">₹{data.netGstPayable.sgst.toFixed(2)}</p>
+                    <p className="text-[#0F172A] font-semibold">₹{data.netGstPayable.sgst.toFixed(2)}</p>
                   </div>
                   <div>
                     <p className="text-[#94a3b8] text-xs uppercase tracking-wider mb-1">IGST</p>
-                    <p className="text-white font-semibold">₹{data.netGstPayable.igst.toFixed(2)}</p>
+                    <p className="text-[#0F172A] font-semibold">₹{data.netGstPayable.igst.toFixed(2)}</p>
                   </div>
                   <div className="pl-6 border-l border-[#1A1A1A]">
                     <p className="text-[#D4D4D4] text-xs font-bold uppercase tracking-wider mb-1">Total Payable</p>

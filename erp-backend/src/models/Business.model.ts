@@ -36,6 +36,19 @@ export interface IBusiness extends Document {
     name: string;
     brands: string[];
   }[];
+  units: string[];
+  expenseCategories: string[];
+  holidays: {
+    date: Date;
+    name: string;
+  }[];
+  discountSchemes: {
+    _id?: mongoose.Types.ObjectId;
+    name: string;
+    type: 'PERCENTAGE' | 'FLAT';
+    value: number;
+    isActive: boolean;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,6 +100,30 @@ const BusinessSchema = new Schema<IBusiness>(
       type: [{
         name: { type: String, required: true },
         brands: [String]
+      }],
+      default: []
+    },
+    units: {
+      type: [String],
+      default: ['Nos', 'Kg', 'Ltr', 'Box', 'Pcs', 'Mtr']
+    },
+    expenseCategories: {
+      type: [String],
+      default: ['Rent', 'Salary', 'Electricity', 'Water', 'Office Supplies', 'Travel', 'Marketing']
+    },
+    holidays: {
+      type: [{
+        date: { type: Date, required: true },
+        name: { type: String, required: true }
+      }],
+      default: []
+    },
+    discountSchemes: {
+      type: [{
+        name: { type: String, required: true },
+        type: { type: String, enum: ['PERCENTAGE', 'FLAT'], required: true },
+        value: { type: Number, required: true },
+        isActive: { type: Boolean, default: true }
       }],
       default: []
     }

@@ -137,23 +137,23 @@ export default function NewCustomerPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
       <Topbar title="Customer Information" />
       <div className="flex px-4 pt-2 border-b border-[#1A1A1A] bg-[#050505]">
-         <div className="px-4 py-2 text-xs font-semibold bg-[#111111] border border-b-0 border-[#1A1A1A] rounded-t text-white">Profile</div>
+         <div className="px-4 py-2 text-xs font-semibold bg-[#111111] border border-b-0 border-[#1A1A1A] rounded-t text-[#0F172A]">Profile</div>
       </div>
       
       <main className="flex-1 overflow-y-auto p-4 bg-[#050505]">
          <div className="flex flex-col md:flex-row gap-4 max-w-6xl mx-auto">
             {/* Left Panel - Photo */}
             <div className="w-full md:w-64 shrink-0">
-               <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-6 shadow-sm">
-                 <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Profile Pic</legend>
+               <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-6 shadow-sm">
+                 <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Profile Pic</legend>
                  
                  {/* Photo Preview or Camera */}
                  <div className="w-40 h-40 mx-auto mb-4 relative">
                    {showCamera ? (
-                     <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-black flex items-center justify-center relative">
+                     <div className="w-full h-full rounded-full overflow-hidden border-4 border-[#1e3a8a] bg-[#F8FAFC] flex items-center justify-center relative">
                        {cameraError ? (
                          <div className="text-center p-2">
                            <VideoOff className="w-8 h-8 text-red-400 mx-auto mb-1" />
@@ -190,7 +190,7 @@ export default function NewCustomerPage() {
                  {showCamera ? (
                    <div className="flex justify-center gap-3 px-2 mt-2">
                      {!cameraError && (
-                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-white bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-[#0F172A] bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                          <Camera className="w-4 h-4" /> Capture
                        </button>
                      )}
@@ -245,8 +245,8 @@ export default function NewCustomerPage() {
                {/* Column 1 */}
                <div className="space-y-4">
                  
-                 <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Customer Details</legend>
+                 <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Customer Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
                      <label className="text-[#94a3b8]">Full Name <span className="text-red-500">*</span></label>
                      <input className="erp-input w-full bg-[#111111]" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} />
@@ -280,8 +280,8 @@ export default function NewCustomerPage() {
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Tax Details</legend>
+                 <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Tax Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
                      <label className="text-[#94a3b8]">PAN No.</label>
                      <input className="erp-input w-full bg-[#111111]" value={form.panNo} onChange={e=>setForm({...form, panNo: e.target.value})} />
@@ -309,8 +309,8 @@ export default function NewCustomerPage() {
                {/* Column 2 */}
                <div className="space-y-4">
                  
-                 <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Account Details</legend>
+                 <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Account Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
                      <label className="text-[#94a3b8]">Type</label>
                      <div className="flex gap-4">
@@ -324,14 +324,14 @@ export default function NewCustomerPage() {
                      
                      <label className="text-[#94a3b8]">Opening Balance</label>
                      <div className="flex">
-                        <span className="bg-[#1e3a8a] text-white px-2.5 py-1 border border-[#1A1A1A] border-r-0 flex items-center shadow-inner">₹</span>
+                        <span className="bg-[#1e3a8a] text-[#0F172A] px-2.5 py-1 border border-[#1A1A1A] border-r-0 flex items-center shadow-inner">₹</span>
                         <input type="number" className="erp-input w-full rounded-l-none bg-[#111111]" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e=>setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} />
                      </div>
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Identity Details</legend>
+                 <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Identity Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
                      <label className="text-[#94a3b8]">Document Type</label>
                      <select className="erp-input w-full bg-[#111111]" value={form.documentType} onChange={e=>setForm({...form, documentType: e.target.value})}>
@@ -344,8 +344,8 @@ export default function NewCustomerPage() {
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Anniversary</legend>
+                 <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Anniversary</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
                      <label className="text-[#94a3b8]">Date of Birth</label>
                      <div className="flex items-center gap-2">
@@ -365,8 +365,8 @@ export default function NewCustomerPage() {
                    </div>
                  </fieldset>
                  
-                 <fieldset className="border border-[#1A1A1A] rounded bg-black p-4 relative pt-5 shadow-sm">
-                   <legend className="text-[11px] font-semibold px-2 bg-black text-[#94a3b8] absolute -top-2 left-2">Other Details</legend>
+                 <fieldset className="border border-[#1A1A1A] rounded bg-[#F8FAFC] p-4 relative pt-5 shadow-sm">
+                   <legend className="text-[11px] font-semibold px-2 bg-[#F8FAFC] text-[#94a3b8] absolute -top-2 left-2">Other Details</legend>
                    <div className="grid grid-cols-[110px_1fr] gap-y-2.5 items-center text-xs">
                      <label className="text-[#94a3b8]">Credit Allowed</label>
                      <div className="flex gap-4">
@@ -376,7 +376,7 @@ export default function NewCustomerPage() {
                      
                      <label className="text-[#94a3b8]">Credit Limit</label>
                      <div className="flex">
-                        <span className="bg-[#1e3a8a] text-white px-2.5 py-1 border border-[#1A1A1A] border-r-0 flex items-center shadow-inner opacity-[var(--tw-opacity)]" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
+                        <span className="bg-[#1e3a8a] text-[#0F172A] px-2.5 py-1 border border-[#1A1A1A] border-r-0 flex items-center shadow-inner opacity-[var(--tw-opacity)]" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
                         <input type="number" className="erp-input w-full rounded-l-none disabled:opacity-40 bg-[#111111]" disabled={!form.creditAllowed} value={form.creditLimit === 0 ? '' : form.creditLimit} onChange={e=>setForm({...form, creditLimit: parseFloat(e.target.value) || 0})} />
                      </div>
                      
@@ -392,7 +392,7 @@ export default function NewCustomerPage() {
                  </fieldset>
                  
                  <div className="flex justify-end pt-4 pb-12 lg:pb-0">
-                   <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-white px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
+                   <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-[#0F172A] px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
                      <Save className="w-4 h-4" /> Save
                    </button>
                  </div>

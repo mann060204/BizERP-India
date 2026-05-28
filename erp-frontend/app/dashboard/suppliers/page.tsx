@@ -92,10 +92,10 @@ export default function SuppliersPage() {
       <main className="flex-1 p-6 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold text-white">Supplier Directory</h2>
+            <h2 className="text-xl font-bold text-[#0F172A]">Supplier Directory</h2>
             <p className="text-[#94a3b8] text-sm mt-0.5">{suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition shadow-lg shadow-indigo-600/20">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-[#0F172A] font-semibold text-sm transition shadow-lg shadow-indigo-600/20">
             + Add Supplier
           </button>
         </div>
@@ -103,7 +103,7 @@ export default function SuppliersPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search suppliers..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-indigo-500 transition text-sm" />
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-indigo-500 transition text-sm" />
         </div>
 
         {loading ? (
@@ -111,9 +111,9 @@ export default function SuppliersPage() {
         ) : suppliers.length === 0 ? (
           <div className="bg-[#0A0A0A] rounded-2xl p-16 text-center border border-[#1A1A1A]">
             <Truck className="w-14 h-14 text-indigo-500/50 mx-auto mb-4" />
-            <p className="text-white font-semibold text-lg">No suppliers yet</p>
+            <p className="text-[#0F172A] font-semibold text-lg">No suppliers yet</p>
             <p className="text-[#475569] text-sm mt-1 mb-6">Add your first supplier to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-500 transition">Add Supplier</button>
+            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-indigo-600 text-[#0F172A] text-sm font-semibold hover:bg-indigo-500 transition">Add Supplier</button>
           </div>
         ) : (
           <div className="bg-[#0A0A0A] rounded-2xl overflow-hidden border border-[#1A1A1A] shadow-sm">
@@ -132,7 +132,7 @@ export default function SuppliersPage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-orange-400/20 flex items-center justify-center text-orange-600 text-orange-400 font-bold">{s.name.charAt(0).toUpperCase()}</div>
-                          <span className="text-white font-medium">{s.name}</span>
+                          <span className="text-[#0F172A] font-medium">{s.name}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4 text-[#94a3b8]">{s.mobile || '—'}</td>
@@ -146,7 +146,7 @@ export default function SuppliersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#1A1A1A] hover:bg-gray-200 text-[#94a3b8] hover:text-white hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#1A1A1A] hover:bg-gray-200 text-[#94a3b8] hover:text-[#0F172A] hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-[#94a3b8] hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
@@ -161,19 +161,19 @@ export default function SuppliersPage() {
 
       {/* Supplier Modal Design (Screenshot Match) */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC] backdrop-blur-sm">
           <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
             
             <div className="flex items-center justify-between p-4 border-b border-[#1A1A1A]">
               <div className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-[#94a3b8]" />
-                <h3 className="text-white font-bold text-lg">{editing ? 'Edit Supplier Information' : 'New Supplier Information'}</h3>
+                <h3 className="text-[#0F172A] font-bold text-lg">{editing ? 'Edit Supplier Information' : 'New Supplier Information'}</h3>
               </div>
-              <button onClick={() => setShowModal(false)} className="text-[#475569] hover:text-white hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowModal(false)} className="text-[#475569] hover:text-[#0F172A] hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
             </div>
 
             <div className="border-b border-[#1A1A1A] px-6 py-2">
-              <span className="text-sm font-semibold text-white border-b-2 border-indigo-500 pb-2 inline-block">Profile</span>
+              <span className="text-sm font-semibold text-[#0F172A] border-b-2 border-indigo-500 pb-2 inline-block">Profile</span>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
@@ -199,38 +199,38 @@ export default function SuppliersPage() {
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Company Name <span className="text-red-500">*</span></label>
-                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right mt-1">Address</label>
-                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none resize-none" />
+                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none resize-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">City <span className="text-red-500">*</span></label>
-                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">State <span className="text-red-500">*</span></label>
-                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none">
+                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none">
                             <option value="">Select</option>
                             {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Pin Code</label>
-                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Country</label>
-                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Email</label>
-                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Phone No</label>
-                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -240,15 +240,15 @@ export default function SuppliersPage() {
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Bank Name</label>
-                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Bank A/c No.</label>
-                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">IFSC Code</label>
-                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -261,11 +261,11 @@ export default function SuppliersPage() {
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">PAN No.</label>
-                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">GSTIN</label>
-                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none uppercase" />
+                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none uppercase" />
                         </div>
                       </div>
                     </fieldset>
@@ -276,8 +276,8 @@ export default function SuppliersPage() {
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Op. Balance</label>
                           <div className="col-span-2 flex gap-2">
-                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
-                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none">
+                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
+                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none">
                               <option value="Credit">Credit</option>
                               <option value="Debit">Debit</option>
                             </select>
@@ -291,7 +291,7 @@ export default function SuppliersPage() {
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right">Contact Person</label>
-                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none" />
+                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -301,7 +301,7 @@ export default function SuppliersPage() {
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 gap-2">
                           <label className="text-xs font-semibold text-[#94a3b8] text-right mt-1">Remark / Note</label>
-                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-white text-sm focus:border-indigo-500 outline-none resize-none" />
+                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-[#262626] bg-[#111111] rounded text-[#0F172A] text-sm focus:border-indigo-500 outline-none resize-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -312,8 +312,8 @@ export default function SuppliersPage() {
             </div>
 
             <div className="flex justify-end gap-3 p-4 border-t border-[#1A1A1A] bg-[#050505] rounded-b-xl">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border border-[#262626] text-[#94a3b8] hover:text-white hover:text-gray-900 hover:bg-[#1A1A1A] hover:bg-white font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
+              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border border-[#262626] text-[#94a3b8] hover:text-[#0F172A] hover:text-gray-900 hover:bg-[#1A1A1A] hover:bg-white font-medium text-sm transition">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-[#0F172A] font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update' : 'Save'}
               </button>
             </div>

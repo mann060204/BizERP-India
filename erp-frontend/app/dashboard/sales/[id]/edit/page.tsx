@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; currentBalance?: number; }
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
@@ -297,8 +297,9 @@ export default function NewInvoicePage() {
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shippingCGST;
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shippingSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shippingIGST;
+  const totalCess = lineItems.reduce((s, i) => s + (invoiceType === 'GST' ? round2((i.taxableAmount * i.cess) / 100) : 0), 0);
   
-  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge;
+  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + totalCess + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
@@ -345,10 +346,10 @@ export default function NewInvoicePage() {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="w-10 h-10 animate-spin text-white" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-[#F8FAFC]"><Loader2 className="w-10 h-10 animate-spin text-[#0F172A]" /></div>;
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
       <Topbar title="New Invoice" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
@@ -400,8 +401,8 @@ export default function NewInvoicePage() {
                    </button>
                  </label>
                  {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
-                   <div className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30' : selectedCustomer.openingBalance < 0 ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'}`}>
-                     A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
+                   <div className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${((selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : selectedCustomer.openingBalance) > 0) ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30' : ((selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : selectedCustomer.openingBalance) < 0) ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'}`}>
+                     A/C Bal: {((selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : selectedCustomer.openingBalance) > 0) ? '₹' + (selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : selectedCustomer.openingBalance).toFixed(2) + ' Dr' : ((selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : selectedCustomer.openingBalance) < 0) ? '₹' + Math.abs((selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : selectedCustomer.openingBalance)).toFixed(2) + ' Cr' : '₹0.00'}
                    </div>
                  )}
               </div>
@@ -470,13 +471,13 @@ export default function NewInvoicePage() {
                     <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
                       <Plus className="w-4 h-4" />
                     </button>
-                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-white bg-[#1A1A1A] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
+                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-[#475569] hover:text-[#0F172A] bg-[#1A1A1A] hover:bg-[#262626] p-1 rounded transition ml-1" title="Refresh Items">
                       <RotateCcw className="w-4 h-4" />
                     </button>
                   </label>
                   {itemInput.productId && (
                     <span className="text-[9px] text-[#94a3b8]">
-                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-white">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-[#0F172A]">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
@@ -487,7 +488,7 @@ export default function NewInvoicePage() {
                       {filteredProducts.map(p => (
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-[#262626] cursor-pointer border-b border-[#1A1A1A] flex justify-between items-center group">
                           <div className="flex flex-col">
-                            <span className="text-white font-medium">{p.name}</span>
+                            <span className="text-[#0F172A] font-medium">{p.name}</span>
                             <span className="text-[9px] text-[#94a3b8]">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
@@ -537,12 +538,24 @@ export default function NewInvoicePage() {
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
                 
+                {lastPriceInfo && (
+                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-[#F8FAFC]/80 px-1 rounded shadow cursor-pointer hover:bg-[#111111] whitespace-nowrap z-40" onClick={() => {
+                     let newRate = lastPriceInfo.price;
+                     if (itemInput.unit === itemInput.secondaryUnit && itemInput.conversionRate) {
+                       newRate = lastPriceInfo.price / itemInput.conversionRate;
+                     }
+                     setItemInput({...itemInput, rate: newRate, selectedBaseRate: lastPriceInfo.price});
+                  }}>
+                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                  </div>
+                )}
+
                 {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
                   <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#050505] border border-[#1A1A1A] p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
                      <div className="text-[9px] px-2 py-1.5 text-[#475569] font-bold uppercase tracking-wider border-b border-[#1A1A1A] mb-1">Available Prices</div>
                      
-                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-white' },
+                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-[#0F172A]' },
                        { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-400' },
                        { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-400' },
                        { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-400' },
@@ -598,7 +611,7 @@ export default function NewInvoicePage() {
                   <label className="erp-label">Amount</label>
                   <div className="erp-input w-full bg-[#001a00] text-emerald-400 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
                </div>
-               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-white p-1 rounded flex items-center justify-center">
+               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-[#0F172A] p-1 rounded flex items-center justify-center">
                  <Plus className="w-5 h-5" />
                </button>
             </div>
@@ -787,11 +800,11 @@ export default function NewInvoicePage() {
 
       {/* Advanced Item Search Modal */}
       {showAdvancedSearch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC]/60 backdrop-blur-sm">
           <div className="bg-[#050505] border border-[#1A1A1A] rounded-xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[85vh]">
             <div className="flex items-center justify-between p-3 border-b border-[#1A1A1A] bg-[#0A0A0A]">
-              <h3 className="text-white font-bold text-sm">Item Search</h3>
-              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#111111] text-[#94a3b8] hover:text-white transition"><X className="w-4 h-4" /></button>
+              <h3 className="text-[#0F172A] font-bold text-sm">Item Search</h3>
+              <button onClick={() => setShowAdvancedSearch(false)} className="p-1 rounded-lg hover:bg-[#111111] text-[#94a3b8] hover:text-[#0F172A] transition"><X className="w-4 h-4" /></button>
             </div>
             <div className="p-3 bg-[#0A0A0A] border-b border-[#1A1A1A] grid grid-cols-5 gap-3 items-end">
                <div className="col-span-1">
@@ -836,7 +849,7 @@ export default function NewInvoicePage() {
                    <tbody>
                      {advFilteredProducts.map(p => (
                        <tr key={p._id} onClick={() => { pickProduct(p); setShowAdvancedSearch(false); }} className="border-b border-[#1A1A1A]/50 hover:bg-[#111111] cursor-pointer transition">
-                         <td className="p-2 text-white font-medium">{p.name}</td>
+                         <td className="p-2 text-[#0F172A] font-medium">{p.name}</td>
                          <td className="p-2 text-[#94a3b8]">{p.group || '—'}</td>
                          <td className="p-2 text-[#94a3b8]">{p.brand || '—'}</td>
                          <td className="p-2 text-[#94a3b8]">{p.location || '—'}</td>
@@ -879,13 +892,13 @@ export default function NewInvoicePage() {
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
         <div className="flex gap-4">
-           <Bell className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-           <Calculator className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-           <Truck className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-           <Wallet className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-           <Hand className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-           <Search className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-           <RotateCcw className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+           <Bell className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <Calculator className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <Truck className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <Wallet className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <Hand className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <Search className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+           <RotateCcw className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
         </div>
         
         <div className="text-xs font-mono text-[#475569]">
@@ -893,10 +906,10 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleUpdate('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleUpdate('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-[#0F172A] px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleUpdate('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleUpdate('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-[#0F172A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>

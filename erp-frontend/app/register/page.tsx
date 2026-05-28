@@ -106,7 +106,7 @@ export default function RegisterPage() {
         {...register(name as any)}
         type={type}
         placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition text-sm"
+        className="w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] focus:ring-1 focus:ring-[#D4D4D4] transition text-sm"
       />
       {(errors as any)[name] && (
         <p className="mt-1 text-xs text-red-400">{(errors as any)[name]?.message}</p>
@@ -120,9 +120,9 @@ export default function RegisterPage() {
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8 justify-center">
           <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-white" />
+            <BarChart3 className="w-5 h-5 text-[#0F172A]" />
           </div>
-          <span className="text-white font-bold text-lg">BizERP India</span>
+          <span className="text-[#0F172A] font-bold text-lg">BizERP India</span>
         </div>
 
         {/* Stepper */}
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                   ${i < step ? 'bg-white text-black hover:bg-gray-200' : i === step ? 'border-2 border-[#D4D4D4] text-[#D4D4D4]' : 'border-2 border-[#1A1A1A] text-[#475569]'}`}>
                   {i < step ? <CheckCircle2 className="w-5 h-5" /> : i + 1}
                 </div>
-                <span className={`text-xs font-medium hidden sm:block ${i === step ? 'text-[#D4D4D4]' : i < step ? 'text-white' : 'text-[#475569]'}`}>
+                <span className={`text-xs font-medium hidden sm:block ${i === step ? 'text-[#D4D4D4]' : i < step ? 'text-[#0F172A]' : 'text-[#475569]'}`}>
                   {s}
                 </span>
               </div>
@@ -147,7 +147,7 @@ export default function RegisterPage() {
 
         {/* Card */}
         <div className="glass rounded-2xl p-8 shadow-2xl">
-          <h2 className="text-xl font-bold text-white mb-6">{STEPS[step]}</h2>
+          <h2 className="text-xl font-bold text-[#0F172A] mb-6">{STEPS[step]}</h2>
 
           <form onSubmit={handleSubmit(onNext)} className="space-y-4">
             {/* Step 1 — Business Info */}
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm font-medium text-[#94a3b8] mb-2">Business Type <span className="text-red-400">*</span></label>
                   <select {...register('businessType')}
-                    className="w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] transition text-sm">
+                    className="w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] transition text-sm">
                     {['Retail', 'Wholesale', 'Service', 'Medical', 'Manufacturing', 'Other'].map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="block text-sm font-medium text-[#94a3b8] mb-2">State <span className="text-red-400">*</span></label>
                   <select {...register('state')}
-                    className="w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] transition text-sm">
+                    className="w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] transition text-sm">
                     <option value="">— Select State —</option>
                     {STATES.map(st => <option key={st} value={st}>{st}</option>)}
                   </select>
@@ -207,7 +207,7 @@ export default function RegisterPage() {
             <div className="flex gap-3 pt-2">
               {step > 0 && (
                 <button type="button" onClick={() => { setStep(step - 1); reset(); }}
-                  className="flex-1 py-3 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:border-[#D4D4D4] hover:text-white font-medium flex items-center justify-center gap-2 transition">
+                  className="flex-1 py-3 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:border-[#D4D4D4] hover:text-[#0F172A] font-medium flex items-center justify-center gap-2 transition">
                   <ChevronLeft className="w-4 h-4" /> Back
                 </button>
               )}

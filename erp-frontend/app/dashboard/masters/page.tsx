@@ -52,13 +52,13 @@ export default function MasterDashboard() {
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-black">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#F8FAFC]">
       <Topbar title="Master Dashboard" />
       <main className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           
           <div>
-            <h2 className="text-3xl font-bold text-white tracking-tight">Master Configurations</h2>
+            <h2 className="text-3xl font-bold text-[#0F172A] tracking-tight">Master Configurations</h2>
             <p className="text-[#94a3b8] mt-2">Centralized hub for all your core business entities and settings.</p>
           </div>
 
@@ -69,7 +69,7 @@ export default function MasterDashboard() {
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${module.bg}`}>
                     <module.icon className={`w-6 h-6 ${module.color}`} />
                   </div>
-                  <h3 className="text-lg font-bold text-white">{module.title}</h3>
+                  <h3 className="text-lg font-bold text-[#0F172A]">{module.title}</h3>
                 </div>
                 
                 <p className="text-sm text-[#94a3b8] mb-6 flex-1">
@@ -79,12 +79,12 @@ export default function MasterDashboard() {
                 <div className="space-y-2">
                   {module.actions.map((action, aIdx) => (
                     <Link key={aIdx} href={action.href} 
-                      className="w-full flex items-center justify-between p-3 rounded-xl bg-[#111111] border border-transparent hover:border-[#262626] hover:bg-[#1A1A1A] text-sm text-white font-medium transition group">
-                      <div className="flex items-center gap-2.5 text-[#D4D4D4] group-hover:text-white">
-                        <action.icon className="w-4 h-4 text-[#64748b] group-hover:text-white transition-colors" />
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-[#111111] border border-transparent hover:border-[#262626] hover:bg-[#1A1A1A] text-sm text-[#0F172A] font-medium transition group">
+                      <div className="flex items-center gap-2.5 text-[#D4D4D4] group-hover:text-[#0F172A]">
+                        <action.icon className="w-4 h-4 text-[#64748b] group-hover:text-[#0F172A] transition-colors" />
                         {action.label}
                       </div>
-                      <span className="text-[#475569] group-hover:text-white transition-colors">→</span>
+                      <span className="text-[#475569] group-hover:text-[#0F172A] transition-colors">→</span>
                     </Link>
                   ))}
                 </div>

@@ -28,7 +28,7 @@ export default function ReportsPage() {
       <Topbar title="Reports Center" />
       <main className="flex-1 p-6 space-y-8 max-w-6xl mx-auto w-full">
         <div>
-          <h2 className="text-xl font-bold text-white">Reports Center</h2>
+          <h2 className="text-xl font-bold text-[#0F172A]">Reports Center</h2>
           <p className="text-[#94a3b8] text-sm mt-1">Real-time financial and compliance reports for your business.</p>
         </div>
 
@@ -41,7 +41,7 @@ export default function ReportsPage() {
                   item.disabled ? (
                     <div key={item.name} className="glass rounded-2xl p-5 border border-[#1A1A1A] opacity-50 cursor-not-allowed">
                       <item.icon className="w-8 h-8 text-[#475569] mb-3" />
-                      <h4 className="text-white font-medium text-base mb-1">{item.name}</h4>
+                      <h4 className="text-[#0F172A] font-medium text-base mb-1">{item.name}</h4>
                       <p className="text-[#475569] text-xs">{item.desc}</p>
                       <span className="inline-block mt-3 px-2 py-0.5 rounded text-[10px] font-bold bg-[#0A0A0A] text-[#94a3b8] border border-[#1A1A1A]">COMING SOON</span>
                     </div>
@@ -50,7 +50,7 @@ export default function ReportsPage() {
                       <div className="w-10 h-10 rounded-xl bg-[#111111] flex items-center justify-center mb-3 group-hover:bg-orange-500/20 transition">
                         <item.icon className="w-5 h-5 text-[#94a3b8] group-hover:text-[#D4D4D4] transition" />
                       </div>
-                      <h4 className="text-white font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
+                      <h4 className="text-[#0F172A] font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
                       <p className="text-[#94a3b8] text-xs">{item.desc}</p>
                     </Link>
                   )

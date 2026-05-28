@@ -78,7 +78,7 @@ export default function SalesPage() {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-white">All Invoices</h2>
+          <h2 className="text-xl font-bold text-[#0F172A]">All Invoices</h2>
           <Link href="/dashboard/sales/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> New Invoice
           </Link>
@@ -88,7 +88,7 @@ export default function SalesPage() {
         <div className="flex gap-2 flex-wrap">
           {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
             <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-white text-black hover:bg-gray-200 border-transparent' : 'border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4]'}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-white text-black hover:bg-gray-200 border-transparent' : 'border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4]'}`}>
               {label}
             </button>
           ))}
@@ -100,7 +100,7 @@ export default function SalesPage() {
         ) : invoices.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
-            <p className="text-white font-semibold text-lg">No invoices yet</p>
+            <p className="text-[#0F172A] font-semibold text-lg">No invoices yet</p>
             <p className="text-[#475569] text-sm mt-1 mb-6">Create your first GST invoice to get started</p>
             <Link href="/dashboard/sales/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Create Invoice
@@ -125,8 +125,8 @@ export default function SalesPage() {
                       <tr key={inv._id} className="hover:bg-[#111111] transition-colors group">
                         <td className="px-5 py-4 font-mono text-xs text-[#D4D4D4] font-semibold">{inv.invoiceNumber}</td>
                         <td className="px-5 py-4 text-[#94a3b8]">{new Date(inv.invoiceDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td className="px-5 py-4 text-white font-medium">{inv.customerSnapshot.name}</td>
-                        <td className="px-5 py-4 text-white font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
+                        <td className="px-5 py-4 text-[#0F172A] font-medium">{inv.customerSnapshot.name}</td>
+                        <td className="px-5 py-4 text-[#0F172A] font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
                         <td className="px-5 py-4 text-green-400">₹{inv.amountReceived.toFixed(2)}</td>
                         <td className="px-5 py-4"><span className={inv.balance > 0 ? 'text-red-400 font-medium' : 'text-[#475569]'}>₹{inv.balance.toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-[#94a3b8]">{inv.paymentMode}</td>
@@ -137,22 +137,22 @@ export default function SalesPage() {
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link href={`/print/invoice/${inv._id}`} target="_blank" className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-white hover:bg-[#D4D4D4] transition tooltip" title="Print Invoice">
+                            <Link href={`/print/invoice/${inv._id}`} target="_blank" className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:bg-[#D4D4D4] transition tooltip" title="Print Invoice">
                               <Printer className="w-4 h-4" />
                             </Link>
                             {inv.status !== 'cancelled' && (
-                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-white hover:bg-blue-500 transition tooltip" title="Edit Invoice">
+                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:bg-blue-500 transition tooltip" title="Edit Invoice">
                                 <Edit3 className="w-4 h-4" />
                               </Link>
                             )}
-                            <button onClick={() => handleWhatsApp(inv)} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-white hover:bg-[#22c55e] transition" title="Share via WhatsApp">
+                            <button onClick={() => handleWhatsApp(inv)} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:bg-[#22c55e] transition" title="Share via WhatsApp">
                               <MessageCircle className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleEmail(inv)} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-white hover:bg-[#D4D4D4] transition" title="Share via Email">
+                            <button onClick={() => handleEmail(inv)} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:bg-[#D4D4D4] transition" title="Share via Email">
                               <Mail className="w-4 h-4" />
                             </button>
                             {inv.status !== 'cancelled' && (
-                              <button onClick={() => handleCancel(inv._id, inv.invoiceNumber)} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-white hover:bg-red-500 transition" title="Cancel Invoice">
+                              <button onClick={() => handleCancel(inv._id, inv.invoiceNumber)} className="p-1.5 rounded-lg bg-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:bg-red-500 transition" title="Cancel Invoice">
                                 <XCircle className="w-4 h-4" />
                               </button>
                             )}

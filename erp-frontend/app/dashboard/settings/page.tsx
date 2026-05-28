@@ -69,7 +69,7 @@ export default function SettingsPage() {
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white">Business Settings</h2>
+            <h2 className="text-xl font-bold text-[#0F172A]">Business Settings</h2>
             <p className="text-[#94a3b8] text-sm mt-0.5">Manage your company profile and compliance details</p>
           </div>
           <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
@@ -86,8 +86,8 @@ export default function SettingsPage() {
                 ) : (
                   <Building2 className="w-8 h-8 text-[#475569]" />
                 )}
-                <label className="absolute inset-0 bg-black flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
-                  <span className="text-[10px] text-white font-semibold">Upload Logo</span>
+                <label className="absolute inset-0 bg-[#F8FAFC] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                  <span className="text-[10px] text-[#0F172A] font-semibold">Upload Logo</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
@@ -98,7 +98,7 @@ export default function SettingsPage() {
                   }} />
                 </label>
               </div>
-              <h3 className="font-bold text-white text-lg">{form.name || form.businessName}</h3>
+              <h3 className="font-bold text-[#0F172A] text-lg">{form.name || form.businessName}</h3>
               {form.gstin && <p className="text-[#94a3b8] text-xs font-mono mt-1">GSTIN: {form.gstin}</p>}
             </div>
           </div>
@@ -108,92 +108,92 @@ export default function SettingsPage() {
             <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
               <div className="flex items-center gap-2 border-b border-[#1A1A1A] pb-3">
                 <ShieldCheck className="w-5 h-5 text-[#D4D4D4]" />
-                <h3 className="font-semibold text-white">General & Compliance</h3>
+                <h3 className="font-semibold text-[#0F172A]">General & Compliance</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Business Name *</label>
                   <input value={form.name || form.businessName || ''} onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">GSTIN</label>
                   <input value={form.gstin || ''} onChange={e => setForm({ ...form, gstin: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">PAN Number</label>
                   <input value={form.pan || ''} onChange={e => setForm({ ...form, pan: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Email Address</label>
                   <input value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Phone Number</label>
                   <input value={form.phone || form.mobile || ''} onChange={e => setForm({ ...form, phone: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
             </div>
 
             {/* Address */}
             <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
-              <h3 className="font-semibold text-white border-b border-[#1A1A1A] pb-3">Registered Address</h3>
+              <h3 className="font-semibold text-[#0F172A] border-b border-[#1A1A1A] pb-3">Registered Address</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Street Address</label>
                   <input value={form.address?.street || ''} onChange={e => setForm({ ...form, address: { ...form.address, street: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">City</label>
                   <input value={form.address?.city || ''} onChange={e => setForm({ ...form, address: { ...form.address, city: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">State</label>
                   <input value={form.address?.state || ''} onChange={e => setForm({ ...form, address: { ...form.address, state: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">PIN Code</label>
                   <input value={form.address?.pinCode || ''} onChange={e => setForm({ ...form, address: { ...form.address, pinCode: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
             </div>
 
             {/* Bank Details */}
             <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
-              <h3 className="font-semibold text-white border-b border-[#1A1A1A] pb-3">Bank Account Details</h3>
+              <h3 className="font-semibold text-[#0F172A] border-b border-[#1A1A1A] pb-3">Bank Account Details</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 md:col-span-1">
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Bank Name</label>
                   <input value={form.bankDetails?.bankName || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, bankName: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div className="col-span-2 md:col-span-1">
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Account Number</label>
                   <input value={form.bankDetails?.accountNumber || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, accountNumber: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">IFSC Code</label>
                   <input value={form.bankDetails?.ifsc || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, ifsc: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Branch</label>
                   <input value={form.bankDetails?.branch || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, branch: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">UPI ID (Optional)</label>
                   <input value={form.bankDetails?.upiId || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, upiId: e.target.value } })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
             </div>
@@ -202,13 +202,13 @@ export default function SettingsPage() {
             <div className="glass rounded-2xl p-6 border border-[#1A1A1A] space-y-4">
               <div className="flex items-center gap-2 border-b border-[#1A1A1A] pb-3">
                 <FileText className="w-5 h-5 text-[#D4D4D4]" />
-                <h3 className="font-semibold text-white">Invoice Settings</h3>
+                <h3 className="font-semibold text-[#0F172A]">Invoice Settings</h3>
               </div>
               <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Invoice Print Template</label>
                   <select value={form.invoiceTemplate || 'A4'} onChange={e => setForm({ ...form, invoiceTemplate: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition">
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition">
                     <option value="A4">A4 Standard Format</option>
                     <option value="POS">Thermal Receipt (POS)</option>
                   </select>
@@ -217,19 +217,19 @@ export default function SettingsPage() {
                   <div>
                     <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">GST Invoice Prefix</label>
                     <input value={form.invoicePrefix || ''} onChange={e => setForm({ ...form, invoicePrefix: e.target.value.toUpperCase() })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="INV" />
+                      className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="INV" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Non-GST Invoice Prefix</label>
                     <input value={form.nonGstInvoicePrefix || ''} onChange={e => setForm({ ...form, nonGstInvoicePrefix: e.target.value.toUpperCase() })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="NON-GST" />
+                      className="w-full px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="NON-GST" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Default Terms & Conditions</label>
                   <textarea value={form.termsAndConditions || ''} onChange={e => setForm({ ...form, termsAndConditions: e.target.value })}
                     placeholder="Enter default terms and conditions to print on invoices..."
-                    className="w-full h-32 resize-none px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                    className="w-full h-32 resize-none px-3 py-2.5 rounded-lg bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
             </div>

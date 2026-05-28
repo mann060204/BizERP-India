@@ -1,16 +1,178 @@
+'use client';
+import { useState, useEffect } from 'react';
 import Topbar from '../../../../components/layout/Topbar';
+import { businessApi } from '../../../../lib/erp-api';
+import { Loader2, Save, X, Plus, Edit3, Check, Scale } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function UnitMasterPage() {
+  const [units, setUnits] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  const [newUnit, setNewUnit] = useState('');
+  
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editInput, setEditInput] = useState('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data } = await businessApi.getProfile();
+        setUnits(data.business?.units || []);
+      } catch (error) { 
+        toast.error('Failed to load units'); 
+      } finally { 
+        setLoading(false); 
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await businessApi.updateProfile({ units });
+      toast.success('Units saved successfully');
+    } catch (error) {
+      toast.error('Failed to save units');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addUnit = () => {
+    const trimmed = newUnit.trim();
+    if (!trimmed) return;
+    if (units.some(u => u.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error('Unit already exists');
+      return;
+    }
+    setUnits([...units, trimmed]);
+    setNewUnit('');
+  };
+
+  const removeUnit = (idx: number) => {
+    setUnits(units.filter((_, i) => i !== idx));
+  };
+
+  const startEdit = (idx: number, name: string) => {
+    setEditingIndex(idx);
+    setEditInput(name);
+  };
+
+  const saveEdit = () => {
+    if (editingIndex === null) return;
+    const trimmed = editInput.trim();
+    if (!trimmed) { setEditingIndex(null); return; }
+    
+    if (units.some((u, i) => i !== editingIndex && u.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error('Unit already exists');
+      return;
+    }
+    
+    const newUnits = [...units];
+    newUnits[editingIndex] = trimmed;
+    setUnits(newUnits);
+    setEditingIndex(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen bg-[#F8FAFC]">
+        <Topbar title="Unit Master" />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-[#F8FAFC]">
       <Topbar title="Unit Master" />
-      <main className="flex-1 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Unit Master</h2>
-          <p className="text-[#94a3b8]">Manage units of measurement (Nos, Kg, Ltr, etc.)</p>
-          <div className="mt-8 text-sm text-[#475569] border border-[#1A1A1A] bg-[#0A0A0A] p-4 rounded-xl">
-            This module is currently under construction.
+      <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-[#0F172A] tracking-tight flex items-center gap-3">
+                <Scale className="w-8 h-8 text-indigo-500" />
+                Unit Master
+              </h2>
+              <p className="text-[#94a3b8] mt-2">Manage units of measurement for your items (Nos, Kg, Ltr, etc.)</p>
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-6 py-2.5 bg-indigo-600 text-[#0F172A] font-medium rounded-xl hover:bg-indigo-700 transition flex items-center gap-2 disabled:opacity-50"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Changes
+            </button>
           </div>
+
+          <div className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6">
+            <div className="flex gap-4 mb-6">
+              <input 
+                type="text"
+                placeholder="e.g. Box, Pcs, Mtr..."
+                value={newUnit}
+                onChange={e => setNewUnit(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addUnit()}
+                className="flex-1 bg-[#111111] border border-[#262626] rounded-xl px-4 text-[#0F172A] focus:outline-none focus:border-indigo-500 transition"
+              />
+              <button 
+                onClick={addUnit}
+                className="px-5 py-2.5 bg-[#1A1A1A] text-[#0F172A] font-medium rounded-xl hover:bg-[#262626] border border-[#333333] transition flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add Unit
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {units.map((unit, idx) => {
+                const isEditing = editingIndex === idx;
+                
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[#111111] border border-[#1A1A1A] group">
+                    {isEditing ? (
+                      <div className="flex items-center gap-2 w-full">
+                        <input 
+                          autoFocus
+                          value={editInput}
+                          onChange={e => setEditInput(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveEdit(); else if (e.key === 'Escape') setEditingIndex(null); }}
+                          className="bg-[#1A1A1A] border border-indigo-500 rounded px-2 py-1 flex-1 text-[#0F172A] font-bold focus:outline-none"
+                        />
+                        <button onClick={saveEdit} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded-lg"><Check className="w-4 h-4"/></button>
+                        <button onClick={() => setEditingIndex(null)} className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg"><X className="w-4 h-4"/></button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="font-bold text-[#0F172A]">{unit}</span>
+                        <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
+                          <button onClick={() => startEdit(idx, unit)} className="p-1.5 text-[#64748b] hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg mr-1 transition">
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => removeUnit(idx)} className="p-1.5 text-[#64748b] hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+              
+              {units.length === 0 && (
+                <div className="col-span-full py-8 text-center border-2 border-dashed border-[#1A1A1A] rounded-xl text-[#64748b]">
+                  No units added yet. Add your first unit above.
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </main>
     </div>

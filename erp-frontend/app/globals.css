@@ -5,18 +5,18 @@
 @tailwind utilities;
 
 :root {
-  --primary: #262626;
-  --primary-light: #FFFFFF;
-  --accent: #FFFFFF;
-  --accent-light: #D4D4D4;
+  --primary: #E2E8F0;
+  --primary-light: #F8FAFC;
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
   --success: #10B981;
   --danger: #EF4444;
-  --bg: #000000;
-  --bg-card: #0A0A0A;
-  --bg-elevated: #111111;
-  --border: rgba(255, 255, 255, 0.1);
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
+  --bg: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F1F5F9;
+  --border: rgba(0, 0, 0, 0.1);
+  --text: #0F172A;
+  --text-muted: #64748b;
 }
 
 @layer base {
@@ -38,7 +38,7 @@
   .glass {
     background: var(--bg-card);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.08);
   }
 
   .ngrok-card-hover {
@@ -82,27 +82,27 @@
   }
 
   .erp-container {
-    @apply border border-[#1A1A1A] bg-[#000000]
+    @apply border border-[#E2E8F0] bg-[#F8FAFC]
   }
   .erp-header {
-    @apply bg-[#111111] border-b border-[#1A1A1A] px-2 py-1 text-[11px] font-bold text-[#94a3b8] uppercase tracking-tight;
+    @apply bg-[#F1F5F9] border-b border-[#E2E8F0] px-2 py-1 text-[11px] font-bold text-[#64748B] uppercase tracking-tight;
   }
   .erp-label {
-    @apply text-[11px] font-medium text-[#94a3b8]
+    @apply text-[11px] font-medium text-[#64748B]
   }
   .erp-input {
-    @apply bg-[#050505] border border-[#1A1A1A] px-2 py-1 text-xs text-white focus:outline-none focus:border-[#D4D4D4] transition placeholder-[#262626]
+    @apply bg-white border border-[#E2E8F0] px-2 py-1 text-xs text-[#0F172A] focus:outline-none focus:border-[#CBD5E1] transition placeholder-[#94A3B8]
   }
   .erp-grid-header {
-    @apply bg-[#111111] text-[#94a3b8] text-[10px] font-bold uppercase;
+    @apply bg-[#F1F5F9] text-[#64748B] text-[10px] font-bold uppercase;
   }
   .erp-grid-cell {
-    @apply border-r border-b border-[#1A1A1A] px-2 py-1 text-xs;
+    @apply border-r border-b border-[#E2E8F0] px-2 py-1 text-xs;
   }
   .erp-grid-row:hover {
-    @apply bg-[#0A0A0A]
+    @apply bg-white
   }
   .erp-footer-box {
-    @apply border border-[#1A1A1A] bg-[#050505] p-2;
+    @apply border border-[#E2E8F0] bg-white p-2;
   }
 }

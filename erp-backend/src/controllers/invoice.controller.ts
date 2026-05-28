@@ -21,6 +21,30 @@ const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NO
   return `${prefixVal}-${year}-${counter}`;
 };
 
+// GET /api/v1/invoices/next-number
+export const getPredictedInvoiceNumber = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const type = req.query.type === 'NON-GST' ? 'NON-GST' : 'GST';
+    
+    const business = await Business.findById(businessId);
+    if (!business) {
+      res.status(404).json({ message: 'Business not found' });
+      return;
+    }
+
+    const year = new Date().getFullYear();
+    const isGst = type === 'GST';
+    const counterVal = isGst ? business.invoiceCounter : business.nonGstInvoiceCounter;
+    const prefixVal = isGst ? business.invoicePrefix : business.nonGstInvoicePrefix;
+    const counter = String(counterVal).padStart(4, '0');
+    
+    res.json({ nextInvoiceNumber: `${prefixVal}-${year}-${counter}` });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 // GET /api/v1/invoices/last-price
 export const getCustomerLastPrice = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

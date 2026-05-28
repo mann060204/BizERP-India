@@ -32,11 +32,11 @@ export default function DaybookPage() {
       <main className="flex-1 p-6 space-y-6 max-w-5xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-bold text-white">Daily Transaction Ledger</h2>
+            <h2 className="text-xl font-bold text-[#0F172A]">Daily Transaction Ledger</h2>
             <p className="text-[#94a3b8] text-sm mt-0.5">Chronological record of all inflows and outflows</p>
           </div>
           <input type="date" value={targetDate} onChange={e => setTargetDate(e.target.value)}
-            className="px-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] transition" />
+            className="px-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] transition" />
         </div>
 
         {loading ? (
@@ -63,7 +63,7 @@ export default function DaybookPage() {
             {data.transactions.length === 0 ? (
               <div className="glass rounded-2xl p-16 text-center">
                 <BookOpen className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
-                <p className="text-white font-semibold text-lg">No transactions on this date</p>
+                <p className="text-[#0F172A] font-semibold text-lg">No transactions on this date</p>
               </div>
             ) : (
               <div className="glass rounded-2xl overflow-hidden border border-[#1A1A1A]">
@@ -90,8 +90,8 @@ export default function DaybookPage() {
                                 {t.type}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-white font-mono text-xs">{t.ref}</td>
-                            <td className="px-5 py-4 text-white font-medium">{t.party}</td>
+                            <td className="px-5 py-4 text-[#0F172A] font-mono text-xs">{t.ref}</td>
+                            <td className="px-5 py-4 text-[#0F172A] font-medium">{t.party}</td>
                             <td className="px-5 py-4 text-[#94a3b8]">{t.mode}</td>
                             <td className="px-5 py-4 font-semibold text-green-400">{isInflow ? `₹${(t.received || 0).toFixed(2)}` : '—'}</td>
                             <td className="px-5 py-4 font-semibold text-red-400">{!isInflow ? `₹${(t.paid || 0).toFixed(2)}` : '—'}</td>

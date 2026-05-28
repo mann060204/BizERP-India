@@ -32,7 +32,7 @@ export default function GstCalculatorPage() {
       <Topbar title="GST Calculator" />
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
             <Calculator className="w-5 h-5 text-[#D4D4D4]" /> GST Calculator
           </h2>
           <p className="text-[#94a3b8] text-sm mt-1">Quickly compute inclusive or exclusive tax values.</p>
@@ -44,10 +44,10 @@ export default function GstCalculatorPage() {
             <div>
               <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Calculation Mode</label>
               <div className="flex rounded-lg overflow-hidden border border-[#1A1A1A]">
-                <button onClick={() => setMode('exclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'exclusive' ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#94a3b8] hover:text-white'}`}>
+                <button onClick={() => setMode('exclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'exclusive' ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#94a3b8] hover:text-[#0F172A]'}`}>
                   Add GST (Exclusive)
                 </button>
-                <button onClick={() => setMode('inclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'inclusive' ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#94a3b8] hover:text-white'}`}>
+                <button onClick={() => setMode('inclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'inclusive' ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#111111] text-[#94a3b8] hover:text-[#0F172A]'}`}>
                   Remove GST (Inclusive)
                 </button>
               </div>
@@ -58,7 +58,7 @@ export default function GstCalculatorPage() {
               <div className="relative">
                 <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
                 <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
-                  className="w-full pl-9 pr-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white text-lg font-semibold focus:outline-none focus:border-[#D4D4D4] transition" />
+                  className="w-full pl-9 pr-4 py-3 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] text-lg font-semibold focus:outline-none focus:border-[#D4D4D4] transition" />
               </div>
             </div>
 
@@ -66,7 +66,7 @@ export default function GstCalculatorPage() {
               <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">GST Rate (%)</label>
               <div className="flex flex-wrap gap-2">
                 {COMMON_RATES.map(r => (
-                  <button key={r} onClick={() => setRate(r)} className={`px-4 py-2 rounded-xl text-sm font-semibold transition border ${rate === r ? 'bg-[#D4D4D4] text-white border-[#D4D4D4]' : 'bg-[#111111] border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4]'}`}>
+                  <button key={r} onClick={() => setRate(r)} className={`px-4 py-2 rounded-xl text-sm font-semibold transition border ${rate === r ? 'bg-[#D4D4D4] text-[#0F172A] border-[#D4D4D4]' : 'bg-[#111111] border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4]'}`}>
                     {r}%
                   </button>
                 ))}
@@ -76,19 +76,19 @@ export default function GstCalculatorPage() {
 
           {/* Results */}
           <div className="glass rounded-2xl p-6 border border-[#1A1A1A] flex flex-col justify-center">
-            <h3 className="text-white font-semibold text-lg border-b border-[#1A1A1A] pb-3 mb-4">Calculation Results</h3>
+            <h3 className="text-[#0F172A] font-semibold text-lg border-b border-[#1A1A1A] pb-3 mb-4">Calculation Results</h3>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#111111]">
                 <span className="text-[#94a3b8]">Net / Taxable Amount</span>
-                <span className="font-semibold text-white">₹{result.base.toFixed(2)}</span>
+                <span className="font-semibold text-[#0F172A]">₹{result.base.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#111111]">
                 <span className="text-[#94a3b8]">CGST ({(rate / 2).toFixed(1)}%)</span>
-                <span className="font-medium text-white">₹{result.cgst.toFixed(2)}</span>
+                <span className="font-medium text-[#0F172A]">₹{result.cgst.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#111111]">
                 <span className="text-[#94a3b8]">SGST ({(rate / 2).toFixed(1)}%)</span>
-                <span className="font-medium text-white">₹{result.sgst.toFixed(2)}</span>
+                <span className="font-medium text-[#0F172A]">₹{result.sgst.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#111111]">
                 <span className="text-[#94a3b8]">Total Tax ({rate}%)</span>

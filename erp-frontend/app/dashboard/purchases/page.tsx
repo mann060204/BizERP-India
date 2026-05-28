@@ -66,7 +66,7 @@ export default function PurchasesPage() {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-white">All Purchases</h2>
+          <h2 className="text-xl font-bold text-[#0F172A]">All Purchases</h2>
           <Link href="/dashboard/purchases/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Add Purchase Bill
           </Link>
@@ -76,7 +76,7 @@ export default function PurchasesPage() {
         <div className="flex gap-2 flex-wrap">
           {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
             <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-white text-black hover:bg-gray-200 border-transparent' : 'border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4]'}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-white text-black hover:bg-gray-200 border-transparent' : 'border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4]'}`}>
               {label}
             </button>
           ))}
@@ -88,7 +88,7 @@ export default function PurchasesPage() {
         ) : purchases.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
-            <p className="text-white font-semibold text-lg">No purchases yet</p>
+            <p className="text-[#0F172A] font-semibold text-lg">No purchases yet</p>
             <p className="text-[#475569] text-sm mt-1 mb-6">Record your first purchase bill to update stock</p>
             <Link href="/dashboard/purchases/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black hover:bg-gray-200 text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Add Purchase Bill
@@ -113,8 +113,8 @@ export default function PurchasesPage() {
                       <tr key={pur._id} className="hover:bg-[#111111] transition-colors group">
                         <td className="px-5 py-4 font-mono text-xs text-[#D4D4D4] font-semibold">{pur.billNumber}</td>
                         <td className="px-5 py-4 text-[#94a3b8]">{new Date(pur.billDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td className="px-5 py-4 text-white font-medium">{pur.supplierSnapshot.name}</td>
-                        <td className="px-5 py-4 text-white font-semibold">₹{pur.grandTotal.toFixed(2)}</td>
+                        <td className="px-5 py-4 text-[#0F172A] font-medium">{pur.supplierSnapshot.name}</td>
+                        <td className="px-5 py-4 text-[#0F172A] font-semibold">₹{pur.grandTotal.toFixed(2)}</td>
                         <td className="px-5 py-4 text-green-400">₹{pur.amountPaid.toFixed(2)}</td>
                         <td className="px-5 py-4"><span className={pur.balance > 0 ? 'text-red-400 font-medium' : 'text-[#475569]'}>₹{pur.balance.toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-[#94a3b8]">{pur.paymentMode}</td>

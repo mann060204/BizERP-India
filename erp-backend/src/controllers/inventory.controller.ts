@@ -19,9 +19,9 @@ export const getInventoryLevels = async (req: AuthRequest, res: Response): Promi
     ]);
 
     // Calculate total stock value
-    const allProducts = await Product.find({ businessId, type: 'product', isActive: true }, 'currentStock purchasePrice');
-    const totalStockValue = allProducts.reduce((sum, p) => sum + (p.currentStock * p.purchasePrice), 0);
-    const lowStockCount = allProducts.filter(p => p.currentStock <= (p as any).reorderLevel).length;
+    const allProducts = await Product.find({ businessId, type: 'product', isActive: true }, 'currentStock purchasePrice reorderLevel');
+    const totalStockValue = allProducts.reduce((sum, p) => sum + (p.currentStock * (p.purchasePrice || 0)), 0);
+    const lowStockCount = allProducts.filter(p => p.currentStock <= (p.reorderLevel || 0)).length;
 
     res.json({ inventory, total, totalStockValue, lowStockCount, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (e: any) { res.status(500).json({ message: e.message }); }

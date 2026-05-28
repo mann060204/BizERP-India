@@ -39,9 +39,9 @@ export default function Sidebar() {
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-[#1A1A1A] ${collapsed ? 'justify-center' : ''}`}>
         <div className="w-9 h-9 rounded-xl bg-[#2563EB] flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(37,99,235,0.4)]">
-          <BarChart3 className="w-5 h-5 text-white" />
+          <BarChart3 className="w-5 h-5 text-[#0F172A]" />
         </div>
-        {!collapsed && <span className="text-white font-bold text-base tracking-tight">BizERP India</span>}
+        {!collapsed && <span className="text-[#0F172A] font-bold text-base tracking-tight">BizERP India</span>}
       </div>
 
       {/* Nav */}
@@ -51,7 +51,7 @@ export default function Sidebar() {
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
               ${isActive(href)
                 ? 'bg-[#FFFFFF]/10 text-[#D4D4D4] border border-[#FFFFFF]/30 shadow-[0_0_15px_rgba(255,255,255,0.15)]'
-                : 'text-[#94a3b8] hover:text-white hover:bg-[#111111] border border-transparent'}`}>
+                : 'text-[#94a3b8] hover:text-[#0F172A] hover:bg-[#111111] border border-transparent'}`}>
             <Icon className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">{label}</span>}
           </Link>
@@ -62,7 +62,7 @@ export default function Sidebar() {
       <div className="p-3 border-t border-[#1A1A1A]">
         {!collapsed && (
           <div className="px-3 py-2 mb-2">
-            <p className="text-white text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
+            <p className="text-[#0F172A] text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
             <p className="text-[#94a3b8] text-xs capitalize">{user?.role}</p>
           </div>
         )}
@@ -83,7 +83,7 @@ export default function Sidebar() {
         <SidebarContent />
         {/* Collapse toggle */}
         <button onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-[#0A0A0A] border border-[#1A1A1A] flex items-center justify-center text-[#94a3b8] hover:text-white transition">
+          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-[#0A0A0A] border border-[#1A1A1A] flex items-center justify-center text-[#94a3b8] hover:text-[#0F172A] transition">
           {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
         </button>
       </aside>
@@ -91,7 +91,7 @@ export default function Sidebar() {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black" onClick={() => setMobileOpen(false)} />
+          <div className="fixed inset-0 bg-[#F8FAFC]" onClick={() => setMobileOpen(false)} />
           <aside className="relative w-64 bg-[#0A0A0A] h-full shadow-2xl z-50">
             <SidebarContent />
           </aside>

@@ -196,16 +196,16 @@ export default function NewPurchasePage() {
     }
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="w-10 h-10 animate-spin text-white" /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-[#F8FAFC]"><Loader2 className="w-10 h-10 animate-spin text-[#0F172A]" /></div>;
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#F8FAFC] text-[#0F172A] font-sans overflow-hidden">
       <Topbar title="Unsaved Purchase Bill" />
 
       {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-[#1A1A1A] bg-[#050505]">
-         <div className="px-4 py-2 text-xs font-semibold bg-[#111111] border border-b-0 border-[#1A1A1A] rounded-t text-white">Purchase Bill</div>
-         <div className="px-4 py-2 text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer">Batch Numbers</div>
+         <div className="px-4 py-2 text-xs font-semibold bg-[#111111] border border-b-0 border-[#1A1A1A] rounded-t text-[#0F172A]">Purchase Bill</div>
+         <div className="px-4 py-2 text-xs font-semibold text-[#94a3b8] hover:text-[#0F172A] cursor-pointer">Batch Numbers</div>
       </div>
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 bg-[#000000]">
@@ -325,7 +325,7 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -333,7 +333,7 @@ export default function NewPurchasePage() {
                 <label className="erp-label block mb-1">Disc. (%)</label>
                 <div className="flex">
                   <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
-                  <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-l-0 flex items-center">%</span>
+                  <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#1A1A1A] border-l-0 flex items-center">%</span>
                 </div>
               </div>
               <div>
@@ -347,12 +347,12 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <div className="erp-input w-full rounded-none bg-[#0a0a0a] flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
               <div className="flex items-center justify-center pb-[2px]">
-                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-white p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
+                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-[#0F172A] p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
                    <Plus className="w-5 h-5" />
                  </button>
               </div>
@@ -426,7 +426,7 @@ export default function NewPurchasePage() {
               </label>
               {showAdditionalDiscount && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
@@ -437,7 +437,7 @@ export default function NewPurchasePage() {
               </label>
               {showShipping && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-xs border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
@@ -467,14 +467,14 @@ export default function NewPurchasePage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-[#94a3b8] w-12">Amount</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                       <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-[10px] border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-[#94a3b8] w-12">Balance</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
+                       <span className="bg-[#1e3a8a] text-[#0F172A] px-2 py-1 text-[10px] border border-[#1A1A1A] border-r-0 flex items-center">₹</span>
                        <div className="erp-input w-full rounded-none bg-[#0a0a0a] flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
@@ -501,16 +501,16 @@ export default function NewPurchasePage() {
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#050505] border-t border-[#1A1A1A] flex items-center justify-between px-4 z-50">
           <div className="flex gap-4">
-             <Bell className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-             <Calculator className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-             <Truck className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
-             <Barcode className="w-5 h-5 text-[#475569] hover:text-white cursor-pointer" />
+             <Bell className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+             <Calculator className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+             <Truck className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
+             <Barcode className="w-5 h-5 text-[#475569] hover:text-[#0F172A] cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-[#0F172A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-[#0F172A] px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Save className="w-4 h-4" /> Save
             </button>
           </div>

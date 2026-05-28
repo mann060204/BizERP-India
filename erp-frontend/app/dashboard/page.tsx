@@ -72,7 +72,7 @@ export default function DashboardPage() {
     if (active && payload && payload.length) {
       return (
         <div className="bg-[#0A0A0A] border border-[#1A1A1A] p-3 rounded-lg shadow-xl">
-          <p className="text-white font-medium text-sm mb-2">{label}</p>
+          <p className="text-[#0F172A] font-medium text-sm mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm font-semibold flex justify-between gap-4" style={{ color: entry.color }}>
               <span>{entry.name}:</span>
@@ -92,9 +92,9 @@ export default function DashboardPage() {
       <main className="flex-1 p-6 space-y-8 overflow-auto">
         {/* Greeting */}
         <div>
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-2xl font-bold text-[#0F172A]">
             Good {greeting},{' '}
-            <span className="text-white">{user?.name?.split(' ')[0] || 'Admin'}</span> 👋
+            <span className="text-[#0F172A]">{user?.name?.split(' ')[0] || 'Admin'}</span> 👋
           </h2>
           <p className="text-[#94a3b8] mt-1 text-sm">Here's your business snapshot for today.</p>
         </div>
@@ -116,7 +116,7 @@ export default function DashboardPage() {
                     <ArrowUpRight className="w-4 h-4 text-[#475569] group-hover:text-[#D4D4D4] transition" />
                   </div>
                   <p className="text-[#94a3b8] text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
-                  <p className="text-white text-2xl font-bold">{value}</p>
+                  <p className="text-[#0F172A] text-2xl font-bold">{value}</p>
                   <p className="text-[#475569] text-xs mt-1">{sub}</p>
                 </div>
                 );
@@ -128,7 +128,7 @@ export default function DashboardPage() {
               {/* Sales Area Chart */}
               <div className="glass rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-white font-semibold">Sales Overview</h3>
+                  <h3 className="text-[#0F172A] font-semibold">Sales Overview</h3>
                   <span className="text-xs text-[#94a3b8] bg-[#000000] px-3 py-1 rounded-full border border-[#1A1A1A]">Last 30 days</span>
                 </div>
                 <div className="h-64">
@@ -153,7 +153,7 @@ export default function DashboardPage() {
               {/* Profit Bar Chart */}
               <div className="glass rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-white font-semibold">Revenue vs Profit</h3>
+                  <h3 className="text-[#0F172A] font-semibold">Revenue vs Profit</h3>
                   <span className="text-xs text-[#94a3b8] bg-[#000000] px-3 py-1 rounded-full border border-[#1A1A1A]">Last 6 Months</span>
                 </div>
                 <div className="h-64">
@@ -176,7 +176,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div>
-          <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
+          <h3 className="text-[#0F172A] font-semibold mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {QUICK_ACTIONS.map(({ label, href, icon: ActionIcon, desc }) => (
               <a key={label} href={href}
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                   {ActionIcon && <ActionIcon className="w-5 h-5 text-[#94a3b8] group-hover:text-[#2563EB] transition" />}
                 </div>
                 <div>
-                  <p className="text-white text-sm font-semibold group-hover:text-[#FFFFFF] transition">{label}</p>
+                  <p className="text-[#0F172A] text-sm font-semibold group-hover:text-[#FFFFFF] transition">{label}</p>
                   <p className="text-[#475569] text-xs mt-1">{desc}</p>
                 </div>
               </a>

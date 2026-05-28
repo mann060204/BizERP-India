@@ -73,12 +73,12 @@ export default function InventoryPage() {
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#475569]" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-white placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-[#0A0A0A] border border-[#1A1A1A] text-[#0F172A] placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
           </div>
           <div className="flex rounded-xl overflow-hidden border border-[#1A1A1A]">
             {[{ id: 'all', label: 'All Items' }, { id: 'low', label: 'Low Stock' }].map(f => (
               <button key={f.id} onClick={() => setFilter(f.id as any)}
-                className={`px-4 py-2 text-sm font-medium transition ${filter === f.id ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#0A0A0A] text-[#94a3b8] hover:text-white'}`}>
+                className={`px-4 py-2 text-sm font-medium transition ${filter === f.id ? 'bg-white text-black hover:bg-gray-200' : 'bg-[#0A0A0A] text-[#94a3b8] hover:text-[#0F172A]'}`}>
                 {f.label}
               </button>
             ))}
@@ -91,7 +91,7 @@ export default function InventoryPage() {
         ) : inventory.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <Database className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
-            <p className="text-white font-semibold text-lg">No inventory items found</p>
+            <p className="text-[#0F172A] font-semibold text-lg">No inventory items found</p>
             <p className="text-[#475569] text-sm mt-1">Make sure you have added Products in the Masters section.</p>
           </div>
         ) : (
@@ -110,10 +110,10 @@ export default function InventoryPage() {
                     const isLow = p.currentStock <= p.reorderLevel;
                     return (
                       <tr key={p._id} className="hover:bg-[#111111] transition-colors group">
-                        <td className="px-5 py-4 text-white font-medium">{p.name}</td>
+                        <td className="px-5 py-4 text-[#0F172A] font-medium">{p.name}</td>
                         <td className="px-5 py-4 text-[#94a3b8] font-mono text-xs">{p.sku || '—'}</td>
                         <td className="px-5 py-4 text-[#94a3b8]">{p.category || '—'}</td>
-                        <td className="px-5 py-4 font-bold text-white">{p.currentStock} {p.unit}</td>
+                        <td className="px-5 py-4 font-bold text-[#0F172A]">{p.currentStock} {p.unit}</td>
                         <td className="px-5 py-4 text-emerald-400">₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
                         <td className="px-5 py-4">
                           {isLow ? (
@@ -123,7 +123,7 @@ export default function InventoryPage() {
                           )}
                         </td>
                         <td className="px-5 py-4">
-                          <button onClick={() => openAdjust(p)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] transition text-xs font-medium opacity-0 group-hover:opacity-100">
+                          <button onClick={() => openAdjust(p)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4] transition text-xs font-medium opacity-0 group-hover:opacity-100">
                             <Settings2 className="w-3.5 h-3.5" /> Adjust
                           </button>
                         </td>
@@ -139,16 +139,16 @@ export default function InventoryPage() {
 
       {/* Adjust Modal */}
       {showModal && adjusting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC] backdrop-blur-sm">
           <div className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between p-6 border-b border-[#1A1A1A]">
-              <h3 className="text-white font-bold text-lg">Adjust Stock</h3>
-              <button onClick={() => setShowModal(false)} className="text-[#475569] hover:text-white transition"><X className="w-5 h-5" /></button>
+              <h3 className="text-[#0F172A] font-bold text-lg">Adjust Stock</h3>
+              <button onClick={() => setShowModal(false)} className="text-[#475569] hover:text-[#0F172A] transition"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4">
               <div>
                 <p className="text-xs text-[#94a3b8]">Product</p>
-                <p className="text-white font-semibold">{adjusting.name}</p>
+                <p className="text-[#0F172A] font-semibold">{adjusting.name}</p>
                 <p className="text-xs text-[#475569] mt-0.5">Current Stock: {adjusting.currentStock} {adjusting.unit}</p>
               </div>
 
@@ -157,7 +157,7 @@ export default function InventoryPage() {
                 <div className="flex rounded-xl overflow-hidden border border-[#1A1A1A]">
                   {[{ id: 'add', label: 'Add Stock', icon: TrendingUp }, { id: 'subtract', label: 'Reduce Stock', icon: TrendingDown }].map(t => (
                     <button key={t.id} type="button" onClick={() => setForm({ ...form, type: t.id })}
-                      className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition ${form.type === t.id ? (t.id === 'add' ? 'bg-green-400/20 text-green-400' : 'bg-red-400/20 text-red-400') : 'bg-[#111111] text-[#94a3b8] hover:text-white'}`}>
+                      className={`flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition ${form.type === t.id ? (t.id === 'add' ? 'bg-green-400/20 text-green-400' : 'bg-red-400/20 text-red-400') : 'bg-[#111111] text-[#94a3b8] hover:text-[#0F172A]'}`}>
                       <t.icon className="w-4 h-4" /> {t.label}
                     </button>
                   ))}
@@ -167,13 +167,13 @@ export default function InventoryPage() {
               <div>
                 <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Quantity to {form.type === 'add' ? 'Add' : 'Remove'}</label>
                 <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })} min="0" step="any"
-                  className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Reason</label>
                 <select value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition">
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition">
                   {['Physical Count', 'Damage / Spoilage', 'Return to Supplier', 'Internal Consumption', 'Data Entry Error'].map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
@@ -181,12 +181,12 @@ export default function InventoryPage() {
               <div>
                 <label className="block text-xs font-medium text-[#94a3b8] mb-1.5">Notes (Optional)</label>
                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2}
-                  className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-white focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
+                  className="w-full px-3 py-2 rounded-lg bg-[#111111] border border-[#1A1A1A] text-[#0F172A] focus:outline-none focus:border-[#D4D4D4] text-sm transition resize-none" />
               </div>
             </div>
             <div className="flex gap-3 p-6 border-t border-[#1A1A1A]">
-              <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-white hover:border-[#D4D4D4] font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className={`flex-1 py-2.5 rounded-xl text-white font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 ${form.type === 'add' ? 'bg-green-500' : 'bg-red-500'}`}>
+              <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl border border-[#1A1A1A] text-[#94a3b8] hover:text-[#0F172A] hover:border-[#D4D4D4] font-medium text-sm transition">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className={`flex-1 py-2.5 rounded-xl text-[#0F172A] font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 ${form.type === 'add' ? 'bg-green-500' : 'bg-red-500'}`}>
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} Confirm Adjustment
               </button>
             </div>

@@ -17,7 +17,7 @@ export default function ToolsPage() {
       <Topbar title="Tools & Utilities" />
       <main className="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full">
         <div>
-          <h2 className="text-xl font-bold text-white">Tools & Utilities</h2>
+          <h2 className="text-xl font-bold text-[#0F172A]">Tools & Utilities</h2>
           <p className="text-[#94a3b8] text-sm mt-1">Additional modules to streamline your operations.</p>
         </div>
 
@@ -26,10 +26,10 @@ export default function ToolsPage() {
             const isLive = tool.status === 'live';
             const Card = (
               <div className={`glass ngrok-card-hover rounded-2xl p-6 transition-all duration-300 ${isLive ? 'cursor-pointer group' : 'opacity-60 cursor-not-allowed'}`}>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition ${isLive ? 'bg-[#D4D4D4]/10 text-[#D4D4D4] group-hover:bg-[#D4D4D4] group-hover:text-white' : 'bg-[#0A0A0A] text-[#94a3b8]'}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition ${isLive ? 'bg-[#D4D4D4]/10 text-[#D4D4D4] group-hover:bg-[#D4D4D4] group-hover:text-[#0F172A]' : 'bg-[#0A0A0A] text-[#94a3b8]'}`}>
                   <tool.icon className="w-6 h-6" />
                 </div>
-                <h3 className="font-semibold text-white text-lg mb-1">{tool.name}</h3>
+                <h3 className="font-semibold text-[#0F172A] text-lg mb-1">{tool.name}</h3>
                 <p className="text-[#94a3b8] text-sm mb-4">{tool.desc}</p>
                 <div className={`inline-block px-3 py-1 rounded-lg border ${isLive ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-[#D4D4D4]/10 border-[#D4D4D4]/20'}`}>
                   <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'text-emerald-400' : 'text-[#D4D4D4]'}`}>
