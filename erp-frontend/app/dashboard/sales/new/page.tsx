@@ -360,7 +360,7 @@ export default function NewInvoicePage() {
                    </button>
                  </label>
                  {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
-                   <div className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30' : selectedCustomer.openingBalance < 0 ? 'bg-red-500/20 text-red-500 border-red-500/30' : 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30'}`}>
+                   <div className={`text-xs px-2 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : selectedCustomer.openingBalance < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
                      A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
                    </div>
                  )}
@@ -435,8 +435,8 @@ export default function NewInvoicePage() {
                     </button>
                   </label>
                   {itemInput.productId && (
-                    <span className="text-[9px] text-slate-600">
-                      Stock: <span className="text-emerald-400 font-bold">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                    <span className="text-xs text-slate-600">
+                      Stock: <span className="text-emerald-600 font-bold text-sm">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
@@ -448,7 +448,7 @@ export default function NewInvoicePage() {
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
                           <div className="flex flex-col">
                             <span className="text-slate-900 font-medium">{p.name}</span>
-                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-400 font-bold' : 'text-emerald-400'}>{p.currentStock || 0}</span></span>
+                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{p.currentStock || 0}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
                              {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
@@ -459,6 +459,11 @@ export default function NewInvoicePage() {
                     </div>
                   )}
                 </div>
+                {itemInput.productId && lastPriceInfo && (
+                  <div className="mt-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded border border-emerald-200 inline-block">
+                    Last Sold: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                  </div>
+                )}
               </div>
               <div className="col-span-1">
                 <label className="erp-label">Unit <span className="text-red-500">*</span></label>
@@ -499,14 +504,14 @@ export default function NewInvoicePage() {
                 
                 {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
-                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-[#F1F5F9] border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
-                     <div className="text-[9px] px-2 py-1.5 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 mb-1">Available Prices</div>
+                  <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-white border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
+                     <div className="text-[10px] px-2 py-1.5 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 mb-1">Available Prices</div>
                      
                      {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-slate-900' },
-                       { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-400' },
-                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-400' },
-                       { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-400' },
-                       ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-400', isLast: true }] : [])
+                       { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-600' },
+                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-600' },
+                       { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-600' },
+                       ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-600', isLast: true }] : [])
                      ].map((opt, i) => opt.price ? (
                         <div key={i} onClick={() => {
                            const basePrice = opt.price!;
@@ -853,10 +858,10 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-slate-900 px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>
