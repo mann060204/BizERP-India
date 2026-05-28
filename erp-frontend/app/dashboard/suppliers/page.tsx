@@ -178,7 +178,7 @@ export default function SuppliersPage() {
 
             <div className="flex flex-1 overflow-hidden">
               {/* Left Fixed Column - Account Status */}
-              <div className="w-12 border-r border-slate-200 flex flex-col items-center py-6 bg-[#020202]">
+              <div className="w-12 border-r border-slate-200 flex flex-col items-center py-6 bg-slate-50">
                 <div className="whitespace-nowrap -rotate-90 text-[10px] font-bold text-red-500 tracking-wider mt-20">
                   ACCOUNT STATUS: UNSAVED
                 </div>

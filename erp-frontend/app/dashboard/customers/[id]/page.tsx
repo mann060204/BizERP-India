@@ -238,7 +238,7 @@ export default function EditCustomerPage() {
                       <Camera className="w-4 h-4" /> Capture
                     </button>
                   )}
-                  <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-[#1a0000] py-1.5 rounded border border-slate-200 transition">
+                  <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-red-50 py-1.5 rounded border border-slate-200 transition">
                     <X className="w-4 h-4" /> Cancel
                   </button>
                 </div>

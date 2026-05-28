@@ -350,7 +350,7 @@ export default function NewInvoicePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="New Invoice" />
+      <Topbar title="Update Invoice" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
@@ -459,7 +459,7 @@ export default function NewInvoicePage() {
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a0000]" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" />
               </div>
               <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
@@ -609,7 +609,7 @@ export default function NewInvoicePage() {
                </div>
                <div className="col-span-2">
                   <label className="erp-label">Amount</label>
-                  <div className="erp-input w-full bg-[#001a00] text-emerald-400 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
+                  <div className="erp-input w-full bg-emerald-50 text-emerald-600 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
                </div>
                <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded flex items-center justify-center">
                  <Plus className="w-5 h-5" />
@@ -631,9 +631,9 @@ export default function NewInvoicePage() {
              <div className="col-span-1 erp-grid-cell text-center">Cess%</div>
              <div className="col-span-2 erp-grid-cell text-right">Total</div>
            </div>
-           <div className="flex-1 overflow-y-auto bg-[#020202]">
+           <div className="flex-1 overflow-y-auto bg-white">
               {lineItems.length === 0 ? (
-                <div className="p-10 text-center text-[#262626] italic text-sm">No items added yet...</div>
+                <div className="p-10 text-center text-slate-400 italic text-sm">No items added yet...</div>
               ) : (
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 erp-grid-row group">
