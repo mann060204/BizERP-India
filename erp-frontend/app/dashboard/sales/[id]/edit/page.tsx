@@ -409,7 +409,7 @@ export default function NewInvoicePage() {
               <div className="relative">
                 <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
                 {selectedCustomer && (
-                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-900/40 text-purple-400' : 'bg-blue-900/40 text-blue-400'}`}>
+                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                       {selectedCustomer.priceCategory === 'Wholesale' ? 'Wholesaler' : 'Retailer'}
                    </span>
                 )}
@@ -675,7 +675,7 @@ export default function NewInvoicePage() {
            <div className="erp-footer-box flex flex-col justify-between">
               <div>
                 <label className="erp-label block mb-1">Total Quantity</label>
-                <div className="text-xl font-bold bg-[#1a1a00] p-1 border border-yellow-900/30 text-yellow-400">{totalQty}</div>
+                <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{totalQty}</div>
               </div>
               <div>
                 <label className="erp-label block mb-1">Sold By</label>
@@ -785,8 +785,8 @@ export default function NewInvoicePage() {
                    </div>
                  )}
                  <div className="flex justify-between items-end">
-                    <span className="text-sm font-bold text-yellow-400">GRAND TOTAL</span>
-                    <span className="text-3xl font-black text-emerald-400 tracking-tight">₹{grandTotal.toFixed(2)}</span>
+                    <span className="text-sm font-bold text-yellow-600">GRAND TOTAL</span>
+                    <span className="text-3xl font-black text-emerald-600 tracking-tight">₹{grandTotal.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between text-[11px] font-bold text-slate-600 mt-2 border-t border-slate-200 pt-2">
                     <span>Total Received</span>
