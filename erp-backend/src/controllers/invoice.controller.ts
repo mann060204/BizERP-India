@@ -186,7 +186,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const {
       customerId, customerSnapshot, placeOfSupply, isInterState,
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
-      termsAndConditions, isReverseCharge, status, invoiceDate
+      termsAndConditions, isReverseCharge, status, invoiceDate, invoiceType
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
