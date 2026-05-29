@@ -39,7 +39,8 @@ export const createQuotation = async (req: Request, res: Response) => {
       await business.save();
     }
     
-    const quotation = new Quotation({ ...data, businessId, createdBy: (req as any).user._id });
+    if (!['Draft', 'Sent', 'Accepted', 'Rejected', 'Invoiced', 'Cancelled'].includes(data.status)) data.status = 'Draft';
+      const quotation = new Quotation({ ...data, businessId, createdBy: req.user!.userId });
     const createdQuotation = await quotation.save();
     res.status(201).json(createdQuotation);
   } catch (error: any) {

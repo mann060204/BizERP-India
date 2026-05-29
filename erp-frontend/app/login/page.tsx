@@ -50,10 +50,10 @@ export default function LoginPage() {
         />
         <div className="relative">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-slate-900" />
-            </div>
-            <span className="text-slate-900 font-bold text-xl tracking-tight">BizERP India</span>
+            <div className="w-12 h-12 flex items-center justify-center">
+                <img src="/logo.png" alt="Bissness Logo" className="w-full h-full object-contain drop-shadow-md" />
+              </div>
+            <span className="text-slate-900 font-bold text-xl tracking-tight">Bissness</span>
           </div>
         </div>
         <div className="relative space-y-6">
@@ -80,7 +80,7 @@ export default function LoginPage() {
           </div>
         </div>
         <p className="relative text-blue-300 text-sm">
-          © 2025 BizERP India. Trusted by 10,000+ businesses.
+          © 2025 Bissness. Trusted by 10,000+ businesses.
         </p>
       </div>
 
@@ -89,10 +89,10 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg gradient-accent flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-slate-900" />
-            </div>
-            <span className="text-slate-900 font-bold text-lg">BizERP India</span>
+            <div className="w-10 h-10 flex items-center justify-center">
+                <img src="/logo.png" alt="Bissness Logo" className="w-full h-full object-contain drop-shadow-md" />
+              </div>
+            <span className="text-slate-900 font-bold text-lg">Bissness</span>
           </div>
 
           <div className="mb-8">
@@ -143,7 +143,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-slate-600 mt-8 text-sm">
-            New to BizERP?{' '}
+            New to Bissness?{' '}
             <Link href="/register" className="text-slate-700 hover:text-[#60A5FA] font-medium transition">
               Register your business →
             </Link>

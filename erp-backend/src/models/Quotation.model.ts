@@ -107,7 +107,7 @@ const InvoiceSchema = new Schema<IQuotation>(
     shippingCharge: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'],
+      enum: ['Draft', 'Sent', 'Accepted', 'Rejected', 'Invoiced', 'Cancelled'],
       default: 'Draft',
     },
     notes: String,

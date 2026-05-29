@@ -40,7 +40,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-slate-200 ${collapsed ? 'justify-center' : ''}`}>
         <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
-            <img src="/icon.svg" alt="Logo" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
         {!collapsed && <span className="text-slate-900 font-bold text-base tracking-tight">Bissness</span>}
       </div>

@@ -231,7 +231,7 @@ export default function NewQuotationPage() {
 
     if (selectedCustomer?._id) {
       try {
-        const { data } = await quotationsApi.getLastPrice(selectedCustomer._id, p._id);
+        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
         if (data && data.lastPrice !== null) {
           setLastPriceInfo({ price: data.lastPrice, date: new Date(data.quotationDate).toLocaleDateString() });
         } else {
@@ -722,9 +722,9 @@ export default function NewQuotationPage() {
 
            {/* Column 2 & 3: Payment Details & Remarks */}
            <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
-              <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
+              <div className="hidden bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
               
-              <div className="grid grid-cols-2 gap-4 flex-1">
+              <div className="hidden grid grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
