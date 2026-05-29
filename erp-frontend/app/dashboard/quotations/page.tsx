@@ -9,11 +9,12 @@ import toast from 'react-hot-toast';
 interface Quotation { _id: string; quotationNumber: string; quotationDate: string; customerSnapshot: { name: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
-  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10', icon: CheckCircle },
-  overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',     icon: AlertCircle },
-  cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
+  Draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
+  Sent:      { label: 'Sent',     color: 'text-blue-400 bg-blue-400/10',   icon: Clock },
+  Accepted:  { label: 'Accepted', color: 'text-green-400 bg-green-400/10', icon: CheckCircle },
+  Rejected:  { label: 'Rejected', color: 'text-red-400 bg-red-400/10',     icon: XCircle },
+  Invoiced:  { label: 'Invoiced', color: 'text-violet-400 bg-violet-400/10',icon: TrendingUp },
+  Cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
 };
 
 export default function QuotationsPage() {
@@ -30,8 +31,8 @@ export default function QuotationsPage() {
         quotationsApi.getAll({ status: statusFilter || undefined, limit: 50 }),
         quotationsApi.summary(),
       ]);
-      setQuotations(invRes.data.quotations);
-      setSummary(sumRes.data);
+      setQuotations(invRes.quotations || []);
+      setSummary(sumRes || {});
     } catch { toast.error('Failed to load quotations'); }
     finally { setLoading(false); }
   };
@@ -153,7 +154,7 @@ export default function QuotationsPage() {
                 </thead>
                 <tbody className="divide-y divide-[#1A1A1A]">
                   {filteredQuotations.map((inv) => {
-                    const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG['draft'];
+                    const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG['Draft'];
                     const StatusIcon = sc.icon;
                     return (
                       <tr key={inv._id} className="hover:bg-[#F1F5F9] transition-colors group">

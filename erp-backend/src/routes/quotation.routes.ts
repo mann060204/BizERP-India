@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { protect } from '../middlewares/auth.middleware';
 import {
-  getQuotations, getQuotation, createQuotation, updateQuotation, deleteQuotation, getNextQuotationNumber, convertToInvoice
+  getQuotations, getQuotation, createQuotation, updateQuotation, deleteQuotation, getNextQuotationNumber, convertToInvoice, getQuotationSummary
 } from '../controllers/quotation.controller';
 
 const router = Router();
 
 router.use(protect);
 
+router.get('/summary', getQuotationSummary);
 router.get('/next-number', getNextQuotationNumber);
 router.get('/', getQuotations);
 router.get('/:id', getQuotation);

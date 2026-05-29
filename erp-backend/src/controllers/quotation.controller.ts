@@ -7,7 +7,7 @@ import { calculateInvoiceTotals } from '../services/gst.service';
 export const getQuotations = async (req: Request, res: Response) => {
   try {
     const quotations = await Quotation.find({ businessId: (req as any).user.businessId }).sort({ createdAt: -1 }).populate('customerId', 'name');
-    res.json(quotations);
+    res.json({ quotations });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -17,7 +17,36 @@ export const getQuotation = async (req: Request, res: Response) => {
   try {
     const quotation = await Quotation.findOne({ _id: req.params.id, businessId: (req as any).user.businessId });
     if (!quotation) return res.status(404).json({ message: 'Quotation not found' });
-    res.json(quotation);
+    res.json({ quotation });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getQuotationSummary = async (req: Request, res: Response) => {
+  try {
+    const businessId = (req as any).user.businessId;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const mongoose = require('mongoose');
+    const [monthQuotations, todayQuotations] = await Promise.all([
+      Quotation.aggregate([
+        { $match: { businessId: new mongoose.Types.ObjectId(businessId), quotationDate: { $gte: startOfMonth }, status: { $ne: 'Cancelled' } } },
+        { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
+      ]),
+      Quotation.aggregate([
+        { $match: { businessId: new mongoose.Types.ObjectId(businessId), quotationDate: { $gte: startOfDay }, status: { $ne: 'Cancelled' } } },
+        { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
+      ]),
+    ]);
+    res.json({
+      monthQuotations: monthQuotations[0]?.total || 0,
+      monthQuotationCount: monthQuotations[0]?.count || 0,
+      todayQuotations: todayQuotations[0]?.total || 0,
+      totalReceived: 0,
+      outstanding: 0,
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

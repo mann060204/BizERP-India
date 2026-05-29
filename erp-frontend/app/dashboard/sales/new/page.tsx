@@ -294,7 +294,7 @@ export default function NewInvoicePage() {
         deliveryTerms,
         soldBy,
         billTo,
-        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
+        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'draft',
       };
       const { data } = await invoicesApi.create(payload);
       toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);

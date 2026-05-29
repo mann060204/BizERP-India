@@ -306,7 +306,7 @@ export const getSalesSummary = async (req: AuthRequest, res: Response): Promise<
         { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
       ]),
       Invoice.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $in: ['unpaid', 'partial', 'overdue'] } } },
+        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $in: ['draft', 'partial', 'overdue'] } } },
         { $group: { _id: null, total: { $sum: '$balance' } } },
       ]),
       Invoice.aggregate([

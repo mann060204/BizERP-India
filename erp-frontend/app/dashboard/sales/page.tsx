@@ -10,7 +10,6 @@ interface Invoice { _id: string; invoiceNumber: string; invoiceDate: string; cus
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  unpaid:    { label: 'Unpaid',   color: 'text-blue-400 bg-blue-400/10',    icon: Clock },
   partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
   paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
   overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
@@ -159,7 +158,7 @@ export default function SalesPage() {
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
                               <StatusIcon className="w-3 h-3" /> {sc.label}
                             </span>
-                            {inv.balance > 0 && inv.status !== 'cancelled' && (
+                            {inv.balance > 0 && inv.status !== 'cancelled' && inv.status !== 'paid' && (
                               <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
                                 {Math.max(0, Math.floor((new Date().getTime() - new Date(inv.invoiceDate).getTime()) / (1000 * 3600 * 24)))} days pending
                               </span>

@@ -282,24 +282,29 @@ export default function NewQuotationPage() {
         isInterState,
         quotationType,
         lineItems,
-        paymentMode: combinedPaymentMode,
-        amountReceived: totalAmountReceived,
-          txnId: combinedTxnId,
-          shippingCharge,
-          balance,
-          roundOff,
-          subtotal,
+        txnId: combinedTxnId,
+        shippingCharge,
+        balance,
+        roundOff,
+        subtotal,
+        totalDiscount,
+        totalTaxableAmount: totalTaxable,
+        totalCGST,
+        totalSGST,
+        totalIGST,
+        totalGST: totalCGST + totalSGST + totalIGST,
+        grandTotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
         soldBy,
         billTo,
-        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
+        status: 'Draft',
       };
       const { data } = await quotationsApi.create(payload);
-      toast.success(`Quotation ${data.quotation.quotationNumber} Saved!`);
+      toast.success(`Quotation ${data.quotationNumber || quotationNumber} Saved!`);
       if (printAfterSave) {
-        window.open(`/print/quotation/${data.quotation._id}`, '_blank');
+        window.open(`/print/quotation/${data._id}`, '_blank');
       }
       router.push('/dashboard/quotations');
     } catch (e: any) {
