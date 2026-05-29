@@ -72,7 +72,7 @@ export default function SettingsPage() {
             <h2 className="text-xl font-bold text-slate-900">Business Settings</h2>
             <p className="text-slate-600 text-sm mt-0.5">Manage your company profile and compliance details</p>
           </div>
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
           </button>
         </div>

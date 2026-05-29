@@ -140,7 +140,7 @@ export default function PrintableInvoicePage() {
 
           {/* Non-print controls */}
           <div className="print:hidden mt-8 flex flex-col gap-2 border-t pt-4">
-            <button onClick={() => window.print()} className="py-2 bg-blue-600 text-slate-900 rounded font-bold">Print</button>
+            <button onClick={() => window.print()} className="py-2 bg-action-500 text-slate-900 rounded font-bold">Print</button>
             <button onClick={() => window.close()} className="py-2 bg-gray-200 text-black rounded font-bold">Close</button>
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function PrintableInvoicePage() {
           <div className="flex-1 flex flex-col min-h-[200px] overflow-hidden">
             <table className="w-full text-center border-collapse h-full text-[10px] table-fixed font-semibold text-gray-800">
               <thead>
-                <tr className="border-b-2 border-gray-800 bg-blue-50 text-blue-900">
+                <tr className="border-b-2 border-gray-800 bg-action-50 text-blue-900">
                   <th className="border-r-2 border-gray-800 p-1 w-[4%]">Sr</th>
                   <th className={`border-r-2 border-gray-800 p-1 text-left ${isNonGst ? 'w-[60%]' : 'w-[32%]'}`}>Product / Service Description</th>
                   {!isNonGst && <th className="border-r-2 border-gray-800 p-1 w-[10%]">HSN/SAC</th>}
@@ -275,7 +275,7 @@ export default function PrintableInvoicePage() {
                   <td></td>
                 </tr>
                 {/* Total Row */}
-                <tr className="border-t-2 border-gray-800 bg-blue-50 h-6 font-bold text-blue-900">
+                <tr className="border-t-2 border-gray-800 bg-action-50 h-6 font-bold text-blue-900">
                   <td className="border-r-2 border-gray-800"></td>
                   <td className="border-r-2 border-gray-800 text-right pr-2">Sub-Total:</td>
                   {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
@@ -300,7 +300,7 @@ export default function PrintableInvoicePage() {
           <div className="flex border-t-2 border-gray-800 text-[10px] font-bold min-h-[14rem] bg-white">
             {/* Left Side (Bank, Amount in Words, T&C) */}
             <div className="w-[65%] flex flex-col border-r-2 border-gray-800">
-               <div className="border-b-2 border-gray-800 px-2 py-1 flex justify-between bg-blue-50 text-blue-900">
+               <div className="border-b-2 border-gray-800 px-2 py-1 flex justify-between bg-action-50 text-blue-900">
                  <span>Invoice Total in Words:</span>
                  <span className="italic uppercase">Rupees {numberToWords(Math.round(invoice.grandTotal))} Only</span>
                </div>
@@ -334,7 +334,7 @@ export default function PrintableInvoicePage() {
             
             {/* Right Side (Summary Totals) */}
             <div className="w-[35%] flex flex-col font-bold text-gray-800">
-               <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1 bg-blue-50 text-blue-900">
+               <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1 bg-action-50 text-blue-900">
                  <span>SUMMARY</span><span>AMOUNT</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
@@ -367,7 +367,7 @@ export default function PrintableInvoicePage() {
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1">
                  <span>Round off :</span><span>{(invoice.grandTotal - (invoice.totalTaxableAmount + invoice.totalGST + invoice.shippingCharge - invoice.totalDiscount)).toFixed(2)}</span>
                </div>
-               <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-blue-100 text-[13px] text-blue-900">
+               <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
                  <span>Total Amount :</span><span>{invoice.grandTotal.toFixed(2)}</span>
                </div>
                
@@ -389,8 +389,8 @@ export default function PrintableInvoicePage() {
 
       {/* Non-print controls floating */}
       <div className="print:hidden fixed bottom-8 right-8 flex flex-col gap-2">
-        <button onClick={() => window.print()} className="px-6 py-3 bg-blue-600 text-slate-900 rounded-full font-bold shadow-2xl hover:bg-blue-700">Print Invoice</button>
-        <button onClick={() => window.close()} className="px-6 py-3 bg-blue-600 text-white border rounded-full font-bold shadow-2xl hover:bg-gray-100">Close Window</button>
+        <button onClick={() => window.print()} className="px-6 py-3 bg-action-500 text-slate-900 rounded-full font-bold shadow-2xl hover:bg-action-600">Print Invoice</button>
+        <button onClick={() => window.close()} className="px-6 py-3 bg-action-500 text-white border rounded-full font-bold shadow-2xl hover:bg-gray-100">Close Window</button>
       </div>
     </div>
     </>

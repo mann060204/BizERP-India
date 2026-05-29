@@ -372,7 +372,7 @@ export default function NewInvoicePage() {
               <div className="relative">
                 <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
                 {selectedCustomer && (
-                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-action-100 text-action-600'}`}>
                       {selectedCustomer.priceCategory === 'Wholesale' ? 'Wholesaler' : 'Retailer'}
                    </span>
                 )}
@@ -428,7 +428,7 @@ export default function NewInvoicePage() {
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
-                    <button onClick={() => setShowAdvancedSearch(true)} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-1 rounded transition" title="Advanced Search">
+                    <button onClick={() => setShowAdvancedSearch(true)} className="text-action-500 hover:text-blue-400 bg-action-500/10 p-1 rounded transition" title="Advanced Search">
                       <Search className="w-4 h-4" />
                     </button>
                     <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
@@ -513,7 +513,7 @@ export default function NewInvoicePage() {
                      
                      {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-slate-900' },
                        { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-600' },
-                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-blue-600' },
+                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-action-500' },
                        { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-600' },
                        ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-600', isLast: true }] : [])
                      ].map((opt, i) => opt.price ? (
@@ -610,7 +610,7 @@ export default function NewInvoicePage() {
                     <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${invoiceType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                        <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-blue-500/10 rounded">
+                        <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-action-500/10 rounded">
                           <Pencil className="w-3 h-3" />
                         </button>
                         <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
@@ -862,10 +862,10 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave(true)} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleSave(true)} disabled={saving} className="bg-action-500 hover:bg-action-600 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleSave(false)} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave(false)} disabled={saving} className="bg-action-700 hover:bg-action-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>

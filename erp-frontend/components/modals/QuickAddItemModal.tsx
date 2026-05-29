@@ -42,7 +42,7 @@ const Select = ({ label, required = false, keyName, form, setForm, options }: an
 const Checkbox = ({ label, keyName, form, setForm, danger = false }: any) => (
   <label className={`flex items-center gap-2 text-sm cursor-pointer ${danger ? 'text-red-400 font-medium' : 'text-slate-900'}`}>
     <input type="checkbox" checked={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.checked })}
-      className="w-4 h-4 rounded border-slate-200 bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+      className="w-4 h-4 rounded border-slate-200 bg-[#F1F5F9] text-action-500 focus:ring-action-400 focus:ring-offset-black" />
     {label}
   </label>
 );
@@ -152,7 +152,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                           <div className="flex-1">
                             <Select label="Unit" keyName="unit" options={UNITS} required form={form} setForm={setForm} />
                           </div>
-                          <button onClick={() => setShowUnitModal(true)} className="px-3 py-2 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 text-xs font-semibold whitespace-nowrap transition mt-5">
+                          <button onClick={() => setShowUnitModal(true)} className="px-3 py-2 rounded-lg bg-action-500/20 text-blue-400 hover:bg-action-500/30 text-xs font-semibold whitespace-nowrap transition mt-5">
                             Secondary Unit
                           </button>
                         </div>
@@ -231,7 +231,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
               <button onClick={() => onClose()} className="px-5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-xl bg-blue-600 text-slate-900 hover:bg-blue-500 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-xl bg-action-500 text-slate-900 hover:bg-action-500 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} 'Create Item'
               </button>
             </div>
@@ -245,7 +245,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-white">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-action-500/10 flex items-center justify-center">
                   <Layers className="w-4 h-4 text-blue-400" />
                 </div>
                 <h3 className="font-bold text-base text-slate-900">Unit Settings</h3>
@@ -272,7 +272,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
               <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-white">
                  <div className="flex justify-between items-center mb-3">
                    <label className="block text-[11px] font-medium text-slate-600 uppercase tracking-wider">Conversion Factor</label>
-                   <div className="text-[11px] text-blue-400 font-semibold bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">1 {form.unit || 'Pieces'} = {form.conversionRate || 1} {form.secondaryUnit || 'Feet'}</div>
+                   <div className="text-[11px] text-blue-400 font-semibold bg-action-500/10 px-2 py-1 rounded-md border border-action-400/20">1 {form.unit || 'Pieces'} = {form.conversionRate || 1} {form.secondaryUnit || 'Feet'}</div>
                  </div>
                  <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
               </div>
@@ -281,11 +281,11 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
               <div className="space-y-3">
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 text-sm text-slate-900 cursor-pointer group">
-                    <input type="radio" checked={form.secSalePriceType !== 'margin'} onChange={() => setForm({...form, secSalePriceType: 'fixed'})} className="w-4 h-4 rounded-full border-slate-200 bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+                    <input type="radio" checked={form.secSalePriceType !== 'margin'} onChange={() => setForm({...form, secSalePriceType: 'fixed'})} className="w-4 h-4 rounded-full border-slate-200 bg-[#F1F5F9] text-action-500 focus:ring-action-400 focus:ring-offset-black" />
                     Fixed Per Unit
                   </label>
                   <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition group">
-                    <input type="radio" checked={form.secSalePriceType === 'margin'} onChange={() => setForm({...form, secSalePriceType: 'margin'})} className="w-4 h-4 rounded-full border-slate-200 bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+                    <input type="radio" checked={form.secSalePriceType === 'margin'} onChange={() => setForm({...form, secSalePriceType: 'margin'})} className="w-4 h-4 rounded-full border-slate-200 bg-[#F1F5F9] text-action-500 focus:ring-action-400 focus:ring-offset-black" />
                     Margin Per Unit
                   </label>
                 </div>
@@ -315,7 +315,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
 
               {/* Default Sales Unit Checkbox */}
               <label className="flex items-center gap-3 text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition pt-2">
-                <input type="checkbox" checked={form.isDefaultSecondaryUnit || false} onChange={e => setForm({...form, isDefaultSecondaryUnit: e.target.checked})} className="w-4 h-4 rounded border-slate-200 bg-[#F1F5F9] text-blue-500 focus:ring-blue-500 focus:ring-offset-black" />
+                <input type="checkbox" checked={form.isDefaultSecondaryUnit || false} onChange={e => setForm({...form, isDefaultSecondaryUnit: e.target.checked})} className="w-4 h-4 rounded border-slate-200 bg-[#F1F5F9] text-action-500 focus:ring-action-400 focus:ring-offset-black" />
                 Set as default sales unit
               </label>
 
@@ -326,7 +326,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
               <button onClick={() => setShowUnitModal(false)} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
-              <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-slate-900 rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/20">
+              <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-2 px-6 py-2.5 bg-action-500 hover:bg-action-500 text-slate-900 rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/20">
                 <Plus className="w-4 h-4" /> Save Settings
               </button>
             </div>

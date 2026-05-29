@@ -169,7 +169,7 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
                        {photo ? (
                          <img src={photo} alt="Customer" className="w-full h-full object-cover" />
                        ) : (
-                         <UserIcon className="w-24 h-24 text-blue-500 mt-8" />
+                         <UserIcon className="w-24 h-24 text-action-500 mt-8" />
                        )}
                      </div>
                    )}
@@ -191,7 +191,7 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
                  {showCamera ? (
                    <div className="flex justify-center gap-3 px-2 mt-2">
                      {!cameraError && (
-                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                       <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-action-600 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                          <Camera className="w-4 h-4" /> Capture
                        </button>
                      )}
@@ -301,7 +301,7 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.tradeName} onChange={e=>setForm({...form, tradeName: e.target.value})} />
                    </div>
                    <div className="mt-3 pl-[118px]">
-                     <a href="#" className="text-blue-500 text-[10px] hover:underline hover:text-blue-400 transition">Check GSTIN/UIN Status</a>
+                     <a href="#" className="text-action-500 text-[10px] hover:underline hover:text-blue-400 transition">Check GSTIN/UIN Status</a>
                    </div>
                  </fieldset>
                  
@@ -393,7 +393,7 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
                  </fieldset>
                  
                  <div className="flex justify-end pt-4 pb-12 lg:pb-0">
-                   <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
+                   <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-600 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
                      <Save className="w-4 h-4" /> Save
                    </button>
                  </div>

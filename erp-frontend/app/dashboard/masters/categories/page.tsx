@@ -154,7 +154,7 @@ export default function CategoryMasterPage() {
             <h2 className="text-xl font-bold text-slate-900">Category & Brand Master</h2>
             <p className="text-slate-600 text-sm mt-0.5">Define your product groups and assign specific brands to them.</p>
           </div>
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
           </button>
         </div>
@@ -162,7 +162,7 @@ export default function CategoryMasterPage() {
         <div className="glass rounded-2xl p-6 border border-slate-200 space-y-6">
           
           <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-action-500/10 flex items-center justify-center">
               <Layers className="w-5 h-5 text-blue-400" />
             </div>
             <div>
@@ -174,7 +174,7 @@ export default function CategoryMasterPage() {
           <div className="flex gap-2 max-w-md">
             <input value={newGroup} onChange={e => setNewGroup(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGroup(); } }} 
               className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new group (e.g. T-Shirts)..." />
-            <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-slate-900 rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-blue-600/20"><Plus className="w-5 h-5" /></button>
+            <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-action-500 hover:bg-action-500 text-slate-900 rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-blue-600/20"><Plus className="w-5 h-5" /></button>
           </div>
 
           <div className="space-y-4 pt-4">
@@ -204,7 +204,7 @@ export default function CategoryMasterPage() {
                             value={editGroupInput} 
                             onChange={e => setEditGroupInput(e.target.value)} 
                             onKeyDown={e => { if (e.key === 'Enter') saveGroupEdit(cat.name, e); else if (e.key === 'Escape') setEditingGroup(null); }}
-                            className="bg-[#E2E8F0] border border-blue-500 rounded px-2 py-1 text-slate-900 text-lg font-bold focus:outline-none"
+                            className="bg-[#E2E8F0] border border-action-400 rounded px-2 py-1 text-slate-900 text-lg font-bold focus:outline-none"
                           />
                           <button onClick={(e) => saveGroupEdit(cat.name, e)} className="p-1 text-green-400 hover:bg-green-400/10 rounded"><Check className="w-4 h-4"/></button>
                           <button onClick={() => setEditingGroup(null)} className="p-1 text-red-400 hover:bg-red-400/10 rounded"><X className="w-4 h-4"/></button>
@@ -221,7 +221,7 @@ export default function CategoryMasterPage() {
                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
                         <button 
                           onClick={(e) => startEditGroup(cat.name, e)} 
-                          className="p-1.5 text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition mr-1"
+                          className="p-1.5 text-slate-600 hover:text-blue-400 hover:bg-action-500/10 rounded-lg transition mr-1"
                           title="Edit Group"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -257,7 +257,7 @@ export default function CategoryMasterPage() {
                                         value={editBrandInput}
                                         onChange={e => setEditBrandInput(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') saveBrandEdit(); else if (e.key === 'Escape') setEditingBrand(null); }}
-                                        className="bg-[#E2E8F0] border border-blue-500 rounded px-2 py-1 flex-1 text-sm text-slate-900 focus:outline-none"
+                                        className="bg-[#E2E8F0] border border-action-400 rounded px-2 py-1 flex-1 text-sm text-slate-900 focus:outline-none"
                                       />
                                       <button onClick={saveBrandEdit} className="p-1 text-green-400 hover:bg-green-400/10 rounded"><Check className="w-3.5 h-3.5"/></button>
                                       <button onClick={() => setEditingBrand(null)} className="p-1 text-red-400 hover:bg-red-400/10 rounded"><X className="w-3.5 h-3.5"/></button>
@@ -266,7 +266,7 @@ export default function CategoryMasterPage() {
                                     <>
                                       <span className="text-sm font-medium text-slate-700">{brand}</span>
                                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                                        <button onClick={() => startEditBrand(cat.name, idx, brand)} className="p-1 text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 rounded mr-1">
+                                        <button onClick={() => startEditBrand(cat.name, idx, brand)} className="p-1 text-slate-600 hover:text-blue-400 hover:bg-action-500/10 rounded mr-1">
                                           <Edit3 className="w-3.5 h-3.5" />
                                         </button>
                                         <button onClick={() => removeBrand(cat.name, idx)} className="p-1 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded">
@@ -288,7 +288,7 @@ export default function CategoryMasterPage() {
                           value={newBrandInputs[cat.name] || ''} 
                           onChange={e => setNewBrandInputs({...newBrandInputs, [cat.name]: e.target.value})} 
                           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBrand(cat.name); } }} 
-                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-500 text-xs transition" 
+                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-slate-300 text-slate-900 focus:outline-none focus:border-action-400 text-xs transition" 
                           placeholder={`Add brand to ${cat.name} (e.g. ZARA)...`} 
                         />
                         <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 bg-[#E2E8F0] hover:bg-slate-100 text-slate-900 rounded-lg text-xs font-semibold transition">Add Brand</button>

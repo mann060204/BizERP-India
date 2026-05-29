@@ -95,7 +95,7 @@ export default function SuppliersPage() {
             <h2 className="text-xl font-bold text-slate-900">Supplier Directory</h2>
             <p className="text-slate-600 text-sm mt-0.5">{suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
             + Add Supplier
           </button>
         </div>
@@ -103,17 +103,17 @@ export default function SuppliersPage() {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search suppliers..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-500 transition text-sm" />
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-action-400 transition text-sm" />
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-500 animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-action-500 animate-spin" /></div>
         ) : suppliers.length === 0 ? (
           <div className="bg-white rounded-2xl p-16 text-center border border-slate-200">
-            <Truck className="w-14 h-14 text-blue-500/50 mx-auto mb-4" />
+            <Truck className="w-14 h-14 text-action-500/50 mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No suppliers yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Add your first supplier to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-blue-600 text-slate-900 text-sm font-semibold hover:bg-blue-500 transition">Add Supplier</button>
+            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-action-500 text-slate-900 text-sm font-semibold hover:bg-action-500 transition">Add Supplier</button>
           </div>
         ) : (
           <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
@@ -146,7 +146,7 @@ export default function SuppliersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] hover:bg-blue-700 text-slate-600 hover:text-slate-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] hover:bg-action-600 text-slate-600 hover:text-slate-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
@@ -173,7 +173,7 @@ export default function SuppliersPage() {
             </div>
 
             <div className="border-b border-slate-200 px-6 py-2">
-              <span className="text-sm font-semibold text-slate-900 border-b-2 border-blue-500 pb-2 inline-block">Profile</span>
+              <span className="text-sm font-semibold text-slate-900 border-b-2 border-action-400 pb-2 inline-block">Profile</span>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
@@ -182,7 +182,7 @@ export default function SuppliersPage() {
                 <div className="whitespace-nowrap -rotate-90 text-[10px] font-bold text-red-500 tracking-wider mt-20">
                   ACCOUNT STATUS: UNSAVED
                 </div>
-                <div className="mt-auto -rotate-90 whitespace-nowrap mb-20 text-[10px] font-semibold text-blue-500 cursor-pointer">
+                <div className="mt-auto -rotate-90 whitespace-nowrap mb-20 text-[10px] font-semibold text-action-500 cursor-pointer">
                   CHECK GSTIN STATUS
                 </div>
               </div>
@@ -194,61 +194,61 @@ export default function SuppliersPage() {
                   {/* Left Main Column */}
                   <div className="space-y-6">
                     <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-blue-500 uppercase">Supplier Details</legend>
+                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Supplier Details</legend>
                       
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Company Name <span className="text-red-500">*</span></label>
-                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right mt-1">Address</label>
-                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none resize-none" />
+                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none resize-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">City <span className="text-red-500">*</span></label>
-                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">State <span className="text-red-500">*</span></label>
-                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none">
+                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none">
                             <option value="">Select</option>
                             {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Pin Code</label>
-                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Country</label>
-                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Email</label>
-                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Phone No</label>
-                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                       </div>
                     </fieldset>
 
                     <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-blue-500 uppercase">Bank Details</legend>
+                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Bank Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Bank Name</label>
-                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Bank A/c No.</label>
-                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">IFSC Code</label>
-                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -257,27 +257,27 @@ export default function SuppliersPage() {
                   {/* Right Main Column */}
                   <div className="space-y-6">
                     <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-blue-500 uppercase">Tax Details</legend>
+                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Tax Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">PAN No.</label>
-                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">GSTIN</label>
-                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none uppercase" />
+                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none uppercase" />
                         </div>
                       </div>
                     </fieldset>
 
                     <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-blue-500 uppercase">Account Details</legend>
+                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Account Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Op. Balance</label>
                           <div className="col-span-2 flex gap-2">
-                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
-                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none">
+                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
+                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none">
                               <option value="Credit">Credit</option>
                               <option value="Debit">Debit</option>
                             </select>
@@ -287,21 +287,21 @@ export default function SuppliersPage() {
                     </fieldset>
 
                     <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-blue-500 uppercase">Contact Details</legend>
+                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Contact Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 items-center gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right">Contact Person</label>
-                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none" />
+                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
                         </div>
                       </div>
                     </fieldset>
 
                     <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-blue-500 uppercase">Other Details</legend>
+                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Other Details</legend>
                       <div className="space-y-4 mt-2">
                         <div className="grid grid-cols-3 gap-2">
                           <label className="text-xs font-semibold text-slate-600 text-right mt-1">Remark / Note</label>
-                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-blue-500 outline-none resize-none" />
+                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none resize-none" />
                         </div>
                       </div>
                     </fieldset>
@@ -313,7 +313,7 @@ export default function SuppliersPage() {
 
             <div className="flex justify-end gap-3 p-4 border-t border-slate-200 bg-[#F1F5F9] rounded-b-xl">
               <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border border-slate-300 text-slate-600 hover:text-slate-900 hover:text-gray-900 hover:bg-[#E2E8F0] hover:bg-white font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-slate-900 font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update' : 'Save'}
               </button>
             </div>

@@ -222,7 +222,7 @@ export default function EditCustomerPage() {
                     {photo ? (
                       <img src={photo} alt="Customer" className="w-full h-full object-cover" />
                     ) : (
-                      <UserIcon className="w-24 h-24 text-blue-500 mt-8" />
+                      <UserIcon className="w-24 h-24 text-action-500 mt-8" />
                     )}
                   </div>
                 )}
@@ -234,7 +234,7 @@ export default function EditCustomerPage() {
               {showCamera ? (
                 <div className="flex justify-center gap-3 px-2 mt-2">
                   {!cameraError && (
-                    <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-blue-700 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                    <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-action-600 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                       <Camera className="w-4 h-4" /> Capture
                     </button>
                   )}
@@ -404,7 +404,7 @@ export default function EditCustomerPage() {
                        <button onClick={() => router.push('/dashboard/customers')} className="px-6 py-2 rounded border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] text-sm font-medium transition">
                          Cancel
                        </button>
-                       <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-700 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
+                       <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-600 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
                        </button>
                      </div>
@@ -514,7 +514,7 @@ export default function EditCustomerPage() {
                  <div className="flex flex-col h-full items-center justify-center text-slate-600 gap-3">
                     <div className="text-4xl">📝</div>
                     <p className="text-sm">No quotations generated.</p>
-                    <button className="mt-2 text-blue-500 hover:text-blue-400 text-xs font-semibold underline">Create Quotation</button>
+                    <button className="mt-2 text-action-500 hover:text-blue-400 text-xs font-semibold underline">Create Quotation</button>
                  </div>
                )}
 

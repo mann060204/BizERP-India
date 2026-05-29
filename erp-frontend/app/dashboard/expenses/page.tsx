@@ -89,7 +89,7 @@ export default function ExpensesPage() {
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Record Expense
           </button>
         </div>
@@ -195,7 +195,7 @@ export default function ExpensesPage() {
                     <div className="flex rounded-lg overflow-hidden border border-slate-200">
                       {[{ label: 'Intra (C+S)', v: false }, { label: 'Inter (I)', v: true }].map(({ label, v }) => (
                         <button key={label} type="button" onClick={() => setForm({ ...form, isInterState: v })} disabled={form.gstRate === 0}
-                          className={`flex-1 py-2 text-xs font-medium transition ${form.isInterState === v ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'} disabled:opacity-50`}>
+                          className={`flex-1 py-2 text-xs font-medium transition ${form.isInterState === v ? 'bg-action-500 text-white hover:bg-action-600' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'} disabled:opacity-50`}>
                           {label}
                         </button>
                       ))}
@@ -212,7 +212,7 @@ export default function ExpensesPage() {
             </div>
             <div className="flex gap-3 p-6 border-t border-slate-200">
               <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2">
+              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} Record Expense
               </button>
             </div>

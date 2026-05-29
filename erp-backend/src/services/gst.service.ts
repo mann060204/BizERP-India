@@ -36,7 +36,8 @@ interface InvoiceTotals {
  */
 export const calculateInvoiceTotals = (
   items: LineItemInput[],
-  isInterState: boolean
+  isInterState: boolean,
+  isNonGst: boolean = false
 ): InvoiceTotals => {
   let subtotal = 0;
   let totalDiscount = 0;
@@ -56,7 +57,11 @@ export const calculateInvoiceTotals = (
     const taxableAmount = gross - discountAmt;
 
     let cgst = 0, sgst = 0, igst = 0;
-    if (isInterState) {
+    if (isNonGst) {
+      cgst = 0;
+      sgst = 0;
+      igst = 0;
+    } else if (isInterState) {
       igst = (taxableAmount * gstRate) / 100;
     } else {
       cgst = (taxableAmount * gstRate) / 2 / 100;

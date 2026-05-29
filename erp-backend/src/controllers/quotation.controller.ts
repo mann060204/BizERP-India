@@ -39,7 +39,7 @@ export const createQuotation = async (req: Request, res: Response) => {
       await business.save();
     }
     
-    const quotation = new Quotation({ ...data, businessId });
+    const quotation = new Quotation({ ...data, businessId, createdBy: (req as any).user._id });
     const createdQuotation = await quotation.save();
     res.status(201).json(createdQuotation);
   } catch (error: any) {
@@ -86,7 +86,7 @@ export const getNextQuotationNumber = async (req: Request, res: Response) => {
     const counter = type === 'NON-GST' ? (business.nonGstQuotationCounter || 1) : (business.quotationCounter || 1);
     
     const nextNumber = `${prefix}${new Date().getFullYear()}-${counter.toString().padStart(4, '0')}`;
-    res.json({ nextInvoiceNumber: nextNumber });
+    res.json({ nextQuotationNumber: nextNumber });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -131,6 +131,7 @@ export const convertToInvoice = async (req: Request, res: Response) => {
     invoiceData.balance = invoiceData.grandTotal;
     invoiceData.paymentMode = 'Cash';
     
+    invoiceData.createdBy = (req as any).user._id;
     const invoice = new Invoice(invoiceData);
     const createdInvoice = await invoice.save();
     

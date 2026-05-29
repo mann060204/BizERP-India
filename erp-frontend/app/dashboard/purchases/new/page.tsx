@@ -296,7 +296,7 @@ export default function NewPurchasePage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                    <label className="erp-label block">Item Name <span className="text-red-500">*</span></label>
-                   <span className="text-[10px] text-blue-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
+                   <span className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
                 </div>
                 <div className="relative">
                   <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Select item..." />
@@ -507,10 +507,10 @@ export default function NewPurchasePage() {
              <Barcode className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-blue-800 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-action-700 hover:bg-action-800 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Save className="w-4 h-4" /> Save
             </button>
           </div>

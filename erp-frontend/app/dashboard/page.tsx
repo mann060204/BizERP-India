@@ -182,15 +182,15 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {QUICK_ACTIONS.map(({ label, href, icon: ActionIcon, desc }) => (
               <div key={label} onClick={() => router.push(href)}
-                className="group p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer">
+                className="group p-4 bg-white border border-slate-200 rounded-xl hover:border-action-400 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] border border-slate-200 flex items-center justify-center group-hover:bg-blue-50 group-hover:border-indigo-200 transition">
-                    {ActionIcon && <ActionIcon className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition" />}
+                  <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] border border-slate-200 flex items-center justify-center group-hover:bg-action-50 group-hover:border-indigo-200 transition">
+                    {ActionIcon && <ActionIcon className="w-5 h-5 text-slate-600 group-hover:text-action-500 transition" />}
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition" />
+                  <ArrowUpRight className="w-4 h-4 text-slate-600 group-hover:text-action-500 transition" />
                 </div>
                 <div>
-                  <p className="text-slate-900 text-sm font-semibold group-hover:text-blue-700 transition">{label}</p>
+                  <p className="text-slate-900 text-sm font-semibold group-hover:text-action-600 transition">{label}</p>
                   <p className="text-[#475469] text-xs mt-1">{desc}</p>
                 </div>
               </div>

@@ -39,10 +39,10 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-4 py-5 border-b border-slate-200 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 rounded-xl bg-[#1E3A5F] flex items-center justify-center flex-shrink-0 shadow-md">
-          <BarChart3 className="w-5 h-5 text-white" />
-        </div>
-        {!collapsed && <span className="text-slate-900 font-bold text-base tracking-tight">BizERP India</span>}
+        <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+            <img src="/icon.svg" alt="Logo" className="w-full h-full object-contain" />
+          </div>
+        {!collapsed && <span className="text-slate-900 font-bold text-base tracking-tight">Bissness</span>}
       </div>
 
       {/* Nav */}
@@ -51,9 +51,9 @@ export default function Sidebar() {
           <Link key={href} href={href} onClick={() => setMobileOpen(false)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
               ${isActive(href)
-                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                ? 'bg-action-50 text-action-600 border border-blue-200 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}>
-            <Icon className={`w-5 h-5 flex-shrink-0 ${isActive(href) ? 'text-blue-600' : ''}`} />
+            <Icon className={`w-5 h-5 flex-shrink-0 ${isActive(href) ? 'text-action-500' : ''}`} />
             {!collapsed && <span className="text-sm font-medium">{label}</span>}
           </Link>
         ))}

@@ -131,7 +131,7 @@ export default function RegisterPage() {
             <div key={s} className="flex items-center">
               <div className="flex flex-col items-center gap-1">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300
-                  ${i < step ? 'bg-blue-600 text-white hover:bg-blue-700' : i === step ? 'border-2 border-[#D4D4D4] text-slate-700' : 'border-2 border-slate-200 text-slate-600'}`}>
+                  ${i < step ? 'bg-action-500 text-white hover:bg-action-600' : i === step ? 'border-2 border-[#D4D4D4] text-slate-700' : 'border-2 border-slate-200 text-slate-600'}`}>
                   {i < step ? <CheckCircle2 className="w-5 h-5" /> : i + 1}
                 </div>
                 <span className={`text-xs font-medium hidden sm:block ${i === step ? 'text-slate-700' : i < step ? 'text-slate-900' : 'text-slate-600'}`}>
@@ -212,7 +212,7 @@ export default function RegisterPage() {
                 </button>
               )}
               <button type="submit" disabled={loading}
-                className="flex-1 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60 transition shadow-lg shadow-white/10/30">
+                className="flex-1 py-3 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60 transition shadow-lg shadow-white/10/30">
                 {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                 {step < STEPS.length - 1
                   ? (<>Next <ChevronRight className="w-4 h-4" /></>)

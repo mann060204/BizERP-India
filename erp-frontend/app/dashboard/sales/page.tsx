@@ -98,10 +98,10 @@ export default function SalesPage() {
                 placeholder="Search invoice no, customer..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-slate-900"
+                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-400 w-64 text-slate-900"
               />
             </div>
-            <Link href="/dashboard/sales/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
+            <Link href="/dashboard/sales/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
               <Plus className="w-4 h-4" /> New Invoice
             </Link>
           </div>
@@ -111,7 +111,7 @@ export default function SalesPage() {
         <div className="flex gap-2 flex-wrap">
           {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
             <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-blue-600 text-white hover:bg-blue-700 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
               {label}
             </button>
           ))}
@@ -125,7 +125,7 @@ export default function SalesPage() {
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No invoices yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Create your first GST invoice to get started</p>
-            <Link href="/dashboard/sales/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold hover:opacity-90 transition">
+            <Link href="/dashboard/sales/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Create Invoice
             </Link>
           </div>
@@ -171,7 +171,7 @@ export default function SalesPage() {
                               <Printer className="w-4 h-4" />
                             </Link>
                             {inv.status !== 'cancelled' && (
-                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-blue-500 transition tooltip" title="Edit Invoice">
+                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-action-500 transition tooltip" title="Edit Invoice">
                                 <Edit3 className="w-4 h-4" />
                               </Link>
                             )}

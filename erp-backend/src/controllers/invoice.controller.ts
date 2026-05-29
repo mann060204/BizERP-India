@@ -129,7 +129,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const businessId = req.user!.businessId;
     const invType = invoiceType === 'NON-GST' ? 'NON-GST' : 'GST';
     const invoiceNumber = await getNextInvoiceNumber(businessId, invType);
-    const totals = calculateInvoiceTotals(lineItems, !!isInterState);
+    const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType === 'NON-GST');
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
     totals.grandTotal += shipping;
@@ -207,7 +207,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
       }
     }
 
-    const totals = calculateInvoiceTotals(lineItems, !!isInterState);
+    const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType === 'NON-GST');
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
     totals.grandTotal += shipping;
