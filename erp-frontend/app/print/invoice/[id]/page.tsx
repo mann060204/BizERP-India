@@ -92,6 +92,9 @@ export default function PrintableInvoicePage() {
           <div className="border-t border-dashed border-black py-2 mb-2">
             <p><strong>Inv No:</strong> {invoice.invoiceNumber}</p>
             <p><strong>Date:</strong> {new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}</p>
+            <p><strong>Payment:</strong> {invoice.paymentMode}</p>
+            {invoice.txnId && <p><strong>Txn ID:</strong> {invoice.txnId}</p>}
+            {invoice.remarks && <p><strong>Remarks:</strong> {invoice.remarks}</p>}
             <p><strong>Customer:</strong> {invoice.customerSnapshot.name}</p>
             {invoice.customerSnapshot.mobile && <p><strong>Phone:</strong> {invoice.customerSnapshot.mobile}</p>}
           </div>
@@ -211,9 +214,11 @@ export default function PrintableInvoicePage() {
               <div className="grid grid-cols-[100px_1fr] gap-x-1 font-semibold text-gray-800">
                 <span>Invoice No.</span><span>: {invoice.invoiceNumber}</span>
                 <span>Invoice Date</span><span>: {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}</span>
-                <span>Payment Mode</span><span>: {invoice.paymentMode}</span>
+                <span>Payment Mode</span><span className="whitespace-pre-wrap leading-tight">: {invoice.paymentMode}</span>
                 <span>Reverse Charge</span><span>: {invoice.isReverseCharge ? 'YES' : 'NO'}</span>
                 <span>Transport</span><span>: {invoice.deliveryTerms || 'N/A'}</span>
+                {invoice.txnId && <><span>Transaction ID</span><span className="whitespace-pre-wrap leading-tight">: {invoice.txnId}</span></>}
+                {invoice.remarks && <><span>Remarks</span><span className="whitespace-pre-wrap leading-tight">: {invoice.remarks}</span></>}
               </div>
             </div>
           </div>

@@ -29,6 +29,9 @@ export default function AccountsPage() {
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [editAccountId, setEditAccountId] = useState<string | null>(null);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  
+  const [allAccounts, setAllAccounts] = useState<Account[]>([]);
   
   const fetchAccounts = useCallback(async () => {
     try {
@@ -42,6 +45,21 @@ export default function AccountsPage() {
   }, [type, selectedAccount]);
 
   useEffect(() => { fetchAccounts(); }, [fetchAccounts]);
+
+  const fetchAllAccounts = async () => {
+    try {
+      const { accounts } = await accountsApi.list();
+      setAllAccounts(accounts);
+    } catch (e) {
+      // silent
+    }
+  };
+
+  useEffect(() => {
+    if (showTransfer) {
+      fetchAllAccounts();
+    }
+  }, [showTransfer]);
 
   const fetchLedger = useCallback(async () => {
     if (!selectedAccount) return;
@@ -92,16 +110,22 @@ export default function AccountsPage() {
     setShowAddAccount(true);
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = async (force: boolean = false) => {
     if (!selectedAccount) return;
-    if (!confirm(`Are you sure you want to delete ${selectedAccount.name}? This will fail if there are non-opening transactions.`)) return;
+    if (!force && !confirm(`Are you sure you want to delete ${selectedAccount.name}?`)) return;
     try {
-      await accountsApi.delete(selectedAccount._id);
+      await accountsApi.delete(selectedAccount._id, force);
       toast.success('Account deleted successfully');
       setSelectedAccount(null);
       fetchAccounts();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error deleting account');
+      if (err.response?.data?.message === 'HAS_TRANSACTIONS') {
+        if (confirm(`This account has existing ledger transactions. Do you want to FORCE delete this account and wipe all its ledger history? This cannot be undone.`)) {
+          handleDeleteAccount(true);
+        }
+      } else {
+        toast.error(err.response?.data?.message || 'Error deleting account');
+      }
     }
   };
 
@@ -158,6 +182,52 @@ export default function AccountsPage() {
       fetchAccounts(); // to update balances in the list
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Error adding transaction');
+    }
+  };
+
+  const handleDeleteTransaction = async (txnId: string, referenceType: string) => {
+    if (referenceType === 'Opening') {
+      toast.error('Cannot delete the initial opening balance entry.');
+      return;
+    }
+    if (!selectedAccount) return;
+    if (!confirm('Are you sure you want to delete this transaction? The account balance will be recalculated.')) return;
+
+    try {
+      await accountsApi.deleteTransaction(selectedAccount._id, txnId);
+      toast.success('Transaction deleted');
+      fetchLedger();
+      fetchAccounts();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error deleting transaction');
+    }
+  };
+
+  // Transfer Form
+  const [transferToId, setTransferToId] = useState('');
+  const [transferAmt, setTransferAmt] = useState('');
+  const [transferDate, setTransferDate] = useState(new Date().toISOString().substring(0,10));
+  const [transferDesc, setTransferDesc] = useState('');
+
+  const handleTransferFunds = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedAccount || !transferToId || !transferAmt) return;
+    
+    try {
+      await accountsApi.transfer({
+        fromAccountId: selectedAccount._id,
+        toAccountId: transferToId,
+        amount: transferAmt,
+        date: transferDate,
+        description: transferDesc
+      });
+      toast.success('Transfer completed successfully');
+      setShowTransfer(false);
+      setTransferToId(''); setTransferAmt(''); setTransferDesc('');
+      fetchLedger();
+      fetchAccounts();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error transferring funds');
     }
   };
 
@@ -253,7 +323,7 @@ export default function AccountsPage() {
                   <button onClick={() => setShowAddTransaction(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition">
                     <Plus className="w-4 h-4" /> Adjust
                   </button>
-                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition">
+                  <button onClick={() => setShowTransfer(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition">
                     <ArrowRightLeft className="w-4 h-4" /> Transfer
                   </button>
                 </div>
@@ -271,6 +341,7 @@ export default function AccountsPage() {
                         <th className="px-5 py-3 text-white font-medium text-xs tracking-wider">Description</th>
                         <th className="px-5 py-3 text-white font-medium text-xs tracking-wider text-right">Debit (₹)</th>
                         <th className="px-5 py-3 text-white font-medium text-xs tracking-wider text-right">Credit (₹)</th>
+                        <th className="px-5 py-3 text-white font-medium text-xs tracking-wider text-right w-12"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -280,17 +351,25 @@ export default function AccountsPage() {
                           <td className="px-5 py-3 text-slate-600" colSpan={2}>Opening Balance</td>
                           <td className="px-5 py-3 text-right text-emerald-600">{selectedAccount.balanceType === 'Dr' ? periodOpeningBalance.toFixed(2) : ''}</td>
                           <td className="px-5 py-3 text-right text-red-600">{selectedAccount.balanceType === 'Cr' ? periodOpeningBalance.toFixed(2) : ''}</td>
+                          <td className="px-5 py-3"></td>
                         </tr>
                       )}
                       
                       {/* Transactions */}
                       {ledger.map((txn) => {
                         return (
-                          <tr key={txn._id} className="hover:bg-slate-50 transition">
+                          <tr key={txn._id} className="hover:bg-slate-50 transition group/row">
                             <td className="px-5 py-3 text-slate-600">{new Date(txn.date).toLocaleDateString('en-IN')}</td>
                             <td className="px-5 py-3 text-slate-900">{txn.description}</td>
                             <td className="px-5 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
                             <td className="px-5 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
+                            <td className="px-2 py-3 text-right">
+                              {txn.referenceType !== 'Opening' && (
+                                <button onClick={() => handleDeleteTransaction(txn._id, txn.referenceType)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition opacity-0 group-hover/row:opacity-100">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </td>
                           </tr>
                         );
                       })}
@@ -309,6 +388,7 @@ export default function AccountsPage() {
                             <td colSpan={2} className="px-5 py-4 text-right text-slate-900">
                               {closingBal.toFixed(2)} {closingBalType}
                             </td>
+                            <td className="px-5 py-4"></td>
                           </tr>
                         );
                       })()}
@@ -403,6 +483,51 @@ export default function AccountsPage() {
               </div>
               <div className="pt-2">
                 <button type="submit" className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition shadow-lg shadow-emerald-500/30">Save Transaction</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showTransfer && selectedAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-bold text-slate-900">Transfer Funds</h3>
+              <button onClick={() => setShowTransfer(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleTransferFunds} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">From Account</label>
+                <div className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-medium text-sm">
+                  {selectedAccount.name}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">To Account <span className="text-red-500">*</span></label>
+                <select required value={transferToId} onChange={e => setTransferToId(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
+                  <option value="">Select Destination Account</option>
+                  {allAccounts.filter(a => a._id !== selectedAccount._id).map(a => (
+                    <option key={a._id} value={a._id}>{a.name} ({a.type})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Date <span className="text-red-500">*</span></label>
+                  <input type="date" required value={transferDate} onChange={e => setTransferDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Amount (₹) <span className="text-red-500">*</span></label>
+                  <input type="number" step="0.01" required min="0.01" value={transferAmt} onChange={e => setTransferAmt(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Description</label>
+                <input value={transferDesc} onChange={e => setTransferDesc(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. Fund transfer" />
+              </div>
+              <div className="pt-2">
+                <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-600/30">Complete Transfer</button>
               </div>
             </form>
           </div>

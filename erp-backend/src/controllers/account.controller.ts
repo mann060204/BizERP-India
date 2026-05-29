@@ -150,13 +150,16 @@ export const updateAccount = async (req: AuthRequest, res: Response): Promise<vo
 export const deleteAccount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    const { force } = req.query;
     const businessId = req.user!.businessId;
 
-    // Optional: check if there are transactions other than opening balance
-    const txCount = await AccountLedger.countDocuments({ accountId: id, referenceType: { $ne: 'Opening' } });
-    if (txCount > 0) {
-      res.status(400).json({ message: 'Cannot delete account with existing transactions' });
-      return;
+    if (force !== 'true') {
+      // Check if there are transactions other than opening balance
+      const txCount = await AccountLedger.countDocuments({ accountId: id, referenceType: { $ne: 'Opening' } });
+      if (txCount > 0) {
+        res.status(400).json({ message: 'HAS_TRANSACTIONS', error: 'Cannot delete account with existing transactions' });
+        return;
+      }
     }
 
     const account = await Account.findOneAndDelete({ _id: id, businessId });
@@ -166,6 +169,110 @@ export const deleteAccount = async (req: AuthRequest, res: Response): Promise<vo
     await AccountLedger.deleteMany({ accountId: id, businessId });
 
     res.json({ message: 'Account deleted successfully' });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const deleteTransaction = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id, txnId } = req.params;
+    const businessId = req.user!.businessId;
+
+    const account = await Account.findOne({ _id: id, businessId });
+    if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
+
+    const transaction = await AccountLedger.findOne({ _id: txnId, accountId: id, businessId });
+    if (!transaction) { res.status(404).json({ message: 'Transaction not found' }); return; }
+
+    if (transaction.referenceType === 'Opening') {
+      res.status(400).json({ message: 'Cannot delete the opening balance transaction directly' });
+      return;
+    }
+
+    // Revert the balance
+    if (account.balanceType === 'Dr') {
+      account.currentBalance -= (transaction.debit || 0) - (transaction.credit || 0);
+    } else {
+      account.currentBalance -= (transaction.credit || 0) - (transaction.debit || 0);
+    }
+    
+    await account.save();
+    await transaction.deleteOne();
+
+    res.json({ message: 'Transaction deleted successfully', account });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const transferFunds = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { fromAccountId, toAccountId, amount, date, description } = req.body;
+    const businessId = req.user!.businessId;
+
+    if (fromAccountId === toAccountId) {
+      res.status(400).json({ message: 'Cannot transfer to the same account' });
+      return;
+    }
+
+    const fromAccount = await Account.findOne({ _id: fromAccountId, businessId });
+    const toAccount = await Account.findOne({ _id: toAccountId, businessId });
+
+    if (!fromAccount || !toAccount) {
+      res.status(404).json({ message: 'Account not found' });
+      return;
+    }
+
+    const amt = Number(amount);
+    if (!amt || amt <= 0) {
+      res.status(400).json({ message: 'Invalid amount' });
+      return;
+    }
+
+    // From Account gets Credited
+    if (fromAccount.balanceType === 'Dr') {
+      fromAccount.currentBalance -= amt;
+    } else {
+      fromAccount.currentBalance += amt;
+    }
+    await fromAccount.save();
+
+    // To Account gets Debited
+    if (toAccount.balanceType === 'Dr') {
+      toAccount.currentBalance += amt;
+    } else {
+      toAccount.currentBalance -= amt;
+    }
+    await toAccount.save();
+
+    const transferRefId = Math.random().toString(36).substring(7); // simple random ref
+
+    await AccountLedger.create({
+      businessId,
+      accountId: fromAccountId,
+      date: new Date(date),
+      description: description || `Transfer to ${toAccount.name}`,
+      debit: 0,
+      credit: amt,
+      referenceType: 'Transfer',
+      referenceId: transferRefId,
+      closingBalance: fromAccount.currentBalance
+    });
+
+    await AccountLedger.create({
+      businessId,
+      accountId: toAccountId,
+      date: new Date(date),
+      description: description || `Transfer from ${fromAccount.name}`,
+      debit: amt,
+      credit: 0,
+      referenceType: 'Transfer',
+      referenceId: transferRefId,
+      closingBalance: toAccount.currentBalance
+    });
+
+    res.json({ message: 'Transfer successful' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }

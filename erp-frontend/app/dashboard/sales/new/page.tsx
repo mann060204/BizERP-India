@@ -93,8 +93,11 @@ export default function NewInvoicePage() {
   const [shippingCharge, setShippingCharge] = useState(0);
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
-  const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
-  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} (Date: ${paymentDate1}) | ${txnId2} (Date: ${paymentDate2})` : (txnId1 ? `${txnId1} (Date: ${paymentDate1})` : (txnId2 ? `${txnId2} (Date: ${paymentDate2})` : ''));
+  const formatDate = (d: string) => d.split('-').reverse().join('/');
+  const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 
+    ? `${paymentMode1} (₹${amountReceived1} on ${formatDate(paymentDate1)}) & ${paymentMode2} (₹${amountReceived2} on ${formatDate(paymentDate2)})` 
+    : paymentMode1;
+  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} | ${txnId2}` : (txnId1 ? txnId1 : (txnId2 ? txnId2 : ''));
 
   useEffect(() => {
     const fetchData = async () => {
