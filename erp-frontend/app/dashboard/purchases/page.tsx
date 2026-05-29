@@ -124,9 +124,12 @@ export default function PurchasesPage() {
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          {pur.status !== 'cancelled' && (
-                            <button onClick={() => handleCancel(pur._id, pur.billNumber)} className="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg text-xs text-red-400 hover:bg-red-900/10 transition">Cancel</button>
-                          )}
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <Link href={`/dashboard/purchases/${pur._id}/edit`} className="px-2 py-1 rounded-lg text-xs text-blue-500 hover:bg-blue-100 transition">Edit</Link>
+                            {pur.status !== 'cancelled' && (
+                              <button onClick={() => handleCancel(pur._id, pur.billNumber)} className="px-2 py-1 rounded-lg text-xs text-red-500 hover:bg-red-100 transition">Cancel</button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

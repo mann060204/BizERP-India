@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../lib/erp-api';
 import { 
@@ -33,8 +33,10 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function NewPurchasePage() {
+export default function EditPurchasePage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +103,45 @@ export default function NewPurchasePage() {
         setProducts(pRes.data.products);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
+
+        if (id) {
+          const { data } = await purchasesApi.get(id);
+          const p = data.purchase;
+          
+          setPurchaseType(p.purchaseType || 'GST');
+          setBillNumber(p.billNumber || '');
+          setBillDate(new Date(p.billDate).toISOString().split('T')[0]);
+          if (p.dueDate) setDueDate(new Date(p.dueDate).toISOString().split('T')[0]);
+          setPlaceOfSupply(p.placeOfSupply || 'Gujarat');
+          setPurchaseOrderNo(p.purchaseOrderNo || '');
+          if (p.purchaseOrderDate) setPurchaseOrderDate(new Date(p.purchaseOrderDate).toISOString().split('T')[0]);
+          setPaymentTerms(p.paymentTerms || '');
+          setEwayBillNo(p.ewayBillNo || '');
+          
+          if (p.supplierId) {
+            setSelectedSupplier(p.supplierId);
+            setSupplierSearch(p.supplierId.name);
+            setContactNo(p.supplierId.mobile || '');
+            setSupplierAddress(p.supplierId.address || '');
+            setSupplierGstin(p.supplierId.gstin || '');
+          } else if (p.supplierSnapshot) {
+            setSupplierSearch(p.supplierSnapshot.name || 'Walk-in Supplier');
+          }
+          
+          setLineItems(p.lineItems || []);
+          setBatches(p.batches || []);
+          
+          setAdditionalDiscount(p.totalDiscount || 0);
+          if (p.totalDiscount > 0) setShowAdditionalDiscount(true);
+          
+          setShippingCharge(p.shippingCharge || 0);
+          if (p.shippingCharge > 0) setShowShipping(true);
+          
+          setPaymentMode(p.paymentMode || 'Cash');
+          setAmountPaid(p.amountPaid || 0);
+          setTxnId(p.txnId || '');
+          setRemarks(p.notes || '');
+        }
       } catch (err) {
         toast.error('Failed to load data');
       } finally {
@@ -108,7 +149,7 @@ export default function NewPurchasePage() {
       }
     };
     fetchData();
-  }, []);
+  }, [id]);
 
   const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
@@ -207,8 +248,8 @@ export default function NewPurchasePage() {
         notes: remarks,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
       };
-      await purchasesApi.create(payload);
-      toast.success(`Purchase Bill ${billNumber} Recorded!`);
+      await purchasesApi.update(id, payload);
+      toast.success(`Purchase Bill ${billNumber} Updated!`);
       router.push('/dashboard/purchases');
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save purchase bill');
@@ -221,7 +262,7 @@ export default function NewPurchasePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="Unsaved Purchase Bill" />
+      <Topbar title="Edit Purchase Bill" />
 
       {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">

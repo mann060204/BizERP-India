@@ -134,6 +134,125 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// PUT /api/v1/purchases/:id
+export const updatePurchase = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const {
+      billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
+      lineItems, batches, paymentMode, amountPaid, notes, status,
+    } = req.body;
+
+    const purchaseId = req.params['id'];
+    const businessId = req.user!.businessId;
+
+    if (!lineItems || lineItems.length === 0) {
+      res.status(400).json({ message: 'At least one line item is required' });
+      return;
+    }
+    if (!billNumber) {
+      res.status(400).json({ message: 'Supplier Bill Number is required' });
+      return;
+    }
+
+    const existingPurchase = await PurchaseBill.findOne({ _id: purchaseId, businessId });
+    if (!existingPurchase) {
+      res.status(404).json({ message: 'Purchase bill not found' });
+      return;
+    }
+
+    if (existingPurchase.status !== 'cancelled') {
+      // Revert old stock
+      for (const item of existingPurchase.lineItems) {
+        if (item.productId) {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: -item.quantity },
+          });
+          if (item.batchNo) {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: item.batchNo },
+              { $inc: { currentStock: -item.quantity } }
+            );
+          }
+        }
+      }
+    }
+
+    const totals = calculateInvoiceTotals(lineItems, !!isInterState);
+    const paid = Number(amountPaid) || 0;
+    const balance = totals.grandTotal - paid;
+
+    // Add new stock
+    for (const item of lineItems) {
+      if (item.productId) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { currentStock: item.quantity },
+        });
+
+        if (item.batchNo) {
+          const batchConfig = (batches || []).find((b: any) => String(b.productId) === String(item.productId) && String(b.batchNo) === String(item.batchNo));
+          
+          await Batch.findOneAndUpdate(
+            { businessId, productId: item.productId, batchNo: item.batchNo },
+            {
+              $setOnInsert: {
+                mrp: batchConfig?.mrp || item.mrp || 0,
+                salePrice: batchConfig?.salePrice || item.rate || 0,
+                minSalePrice: batchConfig?.minSalePrice || 0,
+                expiryDate: batchConfig?.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
+              },
+              $inc: { currentStock: item.quantity }
+            },
+            { upsert: true, new: true }
+          );
+
+          if (batchConfig) {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: item.batchNo },
+              {
+                $set: {
+                  mrp: batchConfig.mrp,
+                  salePrice: batchConfig.salePrice,
+                  minSalePrice: batchConfig.minSalePrice,
+                  expiryDate: batchConfig.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
+                }
+              }
+            );
+          }
+        }
+      }
+    }
+
+    const updatedPurchase = await PurchaseBill.findOneAndUpdate(
+      { _id: purchaseId, businessId },
+      {
+        billNumber,
+        billDate: billDate ? new Date(billDate) : new Date(),
+        dueDate,
+        supplierId: supplierId || undefined,
+        supplierSnapshot: supplierSnapshot || { name: 'Walk-in Supplier' },
+        isInterState: !!isInterState,
+        lineItems: totals.lineItems,
+        subtotal: totals.subtotal,
+        totalDiscount: totals.totalDiscount,
+        totalTaxableAmount: totals.totalTaxableAmount,
+        totalCGST: totals.totalCGST,
+        totalSGST: totals.totalSGST,
+        totalIGST: totals.totalIGST,
+        totalGST: totals.totalGST,
+        grandTotal: totals.grandTotal,
+        amountPaid: paid,
+        balance,
+        paymentMode: paymentMode || 'Cash',
+        status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
+        notes,
+      },
+      { new: true }
+    );
+
+    res.json({ message: 'Purchase bill updated', purchase: updatedPurchase });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // PUT /api/v1/purchases/:id/status
 export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
