@@ -1,0 +1,127 @@
+import { Response } from 'express';
+import { AuthRequest } from '../middlewares/auth.middleware';
+import Account from '../models/Account.model';
+import AccountLedger from '../models/AccountLedger.model';
+
+export const getAccounts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { type } = req.query;
+    const query: any = { businessId: req.user!.businessId };
+    if (type) query.type = type;
+
+    const accounts = await Account.find(query).sort({ createdAt: -1 });
+    res.json({ accounts });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const createAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, type, accountNumber, openingBalance, balanceType } = req.body;
+    const businessId = req.user!.businessId;
+
+    const account = await Account.create({
+      businessId,
+      name,
+      type,
+      accountNumber,
+      openingBalance: Number(openingBalance) || 0,
+      balanceType: balanceType || 'Dr',
+      currentBalance: Number(openingBalance) || 0
+    });
+
+    if (account.openingBalance > 0) {
+      await AccountLedger.create({
+        businessId,
+        accountId: account._id,
+        date: new Date(),
+        description: 'Opening Balance',
+        debit: account.balanceType === 'Dr' ? account.openingBalance : 0,
+        credit: account.balanceType === 'Cr' ? account.openingBalance : 0,
+        referenceType: 'Opening',
+        closingBalance: account.openingBalance
+      });
+    }
+
+    res.status(201).json({ message: 'Account created', account });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const getAccountLedger = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { from, to } = req.query as any;
+    const businessId = req.user!.businessId;
+
+    const account = await Account.findOne({ _id: id, businessId });
+    if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
+
+    const query: any = { businessId, accountId: id };
+    if (from || to) {
+      query.date = {};
+      if (from) query.date.$gte = new Date(from);
+      if (to) query.date.$lte = new Date(to);
+    }
+
+    const ledger = await AccountLedger.find(query).sort({ date: 1, createdAt: 1 });
+
+    // Calculate opening balance for the period if date filter is applied
+    let periodOpeningBalance = 0;
+    if (from) {
+      const prevTransactions = await AccountLedger.find({
+        businessId,
+        accountId: id,
+        date: { $lt: new Date(from) }
+      });
+      const totalDr = prevTransactions.reduce((acc, curr) => acc + (curr.debit || 0), 0);
+      const totalCr = prevTransactions.reduce((acc, curr) => acc + (curr.credit || 0), 0);
+      periodOpeningBalance = account.balanceType === 'Dr' ? totalDr - totalCr : totalCr - totalDr;
+    } else {
+      periodOpeningBalance = 0; // If no date filter, the 'Opening Balance' ledger entry is the start
+    }
+
+    res.json({ account, ledger, periodOpeningBalance });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const addTransaction = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { date, description, debit, credit, referenceType } = req.body;
+    const businessId = req.user!.businessId;
+
+    const account = await Account.findOne({ _id: id, businessId });
+    if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
+
+    const d = Number(debit) || 0;
+    const c = Number(credit) || 0;
+
+    // Update account balance
+    if (account.balanceType === 'Dr') {
+      account.currentBalance += d - c;
+    } else {
+      account.currentBalance += c - d;
+    }
+    await account.save();
+
+    const transaction = await AccountLedger.create({
+      businessId,
+      accountId: id,
+      date: new Date(date),
+      description,
+      debit: d,
+      credit: c,
+      referenceType: referenceType || 'Adjustment',
+      closingBalance: account.currentBalance
+    });
+
+    res.status(201).json({ message: 'Transaction added', transaction, account });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};

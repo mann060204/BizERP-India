@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3, LayoutDashboard, ShoppingCart, Package, Users, Truck,
   Receipt, FileText, Wrench, Settings, LogOut, ChevronLeft, ChevronRight,
-  Menu, Database,
+  Menu, Database, Wallet, ChevronDown, Landmark
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
 import { logout } from '../../store/slices/authSlice';
@@ -16,6 +16,16 @@ const NAV_ITEMS = [
   { label: 'Quotations',      href: '/dashboard/quotations', icon: FileText },
   { label: 'Purchases',       href: '/dashboard/purchases',icon: Package },
   { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },
+  { label: 'Accounts',        href: '/dashboard/accounts', icon: Landmark, 
+    subItems: [
+      { label: 'Bank Account', href: '/dashboard/accounts/Bank' },
+      { label: 'Loan Account', href: '/dashboard/accounts/Loan' },
+      { label: 'Asset Account', href: '/dashboard/accounts/Asset' },
+      { label: 'Capital Account', href: '/dashboard/accounts/Capital' },
+      { label: 'Other Income', href: '/dashboard/accounts/Income' },
+      { label: 'Tax Payment', href: '/dashboard/accounts/Tax' },
+    ]
+  },
   { label: 'Customers',       href: '/dashboard/customers',icon: Users },
   { label: 'Suppliers',       href: '/dashboard/suppliers',icon: Truck },
   { label: 'Expenses',        href: '/dashboard/expenses', icon: Receipt },
@@ -31,9 +41,16 @@ export default function Sidebar() {
   const { user } = useAppSelector((s) => s.auth);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === href : pathname.startsWith(href);
+
+  const toggleSubmenu = (label: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (collapsed) setCollapsed(false);
+    setExpandedMenus(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -47,16 +64,45 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {NAV_ITEMS.map(({ label, href, icon: Icon }) => (
-          <Link key={href} href={href} onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
-              ${isActive(href)
-                ? 'bg-action-50 text-action-600 border border-blue-200 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}>
-            <Icon className={`w-5 h-5 flex-shrink-0 ${isActive(href) ? 'text-action-500' : ''}`} />
-            {!collapsed && <span className="text-sm font-medium">{label}</span>}
-          </Link>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const { label, href, icon: Icon, subItems } = item;
+          const active = isActive(href);
+          const expanded = expandedMenus[label];
+
+          return (
+            <div key={href}>
+              <Link href={subItems ? '#' : href} onClick={(e) => {
+                if (subItems) toggleSubmenu(label, e);
+                else setMobileOpen(false);
+              }}
+                className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group
+                  ${active && !subItems
+                    ? 'bg-action-50 text-action-600 border border-blue-200 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}>
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-5 h-5 flex-shrink-0 ${active && !subItems ? 'text-action-500' : ''}`} />
+                  {!collapsed && <span className="text-sm font-medium">{label}</span>}
+                </div>
+                {!collapsed && subItems && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                )}
+              </Link>
+
+              {/* Sub items */}
+              {!collapsed && subItems && expanded && (
+                <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
+                  {subItems.map(sub => (
+                    <Link key={sub.href} href={sub.href} onClick={() => setMobileOpen(false)}
+                      className={`block px-3 py-2 rounded-lg text-sm transition-all
+                        ${pathname === sub.href ? 'bg-action-50 text-action-600 font-medium' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}>
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       {/* User + Logout */}

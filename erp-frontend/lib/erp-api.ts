@@ -93,3 +93,11 @@ export const quotationsApi = {
   getNextNumber: (type?: string) => api.get(`/quotations/next-number${type ? `?type=${type}` : ''}`).then(res => res.data),
   convertToInvoice: (id: string) => api.post(`/quotations/${id}/convert`).then(res => res.data),
 };
+
+// ─── Accounts ─────────────────────────────────────────────────────────────────
+export const accountsApi = {
+  list: (params?: any) => api.get('/accounts', { params }).then(res => res.data),
+  create: (data: any) => api.post('/accounts', data).then(res => res.data),
+  getLedger: (id: string, params?: any) => api.get(`/accounts/${id}/ledger`, { params }).then(res => res.data),
+  addTransaction: (id: string, data: any) => api.post(`/accounts/${id}/transaction`, data).then(res => res.data),
+};
