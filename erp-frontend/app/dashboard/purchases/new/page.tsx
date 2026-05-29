@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchasesApi } from '../../../../lib/erp-api';
+import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -29,6 +29,7 @@ export default function NewPurchasePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [units, setUnits] = useState<string[]>(['Nos', 'Kg', 'Ltr', 'Box', 'Pcs', 'Mtr']);
 
   // Header State
   const [purchaseType, setPurchaseType] = useState('GST');
@@ -75,12 +76,15 @@ export default function NewPurchasePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sRes, pRes] = await Promise.all([
+        const [sRes, pRes, bRes] = await Promise.all([
           suppliersApi.list({ limit: 200 }),
-          productsApi.list({ limit: 500 })
+          productsApi.list({ limit: 500 }),
+          businessApi.getProfile()
         ]);
         setSuppliers(sRes.data.suppliers);
         setProducts(pRes.data.products);
+        const bizUnits = bRes.data?.business?.units;
+        if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
       } catch (err) {
         toast.error('Failed to load data');
       } finally {
@@ -315,7 +319,7 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Unit <span className="text-red-500">*</span></label>
                 <select value={itemInput.unit} onChange={e => setItemInput({...itemInput, unit: e.target.value})} className="erp-input w-full uppercase">
-                  <option>NOS</option><option>KGS</option><option>PCS</option><option>MTR</option><option>BOX</option>
+                  {units.map(u => <option key={u} value={u}>{u.toUpperCase()}</option>)}
                 </select>
               </div>
               <div>

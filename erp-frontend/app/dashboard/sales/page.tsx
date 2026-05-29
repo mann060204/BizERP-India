@@ -46,7 +46,7 @@ export default function SalesPage() {
   };
 
   const handleWhatsApp = (inv: Invoice) => {
-    const text = `Hello ${inv.customerSnapshot.name},\n\nYour invoice ${inv.invoiceNumber} for ₹${inv.grandTotal.toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/invoice/${inv._id}\n\nThank you for your business!`;
+    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/invoice/${inv._id}\n\nThank you for your business!`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -63,7 +63,7 @@ export default function SalesPage() {
 
   const handleEmail = (inv: Invoice) => {
     const subject = `Invoice ${inv.invoiceNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot.name},\n\nYour invoice ${inv.invoiceNumber} for ₹${inv.grandTotal.toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/invoice/${inv._id}\n\nThank you for your business!`;
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/invoice/${inv._id}\n\nThank you for your business!`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
@@ -148,7 +148,7 @@ export default function SalesPage() {
                       <tr key={inv._id} className="hover:bg-[#F1F5F9] transition-colors group">
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{inv.invoiceNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.invoiceDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot.name}</td>
+                        <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot?.name || 'Walk-in Customer'}</td>
                         <td className="px-5 py-4 text-slate-900 font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
                         <td className="px-5 py-4 text-green-400">₹{inv.amountReceived.toFixed(2)}</td>
                         <td className="px-5 py-4"><span className={inv.balance > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{inv.balance.toFixed(2)}</span></td>

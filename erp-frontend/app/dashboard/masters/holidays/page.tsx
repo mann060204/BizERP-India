@@ -57,7 +57,7 @@ export default function HolidayMasterPage() {
     }
   };
 
-  const addHoliday = () => {
+  const addHoliday = async () => {
     const trimmedName = newName.trim();
     if (!trimmedName || !newDate) {
       toast.error('Please enter both date and name');
@@ -74,10 +74,23 @@ export default function HolidayMasterPage() {
     setHolidays(newHolidays);
     setNewName('');
     setNewDate('');
+    try {
+      await businessApi.updateProfile({ holidays: newHolidays });
+      toast.success(`Holiday "${trimmedName}" added & saved`);
+    } catch {
+      toast.error('Failed to save holiday');
+    }
   };
 
-  const removeHoliday = (idx: number) => {
-    setHolidays(holidays.filter((_, i) => i !== idx));
+  const removeHoliday = async (idx: number) => {
+    const newHolidays = holidays.filter((_, i) => i !== idx);
+    setHolidays(newHolidays);
+    try {
+      await businessApi.updateProfile({ holidays: newHolidays });
+      toast.success('Holiday removed');
+    } catch {
+      toast.error('Failed to save');
+    }
   };
 
   const startEdit = (idx: number, h: Holiday) => {
@@ -86,7 +99,7 @@ export default function HolidayMasterPage() {
     setEditNameInput(h.name);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingIndex === null) return;
     const trimmed = editNameInput.trim();
     if (!trimmed || !editDateInput) { setEditingIndex(null); return; }
@@ -102,6 +115,12 @@ export default function HolidayMasterPage() {
     
     setHolidays(newHolidays);
     setEditingIndex(null);
+    try {
+      await businessApi.updateProfile({ holidays: newHolidays });
+      toast.success('Holiday updated successfully');
+    } catch {
+      toast.error('Failed to save updated holiday');
+    }
   };
 
   if (loading) {

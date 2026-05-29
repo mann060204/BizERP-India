@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from "next/navigation";
 import Topbar from '../../../../../components/layout/Topbar';
-import { customersApi, productsApi, quotationsApi, invoicesApi } from '../../../../../lib/erp-api';
+import { customersApi, productsApi, quotationsApi, invoicesApi, businessApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -34,6 +34,9 @@ export default function NewQuotationPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [units, setUnits] = useState<string[]>(['Nos', 'Kg', 'Ltr', 'Box', 'Pcs', 'Mtr']);
+  const [discountSchemes, setDiscountSchemes] = useState<any[]>([]);
+  const [selectedSchemeId, setSelectedSchemeId] = useState('');
 
   // Header State
   const [quotationType, setQuotationType] = useState('GST');
@@ -98,14 +101,19 @@ export default function NewQuotationPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        const [cRes, pRes, iRes] = await Promise.all([
+        const [cRes, pRes, iRes, bRes] = await Promise.all([
           customersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
-          quotationsApi.getById(id as string)
+          quotationsApi.getById(id as string),
+          businessApi.getProfile()
         ]);
         
         setCustomers(cRes.data.customers);
         setProducts(pRes.data.products);
+        const bizUnits = bRes.data?.business?.units;
+        if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
+        const bizDiscounts = bRes.data?.business?.discountSchemes || [];
+        setDiscountSchemes(bizDiscounts.filter((d: any) => d.isActive));
         
         const inv = iRes.quotation;
         setQuotationNumber(inv.quotationNumber);
@@ -136,9 +144,6 @@ export default function NewQuotationPage() {
           selectedBaseRate: item.selectedBaseRate || item.rate
         })));
         
-        // Wait, payment state variables may have different names in [id]/edit/page.tsx
-        // because it was copied from new/page.tsx. Let's make sure it matches.
-        
         setPaymentMode1(inv.paymentMode || 'Cash');
         setAmountReceived1(inv.amountReceived || 0);
         if (inv.paymentDate) setPaymentDate1(new Date(inv.paymentDate).toISOString().split('T')[0]);
@@ -159,6 +164,31 @@ export default function NewQuotationPage() {
     };
     if (id) init();
   }, [id]);
+
+  const applyDiscountScheme = (schemeId: string) => {
+    setSelectedSchemeId(schemeId);
+    if (!schemeId) {
+      setLineItems(prev => prev.map(item => calculateItem({ ...item, discount: 0 })));
+      setItemInput(prev => ({ ...prev, discount: 0 }));
+      toast.success('Discount scheme cleared');
+      return;
+    }
+    const scheme = discountSchemes.find(s => (s._id || s.name) === schemeId);
+    if (!scheme) return;
+    
+    let discountPercent = 0;
+    if (scheme.type === 'PERCENTAGE') {
+      discountPercent = scheme.value;
+    } else {
+      if (subtotal > 0) {
+        discountPercent = round2((scheme.value / subtotal) * 100);
+      }
+    }
+    
+    setLineItems(prev => prev.map(item => calculateItem({ ...item, discount: discountPercent })));
+    setItemInput(prev => ({ ...prev, discount: discountPercent }));
+    toast.success(`Discount scheme "${scheme.name}" (${discountPercent}%) applied!`);
+  };
 
 
   const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
@@ -557,7 +587,7 @@ export default function NewQuotationPage() {
                       {itemInput.secondaryUnit && <option value={itemInput.secondaryUnit}>{itemInput.secondaryUnit}</option>}
                     </>
                   ) : (
-                    <><option>Nos</option><option>Kgs</option><option>Pcs</option><option>Mtr</option><option>Box</option></>
+                    <>{units.map(u => <option key={u} value={u}>{u}</option>)}</>
                   )}
                 </select>
               </div>
@@ -711,6 +741,23 @@ export default function NewQuotationPage() {
                 <label className="erp-label block mb-1">Total Quantity</label>
                 <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{totalQty}</div>
               </div>
+              {discountSchemes.length > 0 && (
+                <div>
+                  <label className="erp-label block mb-1">Discount Scheme</label>
+                  <select 
+                    value={selectedSchemeId} 
+                    onChange={e => applyDiscountScheme(e.target.value)} 
+                    className="erp-input w-full text-slate-900"
+                  >
+                    <option value="">No Scheme</option>
+                    {discountSchemes.map(s => (
+                      <option key={s._id || s.name} value={s._id || s.name}>
+                        {s.name} ({s.type === 'PERCENTAGE' ? `${s.value}%` : `₹${s.value}`})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="erp-label block mb-1">Sold By</label>
                 <select value={soldBy} onChange={e => setSoldBy(e.target.value)} className="erp-input w-full">

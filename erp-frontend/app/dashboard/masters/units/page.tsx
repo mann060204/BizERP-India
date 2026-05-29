@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../../../../components/layout/Topbar';
 import { businessApi } from '../../../../lib/erp-api';
-import { Loader2, Save, X, Plus, Edit3, Check, Scale } from 'lucide-react';
+import { Loader2, Save, X, Plus, Edit3, Check, Scale, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function UnitMasterPage() {
@@ -41,19 +41,29 @@ export default function UnitMasterPage() {
     }
   };
 
-  const addUnit = () => {
+  const addUnit = async () => {
     const trimmed = newUnit.trim();
     if (!trimmed) return;
     if (units.some(u => u.toLowerCase() === trimmed.toLowerCase())) {
       toast.error('Unit already exists');
       return;
     }
-    setUnits([...units, trimmed]);
+    const updated = [...units, trimmed];
+    setUnits(updated);
     setNewUnit('');
+    try {
+      await businessApi.updateProfile({ units: updated });
+      toast.success(`Unit "${trimmed}" added & saved`);
+    } catch { toast.error('Failed to save unit'); }
   };
 
-  const removeUnit = (idx: number) => {
-    setUnits(units.filter((_, i) => i !== idx));
+  const removeUnit = async (idx: number) => {
+    const updated = units.filter((_, i) => i !== idx);
+    setUnits(updated);
+    try {
+      await businessApi.updateProfile({ units: updated });
+      toast.success('Unit removed');
+    } catch { toast.error('Failed to save'); }
   };
 
   const startEdit = (idx: number, name: string) => {
@@ -61,7 +71,7 @@ export default function UnitMasterPage() {
     setEditInput(name);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingIndex === null) return;
     const trimmed = editInput.trim();
     if (!trimmed) { setEditingIndex(null); return; }
@@ -75,6 +85,12 @@ export default function UnitMasterPage() {
     newUnits[editingIndex] = trimmed;
     setUnits(newUnits);
     setEditingIndex(null);
+    try {
+      await businessApi.updateProfile({ units: newUnits });
+      toast.success('Unit updated successfully');
+    } catch {
+      toast.error('Failed to save updated unit');
+    }
   };
 
   if (loading) {

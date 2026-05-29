@@ -41,19 +41,29 @@ export default function ExpenseMasterPage() {
     }
   };
 
-  const addExpense = () => {
+  const addExpense = async () => {
     const trimmed = newExpense.trim();
     if (!trimmed) return;
     if (expenseCategories.some(u => u.toLowerCase() === trimmed.toLowerCase())) {
       toast.error('Expense category already exists');
       return;
     }
-    setExpenseCategories([...expenseCategories, trimmed]);
+    const updated = [...expenseCategories, trimmed];
+    setExpenseCategories(updated);
     setNewExpense('');
+    try {
+      await businessApi.updateProfile({ expenseCategories: updated });
+      toast.success(`Category "${trimmed}" added & saved`);
+    } catch { toast.error('Failed to save category'); }
   };
 
-  const removeExpense = (idx: number) => {
-    setExpenseCategories(expenseCategories.filter((_, i) => i !== idx));
+  const removeExpense = async (idx: number) => {
+    const updated = expenseCategories.filter((_, i) => i !== idx);
+    setExpenseCategories(updated);
+    try {
+      await businessApi.updateProfile({ expenseCategories: updated });
+      toast.success('Category removed');
+    } catch { toast.error('Failed to save'); }
   };
 
   const startEdit = (idx: number, name: string) => {
@@ -61,7 +71,7 @@ export default function ExpenseMasterPage() {
     setEditInput(name);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (editingIndex === null) return;
     const trimmed = editInput.trim();
     if (!trimmed) { setEditingIndex(null); return; }
@@ -75,6 +85,12 @@ export default function ExpenseMasterPage() {
     newExpenses[editingIndex] = trimmed;
     setExpenseCategories(newExpenses);
     setEditingIndex(null);
+    try {
+      await businessApi.updateProfile({ expenseCategories: newExpenses });
+      toast.success('Expense category updated successfully');
+    } catch {
+      toast.error('Failed to save updated category');
+    }
   };
 
   if (loading) {

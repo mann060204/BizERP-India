@@ -156,7 +156,7 @@ export const convertToInvoice = async (req: Request, res: Response) => {
     invoiceData.invoiceNumber = nextNumber;
     invoiceData.invoiceDate = new Date();
     invoiceData.invoiceType = quotation.quotationType;
-    invoiceData.status = 'Draft';
+    invoiceData.status = 'draft';
     invoiceData.amountReceived = 0;
     invoiceData.balance = invoiceData.grandTotal;
     invoiceData.paymentMode = 'Cash';

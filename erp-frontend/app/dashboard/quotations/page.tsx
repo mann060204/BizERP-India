@@ -59,7 +59,7 @@ export default function QuotationsPage() {
   };
 
   const handleWhatsApp = (inv: Quotation) => {
-    const text = `Hello ${inv.customerSnapshot.name},\n\nYour quotation ${inv.quotationNumber} for ₹${inv.grandTotal.toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/quotation/${inv._id}\n\nThank you for your business!`;
+    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/quotation/${inv._id}\n\nThank you for your business!`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -75,7 +75,7 @@ export default function QuotationsPage() {
 
   const handleEmail = (inv: Quotation) => {
     const subject = `Quotation ${inv.quotationNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot.name},\n\nYour quotation ${inv.quotationNumber} for ₹${inv.grandTotal.toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/quotation/${inv._id}\n\nThank you for your business!`;
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: http://localhost:3000/print/quotation/${inv._id}\n\nThank you for your business!`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
@@ -160,7 +160,7 @@ export default function QuotationsPage() {
                       <tr key={inv._id} className="hover:bg-[#F1F5F9] transition-colors group">
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{inv.quotationNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.quotationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot.name}</td>
+                        <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot?.name || 'Walk-in Customer'}</td>
                         <td className="px-5 py-4 text-slate-900 font-semibold">₹{(inv.grandTotal || 0).toFixed(2)}</td>
                         <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(2)}</td>
                         <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
