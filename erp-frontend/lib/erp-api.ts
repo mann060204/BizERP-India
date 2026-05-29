@@ -83,6 +83,7 @@ export const businessApi = {
 
 
 export const quotationsApi = {
+  summary: (params?: any) => api.get('/quotations/summary', { params }).then(res => res.data),
   getAll: (params?: any) => api.get('/quotations', { params }).then(res => res.data),
   getById: (id: string) => api.get(`/quotations/${id}`).then(res => res.data),
   create: (data: any) => api.post('/quotations', data).then(res => res.data),

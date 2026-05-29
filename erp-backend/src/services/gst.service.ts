@@ -101,7 +101,7 @@ export const calculateInvoiceTotals = (
     totalSGST: round2(totalSGST),
     totalIGST: round2(totalIGST),
     totalGST: round2(totalGST),
-    grandTotal: round2(grandTotal),
+    grandTotal: Math.round(grandTotal),
   };
 };
 

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from "next/navigation";
 import Topbar from '../../../../../components/layout/Topbar';
-import { customersApi, productsApi, quotationsApi } from '../../../../../lib/erp-api';
+import { customersApi, productsApi, quotationsApi, invoicesApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -78,15 +78,15 @@ export default function NewQuotationPage() {
   const [soldBy, setSoldBy] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [ setPaymentMode1] = useState('Cash');
-  const [ setAmountReceived1] = useState(0);
-  const [ setTxnId1] = useState('');
-  const [ setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentMode1, setPaymentMode1] = useState('Cash');
+  const [amountReceived1, setAmountReceived1] = useState(0);
+  const [txnId1, setTxnId1] = useState('');
+  const [paymentDate1, setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
 
-  const [ setPaymentMode2] = useState('');
-  const [ setAmountReceived2] = useState(0);
-  const [ setTxnId2] = useState('');
-  const [ setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentMode2, setPaymentMode2] = useState('');
+  const [amountReceived2, setAmountReceived2] = useState(0);
+  const [txnId2, setTxnId2] = useState('');
+  const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
 
   const [shippingCharge, setShippingCharge] = useState(0);
   
@@ -101,7 +101,7 @@ export default function NewQuotationPage() {
         const [cRes, pRes, iRes] = await Promise.all([
           customersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
-          quotationsApi.get(id as string)
+          quotationsApi.getById(id as string)
         ]);
         
         setCustomers(cRes.data.customers);

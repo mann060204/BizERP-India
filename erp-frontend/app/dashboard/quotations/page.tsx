@@ -3,18 +3,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
 import { quotationsApi } from '../../../lib/erp-api';
-import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3 } from 'lucide-react';
+import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3, ArrowRightLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Quotation { _id: string; quotationNumber: string; quotationDate: string; customerSnapshot: { name: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  unpaid:    { label: 'Unpaid',   color: 'text-blue-400 bg-blue-400/10',    icon: Clock },
-  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
   partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
-  overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
-  cancelled: { label: 'Cancelled',color: 'text-slate-600 bg-[#475569]/10', icon: XCircle },
+  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10', icon: CheckCircle },
+  overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',     icon: AlertCircle },
+  cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
 };
 
 export default function QuotationsPage() {
@@ -24,25 +23,37 @@ export default function QuotationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [summary, setSummary] = useState<any>({});
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [invRes, sumRes] = await Promise.all([
+        quotationsApi.getAll({ status: statusFilter || undefined, limit: 50 }),
+        quotationsApi.summary(),
+      ]);
+      setQuotations(invRes.data.quotations);
+      setSummary(sumRes.data);
+    } catch { toast.error('Failed to load quotations'); }
+    finally { setLoading(false); }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [invRes, sumRes] = await Promise.all([
-          quotationsApi.list({ status: statusFilter || undefined, limit: 50 }),
-          quotationsApi.summary(),
-        ]);
-        setQuotations(invRes.data.quotations);
-        setSummary(sumRes.data);
-      } catch { toast.error('Failed to load quotations'); }
-      finally { setLoading(false); }
-    };
     fetchData();
   }, [statusFilter]);
 
+  const handleConvertToInvoice = async (id: string) => {
+    try {
+      toast.loading('Converting to invoice...', { id: 'convert' });
+      await quotationsApi.convertToInvoice(id);
+      toast.success('Converted to invoice successfully!', { id: 'convert' });
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to convert', { id: 'convert' });
+    }
+  };
+
   const handleCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel quotation ${num}?`)) return;
-    try { await quotationsApi.cancel(id); toast.success('Quotation cancelled'); setQuotations(inv => inv.filter(i => i._id !== id)); }
+    try { await quotationsApi.delete(id); toast.success('Quotation cancelled'); setQuotations(inv => inv.filter(i => i._id !== id)); }
     catch { toast.error('Failed to cancel'); }
   };
 
@@ -171,9 +182,14 @@ export default function QuotationsPage() {
                               <Printer className="w-4 h-4" />
                             </Link>
                             {inv.status !== 'cancelled' && (
-                              <Link href={`/dashboard/quotations/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-action-500 transition tooltip" title="Edit Quotation">
-                                <Edit3 className="w-4 h-4" />
-                              </Link>
+                              <>
+                                <Link href={`/dashboard/quotations/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-action-500 transition tooltip" title="Edit Quotation">
+                                  <Edit3 className="w-4 h-4" />
+                                </Link>
+                                <button onClick={() => handleConvertToInvoice(inv._id)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-indigo-500 transition tooltip" title="Convert to Invoice">
+                                  <ArrowRightLeft className="w-4 h-4" />
+                                </button>
+                              </>
                             )}
                             <button onClick={() => handleWhatsApp(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#22c55e] transition" title="Share via WhatsApp">
                               <MessageCircle className="w-4 h-4" />

@@ -6,15 +6,15 @@ import { invoicesApi } from '../../../lib/erp-api';
 import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Invoice { _id: string; invoiceNumber: string; invoiceDate: string; customerSnapshot: { name: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
+interface Invoice { _id: string; invoiceNumber: string; invoiceDate: string; customerSnapshot: { name: string; mobile?: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
   unpaid:    { label: 'Unpaid',   color: 'text-blue-400 bg-blue-400/10',    icon: Clock },
-  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
   partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
+  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
   overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
-  cancelled: { label: 'Cancelled',color: 'text-slate-600 bg-[#475569]/10', icon: XCircle },
+  cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
 };
 
 export default function SalesPage() {
@@ -57,6 +57,7 @@ export default function SalesPage() {
     return (
       inv.invoiceNumber?.toLowerCase().includes(q) ||
       inv.customerSnapshot?.name?.toLowerCase().includes(q) ||
+      inv.customerSnapshot?.mobile?.toLowerCase().includes(q) ||
       inv.grandTotal?.toString().includes(q)
     );
   });
@@ -95,10 +96,10 @@ export default function SalesPage() {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search invoice no, customer..."
+                placeholder="Search by Bill No, Name, Mobile..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-400 w-64 text-slate-900"
+                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-400 w-72 text-slate-900"
               />
             </div>
             <Link href="/dashboard/sales/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
