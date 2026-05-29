@@ -42,6 +42,7 @@ import expenseRoutes from './routes/expense.routes';
 import reportsRoutes from './routes/reports.routes';
 import businessRoutes from './routes/business.routes';
 import accountRoutes from './routes/account.routes';
+import publicRoutes from './routes/public.routes';
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/customers', customerRoutes);
@@ -55,6 +56,7 @@ app.use('/api/v1/expenses', expenseRoutes);
 app.use('/api/v1/reports', reportsRoutes);
 app.use('/api/v1/business', businessRoutes);
 app.use('/api/v1/accounts', accountRoutes);
+app.use('/api/v1/public', publicRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'ERP API is running' });

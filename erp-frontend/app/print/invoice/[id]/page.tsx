@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { invoicesApi, businessApi } from '../../../../lib/erp-api';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -50,12 +49,13 @@ export default function PrintableInvoicePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [invRes, busRes] = await Promise.all([
-          invoicesApi.get(id as string),
-          businessApi.getProfile()
-        ]);
-        setInvoice(invRes.data.invoice);
-        setBusiness(busRes.data.business);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV !== 'production' ? 'http://localhost:5000/api/v1' : 'https://bizerp-api.vercel.app/api/v1');
+        const res = await fetch(`${apiUrl}/public/invoice/${id}`);
+        if (!res.ok) throw new Error('Invoice not found');
+        
+        const data = await res.json();
+        setInvoice(data.invoice);
+        setBusiness(data.business);
         
         // Auto print after a short delay for rendering
         setTimeout(() => window.print(), 800);

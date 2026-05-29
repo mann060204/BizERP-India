@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { quotationsApi, businessApi } from '../../../../lib/erp-api';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -32,12 +31,14 @@ export default function PrintableQuotationPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [quotRes, busRes] = await Promise.all([
-          quotationsApi.getById(id as string),
-          businessApi.getProfile()
-        ]);
-        setQuotation(quotRes.quotation);
-        setBusiness(busRes.data.business);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV !== 'production' ? 'http://localhost:5000/api/v1' : 'https://bizerp-api.vercel.app/api/v1');
+        const res = await fetch(`${apiUrl}/public/quotation/${id}`);
+        if (!res.ok) throw new Error('Quotation not found');
+        
+        const data = await res.json();
+        setQuotation(data.quotation);
+        setBusiness(data.business);
+        
         setTimeout(() => window.print(), 800);
       } catch (e) {
         toast.error('Failed to load quotation for printing');

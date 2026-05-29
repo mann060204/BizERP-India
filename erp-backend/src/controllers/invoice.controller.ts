@@ -93,7 +93,7 @@ export const getInvoices = async (req: AuthRequest, res: Response): Promise<void
     const [invoices, total] = await Promise.all([
       Invoice.find(query)
         .populate('customerId', 'name mobile')
-        .sort({ invoiceDate: -1 })
+        .sort({ invoiceDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       Invoice.countDocuments(query),

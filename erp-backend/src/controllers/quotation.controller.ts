@@ -6,7 +6,7 @@ import { calculateInvoiceTotals } from '../services/gst.service';
 
 export const getQuotations = async (req: Request, res: Response) => {
   try {
-    const quotations = await Quotation.find({ businessId: (req as any).user.businessId }).sort({ createdAt: -1 }).populate('customerId', 'name');
+    const quotations = await Quotation.find({ businessId: (req as any).user.businessId }).sort({ quotationDate: -1, createdAt: -1 }).populate('customerId', 'name');
     res.json({ quotations });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
