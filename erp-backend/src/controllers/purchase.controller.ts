@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import PurchaseBill from '../models/PurchaseBill.model';
 import Product from '../models/Product.model';
+import Batch from '../models/Batch.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 
 // GET /api/v1/purchases
@@ -46,7 +47,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
   try {
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
-      lineItems, paymentMode, amountPaid, notes, status,
+      lineItems, batches, paymentMode, amountPaid, notes, status,
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -63,12 +64,44 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const paid = Number(amountPaid) || 0;
     const balance = totals.grandTotal - paid;
 
-    // Add stock for product items
+    // Add stock for product items and process batches
     for (const item of lineItems) {
       if (item.productId) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
+
+        if (item.batchNo) {
+          const batchConfig = (batches || []).find((b: any) => String(b.productId) === String(item.productId) && String(b.batchNo) === String(item.batchNo));
+          
+          await Batch.findOneAndUpdate(
+            { businessId, productId: item.productId, batchNo: item.batchNo },
+            {
+              $setOnInsert: {
+                mrp: batchConfig?.mrp || item.mrp || 0,
+                salePrice: batchConfig?.salePrice || item.rate || 0,
+                minSalePrice: batchConfig?.minSalePrice || 0,
+                expiryDate: batchConfig?.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
+              },
+              $inc: { currentStock: item.quantity }
+            },
+            { upsert: true, new: true }
+          );
+
+          if (batchConfig) {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: item.batchNo },
+              {
+                $set: {
+                  mrp: batchConfig.mrp,
+                  salePrice: batchConfig.salePrice,
+                  minSalePrice: batchConfig.minSalePrice,
+                  expiryDate: batchConfig.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
+                }
+              }
+            );
+          }
+        }
       }
     }
 

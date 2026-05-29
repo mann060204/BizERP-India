@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import Product from '../models/Product.model';
+import Batch from '../models/Batch.model';
 
 // GET /api/v1/products
 export const getProducts = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -13,10 +14,21 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [products, total] = await Promise.all([
-      Product.find(query).sort({ name: 1 }).skip(skip).limit(parseInt(limit)),
+      Product.find(query).sort({ name: 1 }).skip(skip).limit(parseInt(limit)).lean(),
       Product.countDocuments(query),
     ]);
-    res.json({ products, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+
+    const productIds = products.map(p => p._id);
+    const batches = await Batch.find({ businessId, productId: { $in: productIds }, currentStock: { $gt: 0 }, isActive: true }).lean();
+
+    const productsWithBatches = products.map(p => {
+      return {
+        ...p,
+        availableBatches: batches.filter(b => String(b.productId) === String(p._id))
+      };
+    });
+
+    res.json({ products: productsWithBatches, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 

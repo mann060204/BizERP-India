@@ -13,7 +13,7 @@ import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModa
 import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; currentBalance?: number; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; batches?: any[]; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
@@ -236,15 +236,25 @@ export default function NewInvoicePage() {
     const isWholesale = selectedCustomer?.priceCategory === 'Wholesale';
     const primaryRate = isWholesale ? (p.sellingPrice2 || p.sellingPrice) : p.sellingPrice;
     const defaultUnit = p.isDefaultSecondaryUnit && p.secondaryUnit ? p.secondaryUnit : p.unit;
-    const initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
+    let initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
+    let initialMrp = p.mrp || p.sellingPrice;
+    let initialBatchNo = '';
+    
+    if (p.batches && p.batches.length > 0) {
+      const b = p.batches[0];
+      initialBatchNo = b.batchNo;
+      initialRate = b.salePrice;
+      initialMrp = b.mrp;
+    }
 
     setItemInput(prev => ({
       ...prev,
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
+      batchNo: initialBatchNo,
       rate: initialRate,
-      mrp: p.mrp || p.sellingPrice,
+      mrp: initialMrp,
       gstRate: p.gstRate,
       unit: defaultUnit,
       primaryUnit: p.unit,
@@ -254,7 +264,7 @@ export default function NewInvoicePage() {
       sellingPrice3: p.sellingPrice3,
       secSalePrice: p.secSalePrice,
       conversionRate: p.conversionRate,
-      selectedBaseRate: primaryRate
+      selectedBaseRate: initialRate
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
@@ -496,7 +506,27 @@ export default function NewInvoicePage() {
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" />
+                {itemInput.productId && products.find(p => p._id === itemInput.productId)?.batches?.length ? (
+                  <select 
+                    value={itemInput.batchNo}
+                    onChange={e => {
+                       const selectedBatch = products.find(p => p._id === itemInput.productId)?.batches?.find((b: any) => b.batchNo === e.target.value);
+                       if (selectedBatch) {
+                         setItemInput({...itemInput, batchNo: e.target.value, rate: selectedBatch.salePrice, mrp: selectedBatch.mrp, selectedBaseRate: selectedBatch.salePrice});
+                       } else {
+                         setItemInput({...itemInput, batchNo: e.target.value});
+                       }
+                    }}
+                    className="erp-input w-full bg-slate-50"
+                  >
+                    <option value="">Select Batch</option>
+                    {products.find(p => p._id === itemInput.productId)?.batches?.map((b: any) => (
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {b.currentStock})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" placeholder="Optional" />
+                )}
               </div>
               <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">

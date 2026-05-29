@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import Invoice from '../models/Invoice.model';
 import Product from '../models/Product.model';
+import Batch from '../models/Batch.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 
@@ -141,6 +142,13 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: -item.quantity },
         });
+
+        if (item.batchNo) {
+          await Batch.findOneAndUpdate(
+            { businessId, productId: item.productId, batchNo: item.batchNo },
+            { $inc: { currentStock: -item.quantity } }
+          );
+        }
       }
     }
 
@@ -204,6 +212,13 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
         await Product.findByIdAndUpdate(oldItem.productId, {
           $inc: { currentStock: oldItem.quantity },
         });
+
+        if (oldItem.batchNo) {
+          await Batch.findOneAndUpdate(
+            { businessId, productId: oldItem.productId, batchNo: oldItem.batchNo },
+            { $inc: { currentStock: oldItem.quantity } }
+          );
+        }
       }
     }
 
@@ -219,6 +234,13 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: -item.quantity },
         });
+
+        if (item.batchNo) {
+          await Batch.findOneAndUpdate(
+            { businessId, productId: item.productId, batchNo: item.batchNo },
+            { $inc: { currentStock: -item.quantity } }
+          );
+        }
       }
     }
 

@@ -18,6 +18,16 @@ interface LineItem {
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
 }
 
+interface BatchConfig {
+  productId: string;
+  productName: string;
+  batchNo: string;
+  mrp: number;
+  salePrice: number;
+  minSalePrice: number;
+  expiryDate: string;
+}
+
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
 const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
@@ -30,6 +40,12 @@ export default function NewPurchasePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [units, setUnits] = useState<string[]>(['Nos', 'Kg', 'Ltr', 'Box', 'Pcs', 'Mtr']);
+
+  const [activeTab, setActiveTab] = useState<'bill' | 'batches'>('bill');
+  const [batches, setBatches] = useState<BatchConfig[]>([]);
+  const [batchInput, setBatchInput] = useState<BatchConfig>({
+    productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''
+  });
 
   // Header State
   const [purchaseType, setPurchaseType] = useState('GST');
@@ -182,6 +198,7 @@ export default function NewPurchasePage() {
         } : { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
+        batches,
         additionalDiscount,
         shippingCharge,
         paymentMode,
@@ -207,14 +224,16 @@ export default function NewPurchasePage() {
       <Topbar title="Unsaved Purchase Bill" />
 
       {/* Tabs */}
-      <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9]">
-         <div className="px-4 py-2 text-xs font-semibold bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900">Purchase Bill</div>
-         <div className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Batch Numbers</div>
+      <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">
+         <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Purchase Bill</div>
+         <div onClick={() => setActiveTab('batches')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'batches' ? 'bg-white border-t-2 border-t-red-500 border-l border-r border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Batch Numbers</div>
       </div>
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14 bg-slate-50">
         
-        {/* Section 1: Purchase bill information */}
+        {activeTab === 'bill' ? (
+          <>
+            {/* Section 1: Purchase bill information */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Purchase bill information</div>
           <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
@@ -499,7 +518,111 @@ export default function NewPurchasePage() {
               </div>
            </div>
         </div>
+          </>
+        ) : (
+          <div className="erp-container h-full flex flex-col">
+            <div className="erp-header py-1 text-xs">Add batch number</div>
+            <div className="p-2 grid grid-cols-6 gap-2 items-end border-b border-slate-200 bg-white">
+              <div className="col-span-1">
+                 <label className="erp-label block mb-1">Item Name</label>
+                 <select 
+                    value={batchInput.productId} 
+                    onChange={e => {
+                       const pName = e.target.options[e.target.selectedIndex].text;
+                       const existingBatch = lineItems.find(l => l.productId === e.target.value)?.batchNo || '';
+                       setBatchInput({...batchInput, productId: e.target.value, productName: pName, batchNo: existingBatch});
+                    }} 
+                    className="erp-input w-full"
+                 >
+                   <option value="">Select</option>
+                   {Array.from(new Set(lineItems.filter(l => !!l.productId).map(l => l.productId))).map(pid => {
+                      const item = lineItems.find(l => l.productId === pid);
+                      return item && <option key={pid} value={pid}>{item.productName}</option>;
+                   })}
+                 </select>
+              </div>
+              <div className="col-span-1">
+                 <label className="erp-label block mb-1">M.R.P.</label>
+                 <div className="flex">
+                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <input type="number" value={batchInput.mrp || ''} onChange={e => setBatchInput({...batchInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
+                 </div>
+              </div>
+              <div className="col-span-1">
+                 <label className="erp-label block mb-1">Sale Price</label>
+                 <div className="flex">
+                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <input type="number" value={batchInput.salePrice || ''} onChange={e => setBatchInput({...batchInput, salePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
+                 </div>
+              </div>
+              <div className="col-span-1">
+                 <label className="erp-label block mb-1">Min. Sale Price</label>
+                 <div className="flex">
+                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <input type="number" value={batchInput.minSalePrice || ''} onChange={e => setBatchInput({...batchInput, minSalePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
+                 </div>
+              </div>
+              <div className="col-span-1">
+                 <label className="erp-label block mb-1">Batch No.</label>
+                 <input value={batchInput.batchNo} onChange={e => setBatchInput({...batchInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
+                 <div className="mt-1">
+                   {batchInput.expiryDate ? (
+                     <input type="date" value={batchInput.expiryDate} onChange={e => setBatchInput({...batchInput, expiryDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5" />
+                   ) : (
+                     <button onClick={() => setBatchInput({...batchInput, expiryDate: new Date().toISOString().split('T')[0]})} className="w-full bg-slate-200 hover:bg-slate-300 text-action-600 font-bold text-[10px] py-1 rounded transition">Set Expiry Date</button>
+                   )}
+                 </div>
+              </div>
+              <div className="col-span-1 flex gap-2 mb-[22px]">
+                 <button onClick={() => {
+                    if(!batchInput.productId || !batchInput.batchNo) { toast.error("Select item and enter Batch No"); return; }
+                    setBatches([...batches.filter(b => !(b.productId === batchInput.productId && b.batchNo === batchInput.batchNo)), batchInput]);
+                    setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''});
+                 }} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><Save className="w-3.5 h-3.5" /> Save</button>
+                 <button onClick={() => setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''})} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
+              </div>
+            </div>
 
+            <div className="erp-header py-1 text-xs border-t-0 bg-transparent text-slate-500 font-medium ml-1 mt-1">Existing batch number(s)</div>
+            <div className="flex-1 overflow-y-auto bg-slate-50 p-2">
+               {batches.length === 0 ? (
+                 <div className="flex flex-col items-center justify-center h-[200px] text-slate-400 opacity-50">
+                    <Search className="w-16 h-16 mb-2 text-yellow-500 opacity-80" />
+                    <span className="text-sm">No batches added yet</span>
+                 </div>
+               ) : (
+                 <table className="w-full text-left border-collapse bg-white shadow-sm border border-slate-200">
+                   <thead>
+                     <tr className="bg-[#F1F5F9] text-slate-700 text-[10px] uppercase">
+                       <th className="p-2 border border-slate-200">Item Name</th>
+                       <th className="p-2 border border-slate-200">Batch No</th>
+                       <th className="p-2 border border-slate-200">M.R.P.</th>
+                       <th className="p-2 border border-slate-200">Sale Price</th>
+                       <th className="p-2 border border-slate-200">Min. Sale Price</th>
+                       <th className="p-2 border border-slate-200">Expiry</th>
+                       <th className="p-2 border border-slate-200 w-10"></th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {batches.map((b, i) => (
+                       <tr key={i} className="text-xs hover:bg-slate-50">
+                         <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
+                         <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
+                         <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{b.salePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
+                         <td className="p-2 border border-slate-200 text-center">
+                            <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Bottom Toolbar */}
