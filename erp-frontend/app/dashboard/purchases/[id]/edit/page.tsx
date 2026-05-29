@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Topbar from '../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../lib/erp-api';
+import Topbar from '../../../../../components/layout/Topbar';
+import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
