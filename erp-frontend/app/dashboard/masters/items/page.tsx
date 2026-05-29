@@ -27,7 +27,7 @@ const emptyForm = {
   category: '', unit: 'Nos', secondaryUnit: '', conversionRate: 1,
   purchasePrice: 0, sellingPrice: 0, sellingPrice2: 0, sellingPrice3: 0, minSalePrice: 0, mrp: 0,
   openingStock: 0, openingStockValue: 0, reorderLevel: 5, lowLevelLimit: 0,
-  gstRate: 18, cessRate: 0, igstRate: 0, saleDiscount: 0, saleDiscountType: 'percentage',
+  gstRate: 0, cessRate: 0, igstRate: 0, saleDiscount: 0, saleDiscountType: 'percentage',
   location: '', batchNo: '', description: '', productType: 'General',
   printDescription: false, printBatchNo: false, oneClickSale: false,
   enableTracking: false, printExpiryDate: false, notForSale: false,

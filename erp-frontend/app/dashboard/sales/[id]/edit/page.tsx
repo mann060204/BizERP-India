@@ -58,7 +58,7 @@ export default function NewInvoicePage() {
   // Particulars (Input Row) State
   const [itemInput, setItemInput] = useState<LineItem>({
     productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 18, cess: 0,
+    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
     taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
   });
   const [itemSearch, setItemSearch] = useState('');
@@ -300,7 +300,7 @@ export default function NewInvoicePage() {
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 18, cess: 0,
+      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
@@ -394,7 +394,7 @@ export default function NewInvoicePage() {
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label">Invoice Type</label>
-              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
+              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} disabled className="erp-input w-full bg-slate-100 cursor-not-allowed">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
