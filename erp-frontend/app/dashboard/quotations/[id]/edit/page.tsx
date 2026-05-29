@@ -107,7 +107,7 @@ export default function NewQuotationPage() {
         setCustomers(cRes.data.customers);
         setProducts(pRes.data.products);
         
-        const inv = iRes.data.quotation;
+        const inv = iRes.quotation;
         setQuotationNumber(inv.quotationNumber);
         if (inv.quotationNumber.startsWith('GST')) setQuotationType('GST');
         else if (inv.quotationNumber.startsWith('NON-GST')) setQuotationType('NON-GST');
