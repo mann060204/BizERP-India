@@ -3,7 +3,9 @@ import {
   getAccounts,
   createAccount,
   getAccountLedger,
-  addTransaction
+  addTransaction,
+  updateAccount,
+  deleteAccount
 } from '../controllers/account.controller';
 import { protect } from '../middlewares/auth.middleware';
 
@@ -13,6 +15,8 @@ router.use(protect);
 
 router.get('/', getAccounts);
 router.post('/', createAccount);
+router.put('/:id', updateAccount);
+router.delete('/:id', deleteAccount);
 router.get('/:id/ledger', getAccountLedger);
 router.post('/:id/transaction', addTransaction);
 

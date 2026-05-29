@@ -98,6 +98,8 @@ export const quotationsApi = {
 export const accountsApi = {
   list: (params?: any) => api.get('/accounts', { params }).then(res => res.data),
   create: (data: any) => api.post('/accounts', data).then(res => res.data),
+  update: (id: string, data: any) => api.put(`/accounts/${id}`, data).then(res => res.data),
+  delete: (id: string) => api.delete(`/accounts/${id}`).then(res => res.data),
   getLedger: (id: string, params?: any) => api.get(`/accounts/${id}/ledger`, { params }).then(res => res.data),
   addTransaction: (id: string, data: any) => api.post(`/accounts/${id}/transaction`, data).then(res => res.data),
 };

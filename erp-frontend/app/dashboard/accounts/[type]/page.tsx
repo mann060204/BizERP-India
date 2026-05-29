@@ -3,10 +3,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { accountsApi } from '../../../../lib/erp-api';
-import { Plus, Search, Landmark, ArrowRightLeft, Loader2, X, Download, Filter } from 'lucide-react';
+import { Plus, Search, Landmark, ArrowRightLeft, Loader2, X, Download, Filter, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Account { _id: string; name: string; type: string; accountNumber?: string; currentBalance: number; balanceType: string; }
+interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; }
 interface LedgerEntry { _id: string; date: string; description: string; debit: number; credit: number; referenceType: string; closingBalance?: number; }
 
 export default function AccountsPage() {
@@ -27,6 +27,7 @@ export default function AccountsPage() {
   
   // Modals
   const [showAddAccount, setShowAddAccount] = useState(false);
+  const [editAccountId, setEditAccountId] = useState<string | null>(null);
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   
   const fetchAccounts = useCallback(async () => {
@@ -69,26 +70,67 @@ export default function AccountsPage() {
 
   // Add Account Form
   const [accName, setAccName] = useState('');
+  const [bankName, setBankName] = useState('');
   const [accNo, setAccNo] = useState('');
   const [openingBal, setOpeningBal] = useState('');
   const [balType, setBalType] = useState('Dr');
 
+  const handleOpenAddAccount = () => {
+    setEditAccountId(null);
+    setAccName(''); setBankName(''); setAccNo(''); setOpeningBal(''); setBalType('Dr');
+    setShowAddAccount(true);
+  };
+
+  const handleOpenEditAccount = () => {
+    if (!selectedAccount) return;
+    setEditAccountId(selectedAccount._id);
+    setAccName(selectedAccount.name);
+    setBankName(selectedAccount.bankName || '');
+    setAccNo(selectedAccount.accountNumber || '');
+    setOpeningBal(selectedAccount.openingBalance?.toString() || '');
+    setBalType(selectedAccount.balanceType || 'Dr');
+    setShowAddAccount(true);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!selectedAccount) return;
+    if (!confirm(`Are you sure you want to delete ${selectedAccount.name}? This will fail if there are non-opening transactions.`)) return;
+    try {
+      await accountsApi.delete(selectedAccount._id);
+      toast.success('Account deleted successfully');
+      setSelectedAccount(null);
+      fetchAccounts();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error deleting account');
+    }
+  };
+
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await accountsApi.create({
+      const payload = {
         name: accName,
+        bankName: bankName,
         type: type,
         accountNumber: accNo,
         openingBalance: openingBal || 0,
         balanceType: balType
-      });
-      toast.success(`${type} Account created`);
+      };
+
+      if (editAccountId) {
+        // Just update
+        await accountsApi.update(editAccountId, payload);
+        toast.success(`${type} Account updated`);
+      } else {
+        await accountsApi.create(payload);
+        toast.success(`${type} Account created`);
+      }
+
       setShowAddAccount(false);
-      setAccName(''); setAccNo(''); setOpeningBal('');
+      setAccName(''); setBankName(''); setAccNo(''); setOpeningBal('');
       fetchAccounts();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error creating account');
+      toast.error(err.response?.data?.message || 'Error saving account');
     }
   };
 
@@ -136,7 +178,7 @@ export default function AccountsPage() {
         
         {/* Left Pane - Account List */}
         <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <button onClick={() => setShowAddAccount(true)} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg w-full">
+          <button onClick={handleOpenAddAccount} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg w-full">
             <Landmark className="w-4 h-4" /> Add {type} Account
           </button>
           
@@ -174,7 +216,14 @@ export default function AccountsPage() {
               {/* Account Header */}
               <div className="p-4 lg:p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{selectedAccount.name}</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-bold text-slate-900">{selectedAccount.name}</h2>
+                    <div className="flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity" style={{ opacity: 1 }}>
+                      <button onClick={handleOpenEditAccount} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition"><Edit2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={handleDeleteAccount} className="p-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </div>
+                  {selectedAccount.bankName && <p className="text-sm text-slate-700 mt-1">{selectedAccount.bankName}</p>}
                   {selectedAccount.accountNumber && <p className="text-sm text-slate-600 mt-1">A/c No.: {selectedAccount.accountNumber}</p>}
                 </div>
                 <div className="text-right">
@@ -226,11 +275,13 @@ export default function AccountsPage() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {/* Opening Balance Row */}
-                      <tr className="bg-slate-50/80 font-semibold">
-                        <td className="px-5 py-3 text-slate-600" colSpan={2}>Opening Balance</td>
-                        <td className="px-5 py-3 text-right text-emerald-600">{selectedAccount.balanceType === 'Dr' ? periodOpeningBalance.toFixed(2) : ''}</td>
-                        <td className="px-5 py-3 text-right text-red-600">{selectedAccount.balanceType === 'Cr' ? periodOpeningBalance.toFixed(2) : ''}</td>
-                      </tr>
+                      {fromDate && (
+                        <tr className="bg-slate-50/80 font-semibold">
+                          <td className="px-5 py-3 text-slate-600" colSpan={2}>Opening Balance</td>
+                          <td className="px-5 py-3 text-right text-emerald-600">{selectedAccount.balanceType === 'Dr' ? periodOpeningBalance.toFixed(2) : ''}</td>
+                          <td className="px-5 py-3 text-right text-red-600">{selectedAccount.balanceType === 'Cr' ? periodOpeningBalance.toFixed(2) : ''}</td>
+                        </tr>
+                      )}
                       
                       {/* Transactions */}
                       {ledger.map((txn) => {
@@ -280,7 +331,7 @@ export default function AccountsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-900">Add {type} Account</h3>
+              <h3 className="text-lg font-bold text-slate-900">{editAccountId ? 'Edit' : 'Add'} {type} Account</h3>
               <button onClick={() => setShowAddAccount(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"><X className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleCreateAccount} className="p-6 space-y-4">
@@ -289,19 +340,25 @@ export default function AccountsPage() {
                 <input required value={accName} onChange={e => setAccName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. State Bank of India" />
               </div>
               {(type === 'Bank' || type === 'Loan') && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Account Number</label>
-                  <input value={accNo} onChange={e => setAccNo(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Bank Name</label>
+                    <input value={bankName} onChange={e => setBankName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Account Number</label>
+                    <input value={accNo} onChange={e => setAccNo(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
+                  </div>
+                </>
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Opening Balance</label>
-                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
+                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} disabled={!!editAccountId} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm disabled:opacity-50" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Type</label>
-                  <select value={balType} onChange={e => setBalType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
+                  <select value={balType} onChange={e => setBalType(e.target.value)} disabled={!!editAccountId} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm disabled:opacity-50">
                     <option value="Dr">Debit (Dr)</option>
                     <option value="Cr">Credit (Cr)</option>
                   </select>

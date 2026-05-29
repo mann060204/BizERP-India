@@ -47,6 +47,7 @@ export default function MasterDashboard() {
         { label: 'Unit Master', href: '/dashboard/masters/units', icon: Settings2 },
         { label: 'Expense Master', href: '/dashboard/masters/expenses', icon: HandCoins },
         { label: 'Holiday Master', href: '/dashboard/masters/holidays', icon: Calendar },
+        { label: 'Bank Master', href: '/dashboard/masters/banks', icon: Database },
       ]
     }
   ];

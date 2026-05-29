@@ -18,12 +18,13 @@ export const getAccounts = async (req: AuthRequest, res: Response): Promise<void
 
 export const createAccount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, type, accountNumber, openingBalance, balanceType } = req.body;
+    const { name, bankName, type, accountNumber, openingBalance, balanceType } = req.body;
     const businessId = req.user!.businessId;
 
     const account = await Account.create({
       businessId,
       name,
+      bankName,
       type,
       accountNumber,
       openingBalance: Number(openingBalance) || 0,
@@ -121,6 +122,50 @@ export const addTransaction = async (req: AuthRequest, res: Response): Promise<v
     });
 
     res.status(201).json({ message: 'Transaction added', transaction, account });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const updateAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, bankName, accountNumber } = req.body;
+    const businessId = req.user!.businessId;
+
+    const account = await Account.findOneAndUpdate(
+      { _id: id, businessId },
+      { name, bankName, accountNumber },
+      { new: true }
+    );
+
+    if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
+
+    res.json({ message: 'Account updated', account });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const deleteAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const businessId = req.user!.businessId;
+
+    // Optional: check if there are transactions other than opening balance
+    const txCount = await AccountLedger.countDocuments({ accountId: id, referenceType: { $ne: 'Opening' } });
+    if (txCount > 0) {
+      res.status(400).json({ message: 'Cannot delete account with existing transactions' });
+      return;
+    }
+
+    const account = await Account.findOneAndDelete({ _id: id, businessId });
+    if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
+
+    // Clean up ledgers
+    await AccountLedger.deleteMany({ accountId: id, businessId });
+
+    res.json({ message: 'Account deleted successfully' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
