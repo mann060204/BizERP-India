@@ -263,7 +263,7 @@ export default function NewInvoicePage() {
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
 
-  const handleSave = async (saveStatus: 'draft' | 'sent' | 'paid') => {
+  const handleSave = async (printAfterSave: boolean) => {
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     setSaving(true);
     try {
@@ -293,10 +293,13 @@ export default function NewInvoicePage() {
         deliveryTerms,
         soldBy,
         billTo,
-        status: saveStatus === 'paid' ? 'paid' : totalAmountReceived > 0 ? 'partial' : saveStatus,
+        status: totalAmountReceived >= grandTotal ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
       };
       const { data } = await invoicesApi.create(payload);
       toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);
+      if (printAfterSave) {
+        window.open(`/print/invoice/${data.invoice._id}`, '_blank');
+      }
       router.push('/dashboard/sales');
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save invoice');
@@ -858,10 +861,10 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave('paid')} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          <button onClick={() => handleSave(true)} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
-          <button onClick={() => handleSave('sent')} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+          <button onClick={() => handleSave(false)} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
             <Save className="w-4 h-4" /> Save
           </button>
         </div>
