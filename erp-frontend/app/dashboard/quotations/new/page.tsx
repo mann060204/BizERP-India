@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi } from '../../../../lib/erp-api';
+import { customersApi, productsApi, quotationsApi } from '../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -27,7 +27,7 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function NewInvoicePage() {
+export default function NewQuotationPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,9 +35,9 @@ export default function NewInvoicePage() {
   const [saving, setSaving] = useState(false);
 
   // Header State
-  const [invoiceType, setInvoiceType] = useState('GST');
-  const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [quotationType, setQuotationType] = useState('GST');
+  const [quotationNumber, setQuotationNumber] = useState('GST-001');
+  const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
@@ -181,9 +181,9 @@ export default function NewInvoicePage() {
 
     if (selectedCustomer?._id) {
       try {
-        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
+        const { data } = await quotationsApi.getLastPrice(selectedCustomer._id, p._id);
         if (data && data.lastPrice !== null) {
-          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.invoiceDate).toLocaleDateString() });
+          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.quotationDate).toLocaleDateString() });
         } else {
           setLastPriceInfo(null);
         }
@@ -193,7 +193,7 @@ export default function NewInvoicePage() {
     }
   };
 
-  const calculateItem = (item: LineItem, invType = invoiceType, interState = isInterState) => {
+  const calculateItem = (item: LineItem, invType = quotationType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
     const discountAmt = (gross * item.discount) / 100;
     const taxableAmount = round2(gross - discountAmt);
@@ -205,23 +205,23 @@ export default function NewInvoicePage() {
   };
 
   useEffect(() => {
-    setLineItems(prev => prev.map(item => calculateItem(item, invoiceType, isInterState)));
-    // Fetch next invoice number based on type
-    invoicesApi.getNextNumber(invoiceType as 'GST' | 'NON-GST')
+    setLineItems(prev => prev.map(item => calculateItem(item, quotationType, isInterState)));
+    // Fetch next quotation number based on type
+    quotationsApi.getNextNumber(quotationType as 'GST' | 'NON-GST')
       .then(res => {
-        if (res.data?.nextInvoiceNumber) {
-          setInvoiceNumber(res.data.nextInvoiceNumber);
+        if (res.data?.nextQuotationNumber) {
+          setQuotationNumber(res.data.nextQuotationNumber);
         }
       })
       .catch(() => {
         // Fallback
-        setInvoiceNumber(prev => {
-          if (invoiceType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
-          if (invoiceType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
+        setQuotationNumber(prev => {
+          if (quotationType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
+          if (quotationType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
           return prev;
         });
       });
-  }, [invoiceType, isInterState]);
+  }, [quotationType, isInterState]);
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
@@ -250,9 +250,9 @@ export default function NewInvoicePage() {
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
   const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-  const shippingCGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
-  const shippingSGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
-  const shippingIGST = (invoiceType === 'GST' && isInterState) ? round2(shippingCharge * 0.18) : 0;
+  const shippingCGST = (quotationType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
+  const shippingSGST = (quotationType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
+  const shippingIGST = (quotationType === 'GST' && isInterState) ? round2(shippingCharge * 0.18) : 0;
 
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shippingCGST;
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shippingSGST;
@@ -268,8 +268,8 @@ export default function NewInvoicePage() {
     setSaving(true);
     try {
       const payload = {
-        invoiceNumber,
-        invoiceDate,
+        quotationNumber,
+        quotationDate,
         dueDate,
         customerId: selectedCustomer?._id,
         customerSnapshot: selectedCustomer ? {
@@ -280,7 +280,7 @@ export default function NewInvoicePage() {
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
-        invoiceType,
+        quotationType,
         lineItems,
         paymentMode: combinedPaymentMode,
         amountReceived: totalAmountReceived,
@@ -296,14 +296,14 @@ export default function NewInvoicePage() {
         billTo,
         status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
       };
-      const { data } = await invoicesApi.create(payload);
-      toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);
+      const { data } = await quotationsApi.create(payload);
+      toast.success(`Quotation ${data.quotation.quotationNumber} Saved!`);
       if (printAfterSave) {
-        window.open(`/print/invoice/${data.invoice._id}`, '_blank');
+        window.open(`/print/quotation/${data.quotation._id}`, '_blank');
       }
-      router.push('/dashboard/sales');
+      router.push('/dashboard/quotations');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to save invoice');
+      toast.error(e.response?.data?.message || 'Failed to save quotation');
     } finally {
       setSaving(false);
     }
@@ -313,28 +313,28 @@ export default function NewInvoicePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="New Invoice" />
+      <Topbar title="New Quotation" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
-        {/* Section 1: Invoice Information */}
+        {/* Section 1: Quotation Information */}
         <div className="erp-container">
-          <div className="erp-header py-1 text-xs">Invoice Information</div>
+          <div className="erp-header py-1 text-xs">Quotation Information</div>
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
-              <label className="erp-label">Invoice Type</label>
-              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
+              <label className="erp-label">Quotation Type</label>
+              <select value={quotationType} onChange={e => setQuotationType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
             </div>
             <div>
-              <label className="erp-label">Invoice No. <span className="text-red-500">*</span></label>
-              <input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label">Quotation No. <span className="text-red-500">*</span></label>
+              <input value={quotationNumber} onChange={e => setQuotationNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Date</label>
-              <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="erp-input w-full" />
+              <input type="date" value={quotationDate} onChange={e => setQuotationDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
@@ -605,9 +605,9 @@ export default function NewInvoicePage() {
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
                     <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(2)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
-                    {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
-                    {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
-                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${invoiceType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
+                    {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
+                    {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
+                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${quotationType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                         <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-blue-500/10 rounded">
@@ -637,7 +637,7 @@ export default function NewInvoicePage() {
                 <label className="erp-label block mb-1">Sold By</label>
                 <select value={soldBy} onChange={e => setSoldBy(e.target.value)} className="erp-input w-full">
                   <option value="">Select Agent</option>
-                  <option>Admin</option><option>Sales Executive A</option>
+                  <option>Admin</option><option>Quotations Executive A</option>
                 </select>
               </div>
            </div>
@@ -705,7 +705,7 @@ export default function NewInvoicePage() {
                   </div>
                 )}
                 
-                {invoiceType === 'GST' && (
+                {quotationType === 'GST' && (
                   <>
                     {!isInterState ? (
                       <>

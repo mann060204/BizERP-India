@@ -18,6 +18,10 @@ export interface IBusiness extends Document {
   financialYearStart: number;
   invoicePrefix: string;
   invoiceCounter: number;
+  quotationCounter: number;
+  nonGstQuotationCounter: number;
+  quotationPrefix?: string;
+  nonGstQuotationPrefix?: string;
   nonGstInvoicePrefix: string;
   nonGstInvoiceCounter: number;
   bankDetails?: {

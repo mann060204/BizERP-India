@@ -13,6 +13,7 @@ import { logout } from '../../store/slices/authSlice';
 const NAV_ITEMS = [
   { label: 'Dashboard',       href: '/dashboard',          icon: LayoutDashboard },
   { label: 'Sales',           href: '/dashboard/sales',    icon: ShoppingCart },
+  { label: 'Quotations',      href: '/dashboard/quotations', icon: FileText },
   { label: 'Purchases',       href: '/dashboard/purchases',icon: Package },
   { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },
   { label: 'Customers',       href: '/dashboard/customers',icon: Users },

@@ -80,3 +80,14 @@ export const businessApi = {
   getProfile: () => api.get('/business'),
   updateProfile: (data: any) => api.put('/business', data),
 };
+
+
+export const quotationsApi = {
+  getAll: (params?: any) => api.get('/quotations', { params }).then(res => res.data),
+  getById: (id: string) => api.get(`/quotations/${id}`).then(res => res.data),
+  create: (data: any) => api.post('/quotations', data).then(res => res.data),
+  update: (id: string, data: any) => api.put(`/quotations/${id}`, data).then(res => res.data),
+  delete: (id: string) => api.delete(`/quotations/${id}`).then(res => res.data),
+  getNextNumber: (type?: string) => api.get(`/quotations/next-number${type ? `?type=${type}` : ''}`).then(res => res.data),
+  convertToInvoice: (id: string) => api.post(`/quotations/${id}/convert`).then(res => res.data),
+};

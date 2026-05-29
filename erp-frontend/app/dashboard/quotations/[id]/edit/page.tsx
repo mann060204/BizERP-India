@@ -1,18 +1,18 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi } from '../../../../lib/erp-api';
+import { useRouter, useParams } from "next/navigation";
+import Topbar from '../../../../../components/layout/Topbar';
+import { customersApi, productsApi, quotationsApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
   Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil, UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
-import QuickAddCustomerModal from '../../../../components/modals/QuickAddCustomerModal';
+import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
+import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; currentBalance?: number; }
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
@@ -27,17 +27,18 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function NewInvoicePage() {
+export default function NewQuotationPage() {
   const router = useRouter();
+  const { id } = useParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // Header State
-  const [invoiceType, setInvoiceType] = useState('GST');
-  const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [quotationType, setQuotationType] = useState('GST');
+  const [quotationNumber, setQuotationNumber] = useState('GST-001');
+  const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
@@ -93,23 +94,72 @@ export default function NewInvoicePage() {
   const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
   const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} (Date: ${paymentDate1}) | ${txnId2} (Date: ${paymentDate2})` : (txnId1 ? `${txnId1} (Date: ${paymentDate1})` : (txnId2 ? `${txnId2} (Date: ${paymentDate2})` : ''));
 
+  
   useEffect(() => {
-    const fetchData = async () => {
+    const init = async () => {
       try {
-        const [cRes, pRes] = await Promise.all([
+        const [cRes, pRes, iRes] = await Promise.all([
           customersApi.list({ limit: 200 }),
-          productsApi.list({ limit: 500 })
+          productsApi.list({ limit: 500 }),
+          quotationsApi.get(id as string)
         ]);
+        
         setCustomers(cRes.data.customers);
         setProducts(pRes.data.products);
-      } catch (err) {
-        toast.error('Failed to load data');
+        
+        const inv = iRes.data.quotation;
+        setQuotationNumber(inv.quotationNumber);
+        if (inv.quotationNumber.startsWith('GST')) setQuotationType('GST');
+        else if (inv.quotationNumber.startsWith('NON-GST')) setQuotationType('NON-GST');
+        
+        setQuotationDate(new Date(inv.quotationDate).toISOString().split('T')[0]);
+        if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);
+        setPlaceOfSupply(inv.placeOfSupply);
+        setIsInterState(inv.isInterState);
+        setBillTo(inv.billTo || 'Customer');
+        setCustomerSearch(inv.customerSnapshot.name);
+        setContactNo(inv.customerSnapshot.mobile || '');
+        setCustomerAddress(inv.customerSnapshot.address || '');
+        setCustomerGstin(inv.customerSnapshot.gstin || '');
+        if (inv.customerId) setSelectedCustomer(cRes.data.customers.find((c: any) => c._id === (inv.customerId._id || inv.customerId)));
+        
+        setLineItems(inv.lineItems.map((item: any) => ({
+          ...item,
+          batchNo: item.batchNo || '',
+          tag: item.tag || '',
+          description: item.description || '',
+          cess: item.cess || 0,
+          mrp: item.mrp || item.rate,
+          primaryUnit: item.primaryUnit || item.unit,
+          secondaryUnit: item.secondaryUnit || item.unit,
+          primaryRate: item.primaryRate || item.rate,
+          selectedBaseRate: item.selectedBaseRate || item.rate
+        })));
+        
+        // Wait, payment state variables may have different names in [id]/edit/page.tsx
+        // because it was copied from new/page.tsx. Let's make sure it matches.
+        
+        setPaymentMode1(inv.paymentMode || 'Cash');
+        setAmountReceived1(inv.amountReceived || 0);
+        if (inv.paymentDate) setPaymentDate1(new Date(inv.paymentDate).toISOString().split('T')[0]);
+        setTxnId1(inv.txnId || '');
+        
+        setShippingCharge(inv.shippingCharge || 0);
+        setRemarks(inv.notes || '');
+        setDeliveryTerms(inv.deliveryTerms || '');
+        setSoldBy(inv.soldBy || '');
+        
+      } catch (e) {
+        console.error(e);
+        toast.error('Failed to load quotation');
+        router.push('/dashboard/quotations');
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
-  }, []);
+    if (id) init();
+  }, [id]);
+
 
   const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
@@ -181,9 +231,9 @@ export default function NewInvoicePage() {
 
     if (selectedCustomer?._id) {
       try {
-        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
+        const { data } = await quotationsApi.getLastPrice(selectedCustomer._id, p._id);
         if (data && data.lastPrice !== null) {
-          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.invoiceDate).toLocaleDateString() });
+          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.quotationDate).toLocaleDateString() });
         } else {
           setLastPriceInfo(null);
         }
@@ -193,7 +243,7 @@ export default function NewInvoicePage() {
     }
   };
 
-  const calculateItem = (item: LineItem, invType = invoiceType, interState = isInterState) => {
+  const calculateItem = (item: LineItem, invType = quotationType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
     const discountAmt = (gross * item.discount) / 100;
     const taxableAmount = round2(gross - discountAmt);
@@ -205,23 +255,13 @@ export default function NewInvoicePage() {
   };
 
   useEffect(() => {
-    setLineItems(prev => prev.map(item => calculateItem(item, invoiceType, isInterState)));
-    // Fetch next invoice number based on type
-    invoicesApi.getNextNumber(invoiceType as 'GST' | 'NON-GST')
-      .then(res => {
-        if (res.data?.nextInvoiceNumber) {
-          setInvoiceNumber(res.data.nextInvoiceNumber);
-        }
-      })
-      .catch(() => {
-        // Fallback
-        setInvoiceNumber(prev => {
-          if (invoiceType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
-          if (invoiceType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
-          return prev;
-        });
-      });
-  }, [invoiceType, isInterState]);
+    setLineItems(prev => prev.map(item => calculateItem(item, quotationType, isInterState)));
+    setQuotationNumber(prev => {
+      if (quotationType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
+      if (quotationType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
+      return prev;
+    });
+  }, [quotationType, isInterState]);
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
@@ -250,26 +290,49 @@ export default function NewInvoicePage() {
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
   const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-  const shippingCGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
-  const shippingSGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
-  const shippingIGST = (invoiceType === 'GST' && isInterState) ? round2(shippingCharge * 0.18) : 0;
+  const shippingCGST = (quotationType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
+  const shippingSGST = (quotationType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
+  const shippingIGST = (quotationType === 'GST' && isInterState) ? round2(shippingCharge * 0.18) : 0;
 
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shippingCGST;
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shippingSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shippingIGST;
+  const totalCess = lineItems.reduce((s, i) => s + (quotationType === 'GST' ? round2((i.taxableAmount * i.cess) / 100) : 0), 0);
   
-  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge;
+  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + totalCess + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
+
+  
+  const handleConvertToInvoice = async () => {
+    if (!window.confirm('Are you sure you want to convert this quotation to an invoice?')) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/v1/quotations/${id}/convert`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('erp_token')}`
+        }
+      });
+      if (!res.ok) throw new Error('Failed to convert');
+      const data = await res.json();
+      toast.success('Successfully converted to Invoice!');
+      router.push(`/dashboard/sales/${data._id}/edit`);
+    } catch (e: any) {
+      toast.error(e.message || 'Error converting');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSave = async (printAfterSave: boolean) => {
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     setSaving(true);
     try {
       const payload = {
-        invoiceNumber,
-        invoiceDate,
+        quotationNumber,
+        quotationDate,
         dueDate,
         customerId: selectedCustomer?._id,
         customerSnapshot: selectedCustomer ? {
@@ -280,30 +343,30 @@ export default function NewInvoicePage() {
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
-        invoiceType,
+        quotationType,
         lineItems,
         paymentMode: combinedPaymentMode,
         amountReceived: totalAmountReceived,
           txnId: combinedTxnId,
           shippingCharge,
           balance,
-          roundOff,
-          subtotal,
+        roundOff,
+        subtotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
         soldBy,
         billTo,
-        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
+        status: 'Draft',
       };
-      const { data } = await invoicesApi.create(payload);
-      toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);
+      await quotationsApi.update(id as string, payload);
+      toast.success('Quotation Updated!');
       if (printAfterSave) {
-        window.open(`/print/invoice/${data.invoice._id}`, '_blank');
+        window.open(`/print/quotation/${id}`, '_blank');
       }
-      router.push('/dashboard/sales');
+      router.push('/dashboard/quotations');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to save invoice');
+      toast.error(e.response?.data?.message || 'Failed to save quotation');
     } finally {
       setSaving(false);
     }
@@ -313,28 +376,28 @@ export default function NewInvoicePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="New Invoice" />
+      <Topbar title="Update Quotation" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
-        {/* Section 1: Invoice Information */}
+        {/* Section 1: Quotation Information */}
         <div className="erp-container">
-          <div className="erp-header py-1 text-xs">Invoice Information</div>
+          <div className="erp-header py-1 text-xs">Quotation Information</div>
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
-              <label className="erp-label">Invoice Type</label>
-              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
+              <label className="erp-label">Quotation Type</label>
+              <select value={quotationType} onChange={e => setQuotationType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
             </div>
             <div>
-              <label className="erp-label">Invoice No. <span className="text-red-500">*</span></label>
-              <input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label">Quotation No. <span className="text-red-500">*</span></label>
+              <input value={quotationNumber} onChange={e => setQuotationNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Date</label>
-              <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="erp-input w-full" />
+              <input type="date" value={quotationDate} onChange={e => setQuotationDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
@@ -363,11 +426,14 @@ export default function NewInvoicePage() {
                      <UserPlus className="w-3.5 h-3.5" />
                    </button>
                  </label>
-                 {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
-                   <div className={`text-xs px-2 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : selectedCustomer.openingBalance < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                     A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
-                   </div>
-                 )}
+                 {selectedCustomer && (() => {
+                    const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
+                    return (
+                      <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                        A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                      </div>
+                    );
+                  })()}
               </div>
               <div className="relative">
                 <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
@@ -506,6 +572,18 @@ export default function NewInvoicePage() {
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
                 
+                {lastPriceInfo && (
+                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-slate-50/80 px-1 rounded shadow cursor-pointer hover:bg-[#F1F5F9] whitespace-nowrap z-40" onClick={() => {
+                     let newRate = lastPriceInfo.price;
+                     if (itemInput.unit === itemInput.secondaryUnit && itemInput.conversionRate) {
+                       newRate = lastPriceInfo.price / itemInput.conversionRate;
+                     }
+                     setItemInput({...itemInput, rate: newRate, selectedBaseRate: lastPriceInfo.price});
+                  }}>
+                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                  </div>
+                )}
+
                 {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
                   <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-white border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
@@ -605,9 +683,9 @@ export default function NewInvoicePage() {
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
                     <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(2)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
-                    {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
-                    {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
-                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${invoiceType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
+                    {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
+                    {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
+                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${quotationType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                         <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-blue-500/10 rounded">
@@ -637,7 +715,7 @@ export default function NewInvoicePage() {
                 <label className="erp-label block mb-1">Sold By</label>
                 <select value={soldBy} onChange={e => setSoldBy(e.target.value)} className="erp-input w-full">
                   <option value="">Select Agent</option>
-                  <option>Admin</option><option>Sales Executive A</option>
+                  <option>Admin</option><option>Quotations Executive A</option>
                 </select>
               </div>
            </div>
@@ -705,7 +783,7 @@ export default function NewInvoicePage() {
                   </div>
                 )}
                 
-                {invoiceType === 'GST' && (
+                {quotationType === 'GST' && (
                   <>
                     {!isInterState ? (
                       <>
@@ -862,11 +940,16 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave(true)} disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+          
+            <button onClick={handleConvertToInvoice} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+              <CheckCircle className="w-4 h-4" /> Convert to Invoice
+            </button>
+            <button onClick={() => handleSave(true)}
+ disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
             <Printer className="w-4 h-4" /> Save and Print
           </button>
           <button onClick={() => handleSave(false)} disabled={saving} className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
-            <Save className="w-4 h-4" /> Save
+            <Save className="w-4 h-4" /> Update
           </button>
         </div>
       </footer>

@@ -325,8 +325,9 @@ export default function NewInvoicePage() {
         lineItems,
         paymentMode: combinedPaymentMode,
         amountReceived: totalAmountReceived,
-        txnId: combinedTxnId,
-        shippingCharge,
+          txnId: combinedTxnId,
+          shippingCharge,
+          balance,
         roundOff,
         subtotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
@@ -334,7 +335,7 @@ export default function NewInvoicePage() {
         deliveryTerms,
         soldBy,
         billTo,
-        status: totalAmountReceived >= grandTotal ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
+        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'unpaid',
       };
       await invoicesApi.update(id as string, payload);
       toast.success('Invoice Updated!');
@@ -660,9 +661,9 @@ export default function NewInvoicePage() {
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
                     <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(2)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
-                    <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>
-                    <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>
-                    <div className="col-span-2 erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center">
+                    {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
+                    {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
+                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${invoiceType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                         <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-blue-500/10 rounded">
