@@ -6,7 +6,7 @@ import { quotationsApi } from '../../../lib/erp-api';
 import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3, ArrowRightLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Quotation { _id: string; quotationNumber: string; quotationDate: string; customerSnapshot: { name: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
+interface Quotation { _id: string; quotationNumber: string; quotationDate: string; customerSnapshot: { name: string }; grandTotal: number; amountReceived?: number; balance?: number; status: string; paymentMode?: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   Draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
@@ -161,16 +161,16 @@ export default function QuotationsPage() {
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{inv.quotationNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.quotationDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot.name}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{inv.amountReceived.toFixed(2)}</td>
-                        <td className="px-5 py-4"><span className={inv.balance > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{inv.balance.toFixed(2)}</span></td>
-                        <td className="px-5 py-4 text-slate-600">{inv.paymentMode}</td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(inv.grandTotal || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
+                        <td className="px-5 py-4 text-slate-600">{inv.paymentMode || 'N/A'}</td>
                         <td className="px-5 py-4">
                           <div className="flex flex-col gap-1 items-start">
                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
                               <StatusIcon className="w-3 h-3" /> {sc.label}
                             </span>
-                            {inv.balance > 0 && inv.status !== 'cancelled' && (
+                            {(inv.balance || 0) > 0 && inv.status !== 'Cancelled' && (
                               <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
                                 {Math.max(0, Math.floor((new Date().getTime() - new Date(inv.quotationDate).getTime()) / (1000 * 3600 * 24)))} days pending
                               </span>
@@ -182,7 +182,7 @@ export default function QuotationsPage() {
                             <Link href={`/print/quotation/${inv._id}`} target="_blank" className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#D4D4D4] transition tooltip" title="Print Quotation">
                               <Printer className="w-4 h-4" />
                             </Link>
-                            {inv.status !== 'cancelled' && (
+                            {inv.status !== 'Cancelled' && (
                               <>
                                 <Link href={`/dashboard/quotations/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-action-500 transition tooltip" title="Edit Quotation">
                                   <Edit3 className="w-4 h-4" />
@@ -198,7 +198,7 @@ export default function QuotationsPage() {
                             <button onClick={() => handleEmail(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#D4D4D4] transition" title="Share via Email">
                               <Mail className="w-4 h-4" />
                             </button>
-                            {inv.status !== 'cancelled' && (
+                            {inv.status !== 'Cancelled' && (
                               <button onClick={() => handleCancel(inv._id, inv.quotationNumber)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-red-500 transition" title="Cancel Quotation">
                                 <XCircle className="w-4 h-4" />
                               </button>
