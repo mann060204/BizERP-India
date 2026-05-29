@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { expensesApi } from '../../../lib/erp-api';
+import { expensesApi, businessApi } from '../../../lib/erp-api';
 import { Plus, Search, Receipt, Trash2, Loader2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Expense { _id: string; category: string; amount: number; date: string; paymentMode: string; vendorName?: string; notes?: string; totalWithTax: number; }
 
-const CATEGORIES = ['Rent', 'Salaries', 'Electricity', 'Internet', 'Marketing', 'Travel', 'Office Supplies', 'Maintenance', 'Legal & Professional', 'Miscellaneous'];
+const DEFAULT_CATEGORIES = ['Rent', 'Salaries', 'Electricity', 'Internet', 'Marketing', 'Travel', 'Office Supplies', 'Maintenance', 'Legal & Professional', 'Miscellaneous'];
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit Card'];
 
 export default function ExpensesPage() {
@@ -18,7 +18,19 @@ export default function ExpensesPage() {
 
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
   const [form, setForm] = useState({ category: 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false });
+
+  // Load categories from business profile on mount
+  useEffect(() => {
+    businessApi.getProfile().then(res => {
+      const cats = res.data?.business?.expenseCategories;
+      if (cats && cats.length > 0) {
+        setCategories(cats);
+        setForm(f => ({ ...f, category: cats[0] }));
+      }
+    }).catch(() => {});
+  }, []);
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -35,7 +47,7 @@ export default function ExpensesPage() {
 
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
 
-  const openCreate = () => { setForm({ category: 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false }); setShowModal(true); };
+  const openCreate = () => { setForm({ category: categories[0] || 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false }); setShowModal(true); };
 
   const handleSave = async () => {
     if (!form.amount || form.amount <= 0) { toast.error('Amount is required'); return; }
@@ -86,7 +98,7 @@ export default function ExpensesPage() {
             <select value={search} onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] transition text-sm appearance-none">
               <option value="">All Categories</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
@@ -151,7 +163,7 @@ export default function ExpensesPage() {
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Category *</label>
                   <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>

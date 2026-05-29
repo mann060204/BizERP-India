@@ -20,7 +20,7 @@ interface Product {
 }
 
 const GST_RATES = [0, 5, 12, 18, 28];
-const UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
+const FALLBACK_UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
 
 const emptyForm = {
   name: '', printName: '', group: '', brand: '', type: 'product', sku: '', hsnCode: '',
@@ -82,6 +82,7 @@ export default function MastersPage() {
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
   const [productCategories, setProductCategories] = useState<{name: string, brands: string[]}[]>([]);
+  const [units, setUnits] = useState<string[]>(FALLBACK_UNITS);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -89,6 +90,8 @@ export default function MastersPage() {
       setProductGroups(data.business?.productGroups || []);
       setProductBrands(data.business?.productBrands || []);
       setProductCategories(data.business?.productCategories || []);
+      const bizUnits = data.business?.units;
+      if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
     } catch (e) {
       console.error('Failed to load business settings', e);
     }
@@ -327,7 +330,7 @@ export default function MastersPage() {
                       <div className="grid grid-cols-2 gap-4 items-end">
                         <div className="flex gap-2">
                           <div className="flex-1">
-                            <Select label="Unit" keyName="unit" options={UNITS} required form={form} setForm={setForm} />
+                             <Select label="Unit" keyName="unit" options={units} required form={form} setForm={setForm} />
                           </div>
                           <button onClick={() => setShowUnitModal(true)} className="px-3 py-2 rounded-lg bg-action-500/20 text-blue-400 hover:bg-action-500/30 text-xs font-semibold whitespace-nowrap transition mt-5">
                             Secondary Unit
@@ -441,7 +444,7 @@ export default function MastersPage() {
                 <div>
                    <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Secondary Unit <span className="text-red-500">*</span></label>
                    <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none cursor-pointer">
-                      {['', ...UNITS].map(u => <option key={u} value={u}>{u}</option>)}
+                      {['', ...units].map(u => <option key={u} value={u}>{u}</option>)}
                    </select>
                 </div>
               </div>
