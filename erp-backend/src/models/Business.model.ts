@@ -80,6 +80,10 @@ const BusinessSchema = new Schema<IBusiness>(
     financialYearStart: { type: Number, default: 4 }, // April
     invoicePrefix: { type: String, default: 'INV' },
     invoiceCounter: { type: Number, default: 0 },
+    quotationCounter: { type: Number, default: 0 },
+    nonGstQuotationCounter: { type: Number, default: 0 },
+    quotationPrefix: { type: String, default: 'QTN' },
+    nonGstQuotationPrefix: { type: String, default: 'NON-GST-QTN' },
     nonGstInvoicePrefix: { type: String, default: 'NON-GST' },
     nonGstInvoiceCounter: { type: Number, default: 0 },
     bankDetails: {
