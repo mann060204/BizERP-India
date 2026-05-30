@@ -89,7 +89,6 @@ export default function EditPurchasePage() {
 
   // Footer State
   const [showAdditionalDiscount, setShowAdditionalDiscount] = useState(false);
-  const [showAdditionalDiscount, setShowAdditionalDiscount] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState(0);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
