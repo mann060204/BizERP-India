@@ -3,11 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../lib/erp-api';
-import { 
-  Plus, Trash2, Search, Loader2, Save, CheckCircle, 
-  Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
-  Calendar, ChevronDown, User, MapPin, CreditCard, Barcode
-} from 'lucide-react';
+import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';
@@ -52,11 +48,12 @@ export default function NewPurchasePage() {
   // Header State
   const [purchaseType, setPurchaseType] = useState('GST');
   const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+  const [supplierId, setSupplierId] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
+  const [supplierSnapshot, setSupplierSnapshot] = useState<any>(null);
   const [showSupplierDD, setShowSupplierDD] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  
   const [showQuickAddSupplierModal, setShowQuickAddSupplierModal] = useState(false);
+  const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState('');
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -123,8 +120,9 @@ export default function NewPurchasePage() {
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const pickSupplier = (s: Supplier) => {
-    setSelectedSupplier(s);
+    setSupplierId(s._id);
     setSupplierSearch(s.name);
+    setSupplierSnapshot(s);
     setContactNo(s.mobile || '');
     let addrStr = '';
     if (s.address) {
@@ -161,9 +159,9 @@ export default function NewPurchasePage() {
     setItemSearch(p.name);
     setShowItemDD(false);
     
-    if (selectedSupplier?._id) {
+    if (supplierId) {
       try {
-        const { data } = await purchasesApi.getLastPrices(selectedSupplier._id, p._id);
+        const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
         setLastPrices(data.prices || []);
       } catch (err) {
         setLastPrices([]);
@@ -203,9 +201,24 @@ export default function NewPurchasePage() {
 
   // Totals
   const totalTaxableAmount = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
-  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
-  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
+
+  let shipCGST = 0;
+  let shipSGST = 0;
+  let shipIGST = 0;
+  
+  if (shippingCharge > 0 && shippingGstRate > 0 && purchaseType !== 'Non-GST') {
+    if (isInterState) {
+      shipIGST = (shippingCharge * shippingGstRate) / 100;
+    } else {
+      shipCGST = (shippingCharge * shippingGstRate) / 2 / 100;
+      shipSGST = (shippingCharge * shippingGstRate) / 2 / 100;
+    }
+  }
+
+  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shipCGST;
+  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
+  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
+  
   const totalGST = totalCGST + totalSGST + totalIGST;
   const subtotal = round2(totalTaxableAmount + totalGST);
   const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
@@ -227,9 +240,9 @@ export default function NewPurchasePage() {
         purchaseOrderDate: purchaseOrderDate ? purchaseOrderDate : undefined,
         paymentTerms,
         ewayBillNo,
-        supplierId: selectedSupplier?._id,
-        supplierSnapshot: selectedSupplier ? {
-          name: selectedSupplier.name,
+        supplierId: supplierId || undefined,
+        supplierSnapshot: supplierSnapshot ? {
+          name: supplierSnapshot.name,
           mobile: contactNo,
           gstin: supplierGstin,
           address: supplierAddress
@@ -280,11 +293,9 @@ export default function NewPurchasePage() {
         
         {activeTab === 'bill' ? (
           <>
-            {/* Section 1: Purchase bill information */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Purchase bill information</div>
           <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
-            {/* Row 1 */}
             <div>
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
               <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full">
@@ -300,7 +311,12 @@ export default function NewPurchasePage() {
             <div>
               <div className="flex justify-between items-center mb-1">
                  <label className="erp-label block">Supplier Name <span className="text-red-500">*</span></label>
-                 <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add Supplier</span>
+                 <div className="flex gap-2">
+                   {supplierId && supplierSnapshot && (
+                     <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
+                   )}
+                   <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add</span>
+                 </div>
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
@@ -342,7 +358,6 @@ export default function NewPurchasePage() {
               <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
             </div>
 
-            {/* Row 2 */}
             <div>
               <label className="erp-label block mb-1">Place of Supply <span className="text-red-500">*</span></label>
               <select value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
@@ -368,7 +383,6 @@ export default function NewPurchasePage() {
           </div>
         </div>
 
-        {/* Section 2: Particulars Input */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs flex justify-between items-center">
             <span>Particulars</span>
@@ -377,12 +391,12 @@ export default function NewPurchasePage() {
             <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a1a00] text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
                    <label className="erp-label block">Item Name <span className="text-red-500">*</span></label>
-                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
+                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline">Add Item</span>
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
@@ -416,7 +430,7 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -424,7 +438,7 @@ export default function NewPurchasePage() {
                 <label className="erp-label block mb-1">Disc. (%)</label>
                 <div className="flex">
                   <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
-                  <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-l-0 flex items-center">%</span>
+                  <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-l-0 flex items-center">%</span>
                 </div>
               </div>
               <div>
@@ -438,12 +452,12 @@ export default function NewPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
               <div className="flex items-center justify-center pb-[2px]">
-                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
+                 <button onClick={addItem} className="bg-slate-900 hover:bg-slate-800 text-white p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
                    <Plus className="w-5 h-5" />
                  </button>
               </div>
@@ -452,10 +466,10 @@ export default function NewPurchasePage() {
             <div className="grid grid-cols-[1fr_8fr] gap-2 items-center pt-1">
                <div className="flex items-center gap-3">
                   <label className="flex items-center gap-1 text-[11px] cursor-pointer">
-                    <input type="radio" checked={itemIdentifierType === 'tag'} onChange={() => setItemIdentifierType('tag')} className="accent-white" /> Item Tag
+                    <input type="radio" checked={itemIdentifierType === 'tag'} onChange={() => setItemIdentifierType('tag')} className="accent-blue-600" /> Item Tag
                   </label>
                   <label className="flex items-center gap-1 text-[11px] cursor-pointer">
-                    <input type="radio" checked={itemIdentifierType === 'code'} onChange={() => setItemIdentifierType('code')} className="accent-white" /> Item Code
+                    <input type="radio" checked={itemIdentifierType === 'code'} onChange={() => setItemIdentifierType('code')} className="accent-blue-600" /> Item Code
                   </label>
                </div>
                <div>
@@ -465,7 +479,6 @@ export default function NewPurchasePage() {
           </div>
         </div>
 
-        {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div className="grid grid-cols-11 bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200">
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
@@ -479,23 +492,23 @@ export default function NewPurchasePage() {
              <div className="col-span-3 px-2 py-1.5 text-center">Amount</div>
            </div>
            
-           <div className="flex-1 overflow-y-auto bg-[#E2E8F0]">
+           <div className="flex-1 overflow-y-auto bg-white">
               {lineItems.length === 0 ? (
-                <div className="p-10 text-center text-slate-600 italic text-sm"></div>
+                <div className="p-10 text-center text-slate-400 italic text-sm">No items added yet.</div>
               ) : (
                 lineItems.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-11 erp-grid-row group text-[11px]">
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 font-medium">
+                  <div key={idx} className="grid grid-cols-11 hover:bg-slate-50 border-b border-slate-100 text-[11px] group">
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
                       {item.productName}
-                      {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
+                      {item.tag && <span className="ml-2 text-[9px] bg-slate-200 px-1 rounded text-slate-600">{item.tag}</span>}
                     </div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.quantity}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.discount || ''}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.gstRate}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
                     <div className="col-span-3 px-2 py-1.5 text-right font-medium flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
@@ -508,16 +521,15 @@ export default function NewPurchasePage() {
            </div>
         </div>
 
-        {/* Section 4: Footer */}
         <div className="grid grid-cols-4 gap-4 mt-1">
            <div className="col-span-1 space-y-2">
               <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-white" />
+                <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-blue-600" />
                 <span className="text-slate-700">Add'l Discount</span>
               </label>
               {showAdditionalDiscount && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
@@ -560,14 +572,14 @@ export default function NewPurchasePage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Amount</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Balance</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
                        <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
@@ -581,14 +593,11 @@ export default function NewPurchasePage() {
                    <span className="text-xs font-bold text-slate-600">Sub Total</span>
                    <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
                  </div>
-                 <div className="flex flex-col gap-1 py-2 border-b border-slate-100">
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping (₹)</span>
-                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right" placeholder="0" />
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping GST (%)</span>
-                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right" placeholder="0" />
+                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                   <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping / GST%</span>
+                   <div className="flex gap-2">
+                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
+                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right" placeholder="GST %" />
                    </div>
                  </div>
                  <div className="flex justify-between items-center pt-2">
@@ -624,21 +633,21 @@ export default function NewPurchasePage() {
               <div className="col-span-1">
                  <label className="erp-label block mb-1">M.R.P.</label>
                  <div className="flex">
-                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                     <input type="number" value={batchInput.mrp || ''} onChange={e => setBatchInput({...batchInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Sale Price</label>
                  <div className="flex">
-                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                     <input type="number" value={batchInput.salePrice || ''} onChange={e => setBatchInput({...batchInput, salePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Min. Sale Price</label>
                  <div className="flex">
-                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                     <input type="number" value={batchInput.minSalePrice || ''} onChange={e => setBatchInput({...batchInput, minSalePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
@@ -649,7 +658,7 @@ export default function NewPurchasePage() {
                    {batchInput.expiryDate ? (
                      <input type="date" value={batchInput.expiryDate} onChange={e => setBatchInput({...batchInput, expiryDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5" />
                    ) : (
-                     <button onClick={() => setBatchInput({...batchInput, expiryDate: new Date().toISOString().split('T')[0]})} className="w-full bg-slate-200 hover:bg-slate-300 text-action-600 font-bold text-[10px] py-1 rounded transition">Set Expiry Date</button>
+                     <button onClick={() => setBatchInput({...batchInput, expiryDate: new Date().toISOString().split('T')[0]})} className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[10px] py-1 rounded transition">Set Expiry Date</button>
                    )}
                  </div>
               </div>
@@ -658,8 +667,8 @@ export default function NewPurchasePage() {
                     if(!batchInput.productId || !batchInput.batchNo) { toast.error("Select item and enter Batch No"); return; }
                     setBatches([...batches.filter(b => !(b.productId === batchInput.productId && b.batchNo === batchInput.batchNo)), batchInput]);
                     setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''});
-                 }} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><Save className="w-3.5 h-3.5" /> Save</button>
-                 <button onClick={() => setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''})} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
+                 }} className="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><Save className="w-3.5 h-3.5" /> Save</button>
+                 <button onClick={() => setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''})} className="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
               </div>
             </div>
 
@@ -667,7 +676,7 @@ export default function NewPurchasePage() {
             <div className="flex-1 overflow-y-auto bg-slate-50 p-2">
                {batches.length === 0 ? (
                  <div className="flex flex-col items-center justify-center h-[200px] text-slate-400 opacity-50">
-                    <Search className="w-16 h-16 mb-2 text-yellow-500 opacity-80" />
+                    <Search className="w-16 h-16 mb-2 text-slate-400 opacity-80" />
                     <span className="text-sm">No batches added yet</span>
                  </div>
                ) : (
@@ -709,10 +718,22 @@ export default function NewPurchasePage() {
       {showQuickAddSupplierModal && (
         <QuickAddSupplierModal 
           onClose={() => setShowQuickAddSupplierModal(false)}
-          onAdded={(newSupplier: any) => {
-            setSuppliers([...suppliers, newSupplier]);
+          onAdded={(s) => {
+            setSuppliers([s, ...suppliers]);
+            pickSupplier(s);
             setShowQuickAddSupplierModal(false);
-            pickSupplier(newSupplier);
+          }}
+        />
+      )}
+
+      {showEditSupplierModal && supplierSnapshot && (
+        <QuickAddSupplierModal 
+          supplierToEdit={{ ...supplierSnapshot, _id: supplierId }}
+          onClose={() => setShowEditSupplierModal(false)}
+          onAdded={(s) => {
+            setSuppliers(suppliers.map(sup => sup._id === s._id ? s : sup));
+            pickSupplier(s);
+            setShowEditSupplierModal(false);
           }}
         />
       )}

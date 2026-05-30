@@ -3,11 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../../lib/erp-api';
-import { 
-  Plus, Trash2, Search, Loader2, Save, CheckCircle, 
-  Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
-  Calendar, ChevronDown, User, MapPin, CreditCard, Barcode
-} from 'lucide-react';
+import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../../components/modals/QuickAddSupplierModal';
@@ -54,11 +50,12 @@ export default function EditPurchasePage() {
   // Header State
   const [purchaseType, setPurchaseType] = useState('GST');
   const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+  const [supplierId, setSupplierId] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
+  const [supplierSnapshot, setSupplierSnapshot] = useState<any>(null);
   const [showSupplierDD, setShowSupplierDD] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  
   const [showQuickAddSupplierModal, setShowQuickAddSupplierModal] = useState(false);
+  const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState('');
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -128,7 +125,8 @@ export default function EditPurchasePage() {
           setEwayBillNo(p.ewayBillNo || '');
           
           if (p.supplierId) {
-            setSelectedSupplier(p.supplierId);
+            setSupplierId(p.supplierId._id);
+            setSupplierSnapshot(p.supplierId);
             setSupplierSearch(p.supplierId.name);
             setContactNo(p.supplierId.mobile || '');
             let addrStr = '';
@@ -149,6 +147,7 @@ export default function EditPurchasePage() {
             setSupplierAddress(addrStr);
             setSupplierGstin(p.supplierId.gstin || '');
           } else if (p.supplierSnapshot) {
+            setSupplierSnapshot(p.supplierSnapshot);
             setSupplierSearch(p.supplierSnapshot.name || 'Walk-in Supplier');
           }
           
@@ -177,7 +176,8 @@ export default function EditPurchasePage() {
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const pickSupplier = (s: Supplier) => {
-    setSelectedSupplier(s);
+    setSupplierId(s._id);
+    setSupplierSnapshot(s);
     setSupplierSearch(s.name);
     setContactNo(s.mobile || '');
     let addrStr = '';
@@ -214,8 +214,7 @@ export default function EditPurchasePage() {
     setItemSearch(p.name);
     setShowItemDD(false);
 
-    if (selectedSupplier?._id || (selectedSupplier as any)) {
-      const supplierId = selectedSupplier._id || (selectedSupplier as any);
+    if (supplierId) {
       try {
         const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
         setLastPrices(data.prices || []);
@@ -227,7 +226,6 @@ export default function EditPurchasePage() {
     }
   };
 
-  // Determine if Inter-State based on placeOfSupply vs 'Gujarat' (assuming company state is Gujarat for now)
   const isInterState = placeOfSupply !== 'Gujarat';
 
   const calculateItem = (item: LineItem) => {
@@ -255,12 +253,28 @@ export default function EditPurchasePage() {
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
 
-  // Totals
-  const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
-  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
-  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
-  const subtotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST);
+  const totalTaxableAmount = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
+
+  let shipCGST = 0;
+  let shipSGST = 0;
+  let shipIGST = 0;
+  
+  if (shippingCharge > 0 && shippingGstRate > 0 && purchaseType !== 'Non-GST') {
+    if (isInterState) {
+      shipIGST = (shippingCharge * shippingGstRate) / 100;
+    } else {
+      shipCGST = (shippingCharge * shippingGstRate) / 2 / 100;
+      shipSGST = (shippingCharge * shippingGstRate) / 2 / 100;
+    }
+  }
+
+  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shipCGST;
+  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
+  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
+
+  const totalGST = totalCGST + totalSGST + totalIGST;
+  const subtotal = round2(totalTaxableAmount + totalGST);
+  const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
   const grandTotal = round2(subtotal - additionalDiscount + shippingCharge);
   const balance = round2(grandTotal - amountPaid);
 
@@ -279,13 +293,8 @@ export default function EditPurchasePage() {
         purchaseOrderDate: purchaseOrderDate ? purchaseOrderDate : undefined,
         paymentTerms,
         ewayBillNo,
-        supplierId: selectedSupplier?._id,
-        supplierSnapshot: selectedSupplier ? {
-          name: selectedSupplier.name,
-          mobile: contactNo,
-          gstin: supplierGstin,
-          address: supplierAddress
-        } : { name: supplierSearch || 'Cash Supplier' },
+        supplierId: supplierId || undefined,
+        supplierSnapshot: supplierSnapshot || { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
         batches,
@@ -321,7 +330,6 @@ export default function EditPurchasePage() {
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
       <Topbar title="Edit Purchase Bill" />
 
-      {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">
          <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Purchase Bill</div>
          <div onClick={() => setActiveTab('batches')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'batches' ? 'bg-white border-t-2 border-t-red-500 border-l border-r border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Batch Numbers</div>
@@ -331,11 +339,9 @@ export default function EditPurchasePage() {
         
         {activeTab === 'bill' ? (
           <>
-            {/* Section 1: Purchase bill information */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Purchase bill information</div>
           <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
-            {/* Row 1 */}
             <div>
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
               <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full">
@@ -351,7 +357,12 @@ export default function EditPurchasePage() {
             <div>
               <div className="flex justify-between items-center mb-1">
                  <label className="erp-label block">Supplier Name <span className="text-red-500">*</span></label>
-                 <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add Supplier</span>
+                 <div className="flex gap-2">
+                   {supplierId && supplierSnapshot && (
+                     <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
+                   )}
+                   <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add</span>
+                 </div>
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
@@ -393,7 +404,6 @@ export default function EditPurchasePage() {
               <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
             </div>
 
-            {/* Row 2 */}
             <div>
               <label className="erp-label block mb-1">Place of Supply <span className="text-red-500">*</span></label>
               <select value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
@@ -419,7 +429,6 @@ export default function EditPurchasePage() {
           </div>
         </div>
 
-        {/* Section 2: Particulars Input */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs flex justify-between items-center">
             <span>Particulars</span>
@@ -516,7 +525,6 @@ export default function EditPurchasePage() {
           </div>
         </div>
 
-        {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div className="grid grid-cols-11 bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200">
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
@@ -559,7 +567,6 @@ export default function EditPurchasePage() {
            </div>
         </div>
 
-        {/* Section 4: Footer */}
         <div className="grid grid-cols-4 gap-4 mt-1">
            <div className="col-span-1 space-y-2">
               <label className="flex items-center gap-2 text-xs cursor-pointer">
@@ -632,14 +639,11 @@ export default function EditPurchasePage() {
                    <span className="text-xs font-bold text-slate-600">Sub Total</span>
                    <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
                  </div>
-                 <div className="flex flex-col gap-1 py-2 border-b border-slate-100">
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping (₹)</span>
-                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right" placeholder="0" />
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping GST (%)</span>
-                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right" placeholder="0" />
+                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                   <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping / GST%</span>
+                   <div className="flex gap-2">
+                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
+                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right" placeholder="GST %" />
                    </div>
                  </div>
                  <div className="flex justify-between items-center pt-2">
@@ -756,14 +760,25 @@ export default function EditPurchasePage() {
         )}
       </main>
 
-      {/* Modals */}
       {showQuickAddSupplierModal && (
         <QuickAddSupplierModal 
           onClose={() => setShowQuickAddSupplierModal(false)}
-          onAdded={(newSupplier: any) => {
-            setSuppliers([...suppliers, newSupplier]);
+          onAdded={(s) => {
+            setSuppliers([s, ...suppliers]);
+            pickSupplier(s);
             setShowQuickAddSupplierModal(false);
-            pickSupplier(newSupplier);
+          }}
+        />
+      )}
+
+      {showEditSupplierModal && supplierSnapshot && (
+        <QuickAddSupplierModal 
+          supplierToEdit={{ ...supplierSnapshot, _id: supplierId }}
+          onClose={() => setShowEditSupplierModal(false)}
+          onAdded={(s) => {
+            setSuppliers(suppliers.map(sup => sup._id === s._id ? s : sup));
+            pickSupplier(s);
+            setShowEditSupplierModal(false);
           }}
         />
       )}

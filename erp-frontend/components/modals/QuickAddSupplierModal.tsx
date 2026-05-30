@@ -5,15 +5,24 @@ import toast from 'react-hot-toast';
 
 const INDIAN_STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
-export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: () => void; onAdded: (supplier: any) => void; }) {
+export default function QuickAddSupplierModal({ onClose, onAdded, supplierToEdit }: { onClose: () => void; onAdded: (supplier: any) => void; supplierToEdit?: any }) {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
-    name: '', street: '', city: '', state: '', pinCode: '', country: 'India',
-    email: '', mobile: '',
-    pan: '', gstin: '', contactPerson: '',
-    balanceType: 'Credit', openingBalance: 0,
-    note: ''
+    name: supplierToEdit?.name || '', 
+    street: supplierToEdit?.address?.street || '', 
+    city: supplierToEdit?.address?.city || '', 
+    state: supplierToEdit?.address?.state || '', 
+    pinCode: supplierToEdit?.address?.pinCode || '', 
+    country: supplierToEdit?.address?.country || 'India',
+    email: supplierToEdit?.email || '', 
+    mobile: supplierToEdit?.mobile || '',
+    pan: supplierToEdit?.pan || '', 
+    gstin: supplierToEdit?.gstin || '', 
+    contactPerson: supplierToEdit?.contactPerson || '',
+    balanceType: supplierToEdit?.balanceType || 'Credit', 
+    openingBalance: supplierToEdit?.openingBalance || 0,
+    note: supplierToEdit?.note || ''
   });
 
   const handleSave = async () => {
@@ -34,9 +43,15 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
         openingBalance: Math.abs(form.openingBalance),
         note: form.note,
       };
-      const { data } = await suppliersApi.create(payload);
-      toast.success('Supplier Information Saved!');
-      onAdded(data.supplier);
+      if (supplierToEdit?._id) {
+        const { data } = await suppliersApi.update(supplierToEdit._id, payload);
+        toast.success('Supplier Information Updated!');
+        onAdded(data.supplier);
+      } else {
+        const { data } = await suppliersApi.create(payload);
+        toast.success('Supplier Information Saved!');
+        onAdded(data.supplier);
+      }
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save supplier');
     } finally {
@@ -49,8 +64,8 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
       <div className="bg-[#F1F5F9] border border-slate-200 rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0 bg-white rounded-t-2xl">
           <div>
-            <h3 className="text-slate-900 font-bold text-lg">Add New Supplier</h3>
-            <p className="text-xs text-slate-600 mt-0.5">Fill in the supplier details below</p>
+            <h3 className="text-slate-900 font-bold text-lg">{supplierToEdit ? 'Edit Supplier' : 'Add New Supplier'}</h3>
+            <p className="text-xs text-slate-600 mt-0.5">{supplierToEdit ? 'Update supplier details below' : 'Fill in the supplier details below'}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-[#F1F5F9] text-slate-600 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
         </div>
@@ -141,9 +156,11 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
         </div>
 
         <div className="p-5 border-t border-slate-200 bg-white flex justify-end gap-3 rounded-b-2xl shrink-0">
-            <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-600 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50">
-                <Save className="w-4 h-4" /> Save Supplier
-            </button>
+          <button onClick={onClose} className="px-5 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="px-5 py-2 text-sm font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition flex items-center disabled:opacity-70 shadow-sm">
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? 'Saving...' : supplierToEdit ? 'Update Supplier' : 'Save Supplier'}
+          </button>
         </div>
       </div>
     </div>
