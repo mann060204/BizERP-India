@@ -80,6 +80,7 @@ export default function NewInvoicePage() {
   // Footer State
   const [soldBy, setSoldBy] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
+  const [deliveryRemarks, setDeliveryRemarks] = useState('');
   const [remarks, setRemarks] = useState('');
   const [paymentMode1, setPaymentMode1] = useState('Cash');
   const [amountReceived1, setAmountReceived1] = useState(0);
@@ -155,6 +156,7 @@ export default function NewInvoicePage() {
         setShippingCharge(inv.shippingCharge || 0);
         setRemarks(inv.notes || '');
         setDeliveryTerms(inv.deliveryTerms || '');
+        setDeliveryRemarks(inv.deliveryRemarks || '');
         setSoldBy(inv.soldBy || '');
         
       } catch (e) {
@@ -367,15 +369,20 @@ export default function NewInvoicePage() {
         invoiceType,
         lineItems,
         paymentMode: combinedPaymentMode,
+        paymentHistory: [
+          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
+          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
+        ],
         amountReceived: totalAmountReceived,
-          txnId: combinedTxnId,
-          shippingCharge,
-          balance,
+        txnId: combinedTxnId,
+        shippingCharge,
+        balance,
         roundOff,
         subtotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
+        deliveryRemarks,
         soldBy,
         billTo,
         status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'draft',
@@ -829,6 +836,10 @@ export default function NewInvoicePage() {
                  <div>
                     <label className="erp-label block mb-1">Delivery Terms</label>
                     <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                 </div>
+                 <div>
+                    <label className="erp-label block mb-1">Delivery Remarks (Printed)</label>
+                    <textarea value={deliveryRemarks} onChange={e => setDeliveryRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" placeholder="e.g. Courier Name, LR No." />
                  </div>
                  <div>
                     <label className="erp-label block mb-1">Remarks (Private)</label>

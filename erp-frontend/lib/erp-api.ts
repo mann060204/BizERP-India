@@ -24,6 +24,7 @@ export const productsApi = {
 export const invoicesApi = {
   list: (params?: any) => api.get('/invoices', { params }),
   get: (id: string) => api.get(`/invoices/${id}`),
+  getPublic: (id: string) => api.get(`/invoices/public/${id}`),
   create: (data: any) => api.post('/invoices', data),
   update: (id: string, data: any) => api.put(`/invoices/${id}`, data),
   updateStatus: (id: string, data: any) => api.put(`/invoices/${id}/status`, data),

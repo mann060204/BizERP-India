@@ -2,11 +2,14 @@ import { Router } from 'express';
 import {
   getInvoices, getInvoice, createInvoice, updateInvoice,
   updateInvoiceStatus, cancelInvoice, getSalesSummary,
-  getCustomerLastPrice, getPredictedInvoiceNumber
+  getCustomerLastPrice, getPredictedInvoiceNumber, getPublicInvoice
 } from '../controllers/invoice.controller';
 import { protect } from '../middlewares/auth.middleware';
 
 const router = Router();
+
+router.get('/public/:id', getPublicInvoice);
+
 router.use(protect);
 
 router.get('/analytics/summary', getSalesSummary);

@@ -1,6 +1,6 @@
 import express from 'express';
 import { getBanks, getBankById, createBank, updateBank, deleteBank } from '../controllers/bank.controller';
-import { protect } from '../middleware/auth.middleware';
+import { protect } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 

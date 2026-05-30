@@ -130,16 +130,66 @@ export const addTransaction = async (req: AuthRequest, res: Response): Promise<v
 export const updateAccount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, bankName, accountNumber } = req.body;
+    const { name, bankName, accountNumber, openingBalance, balanceType } = req.body;
     const businessId = req.user!.businessId;
 
-    const account = await Account.findOneAndUpdate(
-      { _id: id, businessId },
-      { name, bankName, accountNumber },
-      { new: true }
-    );
-
+    const account = await Account.findOne({ _id: id, businessId });
     if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
+
+    const oldOpeningBalance = account.openingBalance || 0;
+    const oldBalanceType = account.balanceType || 'Dr';
+    const newOpeningBalance = Number(openingBalance) || 0;
+    const newBalanceType = balanceType || 'Dr';
+
+    account.name = name;
+    if (bankName !== undefined) account.bankName = bankName;
+    if (accountNumber !== undefined) account.accountNumber = accountNumber;
+
+    if (oldOpeningBalance !== newOpeningBalance || oldBalanceType !== newBalanceType) {
+      let diff = 0;
+      
+      // Remove old opening balance effect from Dr perspective
+      if (oldBalanceType === 'Dr') diff -= oldOpeningBalance;
+      else diff += oldOpeningBalance;
+
+      // Add new opening balance effect to Dr perspective
+      if (newBalanceType === 'Dr') diff += newOpeningBalance;
+      else diff -= newOpeningBalance;
+
+      if (account.balanceType === 'Dr') {
+        account.currentBalance += diff;
+      } else {
+        account.currentBalance -= diff;
+      }
+      
+      account.openingBalance = newOpeningBalance;
+      account.balanceType = newBalanceType;
+
+      let openingLedger = await AccountLedger.findOne({ accountId: id, referenceType: 'Opening' });
+      if (openingLedger) {
+        if (newOpeningBalance === 0) {
+          await AccountLedger.deleteOne({ _id: openingLedger._id });
+        } else {
+          openingLedger.debit = newBalanceType === 'Dr' ? newOpeningBalance : 0;
+          openingLedger.credit = newBalanceType === 'Cr' ? newOpeningBalance : 0;
+          openingLedger.closingBalance = newOpeningBalance;
+          await openingLedger.save();
+        }
+      } else if (newOpeningBalance > 0) {
+        await AccountLedger.create({
+          businessId,
+          accountId: account._id,
+          date: account.createdAt,
+          description: 'Opening Balance',
+          debit: newBalanceType === 'Dr' ? newOpeningBalance : 0,
+          credit: newBalanceType === 'Cr' ? newOpeningBalance : 0,
+          referenceType: 'Opening',
+          closingBalance: newOpeningBalance
+        });
+      }
+    }
+
+    await account.save();
 
     res.json({ message: 'Account updated', account });
   } catch (e: any) {

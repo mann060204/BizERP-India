@@ -109,7 +109,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       businessId,
       billNumber,
       billDate: billDate ? new Date(billDate) : new Date(),
-      dueDate,
+      dueDate: dueDate === '' ? undefined : dueDate,
       supplierId: supplierId || undefined,
       supplierSnapshot: supplierSnapshot || { name: 'Walk-in Supplier' },
       isInterState: !!isInterState,
@@ -222,12 +222,21 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
       }
     }
 
+    let updatedBillDate = existingPurchase.billDate;
+    if (billDate) {
+      const newDateStr = new Date(billDate).toISOString().split('T')[0];
+      const oldDateStr = new Date(existingPurchase.billDate).toISOString().split('T')[0];
+      if (newDateStr !== oldDateStr) {
+        updatedBillDate = new Date(billDate);
+      }
+    }
+
     const updatedPurchase = await PurchaseBill.findOneAndUpdate(
       { _id: purchaseId, businessId },
       {
         billNumber,
-        billDate: billDate ? new Date(billDate) : new Date(),
-        dueDate,
+        billDate: updatedBillDate,
+        dueDate: dueDate === '' ? undefined : dueDate,
         supplierId: supplierId || undefined,
         supplierSnapshot: supplierSnapshot || { name: 'Walk-in Supplier' },
         isInterState: !!isInterState,

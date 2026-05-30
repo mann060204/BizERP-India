@@ -438,7 +438,7 @@ export default function NewPurchasePage() {
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
-                    <div className="col-span-3 px-2 py-1.5 text-right font-medium flex justify-between items-center group-hover:bg-[#1a1a1a]">
+                    <div className="col-span-3 px-2 py-1.5 text-right font-medium flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />
@@ -644,10 +644,10 @@ export default function NewPurchasePage() {
              <Barcode className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-action-700 hover:bg-action-800 text-slate-900 px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received')} disabled={saving} className="bg-action-700 hover:bg-action-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Save className="w-4 h-4" /> Save
             </button>
           </div>

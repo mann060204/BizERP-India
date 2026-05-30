@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Bank from '../models/Bank.model';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middlewares/auth.middleware';
 
 export const getBanks = async (req: AuthRequest, res: Response) => {
   try {

@@ -55,7 +55,9 @@ export const getQuotationSummary = async (req: Request, res: Response) => {
 export const createQuotation = async (req: Request, res: Response) => {
   try {
     const businessId = (req as any).user.businessId;
-    const data = req.body;
+    const data = { ...req.body };
+    if (data.dueDate === '') data.dueDate = undefined;
+    if (data.quotationDate === '') data.quotationDate = undefined;
     
     // Auto increment logic
     const business = await Business.findById(businessId);
@@ -79,9 +81,13 @@ export const createQuotation = async (req: Request, res: Response) => {
 
 export const updateQuotation = async (req: Request, res: Response) => {
   try {
+    const updateData = { ...req.body };
+    if (updateData.dueDate === '') updateData.dueDate = undefined;
+    if (updateData.quotationDate === '') updateData.quotationDate = undefined;
+
     const quotation = await Quotation.findOneAndUpdate(
       { _id: req.params.id, businessId: (req as any).user.businessId },
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
     if (!quotation) return res.status(404).json({ message: 'Quotation not found' });

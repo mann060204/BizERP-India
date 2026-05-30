@@ -434,11 +434,11 @@ export default function AccountsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Opening Balance</label>
-                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} disabled={!!editAccountId} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm disabled:opacity-50" placeholder="0.00" />
+                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Type</label>
-                  <select value={balType} onChange={e => setBalType(e.target.value)} disabled={!!editAccountId} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm disabled:opacity-50">
+                  <select value={balType} onChange={e => setBalType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
                     <option value="Dr">Debit (Dr)</option>
                     <option value="Cr">Credit (Cr)</option>
                   </select>

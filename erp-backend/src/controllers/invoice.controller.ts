@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import Invoice from '../models/Invoice.model';
 import Product from '../models/Product.model';
@@ -113,6 +113,17 @@ export const getInvoice = async (req: AuthRequest, res: Response): Promise<void>
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// GET /api/v1/invoices/public/:id
+export const getPublicInvoice = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const invoice = await Invoice.findById(req.params['id'])
+      .populate('customerId', 'name mobile email gstin billingAddress')
+      .populate('createdBy', 'name');
+    if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
+    res.json({ invoice });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // POST /api/v1/invoices
 export const createInvoice = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -120,6 +131,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       customerId, customerSnapshot, placeOfSupply, isInterState,
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceType, shippingAddress,
+      txnId, deliveryTerms, deliveryRemarks, paymentHistory
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -176,6 +188,10 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       shippingCharge: shipping,
       balance,
       paymentMode: paymentMode || 'Cash',
+      paymentHistory: paymentHistory || [],
+      txnId,
+      deliveryTerms,
+      deliveryRemarks,
       status: status || (received >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
       notes,
       termsAndConditions,
@@ -194,7 +210,8 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const {
       customerId, customerSnapshot, placeOfSupply, isInterState,
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
-      termsAndConditions, isReverseCharge, status, invoiceDate, invoiceType
+      termsAndConditions, isReverseCharge, status, invoiceDate, invoiceType,
+      txnId, deliveryTerms, deliveryRemarks, paymentHistory
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -244,11 +261,20 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
       }
     }
 
+    let updatedInvoiceDate = existingInvoice.invoiceDate;
+    if (invoiceDate) {
+      const newDateStr = new Date(invoiceDate).toISOString().split('T')[0];
+      const oldDateStr = new Date(existingInvoice.invoiceDate).toISOString().split('T')[0];
+      if (newDateStr !== oldDateStr) {
+        updatedInvoiceDate = new Date(invoiceDate);
+      }
+    }
+
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       id,
       {
         dueDate: dueDate || existingInvoice.dueDate,
-        invoiceDate: invoiceDate || existingInvoice.invoiceDate,
+        invoiceDate: updatedInvoiceDate,
         customerId: customerId || undefined,
         customerSnapshot: customerSnapshot || existingInvoice.customerSnapshot,
         placeOfSupply: placeOfSupply || '',
@@ -266,6 +292,10 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
         shippingCharge: shipping,
         balance,
         paymentMode: paymentMode || existingInvoice.paymentMode,
+        paymentHistory: paymentHistory || existingInvoice.paymentHistory,
+        txnId: txnId !== undefined ? txnId : existingInvoice.txnId,
+        deliveryTerms: deliveryTerms !== undefined ? deliveryTerms : existingInvoice.deliveryTerms,
+        deliveryRemarks: deliveryRemarks !== undefined ? deliveryRemarks : existingInvoice.deliveryRemarks,
         status: status || (received >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
         notes,
         termsAndConditions,

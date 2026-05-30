@@ -78,7 +78,12 @@ export default function PrintableInvoicePage() {
 
   if (template === 'POS') {
     return (
-      <div className="bg-white min-h-screen text-black print:p-0 p-8 font-sans flex justify-center">
+      <>
+      <div className="print:hidden fixed top-0 left-0 right-0 bg-slate-800 text-white p-3 flex justify-between items-center z-50 shadow-md">
+        <span className="text-sm font-medium">Invoice {invoice.invoiceNumber}</span>
+        <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print / Download PDF</button>
+      </div>
+      <div className="bg-white min-h-screen text-black print:p-0 p-8 pt-20 font-sans flex justify-center">
         <div className="w-[80mm] bg-white print:shadow-none shadow-lg print:p-0 p-4 text-[12px] leading-tight font-mono">
           <div className="text-center mb-4">
             {business.logo && <img src={business.logo} alt="Logo" className="w-16 h-16 mx-auto mb-2 object-contain grayscale" />}
@@ -94,7 +99,16 @@ export default function PrintableInvoicePage() {
             <p><strong>Date:</strong> {new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}</p>
             <p><strong>Payment:</strong> {invoice.paymentMode}</p>
             {invoice.txnId && <p><strong>Txn ID:</strong> {invoice.txnId}</p>}
+            {invoice.deliveryRemarks && <p><strong>Delivery Note:</strong> {invoice.deliveryRemarks}</p>}
             {invoice.remarks && <p><strong>Remarks:</strong> {invoice.remarks}</p>}
+            {invoice.paymentHistory && invoice.paymentHistory.length > 0 && (
+              <div className="mt-1 border-t border-dashed border-gray-300 pt-1">
+                <strong>Payment Hist:</strong>
+                {invoice.paymentHistory.map((p: any, i: number) => (
+                   <p key={i} className="pl-2">- {new Date(p.date).toLocaleDateString('en-GB')}: {p.mode} ₹{p.amount}</p>
+                ))}
+              </div>
+            )}
             <p><strong>Customer:</strong> {invoice.customerSnapshot.name}</p>
             {invoice.customerSnapshot.mobile && <p><strong>Phone:</strong> {invoice.customerSnapshot.mobile}</p>}
           </div>
@@ -148,6 +162,7 @@ export default function PrintableInvoicePage() {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
@@ -161,7 +176,11 @@ export default function PrintableInvoicePage() {
           .a4-page { width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 10mm !important; }
         }
       `}} />
-      <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 font-sans flex justify-center text-[11px]">
+      <div className="print:hidden fixed top-0 left-0 right-0 bg-slate-800 text-white p-3 flex justify-between items-center z-50 shadow-md">
+        <span className="text-sm font-medium">Invoice {invoice.invoiceNumber}</span>
+        <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print / Download PDF</button>
+      </div>
+      <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 pt-20 font-sans flex justify-center text-[11px]">
         <div className="a4-page w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col overflow-hidden">
         
         {/* Container */}
@@ -218,7 +237,16 @@ export default function PrintableInvoicePage() {
                 <span>Reverse Charge</span><span>: {invoice.isReverseCharge ? 'YES' : 'NO'}</span>
                 <span>Transport</span><span>: {invoice.deliveryTerms || 'N/A'}</span>
                 {invoice.txnId && <><span>Transaction ID</span><span className="whitespace-pre-wrap leading-tight">: {invoice.txnId}</span></>}
+                {invoice.deliveryRemarks && <><span>Delivery Note</span><span className="whitespace-pre-wrap leading-tight">: {invoice.deliveryRemarks}</span></>}
                 {invoice.remarks && <><span>Remarks</span><span className="whitespace-pre-wrap leading-tight">: {invoice.remarks}</span></>}
+                {invoice.paymentHistory && invoice.paymentHistory.length > 0 && (
+                  <>
+                    <span className="self-start pt-1">Payment Hist.</span>
+                    <span className="whitespace-pre-wrap leading-tight pt-1 border-t border-gray-100 mt-1">
+                      : {invoice.paymentHistory.map((p: any) => `${new Date(p.date).toLocaleDateString('en-GB')} - ${p.mode} - ₹${p.amount}`).join('\n  ')}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

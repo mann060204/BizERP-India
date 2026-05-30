@@ -334,10 +334,10 @@ export default function NewQuotationPage() {
         billTo,
         status: 'Draft',
       };
-      const { data } = await quotationsApi.create(payload);
-      toast.success(`Quotation ${data.quotationNumber || quotationNumber} Saved!`);
+      const createdData = await quotationsApi.create(payload);
+      toast.success(`Quotation ${createdData.quotationNumber || quotationNumber} Saved!`);
       if (printAfterSave) {
-        window.open(`/print/quotation/${data._id}`, '_blank');
+        window.open(`/print/quotation/${createdData._id}`, '_blank');
       }
       router.push('/dashboard/quotations');
     } catch (e: any) {

@@ -37,4 +37,4 @@ const accountSchema = new mg.Schema(
 // Ensure index for faster querying by type and business
 accountSchema.index({ businessId: 1, type: 1 });
 
-export default mg.models.Account || mg.model<IAccount>('Account', accountSchema);
+export default mongoose.models.Account || mongoose.model<IAccount>('Account', accountSchema);
