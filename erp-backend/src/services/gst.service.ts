@@ -37,7 +37,9 @@ interface InvoiceTotals {
 export const calculateInvoiceTotals = (
   items: LineItemInput[],
   isInterState: boolean,
-  isNonGst: boolean = false
+  isNonGst: boolean = false,
+  shippingCharge: number = 0,
+  shippingGstRate: number = 0
 ): InvoiceTotals => {
   let subtotal = 0;
   let totalDiscount = 0;
@@ -89,8 +91,25 @@ export const calculateInvoiceTotals = (
     };
   });
 
+  let shippingCGST = 0;
+  let shippingSGST = 0;
+  let shippingIGST = 0;
+
+  if (shippingCharge > 0 && shippingGstRate > 0 && !isNonGst) {
+    if (isInterState) {
+      shippingIGST = (shippingCharge * shippingGstRate) / 100;
+    } else {
+      shippingCGST = (shippingCharge * shippingGstRate) / 2 / 100;
+      shippingSGST = (shippingCharge * shippingGstRate) / 2 / 100;
+    }
+  }
+
+  totalCGST += shippingCGST;
+  totalSGST += shippingSGST;
+  totalIGST += shippingIGST;
+
   const totalGST = totalCGST + totalSGST + totalIGST;
-  const grandTotal = totalTaxableAmount + totalGST;
+  const grandTotal = totalTaxableAmount + totalGST + shippingCharge;
 
   return {
     lineItems,

@@ -49,6 +49,7 @@ export interface IPurchaseBill extends Document {
   grandTotal: number;
   additionalDiscount: number;
   shippingCharge: number;
+  shippingGstRate: number;
   amountPaid: number;
   balance: number;
   paymentMode: string;
@@ -97,6 +98,7 @@ const PurchaseBillSchema = new Schema<IPurchaseBill>(
     grandTotal: { type: Number, default: 0 },
     additionalDiscount: { type: Number, default: 0 },
     shippingCharge: { type: Number, default: 0 },
+    shippingGstRate: { type: Number, default: 0 },
     amountPaid: { type: Number, default: 0 },
     balance: { type: Number, default: 0 },
     paymentMode: { type: String, default: 'Cash' },

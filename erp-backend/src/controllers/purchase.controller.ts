@@ -123,6 +123,9 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       totalIGST: totals.totalIGST,
       totalGST: totals.totalGST,
       grandTotal: totals.grandTotal,
+      additionalDiscount: Number(additionalDiscount) || 0,
+      shippingCharge: Number(shippingCharge) || 0,
+      shippingGstRate: Number(shippingGstRate) || 0,
       amountPaid: paid,
       balance,
       paymentMode: paymentMode || 'Cash',
@@ -141,6 +144,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
       lineItems, batches, paymentMode, amountPaid, notes, status,
+      shippingCharge, shippingGstRate, additionalDiscount
     } = req.body;
 
     const purchaseId = req.params['id'];
@@ -178,7 +182,17 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
       }
     }
 
-    const totals = calculateInvoiceTotals(lineItems, !!isInterState);
+    const totals = calculateInvoiceTotals(
+      lineItems, 
+      !!isInterState, 
+      false, 
+      Number(shippingCharge) || 0, 
+      Number(shippingGstRate) || 0
+    );
+    if (additionalDiscount && !isNaN(Number(additionalDiscount))) {
+      totals.grandTotal -= Number(additionalDiscount);
+    }
+    
     const paid = Number(amountPaid) || 0;
     const balance = totals.grandTotal - paid;
 
@@ -251,6 +265,9 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
         totalIGST: totals.totalIGST,
         totalGST: totals.totalGST,
         grandTotal: totals.grandTotal,
+        additionalDiscount: Number(additionalDiscount) || 0,
+        shippingCharge: Number(shippingCharge) || 0,
+        shippingGstRate: Number(shippingGstRate) || 0,
         amountPaid: paid,
         balance,
         paymentMode: paymentMode || 'Cash',

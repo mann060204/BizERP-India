@@ -87,9 +87,10 @@ export default function NewPurchasePage() {
 
   // Footer State
   const [showAdditionalDiscount, setShowAdditionalDiscount] = useState(false);
+  const [showAdditionalDiscount, setShowAdditionalDiscount] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState(0);
-  const [showShipping, setShowShipping] = useState(false);
   const [shippingCharge, setShippingCharge] = useState(0);
+  const [shippingGstRate, setShippingGstRate] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
@@ -202,11 +203,13 @@ export default function NewPurchasePage() {
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
 
   // Totals
-  const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
+  const totalTaxableAmount = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0);
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0);
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0);
-  const subtotal = round2(totalTaxable + totalCGST + totalSGST + totalIGST);
+  const totalGST = totalCGST + totalSGST + totalIGST;
+  const subtotal = round2(totalTaxableAmount + totalGST);
+  const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
   const grandTotal = round2(subtotal - additionalDiscount + shippingCharge);
   const balance = round2(grandTotal - amountPaid);
 
@@ -235,10 +238,19 @@ export default function NewPurchasePage() {
         isInterState,
         lineItems,
         batches,
-        additionalDiscount,
+        subtotal,
+        totalDiscount,
+        totalTaxableAmount,
+        totalCGST,
+        totalSGST,
+        totalIGST,
+        totalGST,
+        grandTotal,
         shippingCharge,
-        paymentMode,
+        shippingGstRate,
+        additionalDiscount,
         amountPaid,
+        paymentMode,
         txnId,
         notes: remarks,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
@@ -408,18 +420,6 @@ export default function NewPurchasePage() {
                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
-                {lastPrices.length > 0 && (
-                  <div className="mt-1 p-1 bg-blue-50 border border-blue-100 rounded text-[9px] text-blue-800">
-                    <p className="font-semibold mb-0.5">Last 5 Purchases</p>
-                    {lastPrices.map((lp, idx) => (
-                      <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 pb-0.5">
-                        <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
-                        <span>{lp.billNumber}</span>
-                        <span className="font-medium">₹{lp.rate}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
               <div>
                 <label className="erp-label block mb-1">Disc. (%)</label>
@@ -523,14 +523,16 @@ export default function NewPurchasePage() {
                 </div>
               )}
 
-              <label className="flex items-center gap-2 text-xs cursor-pointer pt-2">
-                <input type="checkbox" checked={showShipping} onChange={e => setShowShipping(e.target.checked)} className="accent-white" />
-                <span className="text-slate-700">Add Shipping</span>
-              </label>
-              {showShipping && (
-                <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                   <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
+              {lastPrices.length > 0 && (
+                <div className="mt-4 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
+                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 Purchases ({itemInput.productName})</p>
+                  {lastPrices.map((lp, idx) => (
+                    <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-1">
+                      <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
+                      <span>{lp.billNumber}</span>
+                      <span className="font-medium text-sm">₹{lp.rate}</span>
+                    </div>
+                  ))}
                 </div>
               )}
            </div>
@@ -576,13 +578,23 @@ export default function NewPurchasePage() {
 
            <div className="col-span-1">
               <div className="erp-container border-slate-200 h-full flex flex-col p-3 space-y-2">
-                 <div className="flex justify-between items-center">
-                   <span className="text-xs font-bold">Sub Total</span>
-                   <span className="text-sm font-bold">₹ {subtotal.toFixed(2)}</span>
+                 <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+                   <span className="text-xs font-bold text-slate-600">Sub Total</span>
+                   <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
                  </div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-xs font-bold uppercase">Total Amount</span>
-                   <span className="text-sm font-bold">₹ {grandTotal.toFixed(2)}</span>
+                 <div className="flex flex-col gap-1 py-2 border-b border-slate-100">
+                   <div className="flex justify-between items-center">
+                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping (₹)</span>
+                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right" placeholder="0" />
+                   </div>
+                   <div className="flex justify-between items-center">
+                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping GST (%)</span>
+                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right" placeholder="0" />
+                   </div>
+                 </div>
+                 <div className="flex justify-between items-center pt-2">
+                   <span className="text-xs font-bold text-slate-800 uppercase">Total Amount</span>
+                   <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(2)}</span>
                  </div>
               </div>
            </div>
