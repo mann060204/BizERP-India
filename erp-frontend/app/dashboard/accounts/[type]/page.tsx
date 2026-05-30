@@ -289,7 +289,7 @@ export default function AccountsPage() {
                     <h2 className="text-xl font-bold text-slate-900">{selectedAccount.name}</h2>
                     <div className="flex items-center gap-1 opacity-0 hover:opacity-100 transition-opacity" style={{ opacity: 1 }}>
                       <button onClick={handleOpenEditAccount} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={handleDeleteAccount} className="p-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleDeleteAccount()} className="p-1.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-lg transition"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                   {selectedAccount.bankName && <p className="text-sm text-slate-700 mt-1">{selectedAccount.bankName}</p>}

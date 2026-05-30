@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Topbar from '../../../components/layout/Topbar';
 import { quotationsApi } from '../../../lib/erp-api';
 import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3, ArrowRightLeft } from 'lucide-react';
@@ -18,6 +19,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
 };
 
 export default function QuotationsPage() {
+  const router = useRouter();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');

@@ -346,7 +346,7 @@ export default function EditPurchasePage() {
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
               <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
-                <option>NON-GST</option>
+                <option value="Non-GST">Non-GST</option>
                 <option>Bill of Supply</option>
               </select>
             </div>
@@ -785,7 +785,7 @@ export default function EditPurchasePage() {
       {showQuickAddModal && (
         <QuickAddItemModal 
           onClose={() => setShowQuickAddModal(false)}
-          onSuccess={(newProduct: any) => {
+          onAdded={(newProduct: any) => {
             setProducts([...products, newProduct]);
             setShowQuickAddModal(false);
             pickProduct(newProduct);

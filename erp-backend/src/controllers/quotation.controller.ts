@@ -152,22 +152,62 @@ export const convertToInvoice = async (req: Request, res: Response) => {
     }
     
     const nextNumber = `${prefix}${new Date().getFullYear()}-${counter.toString().padStart(4, '0')}`;
+
+    // Explicit mapping to prevent any schema mismatch issues
+    const invoiceData = {
+      businessId,
+      invoiceNumber: nextNumber,
+      invoiceDate: new Date(),
+      dueDate: quotation.dueDate,
+      customerId: quotation.customerId,
+      customerSnapshot: quotation.customerSnapshot,
+      placeOfSupply: quotation.placeOfSupply,
+      isInterState: quotation.isInterState,
+      invoiceType: quotation.quotationType,
+      lineItems: quotation.lineItems.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        hsnCode: item.hsnCode,
+        batchNo: item.batchNo,
+        tag: item.tag,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        rate: item.rate,
+        mrp: item.mrp,
+        discount: item.discount,
+        taxableAmount: item.taxableAmount,
+        gstRate: item.gstRate,
+        cess: item.cess,
+        cgst: item.cgst,
+        sgst: item.sgst,
+        igst: item.igst,
+        totalAmount: item.totalAmount
+      })),
+      subtotal: quotation.subtotal,
+      totalDiscount: quotation.totalDiscount,
+      totalTaxableAmount: quotation.totalTaxableAmount,
+      totalCGST: quotation.totalCGST,
+      totalSGST: quotation.totalSGST,
+      totalIGST: quotation.totalIGST,
+      totalGST: quotation.totalGST,
+      shippingCharge: quotation.shippingCharge,
+      grandTotal: quotation.grandTotal,
+      amountReceived: 0,
+      balance: quotation.grandTotal,
+      status: 'draft',
+      paymentMode: 'Cash',
+      billTo: quotation.billTo,
+      contactNo: quotation.contactNo,
+      soldBy: quotation.soldBy,
+      txnId: quotation.txnId,
+      isReverseCharge: quotation.isReverseCharge,
+      notes: quotation.notes,
+      remarks: quotation.remarks,
+      deliveryTerms: quotation.deliveryTerms,
+      createdBy: (req as any).user._id
+    };
     
-    // Prepare invoice data from quotation
-    const invoiceData: any = quotation.toObject();
-    delete invoiceData._id;
-    delete invoiceData.createdAt;
-    delete invoiceData.updatedAt;
-    delete invoiceData.__v;
-    invoiceData.invoiceNumber = nextNumber;
-    invoiceData.invoiceDate = new Date();
-    invoiceData.invoiceType = quotation.quotationType;
-    invoiceData.status = 'draft';
-    invoiceData.amountReceived = 0;
-    invoiceData.balance = invoiceData.grandTotal;
-    invoiceData.paymentMode = 'Cash';
-    
-    invoiceData.createdBy = (req as any).user._id;
     const invoice = new Invoice(invoiceData);
     const createdInvoice = await invoice.save();
     
@@ -177,6 +217,7 @@ export const convertToInvoice = async (req: Request, res: Response) => {
     
     res.status(201).json(createdInvoice);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    console.error('Error in convertToInvoice:', error);
+    res.status(500).json({ message: error.message || 'Validation Failed' });
   }
 };

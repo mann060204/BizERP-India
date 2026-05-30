@@ -48,6 +48,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
       lineItems, batches, paymentMode, amountPaid, notes, status,
+      additionalDiscount, shippingCharge, shippingGstRate
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -87,21 +88,25 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
             },
             { upsert: true, new: true }
           );
-
-          if (batchConfig) {
-            await Batch.findOneAndUpdate(
-              { businessId, productId: item.productId, batchNo: item.batchNo },
-              {
-                $set: {
-                  mrp: batchConfig.mrp,
-                  salePrice: batchConfig.salePrice,
-                  minSalePrice: batchConfig.minSalePrice,
-                  expiryDate: batchConfig.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
-                }
-              }
-            );
-          }
         }
+      }
+    }
+
+    // Process ALL batches from the batches array regardless of lineItems matching
+    for (const batch of (batches || [])) {
+      if (batch.productId && batch.batchNo) {
+        await Batch.findOneAndUpdate(
+          { businessId, productId: batch.productId, batchNo: batch.batchNo },
+          {
+            $set: {
+              mrp: batch.mrp || 0,
+              salePrice: batch.salePrice || 0,
+              minSalePrice: batch.minSalePrice || 0,
+              expiryDate: batch.expiryDate ? new Date(batch.expiryDate) : undefined,
+            }
+          },
+          { upsert: true }
+        );
       }
     }
 
@@ -219,21 +224,25 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
             },
             { upsert: true, new: true }
           );
-
-          if (batchConfig) {
-            await Batch.findOneAndUpdate(
-              { businessId, productId: item.productId, batchNo: item.batchNo },
-              {
-                $set: {
-                  mrp: batchConfig.mrp,
-                  salePrice: batchConfig.salePrice,
-                  minSalePrice: batchConfig.minSalePrice,
-                  expiryDate: batchConfig.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
-                }
-              }
-            );
-          }
         }
+      }
+    }
+
+    // Process ALL batches from the batches array regardless of lineItems matching
+    for (const batch of (batches || [])) {
+      if (batch.productId && batch.batchNo) {
+        await Batch.findOneAndUpdate(
+          { businessId, productId: batch.productId, batchNo: batch.batchNo },
+          {
+            $set: {
+              mrp: batch.mrp || 0,
+              salePrice: batch.salePrice || 0,
+              minSalePrice: batch.minSalePrice || 0,
+              expiryDate: batch.expiryDate ? new Date(batch.expiryDate) : undefined,
+            }
+          },
+          { upsert: true }
+        );
       }
     }
 
@@ -355,13 +364,13 @@ export const getLastPurchasePrices = async (req: AuthRequest, res: Response): Pr
     const businessId = req.user!.businessId;
     const purchases = await PurchaseBill.find({
       businessId,
-      supplierId,
-      'lineItems.productId': productId,
+      supplierId: supplierId as string,
+      'lineItems.productId': productId as string,
       status: { $ne: 'cancelled' }
     })
       .sort({ billDate: -1 })
       .limit(5)
-      .select('billDate billNumber lineItems.$');
+      .select('billDate billNumber lineItems');
 
     const history = purchases.map(p => {
       const item = p.lineItems.find(i => i.productId?.toString() === productId.toString());

@@ -300,7 +300,7 @@ export default function NewPurchasePage() {
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
               <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
-                <option>NON-GST</option>
+                <option value="Non-GST">Non-GST</option>
                 <option>Bill of Supply</option>
               </select>
             </div>
@@ -396,7 +396,7 @@ export default function NewPurchasePage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                    <label className="erp-label block">Item Name <span className="text-red-500">*</span></label>
-                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline">Add Item</span>
+                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
@@ -740,7 +740,7 @@ export default function NewPurchasePage() {
       {showQuickAddModal && (
         <QuickAddItemModal 
           onClose={() => setShowQuickAddModal(false)}
-          onSuccess={(newProduct: any) => {
+          onAdded={(newProduct: any) => {
             setProducts([...products, newProduct]);
             setShowQuickAddModal(false);
             pickProduct(newProduct);

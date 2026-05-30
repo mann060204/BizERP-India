@@ -55,6 +55,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
   const [productCategories, setProductCategories] = useState<{name: string, brands: string[]}[]>([]);
+  const [dynamicUnits, setDynamicUnits] = useState<string[]>(UNITS);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -62,6 +63,10 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
       setProductGroups(data.business?.productGroups || []);
       setProductBrands(data.business?.productBrands || []);
       setProductCategories(data.business?.productCategories || []);
+      const bizUnits = data.business?.units || [];
+      if (bizUnits.length > 0) {
+        setDynamicUnits(Array.from(new Set([...bizUnits, ...UNITS])));
+      }
     } catch (e) {
       console.error('Failed to load business settings', e);
     }
@@ -150,7 +155,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                       <div className="grid grid-cols-2 gap-4 items-end">
                         <div className="flex gap-2">
                           <div className="flex-1">
-                            <Select label="Unit" keyName="unit" options={UNITS} required form={form} setForm={setForm} />
+                            <Select label="Unit" keyName="unit" options={dynamicUnits} required form={form} setForm={setForm} />
                           </div>
                           <button onClick={() => setShowUnitModal(true)} className="px-3 py-2 rounded-lg bg-action-500/20 text-blue-400 hover:bg-action-500/30 text-xs font-semibold whitespace-nowrap transition mt-5">
                             Secondary Unit
@@ -263,7 +268,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                 <div>
                    <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Secondary Unit <span className="text-red-500">*</span></label>
                    <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none cursor-pointer">
-                      {['', ...UNITS].map(u => <option key={u} value={u}>{u}</option>)}
+                      {['', ...dynamicUnits].map(u => <option key={u} value={u}>{u}</option>)}
                    </select>
                 </div>
               </div>
