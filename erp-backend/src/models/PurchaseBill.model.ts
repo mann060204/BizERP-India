@@ -38,6 +38,7 @@ export interface IPurchaseBill extends Document {
   supplierSnapshot: { name: string; gstin?: string; address?: string; mobile?: string };
   isInterState: boolean;
   lineItems: ILineItem[];
+  batches?: any[];
   subtotal: number;
   totalDiscount: number;
   totalTaxableAmount: number;
@@ -85,6 +86,7 @@ const PurchaseBillSchema = new Schema<IPurchaseBill>(
     },
     isInterState: { type: Boolean, default: false },
     lineItems: [LineItemSchema],
+    batches: [Schema.Types.Mixed],
     subtotal: { type: Number, default: 0 },
     totalDiscount: { type: Number, default: 0 },
     totalTaxableAmount: { type: Number, default: 0 },

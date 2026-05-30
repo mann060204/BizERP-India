@@ -257,7 +257,7 @@ export default function NewPurchasePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="Unsaved Purchase Bill" />
+      <Topbar title="NEW PURCHASE BILL" />
 
       {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">
