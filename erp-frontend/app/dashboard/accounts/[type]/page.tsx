@@ -14,6 +14,7 @@ export default function AccountsPage() {
   const type = params.type as string; // 'Bank', 'Loan', 'Asset', 'Capital', 'Income', 'Tax'
   
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [allAccounts, setAllAccounts] = useState<Account[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
@@ -506,7 +507,7 @@ export default function AccountsPage() {
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">To Account <span className="text-red-500">*</span></label>
                 <select required value={transferToId} onChange={e => setTransferToId(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
-                  <option value="">Select Destination Account</option>
+                  <option value="" disabled>Select Destination Account</option>
                   {allAccounts.filter(a => a._id !== selectedAccount._id).map(a => (
                     <option key={a._id} value={a._id}>{a.name} ({a.type})</option>
                   ))}

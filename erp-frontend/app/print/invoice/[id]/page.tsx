@@ -49,15 +49,10 @@ export default function PrintableInvoicePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || (process.env.NODE_ENV !== 'production' ? 'http://localhost:5000/api/v1' : 'https://bizerp-api.vercel.app/api/v1');
-        
-        // Dynamically adjust localhost to the actual IP for local network sharing (e.g. phones)
-        if (typeof window !== 'undefined' && apiUrl.includes('localhost') && window.location.hostname !== 'localhost') {
-          apiUrl = apiUrl.replace('localhost', window.location.hostname);
-        }
+        // Use Next.js rewrite proxy to avoid local network/firewall and CORS issues on phones
+        const res = await fetch(`/backend-api/public/invoice/${id}`);
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
 
-        const res = await fetch(`${apiUrl}/public/invoice/${id}`);
-        if (!res.ok) throw new Error('Invoice not found');
         
         const data = await res.json();
         setInvoice(data.invoice);
