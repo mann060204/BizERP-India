@@ -49,7 +49,8 @@ export const purchasesApi = {
   get: (id: string) => api.get(`/purchases/${id}`),
   create: (data: any) => api.post('/purchases', data),
   update: (id: string, data: any) => api.put(`/purchases/${id}`, data),
-  updateStatus: (id: string, data: any) => api.put(`/purchases/${id}/status`, data),
+  updateStatus: (id: string, status: string) => api.put(`/purchases/${id}/status`, { status }),
+  getLastPrices: (supplierId: string, productId: string) => api.get(`/purchases/last-prices?supplierId=${supplierId}&productId=${productId}`),
   cancel: (id: string) => api.delete(`/purchases/${id}`),
   summary: () => api.get('/purchases/analytics/summary'),
 };

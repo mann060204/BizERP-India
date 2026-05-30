@@ -9,6 +9,8 @@ import {
   Calendar, ChevronDown, User, MapPin, CreditCard, Barcode
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
+import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';
 
 interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; }
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
@@ -53,6 +55,9 @@ export default function NewPurchasePage() {
   const [supplierSearch, setSupplierSearch] = useState('');
   const [showSupplierDD, setShowSupplierDD] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  
+  const [showQuickAddSupplierModal, setShowQuickAddSupplierModal] = useState(false);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState('');
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   
@@ -75,6 +80,7 @@ export default function NewPurchasePage() {
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
   const [itemIdentifierType, setItemIdentifierType] = useState<'tag' | 'code'>('tag');
+  const [lastPrices, setLastPrices] = useState<any[]>([]);
 
   // Main List
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -100,7 +106,10 @@ export default function NewPurchasePage() {
         setSuppliers(sRes.data.suppliers);
         setProducts(pRes.data.products);
         const bizUnits = bRes.data?.business?.units;
-        if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
+        if (bizUnits && bizUnits.length > 0) {
+          setUnits(bizUnits);
+          setItemInput(prev => ({ ...prev, unit: bizUnits[0] }));
+        }
       } catch (err) {
         toast.error('Failed to load data');
       } finally {
@@ -117,12 +126,28 @@ export default function NewPurchasePage() {
     setSelectedSupplier(s);
     setSupplierSearch(s.name);
     setContactNo(s.mobile || '');
-    setSupplierAddress(s.address || '');
+    let addrStr = '';
+    if (s.address) {
+      if (typeof s.address === 'string') {
+        addrStr = s.address;
+      } else {
+        const parts = [
+          (s.address as any).street,
+          (s.address as any).city,
+          (s.address as any).state,
+          (s.address as any).pinCode,
+          (s.address as any).country
+        ].filter(Boolean);
+        addrStr = parts.join(', ');
+      }
+    }
+    setSupplierAddress(addrStr);
+    
     setSupplierGstin(s.gstin || '');
     setShowSupplierDD(false);
   };
 
-  const pickProduct = (p: Product) => {
+  const pickProduct = async (p: Product) => {
     setItemInput(prev => ({
       ...prev,
       productId: p._id,
@@ -135,6 +160,17 @@ export default function NewPurchasePage() {
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
+    
+    if (selectedSupplier?._id) {
+      try {
+        const { data } = await purchasesApi.getLastPrices(selectedSupplier._id, p._id);
+        setLastPrices(data.prices || []);
+      } catch (err) {
+        setLastPrices([]);
+      }
+    } else {
+      setLastPrices([]);
+    }
   };
 
   // Determine if Inter-State based on placeOfSupply vs 'Gujarat' (assuming company state is Gujarat for now)
@@ -251,7 +287,10 @@ export default function NewPurchasePage() {
               <input type="date" value={billDate} onChange={e => setBillDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label block mb-1">Supplier Name <span className="text-red-500">*</span></label>
+              <div className="flex justify-between items-center mb-1">
+                 <label className="erp-label block">Supplier Name <span className="text-red-500">*</span></label>
+                 <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add Supplier</span>
+              </div>
               <div className="relative">
                 <div className="flex w-full relative">
                   <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); }} onFocus={() => setShowSupplierDD(true)} className="erp-input w-full pr-8" placeholder="Select or type..." />
@@ -272,12 +311,20 @@ export default function NewPurchasePage() {
             </div>
             <div>
               <label className="erp-label block mb-1">Payment Terms (Credit Period)</label>
-              <select value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} className="erp-input w-full">
-                <option value="">Select...</option>
-                <option value="Net 0">Due on Receipt</option>
-                <option value="Net 15">Net 15</option>
-                <option value="Net 30">Net 30</option>
-              </select>
+              <input 
+                list="paymentTermsOptions" 
+                value={paymentTerms} 
+                onChange={e => setPaymentTerms(e.target.value)} 
+                className="erp-input w-full"
+                placeholder="e.g. Net 30 or 45 days"
+              />
+              <datalist id="paymentTermsOptions">
+                <option value="Due on Receipt" />
+                <option value="Net 15" />
+                <option value="Net 30" />
+                <option value="Net 45" />
+                <option value="Net 60" />
+              </datalist>
             </div>
             <div>
               <label className="erp-label block mb-1">Due Date</label>
@@ -324,7 +371,7 @@ export default function NewPurchasePage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                    <label className="erp-label block">Item Name <span className="text-red-500">*</span></label>
-                   <span className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
+                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
@@ -361,6 +408,18 @@ export default function NewPurchasePage() {
                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
+                {lastPrices.length > 0 && (
+                  <div className="mt-1 p-1 bg-blue-50 border border-blue-100 rounded text-[9px] text-blue-800">
+                    <p className="font-semibold mb-0.5">Last 5 Purchases</p>
+                    {lastPrices.map((lp, idx) => (
+                      <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 pb-0.5">
+                        <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
+                        <span>{lp.billNumber}</span>
+                        <span className="font-medium">₹{lp.rate}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="erp-label block mb-1">Disc. (%)</label>
@@ -634,6 +693,28 @@ export default function NewPurchasePage() {
           </div>
         )}
       </main>
+
+      {/* Modals */}
+      {showQuickAddSupplierModal && (
+        <QuickAddSupplierModal 
+          onClose={() => setShowQuickAddSupplierModal(false)}
+          onAdded={(newSupplier: any) => {
+            setSuppliers([...suppliers, newSupplier]);
+            setShowQuickAddSupplierModal(false);
+            pickSupplier(newSupplier);
+          }}
+        />
+      )}
+      {showQuickAddModal && (
+        <QuickAddItemModal 
+          onClose={() => setShowQuickAddModal(false)}
+          onSuccess={(newProduct: any) => {
+            setProducts([...products, newProduct]);
+            setShowQuickAddModal(false);
+            pickProduct(newProduct);
+          }}
+        />
+      )}
 
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-50">

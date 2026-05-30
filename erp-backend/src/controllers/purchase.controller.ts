@@ -324,3 +324,35 @@ export const getPurchaseSummary = async (req: AuthRequest, res: Response): Promi
     });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
+
+// GET /api/v1/purchases/last-prices
+export const getLastPurchasePrices = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { supplierId, productId } = req.query;
+    if (!supplierId || !productId) {
+      res.status(400).json({ message: 'Supplier ID and Product ID are required' });
+      return;
+    }
+    const businessId = req.user!.businessId;
+    const purchases = await PurchaseBill.find({
+      businessId,
+      supplierId,
+      'lineItems.productId': productId,
+      status: { $ne: 'cancelled' }
+    })
+      .sort({ billDate: -1 })
+      .limit(5)
+      .select('billDate billNumber lineItems.$');
+
+    const history = purchases.map(p => {
+      const item = p.lineItems.find(i => i.productId?.toString() === productId.toString());
+      return {
+        date: p.billDate,
+        billNumber: p.billNumber,
+        rate: item?.rate || 0
+      };
+    });
+
+    res.json({ prices: history });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
