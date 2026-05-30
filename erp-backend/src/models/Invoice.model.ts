@@ -49,12 +49,19 @@ export interface IInvoice extends Document {
   notes?: string;
   remarks?: string;
   deliveryTerms?: string;
+  deliveryRemarks?: string;
   termsAndConditions?: string;
   billTo: 'Cash' | 'Customer';
   contactNo?: string;
   soldBy?: string;
   txnId?: string;
   isReverseCharge: boolean;
+  paymentHistory?: {
+    amount: number;
+    mode: string;
+    date: Date;
+    txnId?: string;
+  }[];
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -119,12 +126,19 @@ const InvoiceSchema = new Schema<IInvoice>(
     notes: String,
     remarks: String,
     deliveryTerms: String,
+    deliveryRemarks: String,
     termsAndConditions: String,
     billTo: { type: String, enum: ['Cash', 'Customer'], default: 'Customer' },
     contactNo: String,
     soldBy: String,
     txnId: String,
     isReverseCharge: { type: Boolean, default: false },
+    paymentHistory: [{
+      amount: { type: Number, required: true },
+      mode: { type: String, enum: ['Cash', 'Bank', 'UPI', 'Cheque', 'Credit'], required: true },
+      date: { type: Date, required: true, default: Date.now },
+      txnId: { type: String }
+    }],
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }

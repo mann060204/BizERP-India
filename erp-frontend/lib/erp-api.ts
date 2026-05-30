@@ -105,3 +105,12 @@ export const accountsApi = {
   deleteTransaction: (id: string, txnId: string) => api.delete(`/accounts/${id}/transaction/${txnId}`).then(res => res.data),
   transfer: (data: any) => api.post(`/accounts/transfer`, data).then(res => res.data),
 };
+
+// ─── Banks ────────────────────────────────────────────────────────────────────
+export const banksApi = {
+  list: (params?: any) => api.get('/banks', { params }).then(res => res.data),
+  get: (id: string) => api.get(`/banks/${id}`).then(res => res.data),
+  create: (data: any) => api.post('/banks', data).then(res => res.data),
+  update: (id: string, data: any) => api.put(`/banks/${id}`, data).then(res => res.data),
+  delete: (id: string) => api.delete(`/banks/${id}`).then(res => res.data),
+};
