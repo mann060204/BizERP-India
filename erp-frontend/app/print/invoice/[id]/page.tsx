@@ -49,8 +49,12 @@ export default function PrintableInvoicePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Use Next.js rewrite proxy to avoid local network/firewall and CORS issues on phones
-        const res = await fetch(`/backend-api/public/invoice/${id}`);
+        const isDev = process.env.NODE_ENV !== 'production';
+        const fetchUrl = isDev 
+          ? `/backend-api/public/invoice/${id}`
+          : `https://bizerp-api.vercel.app/api/v1/public/invoice/${id}`;
+          
+        const res = await fetch(fetchUrl);
         if (!res.ok) throw new Error(`HTTP Error: ${res.status} ${res.statusText}`);
 
         
