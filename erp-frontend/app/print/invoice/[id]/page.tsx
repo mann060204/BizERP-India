@@ -65,8 +65,11 @@ export default function PrintableInvoicePage() {
         
         // Auto print after a short delay for rendering
         setTimeout(() => window.print(), 800);
-      } catch (e) {
-        toast.error('Failed to load invoice for printing');
+      } catch (e: any) {
+        console.error('Fetch error:', e);
+        toast.error(`Error: ${e.message}`);
+        // Inject error message into state so it renders on screen instead of generic div
+        setInvoice({ __error: e.message });
       } finally {
         setLoading(false);
       }
@@ -75,6 +78,7 @@ export default function PrintableInvoicePage() {
   }, [id]);
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-white"><Loader2 className="w-12 h-12 animate-spin text-gray-400" /></div>;
+  if (invoice?.__error) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Error: {invoice.__error}</div>;
   if (!invoice || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Invoice not found</div>;
 
   const template = business.invoiceTemplate || 'A4';
