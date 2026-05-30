@@ -32,8 +32,6 @@ export default function AccountsPage() {
   const [showAddTransaction, setShowAddTransaction] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   
-  const [allAccounts, setAllAccounts] = useState<Account[]>([]);
-  
   const fetchAccounts = useCallback(async () => {
     try {
       const { accounts } = await accountsApi.list({ type });
