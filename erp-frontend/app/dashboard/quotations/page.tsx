@@ -44,9 +44,9 @@ export default function QuotationsPage() {
   const handleConvertToInvoice = async (id: string) => {
     try {
       toast.loading('Converting to invoice...', { id: 'convert' });
-      await quotationsApi.convertToInvoice(id);
+      const data = await quotationsApi.convertToInvoice(id);
       toast.success('Converted to invoice successfully!', { id: 'convert' });
-      fetchData();
+      router.push(`/dashboard/sales/${data._id}/edit`);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to convert', { id: 'convert' });
     }

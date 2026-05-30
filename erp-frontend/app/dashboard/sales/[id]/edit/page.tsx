@@ -121,8 +121,9 @@ export default function NewInvoicePage() {
         
         const inv = iRes.data.invoice;
         setInvoiceNumber(inv.invoiceNumber);
-        if (inv.invoiceNumber.startsWith('GST')) setInvoiceType('GST');
+        if (inv.invoiceType) setInvoiceType(inv.invoiceType);
         else if (inv.invoiceNumber.startsWith('NON-GST')) setInvoiceType('NON-GST');
+        else if (inv.invoiceNumber.startsWith('GST')) setInvoiceType('GST');
         
         setInvoiceDate(new Date(inv.invoiceDate).toISOString().split('T')[0]);
         if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);

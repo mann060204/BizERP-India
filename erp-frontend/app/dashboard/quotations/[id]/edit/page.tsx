@@ -117,8 +117,9 @@ export default function NewQuotationPage() {
         
         const inv = iRes.quotation;
         setQuotationNumber(inv.quotationNumber);
-        if (inv.quotationNumber.startsWith('GST')) setQuotationType('GST');
+        if (inv.quotationType) setQuotationType(inv.quotationType);
         else if (inv.quotationNumber.startsWith('NON-GST')) setQuotationType('NON-GST');
+        else if (inv.quotationNumber.startsWith('GST')) setQuotationType('GST');
         
         setQuotationDate(new Date(inv.quotationDate).toISOString().split('T')[0]);
         if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);
@@ -339,18 +340,11 @@ export default function NewQuotationPage() {
     if (!window.confirm('Are you sure you want to convert this quotation to an invoice?')) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/v1/quotations/${id}/convert`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('erp_token')}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to convert');
-      const data = await res.json();
+      const data = await quotationsApi.convertToInvoice(id as string);
       toast.success('Successfully converted to Invoice!');
       router.push(`/dashboard/sales/${data._id}/edit`);
     } catch (e: any) {
-      toast.error(e.message || 'Error converting');
+      toast.error(e.response?.data?.message || e.message || 'Error converting');
     } finally {
       setSaving(false);
     }
