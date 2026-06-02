@@ -318,7 +318,7 @@ export default function EditpurchaseReturnPage() {
       };
       await purchaseReturnsApi.update(id, payload);
       toast.success(`purchaseReturn Return ${billNumber} Updated!`);
-      router.push('/dashboard/purchaseReturns');
+      router.push('/dashboard/purchases/returns');
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save purchaseReturn Return');
     } finally {

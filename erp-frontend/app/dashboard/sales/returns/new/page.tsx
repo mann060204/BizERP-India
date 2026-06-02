@@ -430,47 +430,23 @@ export default function NewSalesReturnPage() {
         {/* Section 1: Sales Return Information */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Sales Return Information</div>
-          <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
-
-
+          <div className="p-2 grid grid-cols-3 gap-x-4 gap-y-3">
+            {/* Row 1 */}
             <div>
-              <label className="erp-label">Sales Return Type</label>
+              <label className="erp-label block mb-1">Return Type <span className="text-red-500">*</span></label>
               <select value={salesReturnType} onChange={e => setsalesReturnType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
             </div>
             <div>
-              <label className="erp-label">Sales Return No. <span className="text-red-500">*</span></label>
-              <input value={salesReturnNumber} onChange={e => setsalesReturnNumber(e.target.value)} className="erp-input w-full" />
-            </div>
-            <div>
-              <label className="erp-label">Date</label>
+              <label className="erp-label block mb-1">Date</label>
               <input type="date" value={salesReturnDate} onChange={e => setsalesReturnDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
-              <select value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
-                {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="erp-label">Due Date</label>
-              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
-            </div>
-            <div className="flex items-center gap-2 pt-4">
-               <label className="flex items-center gap-1 text-[10px] cursor-pointer">
-                 <input type="radio" checked={billTo === 'Cash'} onChange={() => setBillTo('Cash')} className="accent-white" /> Cash A/c
-               </label>
-               <label className="flex items-center gap-1 text-[10px] cursor-pointer">
-                 <input type="radio" checked={billTo === 'Customer'} onChange={() => setBillTo('Customer')} className="accent-white" /> Customer A/c
-               </label>
-            </div>
-
-            <div className="col-span-2">
               <div className="flex justify-between items-center mb-1">
                  <label className="erp-label !mb-0 flex items-center gap-1.5">
-                   Customer <span className="text-red-500">*</span>
+                   Customer Name <span className="text-red-500">*</span>
                    <button onClick={() => setShowQuickAddCustomerModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-0.5 rounded transition" title="Add Customer">
                      <UserPlus className="w-3.5 h-3.5" />
                    </button>
@@ -497,37 +473,49 @@ export default function NewSalesReturnPage() {
                   <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
                     {filteredCustomers.map(c => (
                       <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
-                        {c.name}
+                        {c.name} {c.mobile ? `- ${c.mobile}` : ''}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Row 2 */}
             <div>
-              <label className="erp-label">Contact No.</label>
-              <input value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
-            </div>
-            <div className="col-span-2">
-              <label className="erp-label">Address</label>
-              <input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label block mb-1">Place of Supply <span className="text-red-500">*</span></label>
+              <select value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
+                {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
             <div>
-              <label className="erp-label">Customer GSTIN</label>
-              <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
+              <label className="erp-label block mb-1">Return Bill No. <span className="text-red-500">*</span></label>
+              <input value={salesReturnNumber} onChange={e => setsalesReturnNumber(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label block mb-1">Original Invoice No.</label>
+              <div className="flex w-full">
+                <input value={searchInvoiceNo} onChange={e => setSearchInvoiceNo(e.target.value)} placeholder="Invoice No" className="erp-input w-full rounded-r-none" />
+                <button onClick={fetchOriginalInvoice} disabled={isFetchingInvoice || !searchInvoiceNo} className="bg-blue-600 hover:bg-blue-700 text-white px-3 border border-blue-600 rounded-r flex items-center justify-center transition disabled:opacity-50">
+                  {isFetchingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch'}
+                </button>
+              </div>
             </div>
             
-            <div className="col-span-6 border-t border-slate-200 mt-2 pt-2">
-              <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
-                <input type="checkbox" checked={useShippingAddress} onChange={e => setUseShippingAddress(e.target.checked)} className="accent-white" />
-                Custom Shipping Address
-              </label>
-              {useShippingAddress && (
-                <div className="mt-2">
-                  <label className="erp-label">Shipping Address</label>
-                  <textarea value={shippingAddress} onChange={e => setShippingAddress(e.target.value)} className="erp-input w-full resize-none h-12" placeholder="Enter complete shipping address..." />
-                </div>
-              )}
+            {/* Hidden / Extra fields */}
+            <div className="col-span-3 grid grid-cols-4 gap-x-2 gap-y-1 mt-2 p-2 bg-slate-50 border border-slate-200 rounded">
+              <div>
+                <label className="erp-label block mb-1 text-[10px]">Due Date</label>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full text-xs" />
+              </div>
+              <div className="flex flex-col justify-center pt-3">
+                 <label className="flex items-center gap-1 text-[10px] cursor-pointer mb-1">
+                   <input type="radio" checked={billTo === 'Cash'} onChange={() => setBillTo('Cash')} className="accent-white" /> Cash A/c
+                 </label>
+                 <label className="flex items-center gap-1 text-[10px] cursor-pointer">
+                   <input type="radio" checked={billTo === 'Customer'} onChange={() => setBillTo('Customer')} className="accent-white" /> Customer A/c
+                 </label>
+              </div>
             </div>
           </div>
         </div>
