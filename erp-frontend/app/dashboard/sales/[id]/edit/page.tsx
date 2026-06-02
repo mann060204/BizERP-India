@@ -11,9 +11,10 @@ import {
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
+import ManualBatchSelectModal from '../../../../../components/modals/ManualBatchSelectModal';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; currentBalance?: number; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; batches?: any[]; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; batches?: any[]; availableBatches?: any[]; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
@@ -64,6 +65,8 @@ export default function NewInvoicePage() {
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
   const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [pendingBatchItem, setPendingBatchItem] = useState<{product: Product, quantity: number, itemInputData: any} | null>(null);
 
   // Advanced Search Modal State
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -313,6 +316,20 @@ export default function NewInvoicePage() {
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
+    
+    const p = products.find(x => x._id === itemInput.productId);
+    const available = p?.availableBatches || p?.batches || [];
+    
+    if (p && available.length > 0 && !itemInput.batchNo) {
+      setPendingBatchItem({
+        product: p,
+        quantity: itemInput.quantity,
+        itemInputData: { ...itemInput }
+      });
+      setShowBatchModal(true);
+      return;
+    }
+
     const newItem = calculateItem(itemInput);
     setLineItems([...lineItems, newItem]);
     // Reset input
@@ -323,6 +340,35 @@ export default function NewInvoicePage() {
     });
     setItemSearch('');
     setLastPriceInfo(null);
+  };
+
+  const handleBatchModalConfirm = (selectedBatches: any[]) => {
+    if (!pendingBatchItem) return;
+    
+    const newItems: LineItem[] = [];
+    selectedBatches.forEach(b => {
+      const newItem = calculateItem({
+        ...pendingBatchItem.itemInputData,
+        batchNo: b.batchNo,
+        quantity: b.quantity,
+        rate: b.salePrice || pendingBatchItem.itemInputData.rate,
+        mrp: b.mrp || pendingBatchItem.itemInputData.mrp
+      });
+      newItems.push(newItem);
+    });
+
+    setLineItems([...lineItems, ...newItems]);
+    
+    // Reset input
+    setItemInput({
+      productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
+      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
+      taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
+    });
+    setItemSearch('');
+    setLastPriceInfo(null);
+    setShowBatchModal(false);
+    setPendingBatchItem(null);
   };
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
@@ -1010,6 +1056,19 @@ export default function NewInvoicePage() {
             setCustomers([...customers, newCustomer]);
             pickCustomer(newCustomer);
           }}
+        />
+      )}
+
+      {showBatchModal && pendingBatchItem && (
+        <ManualBatchSelectModal
+          productName={pendingBatchItem.product.name}
+          requestedQuantity={pendingBatchItem.quantity}
+          availableBatches={pendingBatchItem.product.availableBatches || pendingBatchItem.product.batches || []}
+          onClose={() => {
+            setShowBatchModal(false);
+            setPendingBatchItem(null);
+          }}
+          onConfirm={handleBatchModalConfirm}
         />
       )}
 

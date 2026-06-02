@@ -23,7 +23,9 @@ interface BatchConfig {
   mrp: number;
   salePrice: number;
   minSalePrice: number;
+  quantity: number;
   expiryDate: string;
+  manufacturingDate?: string;
 }
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
@@ -44,7 +46,7 @@ export default function EditPurchasePage() {
   const [activeTab, setActiveTab] = useState<'bill' | 'batches'>('bill');
   const [batches, setBatches] = useState<BatchConfig[]>([]);
   const [batchInput, setBatchInput] = useState<BatchConfig>({
-    productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''
+    productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, quantity: 1, expiryDate: '', manufacturingDate: ''
   });
 
   // Header State
@@ -281,6 +283,21 @@ export default function EditPurchasePage() {
   const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
     if (!billNumber.trim()) { toast.error('Purchase Bill No. is required'); return; }
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
+    
+    // Strict batch validation
+    for (const item of lineItems) {
+       if (item.productId) {
+         const itemBatches = batches.filter(b => b.productId === item.productId);
+         if (itemBatches.length > 0) {
+            const totalBatchQty = itemBatches.reduce((sum, b) => sum + (b.quantity || 0), 0);
+            if (totalBatchQty !== item.quantity) {
+               toast.error(`Batch quantities for ${item.productName} must equal ${item.quantity}. Currently allocated: ${totalBatchQty}`);
+               return;
+            }
+         }
+       }
+    }
+
     setSaving(true);
     try {
       const payload = {
@@ -297,9 +314,7 @@ export default function EditPurchasePage() {
         supplierSnapshot: supplierSnapshot || { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
-        batches: lineItems.filter(i => i.batchNo).map(i => ({ productId: i.productId, batchNo: i.batchNo, mrp: i.mrp })),
-
-        batches,
+        batches: batches.length > 0 ? batches : lineItems.filter(i => i.batchNo).map(i => ({ productId: i.productId, batchNo: i.batchNo, mrp: i.mrp, quantity: i.quantity })),
         subtotal,
         totalDiscount,
         totalTaxableAmount,
@@ -659,8 +674,8 @@ export default function EditPurchasePage() {
         ) : (
           <div className="erp-container h-full flex flex-col">
             <div className="erp-header py-1 text-xs">Add batch number</div>
-            <div className="p-2 grid grid-cols-6 gap-2 items-end border-b border-slate-200 bg-white">
-              <div className="col-span-1">
+            <div className="p-2 grid grid-cols-8 gap-2 items-end border-b border-slate-200 bg-white">
+              <div className="col-span-2">
                  <label className="erp-label block mb-1">Item Name</label>
                  <select 
                     value={batchInput.productId} 
@@ -679,11 +694,12 @@ export default function EditPurchasePage() {
                  </select>
               </div>
               <div className="col-span-1">
-                 <label className="erp-label block mb-1">M.R.P.</label>
-                 <div className="flex">
-                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                    <input type="number" value={batchInput.mrp || ''} onChange={e => setBatchInput({...batchInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
-                 </div>
+                 <label className="erp-label block mb-1">Batch No.</label>
+                 <input value={batchInput.batchNo} onChange={e => setBatchInput({...batchInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
+              </div>
+              <div className="col-span-1">
+                 <label className="erp-label block mb-1">Quantity</label>
+                 <input type="number" value={batchInput.quantity || ''} onChange={e => setBatchInput({...batchInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Sale Price</label>
@@ -692,31 +708,33 @@ export default function EditPurchasePage() {
                     <input type="number" value={batchInput.salePrice || ''} onChange={e => setBatchInput({...batchInput, salePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
-              <div className="col-span-1">
-                 <label className="erp-label block mb-1">Min. Sale Price</label>
-                 <div className="flex">
-                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                    <input type="number" value={batchInput.minSalePrice || ''} onChange={e => setBatchInput({...batchInput, minSalePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
+              <div className="col-span-2">
+                 <div className="grid grid-cols-2 gap-2">
+                   <div>
+                     <label className="erp-label block mb-1">Mfg Date</label>
+                     <input type="date" value={batchInput.manufacturingDate || ''} onChange={e => setBatchInput({...batchInput, manufacturingDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5 h-[30px]" />
+                   </div>
+                   <div>
+                     <label className="erp-label block mb-1">Expiry Date</label>
+                     <input type="date" value={batchInput.expiryDate || ''} onChange={e => setBatchInput({...batchInput, expiryDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5 h-[30px]" />
+                   </div>
                  </div>
               </div>
-              <div className="col-span-1">
-                 <label className="erp-label block mb-1">Batch No.</label>
-                 <input value={batchInput.batchNo} onChange={e => setBatchInput({...batchInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
-                 <div className="mt-1">
-                   {batchInput.expiryDate ? (
-                     <input type="date" value={batchInput.expiryDate} onChange={e => setBatchInput({...batchInput, expiryDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5" />
-                   ) : (
-                     <button onClick={() => setBatchInput({...batchInput, expiryDate: new Date().toISOString().split('T')[0]})} className="w-full bg-slate-200 hover:bg-slate-300 text-action-600 font-bold text-[10px] py-1 rounded transition">Set Expiry Date</button>
-                   )}
-                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2 mb-[22px]">
+              <div className="col-span-1 flex gap-2 mb-[2px]">
                  <button onClick={() => {
                     if(!batchInput.productId || !batchInput.batchNo) { toast.error("Select item and enter Batch No"); return; }
+                    if(!batchInput.quantity || batchInput.quantity <= 0) { toast.error("Enter a valid quantity"); return; }
+                    
+                    const totalLineItemQty = lineItems.filter(l => l.productId === batchInput.productId).reduce((sum, l) => sum + l.quantity, 0);
+                    const existingBatchQty = batches.filter(b => b.productId === batchInput.productId && !(b.productId === batchInput.productId && b.batchNo === batchInput.batchNo)).reduce((sum, b) => sum + (b.quantity || 0), 0);
+                    if (existingBatchQty + batchInput.quantity > totalLineItemQty) {
+                      toast.error(`Cannot add more. Max allowed for this item: ${totalLineItemQty}, Currently allocated: ${existingBatchQty}`);
+                      return;
+                    }
+
                     setBatches([...batches.filter(b => !(b.productId === batchInput.productId && b.batchNo === batchInput.batchNo)), batchInput]);
-                    setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''});
-                 }} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><Save className="w-3.5 h-3.5" /> Save</button>
-                 <button onClick={() => setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, expiryDate: ''})} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition"><RotateCcw className="w-3.5 h-3.5" /> Reset</button>
+                    setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, quantity: 1, expiryDate: '', manufacturingDate: ''});
+                 }} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition h-[30px]"><Save className="w-3.5 h-3.5" /> Save</button>
               </div>
             </div>
 
@@ -733,9 +751,9 @@ export default function EditPurchasePage() {
                      <tr className="bg-[#F1F5F9] text-slate-700 text-[10px] uppercase">
                        <th className="p-2 border border-slate-200">Item Name</th>
                        <th className="p-2 border border-slate-200">Batch No</th>
-                       <th className="p-2 border border-slate-200">M.R.P.</th>
+                       <th className="p-2 border border-slate-200 text-center">Qty</th>
                        <th className="p-2 border border-slate-200">Sale Price</th>
-                       <th className="p-2 border border-slate-200">Min. Sale Price</th>
+                       <th className="p-2 border border-slate-200 text-slate-500">Mfg Date</th>
                        <th className="p-2 border border-slate-200">Expiry</th>
                        <th className="p-2 border border-slate-200 w-10"></th>
                      </tr>
@@ -745,9 +763,9 @@ export default function EditPurchasePage() {
                        <tr key={i} className="text-xs hover:bg-slate-50">
                          <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
                          <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
-                         <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200 text-center font-bold text-slate-700">{b.quantity}</td>
                          <td className="p-2 border border-slate-200">₹{b.salePrice.toFixed(2)}</td>
-                         <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200 text-slate-500">{b.manufacturingDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-center">
                             <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>

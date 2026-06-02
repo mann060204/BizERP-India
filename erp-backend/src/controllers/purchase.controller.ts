@@ -67,65 +67,64 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const paid = Number(amountPaid) || 0;
     const balance = totals.grandTotal - paid;
 
-    // Add stock for product items and process batches
+    // Add stock for product items
+    if (!batches) batches = [];
+    
     for (const item of lineItems) {
       if (item.productId) {
         if (!item.batchNo) {
           item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
+          // Auto-generated batch goes to batches array
+          batches.push({
+            productId: item.productId,
+            batchNo: item.batchNo,
+            mrp: item.mrp,
+            salePrice: item.rate,
+            quantity: item.quantity
+          });
         }
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
-
-        if (item.batchNo) {
-          const batchConfig = (batches || []).find((b: any) => String(b.productId) === String(item.productId) && String(b.batchNo) === String(item.batchNo));
-          
-          const updatedBatch = await Batch.findOneAndUpdate(
-            { businessId, productId: item.productId, batchNo: item.batchNo },
-            {
-              $setOnInsert: {
-                mrp: batchConfig?.mrp || item.mrp || 0,
-                salePrice: batchConfig?.salePrice || item.rate || 0,
-                minSalePrice: batchConfig?.minSalePrice || 0,
-                expiryDate: batchConfig?.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
-              },
-              $inc: { currentStock: item.quantity }
-            },
-            { upsert: true, new: true }
-          );
-
-          if (updatedBatch) {
-            await BatchLog.create({
-              businessId,
-              batchId: updatedBatch._id,
-              productId: item.productId,
-              action: 'STOCK_IN',
-              quantityChanged: item.quantity,
-              currentStock: updatedBatch.currentStock,
-              documentType: 'PurchaseBill',
-              documentNumber: billNumber,
-              userId: req.user!.userId,
-            });
-          }
-        }
       }
     }
 
-    // Process ALL batches from the batches array regardless of lineItems matching
-    for (const batch of (batches || [])) {
+    // Process ALL batches from the batches array for stock increment and upsert
+    for (const batch of batches) {
       if (batch.productId && batch.batchNo) {
-        await Batch.findOneAndUpdate(
+        const batchQty = Number(batch.quantity) || 0;
+        
+        const updateDoc: any = {
+           $set: {
+             mrp: batch.mrp || 0,
+             salePrice: batch.salePrice || 0,
+             minSalePrice: batch.minSalePrice || 0,
+           }
+        };
+        
+        if (batch.expiryDate) updateDoc.$set.expiryDate = new Date(batch.expiryDate);
+        if (batch.manufacturingDate) updateDoc.$set.manufacturingDate = new Date(batch.manufacturingDate);
+        if (batchQty > 0) updateDoc.$inc = { currentStock: batchQty };
+
+        const updatedBatch = await Batch.findOneAndUpdate(
           { businessId, productId: batch.productId, batchNo: batch.batchNo },
-          {
-            $set: {
-              mrp: batch.mrp || 0,
-              salePrice: batch.salePrice || 0,
-              minSalePrice: batch.minSalePrice || 0,
-              expiryDate: batch.expiryDate ? new Date(batch.expiryDate) : undefined,
-            }
-          },
-          { upsert: true }
+          updateDoc,
+          { upsert: true, new: true }
         );
+
+        if (updatedBatch && batchQty > 0) {
+          await BatchLog.create({
+            businessId,
+            batchId: updatedBatch._id,
+            productId: batch.productId,
+            action: 'STOCK_IN',
+            quantityChanged: batchQty,
+            currentStock: updatedBatch.currentStock,
+            documentType: 'PurchaseBill',
+            documentNumber: billNumber,
+            userId: req.user!.userId,
+          });
+        }
       }
     }
 
@@ -196,12 +195,29 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
           await Product.findByIdAndUpdate(item.productId, {
             $inc: { currentStock: -item.quantity },
           });
-          if (item.batchNo) {
-            await Batch.findOneAndUpdate(
-              { businessId, productId: item.productId, batchNo: item.batchNo },
-              { $inc: { currentStock: -item.quantity } }
-            );
+        }
+      }
+      
+      const hasBatchQuantities = (existingPurchase.batches || []).some((b: any) => b.quantity > 0);
+      
+      if (hasBatchQuantities) {
+        for (const batch of (existingPurchase.batches || [])) {
+          if (batch.productId && batch.batchNo && batch.quantity) {
+             await Batch.findOneAndUpdate(
+               { businessId, productId: batch.productId, batchNo: batch.batchNo },
+               { $inc: { currentStock: -batch.quantity } }
+             );
           }
+        }
+      } else {
+        // Old way fallback
+        for (const item of existingPurchase.lineItems) {
+           if (item.productId && item.batchNo) {
+              await Batch.findOneAndUpdate(
+                 { businessId, productId: item.productId, batchNo: item.batchNo },
+                 { $inc: { currentStock: -item.quantity } }
+              );
+           }
         }
       }
     }
@@ -221,47 +237,63 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const balance = totals.grandTotal - paid;
 
     // Add new stock
+    if (!batches) batches = [];
+    
     for (const item of lineItems) {
       if (item.productId) {
+        if (!item.batchNo) {
+          item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
+          // Auto-generated batch goes to batches array
+          batches.push({
+            productId: item.productId,
+            batchNo: item.batchNo,
+            mrp: item.mrp,
+            salePrice: item.rate,
+            quantity: item.quantity
+          });
+        }
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
-
-        if (item.batchNo) {
-          const batchConfig = (batches || []).find((b: any) => String(b.productId) === String(item.productId) && String(b.batchNo) === String(item.batchNo));
-          
-          await Batch.findOneAndUpdate(
-            { businessId, productId: item.productId, batchNo: item.batchNo },
-            {
-              $setOnInsert: {
-                mrp: batchConfig?.mrp || item.mrp || 0,
-                salePrice: batchConfig?.salePrice || item.rate || 0,
-                minSalePrice: batchConfig?.minSalePrice || 0,
-                expiryDate: batchConfig?.expiryDate ? new Date(batchConfig.expiryDate) : undefined,
-              },
-              $inc: { currentStock: item.quantity }
-            },
-            { upsert: true, new: true }
-          );
-        }
       }
     }
 
-    // Process ALL batches from the batches array regardless of lineItems matching
-    for (const batch of (batches || [])) {
+    // Process ALL batches from the batches array for stock increment and upsert
+    for (const batch of batches) {
       if (batch.productId && batch.batchNo) {
-        await Batch.findOneAndUpdate(
+        const batchQty = Number(batch.quantity) || 0;
+        
+        const updateDoc: any = {
+           $set: {
+             mrp: batch.mrp || 0,
+             salePrice: batch.salePrice || 0,
+             minSalePrice: batch.minSalePrice || 0,
+           }
+        };
+        
+        if (batch.expiryDate) updateDoc.$set.expiryDate = new Date(batch.expiryDate);
+        if (batch.manufacturingDate) updateDoc.$set.manufacturingDate = new Date(batch.manufacturingDate);
+        if (batchQty > 0) updateDoc.$inc = { currentStock: batchQty };
+
+        const updatedBatch = await Batch.findOneAndUpdate(
           { businessId, productId: batch.productId, batchNo: batch.batchNo },
-          {
-            $set: {
-              mrp: batch.mrp || 0,
-              salePrice: batch.salePrice || 0,
-              minSalePrice: batch.minSalePrice || 0,
-              expiryDate: batch.expiryDate ? new Date(batch.expiryDate) : undefined,
-            }
-          },
-          { upsert: true }
+          updateDoc,
+          { upsert: true, new: true }
         );
+
+        if (updatedBatch && batchQty > 0) {
+          await BatchLog.create({
+            businessId,
+            batchId: updatedBatch._id,
+            productId: batch.productId,
+            action: 'STOCK_IN',
+            quantityChanged: batchQty,
+            currentStock: updatedBatch.currentStock,
+            documentType: 'PurchaseBill',
+            documentNumber: billNumber,
+            userId: req.user!.userId,
+          });
+        }
       }
     }
 
