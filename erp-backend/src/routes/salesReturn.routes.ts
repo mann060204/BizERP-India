@@ -16,7 +16,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/analytics/summary', getSalesReturnSummary);
-router.get('/next-number', getPredictedSalesReturnNumber);
+router.get('/next-number/:type', getPredictedSalesReturnNumber);
 router.get('/', getSalesReturns);
 router.get('/:id', getSalesReturn);
 router.post('/', createSalesReturn);

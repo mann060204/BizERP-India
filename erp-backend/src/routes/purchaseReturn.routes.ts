@@ -16,7 +16,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/analytics/summary', getPurchaseReturnSummary);
-router.get('/next-number', getPredictedPurchaseReturnNumber);
+router.get('/next-number/:type', getPredictedPurchaseReturnNumber);
 router.get('/', getPurchaseReturns);
 router.get('/:id', getPurchaseReturn);
 router.post('/', createPurchaseReturn);
