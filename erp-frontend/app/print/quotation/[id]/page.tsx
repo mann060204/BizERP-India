@@ -116,6 +116,7 @@ export default function PrintableQuotationPage() {
                 <span>Quotation Date</span><span>: {new Date(quotation.quotationDate).toLocaleDateString('en-GB')}</span>
                 {quotation.dueDate && <><span>Valid Till</span><span>: {new Date(quotation.dueDate).toLocaleDateString('en-GB')}</span></>}
                 <span>Payment Mode</span><span>: {quotation.paymentMode || 'N/A'}</span>
+                {quotation.deliveryTerms && <><span>Transport</span><span className="whitespace-pre-wrap leading-tight">: {quotation.deliveryTerms}</span></>}
               </div>
             </div>
           </div>
@@ -210,12 +211,6 @@ export default function PrintableQuotationPage() {
                   <p className="font-bold text-[10px] mb-1 text-blue-900 uppercase">Terms & Conditions / Declaration:</p>
                   <div className="whitespace-pre-wrap leading-tight">{tAndC}</div>
                </div>
-               {quotation.notes && (
-                 <div className="p-2 border-t border-gray-300 text-[9px]">
-                   <p className="font-bold text-blue-900">Remarks:</p>
-                   <p>{quotation.notes}</p>
-                 </div>
-               )}
             </div>
             {/* Right Side (Summary Totals) */}
             <div className="w-[35%] flex flex-col font-bold text-gray-800">

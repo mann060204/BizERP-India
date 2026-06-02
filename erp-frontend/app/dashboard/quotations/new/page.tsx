@@ -241,9 +241,9 @@ export default function NewQuotationPage() {
     setLineItems(prev => prev.map(item => calculateItem(item, quotationType, isInterState)));
     // Fetch next quotation number based on type
     quotationsApi.getNextNumber(quotationType as 'GST' | 'NON-GST')
-      .then(res => {
-        if (res.data?.nextQuotationNumber) {
-          setQuotationNumber(res.data.nextQuotationNumber);
+      .then((res: any) => {
+        if (res?.nextQuotationNumber) {
+          setQuotationNumber(res.nextQuotationNumber);
         }
       })
       .catch(() => {

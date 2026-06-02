@@ -109,7 +109,6 @@ export default function PrintableInvoicePage() {
             <p><strong>Payment:</strong> {invoice.paymentMode}</p>
             {invoice.txnId && <p><strong>Txn ID:</strong> {invoice.txnId}</p>}
             {invoice.deliveryRemarks && <p><strong>Delivery Note:</strong> {invoice.deliveryRemarks}</p>}
-            {invoice.remarks && <p><strong>Remarks:</strong> {invoice.remarks}</p>}
             {invoice.paymentHistory && invoice.paymentHistory.length > 0 && (
               <div className="mt-1 border-t border-dashed border-gray-300 pt-1">
                 <strong>Payment Hist:</strong>
@@ -247,7 +246,6 @@ export default function PrintableInvoicePage() {
                 <span>Transport</span><span>: {invoice.deliveryTerms || 'N/A'}</span>
                 {invoice.txnId && <><span>Transaction ID</span><span className="whitespace-pre-wrap leading-tight">: {invoice.txnId}</span></>}
                 {invoice.deliveryRemarks && <><span>Delivery Note</span><span className="whitespace-pre-wrap leading-tight">: {invoice.deliveryRemarks}</span></>}
-                {invoice.remarks && <><span>Remarks</span><span className="whitespace-pre-wrap leading-tight">: {invoice.remarks}</span></>}
                 {invoice.paymentHistory && invoice.paymentHistory.length > 0 && (
                   <>
                     <span className="self-start pt-1">Payment Hist.</span>
