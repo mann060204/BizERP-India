@@ -50,6 +50,9 @@ export const salesReturnsApi = {
   create: (data: any) => api.post('/sales-returns', data),
   update: (id: string, data: any) => api.put(`/sales-returns/${id}`, data),
   delete: (id: string) => api.delete(`/sales-returns/${id}`),
+  cancel: (id: string) => api.delete(`/sales-returns/${id}`),
+  summary: () => api.get('/sales-returns/analytics/summary'),
+  getNextNumber: (type: string) => api.get(`/sales-returns/next-number/${type}`),
 };
 export const salesReturnApi = salesReturnsApi;
 
@@ -59,6 +62,9 @@ export const purchaseReturnsApi = {
   create: (data: any) => api.post('/purchase-returns', data),
   update: (id: string, data: any) => api.put(`/purchase-returns/${id}`, data),
   delete: (id: string) => api.delete(`/purchase-returns/${id}`),
+  cancel: (id: string) => api.delete(`/purchase-returns/${id}`),
+  summary: () => api.get('/purchase-returns/analytics/summary'),
+  getNextNumber: (type: string) => api.get(`/purchase-returns/next-number/${type}`),
 };
 export const purchaseReturnApi = purchaseReturnsApi;
 

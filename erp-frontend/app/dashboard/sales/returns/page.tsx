@@ -31,7 +31,7 @@ export default function SalesPage() {
           salesReturnApi.list({ status: statusFilter || undefined, limit: 50 }),
           salesReturnApi.summary(),
         ]);
-        setsalesReturns(invRes.data.salesReturns);
+        setsalesReturns(invRes.data.returns || []);
         setSummary(sumRes.data);
       } catch { toast.error('Failed to load salesReturns'); }
       finally { setLoading(false); }
@@ -150,8 +150,8 @@ export default function SalesPage() {
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.salesReturnDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot?.name || 'Walk-in Customer'}</td>
                         <td className="px-5 py-4 text-slate-900 font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{inv.amountReceived.toFixed(2)}</td>
-                        <td className="px-5 py-4"><span className={inv.balance > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{inv.balance.toFixed(2)}</span></td>
+                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{inv.paymentMode}</td>
                         <td className="px-5 py-4">
                           <div className="flex flex-col gap-1 items-start">

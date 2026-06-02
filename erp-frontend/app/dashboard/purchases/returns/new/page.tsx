@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchaseReturnsApi, businessApi } from '../../../../../lib/erp-api';
+import { suppliersApi, productsApi, purchaseReturnsApi, purchasesApi, businessApi } from '../../../../../lib/erp-api';
 import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
@@ -161,7 +161,7 @@ export default function NewpurchaseReturnPage() {
     
     if (supplierId) {
       try {
-        const { data } = await purchaseReturnsApi.getLastPrices(supplierId, p._id);
+        const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
         setLastPrices(data.prices || []);
       } catch (err) {
         setLastPrices([]);
