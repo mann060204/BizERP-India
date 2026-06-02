@@ -250,6 +250,27 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            </div>
+            
+            {/* Inventory Settings */}
+            <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <Package className="w-5 h-5 text-slate-700" />
+                <h3 className="font-semibold text-slate-900">Inventory Tracking</h3>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5">Batch Delivery Algorithm</label>
+                  <select value={form.inventorySequencing || 'FIFO'} onChange={e => setForm({ ...form, inventorySequencing: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
+                    <option value="FIFO">FIFO (First In, First Out)</option>
+                    <option value="FEFO">FEFO (First Expiring, First Out)</option>
+                    <option value="LIFO">LIFO (Last In, First Out)</option>
+                  </select>
+                  <p className="text-[10px] text-slate-500 mt-1">This determines the default sequence used when auto-assigning batches to invoices.</p>
+                </div>
+              </div>
+            </div>
 
             </div>
           </div>
