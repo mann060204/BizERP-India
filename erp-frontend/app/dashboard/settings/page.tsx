@@ -250,8 +250,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            </div>
-            
+
             {/* Inventory Settings */}
             <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
