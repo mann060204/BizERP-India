@@ -1,4 +1,5 @@
 import express from 'express';
+import { protect } from '../middlewares/auth.middleware';
 import {
   getSalesReturns,
   getSalesReturn,
@@ -11,6 +12,8 @@ import {
 } from '../controllers/salesReturn.controller';
 
 const router = express.Router();
+
+router.use(protect);
 
 router.get('/analytics/summary', getSalesReturnSummary);
 router.get('/next-number', getPredictedSalesReturnNumber);
