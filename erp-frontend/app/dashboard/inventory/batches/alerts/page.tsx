@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Topbar from '../../../../components/layout/Topbar';
-import { inventoryApi } from '../../../../lib/erp-api';
+import Topbar from '../../../../../components/layout/Topbar';
+import { inventoryApi } from '../../../../../lib/erp-api';
 import { Loader2, AlertTriangle, AlertCircle, Clock, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
