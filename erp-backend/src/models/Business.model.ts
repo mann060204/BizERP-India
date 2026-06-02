@@ -24,6 +24,8 @@ export interface IBusiness extends Document {
   nonGstQuotationPrefix?: string;
   nonGstInvoicePrefix: string;
   nonGstInvoiceCounter: number;
+  purchaseOrderPrefix?: string;
+  purchaseOrderCounter: number;
   bankDetails?: {
     bankName?: string;
     accountNumber?: string;
@@ -86,6 +88,8 @@ const BusinessSchema = new Schema<IBusiness>(
     nonGstQuotationPrefix: { type: String, default: 'NON-GST-QTN' },
     nonGstInvoicePrefix: { type: String, default: 'NON-GST' },
     nonGstInvoiceCounter: { type: Number, default: 0 },
+    purchaseOrderPrefix: { type: String, default: 'PO' },
+    purchaseOrderCounter: { type: Number, default: 0 },
     bankDetails: {
       bankName: String,
       accountNumber: String,

@@ -55,6 +55,17 @@ export const purchasesApi = {
   summary: () => api.get('/purchases/analytics/summary'),
 };
 
+export const purchaseOrdersApi = {
+  list: (params?: any) => api.get('/purchase-orders', { params }).then(res => res.data),
+  get: (id: string) => api.get(`/purchase-orders/${id}`).then(res => res.data),
+  create: (data: any) => api.post('/purchase-orders', data).then(res => res.data),
+  update: (id: string, data: any) => api.put(`/purchase-orders/${id}`, data).then(res => res.data),
+  delete: (id: string) => api.delete(`/purchase-orders/${id}`).then(res => res.data),
+  summary: () => api.get('/purchase-orders/analytics/summary').then(res => res.data),
+  getNextNumber: () => api.get(`/purchase-orders/next-number`).then(res => res.data),
+  convert: (id: string) => api.post(`/purchase-orders/${id}/convert`).then(res => res.data),
+};
+
 // ─── Inventory ────────────────────────────────────────────────────────────────
 export const inventoryApi = {
   list: (params?: any) => api.get('/inventory', { params }),

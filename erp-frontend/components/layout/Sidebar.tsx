@@ -18,7 +18,12 @@ const NAV_ITEMS = [
       { label: 'Quotations',     href: '/dashboard/quotations' },
     ]
   },
-  { label: 'Purchases',       href: '/dashboard/purchases',icon: Package },
+  { label: 'Purchases',       href: '#',                   icon: Package,
+    subItems: [
+      { label: 'Purchase Bills', href: '/dashboard/purchases' },
+      { label: 'Purchase Orders', href: '/dashboard/purchases/orders' },
+    ]
+  },
   { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },
   { label: 'Accounts',        href: '/dashboard/accounts', icon: Landmark, 
     subItems: [

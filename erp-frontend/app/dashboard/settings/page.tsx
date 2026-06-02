@@ -53,6 +53,7 @@ export default function SettingsPage() {
         invoiceTemplate: form.invoiceTemplate || 'A4',
         invoicePrefix: form.invoicePrefix || 'INV',
         nonGstInvoicePrefix: form.nonGstInvoicePrefix || 'NON-GST',
+        purchaseOrderPrefix: form.purchaseOrderPrefix || 'PO',
         productGroups: form.productGroups || [],
         productBrands: form.productBrands || []
       });
@@ -232,6 +233,11 @@ export default function SettingsPage() {
                     <label className="block text-xs font-medium text-slate-600 mb-1.5">Non-GST Invoice Prefix</label>
                     <input value={form.nonGstInvoicePrefix || ''} onChange={e => setForm({ ...form, nonGstInvoicePrefix: e.target.value.toUpperCase() })}
                       className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="NON-GST" />
+                  </div>
+                  <div className="col-span-2 md:col-span-1">
+                    <label className="block text-xs font-medium text-slate-600 mb-1.5">Purchase Order Prefix</label>
+                    <input value={form.purchaseOrderPrefix || ''} onChange={e => setForm({ ...form, purchaseOrderPrefix: e.target.value.toUpperCase() })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 font-mono focus:outline-none focus:border-[#D4D4D4] text-sm transition uppercase" placeholder="PO" />
                   </div>
                 </div>
                 <div>
