@@ -343,9 +343,10 @@ export default function NewpurchaseReturnPage() {
           <>
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">purchaseReturn Return information</div>
-          <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
+          <div className="p-2 grid grid-cols-3 gap-x-4 gap-y-3">
+            {/* Row 1 */}
             <div>
-              <label className="erp-label block mb-1">purchaseReturn Type <span className="text-red-500">*</span></label>
+              <label className="erp-label block mb-1">Return Type <span className="text-red-500">*</span></label>
               <select value={purchaseReturnType} onChange={e => setpurchaseReturnType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option value="Non-GST">Non-GST</option>
@@ -353,7 +354,7 @@ export default function NewpurchaseReturnPage() {
               </select>
             </div>
             <div>
-              <label className="erp-label block mb-1">purchaseReturn Date</label>
+              <label className="erp-label block mb-1">Date</label>
               <input type="date" value={billDate} onChange={e => setBillDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
@@ -384,28 +385,8 @@ export default function NewpurchaseReturnPage() {
                 )}
               </div>
             </div>
-            <div>
-              <label className="erp-label block mb-1">Payment Terms (Credit Period)</label>
-              <input 
-                list="paymentTermsOptions" 
-                value={paymentTerms} 
-                onChange={e => setPaymentTerms(e.target.value)} 
-                className="erp-input w-full"
-                placeholder="e.g. Net 30 or 45 days"
-              />
-              <datalist id="paymentTermsOptions">
-                <option value="Due on Receipt" />
-                <option value="Net 15" />
-                <option value="Net 30" />
-                <option value="Net 45" />
-                <option value="Net 60" />
-              </datalist>
-            </div>
-            <div>
-              <label className="erp-label block mb-1">Due Date</label>
-              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
-            </div>
 
+            {/* Row 2 */}
             <div>
               <label className="erp-label block mb-1">Place of Supply <span className="text-red-500">*</span></label>
               <select value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
@@ -413,20 +394,41 @@ export default function NewpurchaseReturnPage() {
               </select>
             </div>
             <div>
-              <label className="erp-label block mb-1">purchaseReturn Return No.</label>
+              <label className="erp-label block mb-1">Return Bill No. <span className="text-red-500">*</span></label>
               <input value={billNumber} onChange={e => setBillNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label block mb-1">purchaseReturn Order No.</label>
-              <input value={purchaseReturnOrderNo} onChange={e => setpurchaseReturnOrderNo(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label block mb-1">Purchase Bill No.</label>
+              <div className="flex w-full">
+                <input value={searchBillNo} onChange={e => setSearchBillNo(e.target.value)} placeholder="Original Bill No" className="erp-input w-full rounded-r-none" />
+                <button onClick={fetchOriginalBill} disabled={isFetchingBill || !searchBillNo} className="bg-blue-600 hover:bg-blue-700 text-white px-3 border border-blue-600 rounded-r flex items-center justify-center transition disabled:opacity-50">
+                  {isFetchingBill ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Fetch'}
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="erp-label block mb-1">purchaseReturn Order Date</label>
-              <input type="date" value={purchaseReturnOrderDate} onChange={e => setpurchaseReturnOrderDate(e.target.value)} className="erp-input w-full" />
-            </div>
-            <div>
-              <label className="erp-label block mb-1">E-Way Bill No.</label>
-              <input value={ewayBillNo} onChange={e => setEwayBillNo(e.target.value)} className="erp-input w-full" />
+
+            {/* Hidden / Extra fields moved to a details block or bottom */}
+            <div className="col-span-3 grid grid-cols-5 gap-x-2 gap-y-1 mt-2 p-2 bg-slate-50 border border-slate-200 rounded">
+              <div>
+                <label className="erp-label block mb-1 text-[10px]">Payment Terms</label>
+                <input list="paymentTermsOptions" value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} className="erp-input w-full text-xs" />
+              </div>
+              <div>
+                <label className="erp-label block mb-1 text-[10px]">Due Date</label>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full text-xs" />
+              </div>
+              <div>
+                <label className="erp-label block mb-1 text-[10px]">Order No.</label>
+                <input value={purchaseReturnOrderNo} onChange={e => setpurchaseReturnOrderNo(e.target.value)} className="erp-input w-full text-xs" />
+              </div>
+              <div>
+                <label className="erp-label block mb-1 text-[10px]">Order Date</label>
+                <input type="date" value={purchaseReturnOrderDate} onChange={e => setpurchaseReturnOrderDate(e.target.value)} className="erp-input w-full text-xs" />
+              </div>
+              <div>
+                <label className="erp-label block mb-1 text-[10px]">E-Way Bill No.</label>
+                <input value={ewayBillNo} onChange={e => setEwayBillNo(e.target.value)} className="erp-input w-full text-xs" />
+              </div>
             </div>
           </div>
         </div>

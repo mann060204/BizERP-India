@@ -431,18 +431,7 @@ export default function NewSalesReturnPage() {
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Sales Return Information</div>
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
-            <div className="col-span-6 flex items-end gap-2 bg-slate-100 p-2 rounded mb-2">
-              <div className="flex-1">
-                <label className="erp-label">Fetch Original Invoice</label>
-                <div className="flex gap-2">
-                  <input value={searchInvoiceNo} onChange={e => setSearchInvoiceNo(e.target.value)} placeholder="Enter exact Invoice No (e.g. INV-2026-0001)" className="erp-input w-full" />
-                  <button onClick={fetchOriginalInvoice} disabled={isFetchingInvoice || !searchInvoiceNo} className="btn-action bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 flex items-center gap-1 shrink-0">
-                    {isFetchingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    Fetch Details
-                  </button>
-                </div>
-              </div>
-            </div>
+
 
             <div>
               <label className="erp-label">Sales Return Type</label>
