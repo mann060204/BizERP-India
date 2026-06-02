@@ -89,6 +89,7 @@ export default function NewpurchaseReturnPage() {
   const [shippingGstRate, setShippingGstRate] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
+  const [amountPaid, setAmountPaid] = useState(0);
   
   const [txnId, setTxnId] = useState('');
 

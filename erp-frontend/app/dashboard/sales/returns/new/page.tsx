@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
-import { customersApi, productsApi, salesReturnApi, salesApi, businessApi } from '../../../../../lib/erp-api';
+import { customersApi, productsApi, salesReturnApi, invoicesApi, businessApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -229,7 +229,7 @@ export default function NewSalesReturnPage() {
 
     if (selectedCustomer?._id) {
       try {
-        const { data } = await salesApi.getLastPrice(selectedCustomer._id, p._id);
+        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
         if (data && data.lastPrice !== null) {
           setLastPriceInfo({ price: data.lastPrice, date: new Date(data.salesReturnDate).toLocaleDateString() });
         } else {
