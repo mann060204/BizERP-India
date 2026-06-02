@@ -8,11 +8,12 @@ import { calculateInvoiceTotals } from '../services/gst.service';
 // GET /api/v1/purchases
 export const getPurchases = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { from, to, status, supplierId, page = '1', limit = '20' } = req.query as any;
+    const { from, to, status, supplierId, billNumber, page = '1', limit = '20' } = req.query as any;
     const businessId = req.user!.businessId;
     const query: any = { businessId };
     if (status) query.status = status;
     if (supplierId) query.supplierId = supplierId;
+    if (billNumber) query.billNumber = billNumber;
     if (from || to) {
       query.billDate = {};
       if (from) query.billDate.$gte = new Date(from);

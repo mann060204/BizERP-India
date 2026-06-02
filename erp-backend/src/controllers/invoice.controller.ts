@@ -79,11 +79,12 @@ export const getCustomerLastPrice = async (req: AuthRequest, res: Response): Pro
 // GET /api/v1/invoices
 export const getInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { from, to, status, customerId, page = '1', limit = '20' } = req.query as any;
+    const { from, to, status, customerId, invoiceNumber, page = '1', limit = '20' } = req.query as any;
     const businessId = req.user!.businessId;
     const query: any = { businessId };
     if (status) query.status = status;
     if (customerId) query.customerId = customerId;
+    if (invoiceNumber) query.invoiceNumber = invoiceNumber;
     if (from || to) {
       query.invoiceDate = {};
       if (from) query.invoiceDate.$gte = new Date(from);
