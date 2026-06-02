@@ -249,6 +249,8 @@ export default function NewPurchasePage() {
         } : { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
+        batches: lineItems.filter(i => i.batchNo).map(i => ({ productId: i.productId, batchNo: i.batchNo, mrp: i.mrp })),
+
         batches,
         subtotal,
         totalDiscount,
@@ -768,3 +770,4 @@ export default function NewPurchasePage() {
     </div>
   );
 }
+

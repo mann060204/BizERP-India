@@ -92,6 +92,7 @@ export default function NewInvoicePage() {
   const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
 
   const [shippingCharge, setShippingCharge] = useState(0);
+  const [shippingGstRate, setShippingGstRate] = useState(0);
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const formatDate = (d: string) => d.split('-').reverse().join('/');
@@ -297,13 +298,23 @@ export default function NewInvoicePage() {
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
   const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-  const shippingCGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
-  const shippingSGST = (invoiceType === 'GST' && !isInterState) ? round2(shippingCharge * 0.09) : 0;
-  const shippingIGST = (invoiceType === 'GST' && isInterState) ? round2(shippingCharge * 0.18) : 0;
+  
+  let shipCGST = 0;
+  let shipSGST = 0;
+  let shipIGST = 0;
+  
+  if (shippingCharge > 0 && shippingGstRate > 0 && invoiceType === 'GST') {
+    if (isInterState) {
+      shipIGST = round2((shippingCharge * shippingGstRate) / 100);
+    } else {
+      shipCGST = round2((shippingCharge * shippingGstRate) / 2 / 100);
+      shipSGST = round2((shippingCharge * shippingGstRate) / 2 / 100);
+    }
+  }
 
-  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shippingCGST;
-  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shippingSGST;
-  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shippingIGST;
+  const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shipCGST;
+  const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
+  const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   
   const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
@@ -337,6 +348,8 @@ export default function NewInvoicePage() {
         amountReceived: totalAmountReceived,
         txnId: combinedTxnId,
         shippingCharge,
+        shippingGstRate,
+        grandTotal,
         balance,
         roundOff,
         subtotal,
@@ -831,8 +844,11 @@ export default function NewInvoicePage() {
                 )}
 
                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
-                  <span className="erp-label">Shipping</span>
-                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right h-7" />
+                  <span className="erp-label">Shipping / GST%</span>
+                  <div className="flex gap-1">
+                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right h-7" placeholder="Amt" />
+                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-12 text-right h-7" placeholder="GST%" />
+                  </div>
                 </div>
               </div>
 

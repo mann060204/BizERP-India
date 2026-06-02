@@ -13,6 +13,17 @@ export interface ISupplier extends Document {
   contactPerson?: string;
   note?: string;
   bankDetails?: { bankName?: string; accountNumber?: string; ifsc?: string };
+  creditLimit?: number;
+  creditAllowed?: boolean;
+  priceCategory?: string;
+  gstType?: string;
+  tradeName?: string;
+  phoneNo?: string;
+  documentType?: string;
+  documentNo?: string;
+  dob?: Date;
+  anniversary?: Date;
+  photo?: string;
   tags?: string[];
   isActive: boolean;
   createdAt: Date;
@@ -38,9 +49,21 @@ const SupplierSchema = new Schema<ISupplier>(
       bankName: String, accountNumber: String, ifsc: String
     },
     tags: [String],
+    creditLimit: { type: Number, default: 0 },
+    creditAllowed: { type: Boolean, default: true },
+    priceCategory: { type: String, enum: ['Retail', 'Wholesale'], default: 'Retail' },
+    gstType: String,
+    tradeName: String,
+    phoneNo: String,
+    documentType: String,
+    documentNo: String,
+    dob: Date,
+    anniversary: Date,
+    photo: String,
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
 export default mongoose.model<ISupplier>('Supplier', SupplierSchema);
+

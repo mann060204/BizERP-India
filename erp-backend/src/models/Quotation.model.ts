@@ -1,4 +1,4 @@
-﻿import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ILineItem {
   productId?: mongoose.Types.ObjectId;
@@ -42,6 +42,7 @@ export interface IQuotation extends Document {
   totalGST: number;
   grandTotal: number;
   shippingCharge: number;
+  shippingGstRate: number;
   status: 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Invoiced' | 'Cancelled';
   notes?: string;
   remarks?: string;
@@ -105,6 +106,7 @@ const InvoiceSchema = new Schema<IQuotation>(
     totalGST: { type: Number, default: 0 },
     grandTotal: { type: Number, default: 0 },
     shippingCharge: { type: Number, default: 0 },
+    shippingGstRate: { type: Number, default: 0 },
     status: {
       type: String,
       enum: ['Draft', 'Sent', 'Accepted', 'Rejected', 'Invoiced', 'Cancelled'],
@@ -125,3 +127,4 @@ const InvoiceSchema = new Schema<IQuotation>(
 );
 
 export default mongoose.model<IQuotation>('Quotation', InvoiceSchema);
+

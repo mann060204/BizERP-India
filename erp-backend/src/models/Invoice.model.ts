@@ -43,6 +43,7 @@ export interface IInvoice extends Document {
   grandTotal: number;
   amountReceived: number;
   shippingCharge: number;
+  shippingGstRate: number;
   balance: number;
   paymentMode: string;
   status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
@@ -116,6 +117,7 @@ const InvoiceSchema = new Schema<IInvoice>(
     grandTotal: { type: Number, default: 0 },
     amountReceived: { type: Number, default: 0 },
     shippingCharge: { type: Number, default: 0 },
+    shippingGstRate: { type: Number, default: 0 },
     balance: { type: Number, default: 0 },
     paymentMode: { type: String, default: 'Cash' },
     status: {
@@ -145,3 +147,4 @@ const InvoiceSchema = new Schema<IInvoice>(
 );
 
 export default mongoose.model<IInvoice>('Invoice', InvoiceSchema);
+

@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Topbar from '../../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchaseOrdersApi, businessApi } from '../../../../../lib/erp-api';
+import Topbar from '../../../../../../components/layout/Topbar';
+import { suppliersApi, productsApi, purchaseOrdersApi, businessApi } from '../../../../../../lib/erp-api';
 import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
-import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
-import QuickAddSupplierModal from '../../../../../components/modals/QuickAddSupplierModal';
+import QuickAddItemModal from '../../../../../../components/modals/QuickAddItemModal';
+import QuickAddSupplierModal from '../../../../../../components/modals/QuickAddSupplierModal';
 
 interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; }
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
