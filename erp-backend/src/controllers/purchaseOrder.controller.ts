@@ -187,7 +187,7 @@ export const convertToPurchaseBill = async (req: Request, res: Response) => {
       notes: order.notes,
       remarks: order.remarks,
       deliveryTerms: order.deliveryTerms,
-      createdBy: (req as any).user._id
+      createdBy: (req as any).user.userId
     };
     
     const bill = new PurchaseBill(billData);
@@ -203,3 +203,4 @@ export const convertToPurchaseBill = async (req: Request, res: Response) => {
     res.status(500).json({ message: error.message || 'Validation Failed' });
   }
 };
+

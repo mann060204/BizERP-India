@@ -45,6 +45,8 @@ import businessRoutes from './routes/business.routes';
 import accountRoutes from './routes/account.routes';
 import publicRoutes from './routes/public.routes';
 import bankRoutes from './routes/bank.routes';
+import salesReturnRoutes from './routes/salesReturn.routes';
+import purchaseReturnRoutes from './routes/purchaseReturn.routes';
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/customers', customerRoutes);
@@ -61,6 +63,8 @@ app.use('/api/v1/business', businessRoutes);
 app.use('/api/v1/accounts', accountRoutes);
 app.use('/api/v1/public', publicRoutes);
 app.use('/api/v1/banks', bankRoutes);
+app.use('/api/v1/sales-returns', salesReturnRoutes);
+app.use('/api/v1/purchase-returns', purchaseReturnRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'ERP API is running' });
@@ -81,3 +85,4 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
 
 export default app;
 module.exports = app;
+

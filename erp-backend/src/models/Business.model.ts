@@ -144,3 +144,4 @@ const BusinessSchema = new Schema<IBusiness>(
 );
 
 export default mongoose.model<IBusiness>('Business', BusinessSchema);
+

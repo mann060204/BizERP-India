@@ -1,19 +1,19 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, quotationsApi, invoicesApi, businessApi } from '../../../../lib/erp-api';
+import Topbar from '../../../../../components/layout/Topbar';
+import { customersApi, productsApi, salesReturnApi, businessApi } from '../../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
   Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil, UserPlus
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
-import QuickAddCustomerModal from '../../../../components/modals/QuickAddCustomerModal';
+import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
+import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
 
 interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
-interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
+interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; batches?: any[]; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
@@ -27,7 +27,7 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function NewQuotationPage() {
+export default function NewSalesReturnPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -38,9 +38,9 @@ export default function NewQuotationPage() {
   const [selectedSchemeId, setSelectedSchemeId] = useState('');
 
   // Header State
-  const [quotationType, setQuotationType] = useState('GST');
-  const [quotationNumber, setQuotationNumber] = useState('EST-001');
-  const [quotationDate, setQuotationDate] = useState(new Date().toISOString().split('T')[0]);
+  const [salesReturnType, setsalesReturnType] = useState('GST');
+  const [salesReturnNumber, setsalesReturnNumber] = useState('GST-001');
+  const [salesReturnDate, setsalesReturnDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
@@ -79,6 +79,7 @@ export default function NewQuotationPage() {
   // Footer State
   const [soldBy, setSoldBy] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
+  const [deliveryRemarks, setDeliveryRemarks] = useState('');
   const [remarks, setRemarks] = useState('');
   const [paymentMode1, setPaymentMode1] = useState('Cash');
   const [amountReceived1, setAmountReceived1] = useState(0);
@@ -93,9 +94,12 @@ export default function NewQuotationPage() {
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
   
-  const totalAmountReceived = 0;
-  const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
-  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} (Date: ${paymentDate1}) | ${txnId2} (Date: ${paymentDate2})` : (txnId1 ? `${txnId1} (Date: ${paymentDate1})` : (txnId2 ? `${txnId2} (Date: ${paymentDate2})` : ''));
+  const totalAmountReceived = amountReceived1 + amountReceived2;
+  const formatDate = (d: string) => d.split('-').reverse().join('/');
+  const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 
+    ? `${paymentMode1} (₹${amountReceived1} on ${formatDate(paymentDate1)}) & ${paymentMode2} (₹${amountReceived2} on ${formatDate(paymentDate2)})` 
+    : paymentMode1;
+  const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} | ${txnId2}` : (txnId1 ? txnId1 : (txnId2 ? txnId2 : ''));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -190,15 +194,25 @@ export default function NewQuotationPage() {
     const isWholesale = selectedCustomer?.priceCategory === 'Wholesale';
     const primaryRate = isWholesale ? (p.sellingPrice2 || p.sellingPrice) : p.sellingPrice;
     const defaultUnit = p.isDefaultSecondaryUnit && p.secondaryUnit ? p.secondaryUnit : p.unit;
-    const initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
+    let initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
+    let initialMrp = p.mrp || p.sellingPrice;
+    let initialBatchNo = '';
+    
+    if (p.batches && p.batches.length > 0) {
+      const b = p.batches[0];
+      initialBatchNo = b.batchNo;
+      initialRate = b.salePrice;
+      initialMrp = b.mrp;
+    }
 
     setItemInput(prev => ({
       ...prev,
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
+      batchNo: initialBatchNo,
       rate: initialRate,
-      mrp: p.mrp || p.sellingPrice,
+      mrp: initialMrp,
       gstRate: p.gstRate,
       unit: defaultUnit,
       primaryUnit: p.unit,
@@ -208,16 +222,16 @@ export default function NewQuotationPage() {
       sellingPrice3: p.sellingPrice3,
       secSalePrice: p.secSalePrice,
       conversionRate: p.conversionRate,
-      selectedBaseRate: primaryRate
+      selectedBaseRate: initialRate
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
 
     if (selectedCustomer?._id) {
       try {
-        const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
+        const { data } = await salesReturnApi.getLastPrice(selectedCustomer._id, p._id);
         if (data && data.lastPrice !== null) {
-          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.quotationDate).toLocaleDateString() });
+          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.salesReturnDate).toLocaleDateString() });
         } else {
           setLastPriceInfo(null);
         }
@@ -227,7 +241,7 @@ export default function NewQuotationPage() {
     }
   };
 
-  const calculateItem = (item: LineItem, invType = quotationType, interState = isInterState) => {
+  const calculateItem = (item: LineItem, invType = salesReturnType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
     const discountAmt = (gross * item.discount) / 100;
     const taxableAmount = round2(gross - discountAmt);
@@ -239,23 +253,23 @@ export default function NewQuotationPage() {
   };
 
   useEffect(() => {
-    setLineItems(prev => prev.map(item => calculateItem(item, quotationType, isInterState)));
-    // Fetch next quotation number based on type
-    quotationsApi.getNextNumber(quotationType as 'GST' | 'NON-GST')
-      .then((res: any) => {
-        if (res?.nextQuotationNumber) {
-          setQuotationNumber(res.nextQuotationNumber);
+    setLineItems(prev => prev.map(item => calculateItem(item, salesReturnType, isInterState)));
+    // Fetch next Sales Return number based on type
+    salesReturnApi.getNextNumber(salesReturnType as 'GST' | 'NON-GST')
+      .then(res => {
+        if (res.data?.nextsalesReturnNumber) {
+          setsalesReturnNumber(res.data.nextsalesReturnNumber);
         }
       })
       .catch(() => {
         // Fallback
-        setQuotationNumber(prev => {
-          if (quotationType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
-          if (quotationType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
+        setsalesReturnNumber(prev => {
+          if (salesReturnType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
+          if (salesReturnType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
           return prev;
         });
       });
-  }, [quotationType, isInterState]);
+  }, [salesReturnType, isInterState]);
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
@@ -284,12 +298,12 @@ export default function NewQuotationPage() {
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
   const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
-
+  
   let shipCGST = 0;
   let shipSGST = 0;
   let shipIGST = 0;
   
-  if (shippingCharge > 0 && shippingGstRate > 0 && quotationType === 'GST') {
+  if (shippingCharge > 0 && shippingGstRate > 0 && salesReturnType === 'GST') {
     if (isInterState) {
       shipIGST = round2((shippingCharge * shippingGstRate) / 100);
     } else {
@@ -312,8 +326,8 @@ export default function NewQuotationPage() {
     setSaving(true);
     try {
       const payload = {
-        quotationNumber,
-        quotationDate,
+        salesReturnNumber,
+        salesReturnDate,
         dueDate,
         customerId: selectedCustomer?._id,
         customerSnapshot: selectedCustomer ? {
@@ -324,36 +338,37 @@ export default function NewQuotationPage() {
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
-        quotationType,
+        salesReturnType,
         lineItems,
+        paymentMode: combinedPaymentMode,
+        paymentHistory: [
+          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
+          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
+        ],
+        amountReceived: totalAmountReceived,
         txnId: combinedTxnId,
         shippingCharge,
         shippingGstRate,
+        grandTotal,
         balance,
         roundOff,
         subtotal,
-        totalDiscount,
-        totalTaxableAmount: totalTaxable,
-        totalCGST,
-        totalSGST,
-        totalIGST,
-        totalGST: totalCGST + totalSGST + totalIGST,
-        grandTotal,
         shippingAddress: useShippingAddress ? shippingAddress : '',
         notes: remarks,
         deliveryTerms,
+        deliveryRemarks,
         soldBy,
         billTo,
-        status: 'Draft',
+        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'draft',
       };
-      const createdData = await quotationsApi.create(payload);
-      toast.success(`Quotation ${createdData.quotationNumber || quotationNumber} Saved!`);
+      const { data } = await salesReturnApi.create(payload);
+      toast.success(`Sales Return ${data.salesReturn.salesReturnNumber} Saved!`);
       if (printAfterSave) {
-        window.open(`/print/quotation/${createdData._id}`, '_blank');
+        window.open(`/print/Sales Return/${data.salesReturn._id}`, '_blank');
       }
-      router.push('/dashboard/quotations');
+      router.push('/dashboard/sales');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to save quotation');
+      toast.error(e.response?.data?.message || 'Failed to save Sales Return');
     } finally {
       setSaving(false);
     }
@@ -363,28 +378,28 @@ export default function NewQuotationPage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="New Quotation" />
+      <Topbar title="New Sales Return" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
-        {/* Section 1: Quotation Information */}
+        {/* Section 1: Sales Return Information */}
         <div className="erp-container">
-          <div className="erp-header py-1 text-xs">Quotation Information</div>
+          <div className="erp-header py-1 text-xs">Sales Return Information</div>
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
-              <label className="erp-label">Quotation Type</label>
-              <select value={quotationType} onChange={e => setQuotationType(e.target.value)} className="erp-input w-full">
+              <label className="erp-label">Sales Return Type</label>
+              <select value={salesReturnType} onChange={e => setsalesReturnType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
             </div>
             <div>
-              <label className="erp-label">Quotation No. <span className="text-red-500">*</span></label>
-              <input value={quotationNumber} onChange={e => setQuotationNumber(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label">Sales Return No. <span className="text-red-500">*</span></label>
+              <input value={salesReturnNumber} onChange={e => setsalesReturnNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Date</label>
-              <input type="date" value={quotationDate} onChange={e => setQuotationDate(e.target.value)} className="erp-input w-full" />
+              <input type="date" value={salesReturnDate} onChange={e => setsalesReturnDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
@@ -420,7 +435,12 @@ export default function NewQuotationPage() {
                  )}
               </div>
               <div className="relative">
-                <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
+                <div className="flex w-full relative">
+                  <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
+                  <button type="button" onClick={() => setShowCustomerDD(!showCustomerDD)} className="absolute right-8 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
                 {selectedCustomer && (
                    <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-action-100 text-action-600'}`}>
                       {selectedCustomer.priceCategory === 'Wholesale' ? 'Wholesaler' : 'Retailer'}
@@ -472,7 +492,27 @@ export default function NewQuotationPage() {
             <div className="grid grid-cols-10 gap-2">
               <div className="col-span-1">
                 <label className="erp-label">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" />
+                {itemInput.productId && products.find(p => p._id === itemInput.productId)?.batches?.length ? (
+                  <select 
+                    value={itemInput.batchNo}
+                    onChange={e => {
+                       const selectedBatch = products.find(p => p._id === itemInput.productId)?.batches?.find((b: any) => b.batchNo === e.target.value);
+                       if (selectedBatch) {
+                         setItemInput({...itemInput, batchNo: e.target.value, rate: selectedBatch.salePrice, mrp: selectedBatch.mrp, selectedBaseRate: selectedBatch.salePrice});
+                       } else {
+                         setItemInput({...itemInput, batchNo: e.target.value});
+                       }
+                    }}
+                    className="erp-input w-full bg-slate-50"
+                  >
+                    <option value="">Select Batch</option>
+                    {products.find(p => p._id === itemInput.productId)?.batches?.map((b: any) => (
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {b.currentStock})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" placeholder="Optional" />
+                )}
               </div>
               <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
@@ -495,7 +535,12 @@ export default function NewQuotationPage() {
                   )}
                 </div>
                 <div className="relative">
-                  <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full" placeholder="Type item name..." />
+                  <div className="flex w-full relative">
+                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full pr-8" placeholder="Type item name..." />
+                    <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                  </div>
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
                       {filteredProducts.map(p => (
@@ -656,9 +701,9 @@ export default function NewQuotationPage() {
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
                     <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(2)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
-                    {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
-                    {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
-                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${quotationType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
+                    {salesReturnType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
+                    {salesReturnType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
+                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${salesReturnType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                         <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-action-500/10 rounded">
@@ -673,7 +718,8 @@ export default function NewQuotationPage() {
                 ))
               )}
            </div>
-         </div>
+        </div>
+
         {/* Section 4: Footer */}
         <div className="grid grid-cols-4 gap-2">
            
@@ -704,16 +750,16 @@ export default function NewQuotationPage() {
                 <label className="erp-label block mb-1">Sold By</label>
                 <select value={soldBy} onChange={e => setSoldBy(e.target.value)} className="erp-input w-full">
                   <option value="">Select Agent</option>
-                  <option>Admin</option><option>Quotations Executive A</option>
+                  <option>Admin</option><option>Sales Executive A</option>
                 </select>
               </div>
            </div>
 
            {/* Column 2 & 3: Payment Details & Remarks */}
            <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
-              <div className="hidden bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
+              <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
               
-              <div className="hidden grid grid-cols-2 gap-4 flex-1">
+              <div className="grid grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
@@ -752,6 +798,10 @@ export default function NewQuotationPage() {
                     <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-10 resize-none" />
                  </div>
                  <div>
+                    <label className="erp-label block mb-1">Delivery Remarks (Printed)</label>
+                    <textarea value={deliveryRemarks} onChange={e => setDeliveryRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" placeholder="e.g. Courier Name, LR No." />
+                 </div>
+                 <div>
                     <label className="erp-label block mb-1">Remarks (Private)</label>
                     <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" />
                  </div>
@@ -772,7 +822,7 @@ export default function NewQuotationPage() {
                   </div>
                 )}
                 
-                {quotationType === 'GST' && (
+                {salesReturnType === 'GST' && (
                   <>
                     {!isInterState ? (
                       <>
@@ -943,4 +993,11 @@ export default function NewQuotationPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
 

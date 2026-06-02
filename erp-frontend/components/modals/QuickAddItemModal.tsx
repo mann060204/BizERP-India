@@ -20,7 +20,14 @@ const emptyForm = {
 // Reusable styling components defined OUTSIDE to prevent focus loss
 const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '' }: any) => (
   <div>
-    <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
+    <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider flex items-center justify-between">
+      <span>{label} {required && <span className="text-red-500">*</span>}</span>
+      {onQuickAdd && (
+        <button type="button" onClick={onQuickAdd} className="text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 p-0.5 rounded transition">
+          <Plus className="w-3 h-3" />
+        </button>
+      )}
+    </label>
     <input type={type}
       value={form[keyName] === 0 && type === 'number' ? '' : form[keyName]}
       onChange={e => setForm({ ...form, [keyName]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
@@ -29,9 +36,16 @@ const Input = ({ label, required = false, type = 'text', keyName, form, setForm,
   </div>
 );
 
-const Select = ({ label, required = false, keyName, form, setForm, options }: any) => (
+const Select = ({ label, required = false, keyName, form, setForm, options, onQuickAdd }: any) => (
   <div>
-    <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</label>
+    <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider flex items-center justify-between">
+      <span>{label} {required && <span className="text-red-500">*</span>}</span>
+      {onQuickAdd && (
+        <button type="button" onClick={onQuickAdd} className="text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 p-0.5 rounded transition">
+          <Plus className="w-3 h-3" />
+        </button>
+      )}
+    </label>
     <select value={form[keyName]} onChange={e => setForm({ ...form, [keyName]: e.target.value })}
       className="w-full px-3 py-2 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none">
       {options.map((o: string) => <option key={o} value={o}>{o || 'Select...'}</option>)}
@@ -75,6 +89,30 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
   useEffect(() => { 
     fetchSettings();
   }, [fetchSettings]);
+
+  const handleAddGroup = async () => {
+    const name = window.prompt('Enter new Group name:');
+    if (!name || !name.trim()) return;
+    try {
+      const newGroups = [...productGroups, name.trim()];
+      await businessApi.updateProfile({ productGroups: newGroups });
+      setProductGroups(newGroups);
+      setForm(prev => ({...prev, group: name.trim()}));
+      toast.success('Group added successfully');
+    } catch (e) { toast.error('Failed to add group'); }
+  };
+
+  const handleAddBrand = async () => {
+    const name = window.prompt('Enter new Brand name:');
+    if (!name || !name.trim()) return;
+    try {
+      const newBrands = [...productBrands, name.trim()];
+      await businessApi.updateProfile({ productBrands: newBrands });
+      setProductBrands(newBrands);
+      setForm(prev => ({...prev, brand: name.trim()}));
+      toast.success('Brand added successfully');
+    } catch (e) { toast.error('Failed to add brand'); }
+  };
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Item name is required'); return; }
@@ -120,11 +158,11 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                           const availableBrands = currentCat ? currentCat.brands : (productCategories.length > 0 && form.group ? [] : productBrands);
                           return (
                             <>
-                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
+                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} onQuickAdd={handleAddGroup} setForm={(newForm: any) => {
                                  if (newForm.group !== form.group) newForm.brand = '';
                                  setForm(newForm);
                               }} />
-                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} setForm={setForm} />
+                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={handleAddBrand} setForm={setForm} />
                             </>
                           );
                         })()}

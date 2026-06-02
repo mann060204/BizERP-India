@@ -693,6 +693,7 @@ export default function NewInvoicePage() {
                       <div>
                         {item.productName}
                         {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
+                        {item.batchNo && <span className="ml-2 text-[9px] text-slate-500 border border-slate-200 rounded px-1">Batch: {item.batchNo}</span>}
                       </div>
                       {item.description && <div className="text-[10px] text-slate-600 font-normal leading-tight mt-0.5">{item.description}</div>}
                     </div>
@@ -992,3 +993,4 @@ export default function NewInvoicePage() {
     </div>
   );
 }
+

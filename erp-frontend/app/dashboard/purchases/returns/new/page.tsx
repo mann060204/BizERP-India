@@ -1,15 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Topbar from '../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../lib/erp-api';
+import Topbar from '../../../../../components/layout/Topbar';
+import { suppliersApi, productsApi, purchaseReturnsApi, businessApi } from '../../../../../lib/erp-api';
 import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
-import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
-import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';
+import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
+import QuickAddSupplierModal from '../../../../../components/modals/QuickAddSupplierModal';
 
 interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; }
-interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
+interface Product { _id: string; name: string; purchaseReturnPrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
@@ -31,7 +31,7 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function NewPurchasePage() {
+export default function NewpurchaseReturnPage() {
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,7 +46,7 @@ export default function NewPurchasePage() {
   });
 
   // Header State
-  const [purchaseType, setPurchaseType] = useState('GST');
+  const [purchaseReturnType, setpurchaseReturnType] = useState('GST');
   const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
   const [supplierId, setSupplierId] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
@@ -60,8 +60,8 @@ export default function NewPurchasePage() {
   
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billNumber, setBillNumber] = useState('');
-  const [purchaseOrderNo, setPurchaseOrderNo] = useState('');
-  const [purchaseOrderDate, setPurchaseOrderDate] = useState('');
+  const [purchaseReturnOrderNo, setpurchaseReturnOrderNo] = useState('');
+  const [purchaseReturnOrderDate, setpurchaseReturnOrderDate] = useState('');
   const [ewayBillNo, setEwayBillNo] = useState('');
 
   const [contactNo, setContactNo] = useState('');
@@ -89,7 +89,7 @@ export default function NewPurchasePage() {
   const [shippingGstRate, setShippingGstRate] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
-  const [amountPaid, setAmountPaid] = useState(0);
+  
   const [txnId, setTxnId] = useState('');
 
   useEffect(() => {
@@ -151,8 +151,8 @@ export default function NewPurchasePage() {
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
-      rate: p.purchasePrice,
-      mrp: p.mrp || p.purchasePrice,
+      rate: p.purchaseReturnPrice,
+      mrp: p.mrp || p.purchaseReturnPrice,
       gstRate: p.gstRate,
       unit: p.unit
     }));
@@ -161,7 +161,7 @@ export default function NewPurchasePage() {
     
     if (supplierId) {
       try {
-        const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
+        const { data } = await purchaseReturnsApi.getLastPrices(supplierId, p._id);
         setLastPrices(data.prices || []);
       } catch (err) {
         setLastPrices([]);
@@ -206,7 +206,7 @@ export default function NewPurchasePage() {
   let shipSGST = 0;
   let shipIGST = 0;
   
-  if (shippingCharge > 0 && shippingGstRate > 0 && purchaseType !== 'Non-GST') {
+  if (shippingCharge > 0 && shippingGstRate > 0 && purchaseReturnType !== 'Non-GST') {
     if (isInterState) {
       shipIGST = (shippingCharge * shippingGstRate) / 100;
     } else {
@@ -226,18 +226,18 @@ export default function NewPurchasePage() {
   const balance = round2(grandTotal - amountPaid);
 
   const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
-    if (!billNumber.trim()) { toast.error('Purchase Bill No. is required'); return; }
+    if (!billNumber.trim()) { toast.error('purchaseReturn Return No. is required'); return; }
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     setSaving(true);
     try {
       const payload = {
-        purchaseType,
+        purchaseReturnType,
         billNumber,
         billDate,
         dueDate,
         placeOfSupply,
-        purchaseOrderNo,
-        purchaseOrderDate: purchaseOrderDate ? purchaseOrderDate : undefined,
+        purchaseReturnOrderNo,
+        purchaseReturnOrderDate: purchaseReturnOrderDate ? purchaseReturnOrderDate : undefined,
         paymentTerms,
         ewayBillNo,
         supplierId: supplierId || undefined,
@@ -269,11 +269,11 @@ export default function NewPurchasePage() {
         notes: remarks,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
       };
-      await purchasesApi.create(payload);
-      toast.success(`Purchase Bill ${billNumber} Recorded!`);
-      router.push('/dashboard/purchases');
+      await purchaseReturnsApi.create(payload);
+      toast.success(`purchaseReturn Return ${billNumber} Recorded!`);
+      router.push('/dashboard/purchaseReturns');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to save purchase bill');
+      toast.error(e.response?.data?.message || 'Failed to save purchaseReturn Return');
     } finally {
       setSaving(false);
     }
@@ -283,11 +283,11 @@ export default function NewPurchasePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="NEW PURCHASE BILL" />
+      <Topbar title="NEW purchaseReturn Return" />
 
       {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">
-         <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Purchase Bill</div>
+         <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>purchaseReturn Return</div>
          <div onClick={() => setActiveTab('batches')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'batches' ? 'bg-white border-t-2 border-t-red-500 border-l border-r border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Batch Numbers</div>
       </div>
 
@@ -296,18 +296,18 @@ export default function NewPurchasePage() {
         {activeTab === 'bill' ? (
           <>
         <div className="erp-container">
-          <div className="erp-header py-1 text-xs">Purchase bill information</div>
+          <div className="erp-header py-1 text-xs">purchaseReturn Return information</div>
           <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
             <div>
-              <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
-              <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full">
+              <label className="erp-label block mb-1">purchaseReturn Type <span className="text-red-500">*</span></label>
+              <select value={purchaseReturnType} onChange={e => setpurchaseReturnType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option value="Non-GST">Non-GST</option>
                 <option>Bill of Supply</option>
               </select>
             </div>
             <div>
-              <label className="erp-label block mb-1">Purchase Date</label>
+              <label className="erp-label block mb-1">purchaseReturn Date</label>
               <input type="date" value={billDate} onChange={e => setBillDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
@@ -367,16 +367,16 @@ export default function NewPurchasePage() {
               </select>
             </div>
             <div>
-              <label className="erp-label block mb-1">Purchase Bill No.</label>
+              <label className="erp-label block mb-1">purchaseReturn Return No.</label>
               <input value={billNumber} onChange={e => setBillNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label block mb-1">Purchase Order No.</label>
-              <input value={purchaseOrderNo} onChange={e => setPurchaseOrderNo(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label block mb-1">purchaseReturn Order No.</label>
+              <input value={purchaseReturnOrderNo} onChange={e => setpurchaseReturnOrderNo(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label block mb-1">Purchase Order Date</label>
-              <input type="date" value={purchaseOrderDate} onChange={e => setPurchaseOrderDate(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label block mb-1">purchaseReturn Order Date</label>
+              <input type="date" value={purchaseReturnOrderDate} onChange={e => setpurchaseReturnOrderDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label block mb-1">E-Way Bill No.</label>
@@ -412,7 +412,7 @@ export default function NewPurchasePage() {
                       {filteredProducts.map(p => (
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between">
                           <span>{p.name}</span>
-                          <span className="text-slate-600">₹{p.purchasePrice}</span>
+                          <span className="text-slate-600">₹{p.purchaseReturnPrice}</span>
                         </div>
                       ))}
                     </div>
@@ -430,7 +430,7 @@ export default function NewPurchasePage() {
                 <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div>
-                <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
+                <label className="erp-label block mb-1">purchaseReturn Price <span className="text-red-500">*</span></label>
                 <div className="flex">
                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
@@ -538,7 +538,7 @@ export default function NewPurchasePage() {
 
               {lastPrices.length > 0 && (
                 <div className="mt-4 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
-                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 Purchases ({itemInput.productName})</p>
+                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 purchaseReturns ({itemInput.productName})</p>
                   {lastPrices.map((lp, idx) => (
                     <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-1">
                       <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
@@ -770,5 +770,12 @@ export default function NewPurchasePage() {
     </div>
   );
 }
+
+
+
+
+
+
+
 
 

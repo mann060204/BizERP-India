@@ -205,7 +205,7 @@ export const convertToInvoice = async (req: Request, res: Response) => {
       notes: quotation.notes,
       remarks: quotation.remarks,
       deliveryTerms: quotation.deliveryTerms,
-      createdBy: (req as any).user._id
+      createdBy: (req as any).user.userId
     };
     
     const invoice = new Invoice(invoiceData);
@@ -221,3 +221,4 @@ export const convertToInvoice = async (req: Request, res: Response) => {
     res.status(500).json({ message: error.message || 'Validation Failed' });
   }
 };
+

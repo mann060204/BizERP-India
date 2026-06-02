@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
-import { Package, Tag, Layers, Database, PlusCircle, Search, Settings2, HandCoins, Calendar } from 'lucide-react';
+import { Package, Tag, Layers, Database, PlusCircle, Search, Settings2, HandCoins, Calendar, Sliders } from 'lucide-react';
 
 export default function MasterDashboard() {
   const masterModules = [
@@ -48,6 +48,16 @@ export default function MasterDashboard() {
         { label: 'Expense Master', href: '/dashboard/masters/expenses', icon: HandCoins },
         { label: 'Holiday Master', href: '/dashboard/masters/holidays', icon: Calendar },
         { label: 'Bank Master', href: '/dashboard/masters/banks', icon: Database },
+      ]
+    },
+    {
+      title: 'System Configurations',
+      description: 'Configure invoice settings, prefixes, terms & conditions, and master application preferences.',
+      icon: Sliders,
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-500/10',
+      actions: [
+        { label: 'Application Settings', href: '/dashboard/settings', icon: Sliders },
       ]
     }
   ];
