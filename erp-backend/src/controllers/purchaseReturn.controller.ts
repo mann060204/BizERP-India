@@ -16,7 +16,7 @@ const getNextPurchaseReturnNumber = async (businessId: string): Promise<string> 
   const counterVal = business!.purchaseReturnCounter;
   const prefixVal = business!.purchaseReturnPrefix || 'DBN';
   const counter = String(counterVal).padStart(4, '0');
-  return `-${year}-${counter};
+  return `-${year}-${counter}`;
 };
 
 export const getPredictedPurchaseReturnNumber = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -28,7 +28,7 @@ export const getPredictedPurchaseReturnNumber = async (req: AuthRequest, res: Re
     const counterVal = business.purchaseReturnCounter;
     const prefixVal = business.purchaseReturnPrefix || 'DBN';
     const counter = String(counterVal).padStart(4, '0');
-    res.json({ nextReturnNumber: `-${year}-${counter} });
+    res.json({ nextReturnNumber: `-${year}-${counter}` });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 

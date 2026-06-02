@@ -23,10 +23,10 @@ export interface ILineItem {
 
 export interface ISalesReturn extends Document {
   businessId: mongoose.Types.ObjectId;
-  SalesreturnNumber: string;
+  returnNumber: string;
   originalInvoiceNumber?: string;
-  SalesReturnType: 'GST' | 'NON-GST';
-  SalesReturnDate: Date;
+  returnType: 'GST' | 'NON-GST';
+  returnDate: Date;
   dueDate?: Date;
   shippingAddress?: string;
   customerId?: mongoose.Types.ObjectId;
@@ -93,10 +93,10 @@ const LineItemSchema = new Schema<ILineItem>({
 const SalesReturnSchema = new Schema<ISalesReturn>(
   {
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
-    SalesreturnNumber: { type: String, required: true, index: true },
+    returnNumber: { type: String, required: true, index: true },
     originalInvoiceNumber: { type: String },
-    SalesReturnType: { type: String, enum: ['GST', 'NON-GST'], default: 'GST' },
-    SalesReturnDate: { type: Date, required: true, index: true, default: Date.now },
+    returnType: { type: String, enum: ['GST', 'NON-GST'], default: 'GST' },
+    returnDate: { type: Date, required: true, index: true, default: Date.now },
     dueDate: { type: Date },
     shippingAddress: { type: String },
     customerId: { type: Schema.Types.ObjectId, ref: 'Customer', index: true },

@@ -25,7 +25,7 @@ const LineItemSchema = new Schema<ILineItem>({
 
 export interface IPurchaseReturn extends Document {
   businessId: mongoose.Types.ObjectId;
-  purchaseType: string;
+  returnType: string;
   returnNumber: string;
   originalBillNumber?: string; // Supplier's invoice number
   returnDate: Date;
@@ -62,6 +62,10 @@ export interface IPurchaseReturn extends Document {
   contactNo?: string;
   purchasedBy?: string;
   txnId?: string;
+  shippingAddress?: string;
+  soldBy?: string;
+  isReverseCharge?: boolean;
+  termsAndConditions?: string;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -70,7 +74,7 @@ export interface IPurchaseReturn extends Document {
 const PurchaseReturnSchema = new Schema<IPurchaseReturn>(
   {
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
-    purchaseType: { type: String, default: 'GST' },
+    returnType: { type: String, default: 'GST' },
     returnNumber: { type: String, required: true, index: true },
     originalBillNumber: { type: String },
     returnDate: { type: Date, required: true, index: true, default: Date.now },
@@ -112,6 +116,10 @@ const PurchaseReturnSchema = new Schema<IPurchaseReturn>(
     contactNo: String,
     purchasedBy: String,
     txnId: String,
+    shippingAddress: String,
+    soldBy: String,
+    isReverseCharge: { type: Boolean, default: false },
+    termsAndConditions: String,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }

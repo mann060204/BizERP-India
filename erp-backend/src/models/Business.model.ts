@@ -26,6 +26,10 @@ export interface IBusiness extends Document {
   nonGstInvoiceCounter: number;
   purchaseOrderPrefix?: string;
   purchaseOrderCounter: number;
+  salesReturnPrefix?: string;
+  salesReturnCounter: number;
+  purchaseReturnPrefix?: string;
+  purchaseReturnCounter: number;
   bankDetails?: {
     bankName?: string;
     accountNumber?: string;
@@ -90,6 +94,10 @@ const BusinessSchema = new Schema<IBusiness>(
     nonGstInvoiceCounter: { type: Number, default: 0 },
     purchaseOrderPrefix: { type: String, default: 'PO' },
     purchaseOrderCounter: { type: Number, default: 0 },
+    salesReturnPrefix: { type: String, default: 'CRN' },
+    salesReturnCounter: { type: Number, default: 0 },
+    purchaseReturnPrefix: { type: String, default: 'DBN' },
+    purchaseReturnCounter: { type: Number, default: 0 },
     bankDetails: {
       bankName: String,
       accountNumber: String,
