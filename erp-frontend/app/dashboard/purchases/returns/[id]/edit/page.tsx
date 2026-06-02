@@ -216,7 +216,7 @@ export default function EditpurchaseReturnPage() {
 
     if (supplierId) {
       try {
-        const { data } = await purchaseReturnsApi.getLastPrices(supplierId, p._id);
+        const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
         setLastPrices(data.prices || []);
       } catch (err) {
         setLastPrices([]);

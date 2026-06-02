@@ -67,7 +67,7 @@ export default function purchaseReturnsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-900">All purchaseReturns</h2>
-          <Link href="/dashboard/purchaseReturns/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+          <Link href="/dashboard/purchases/returns/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Add purchaseReturn Bill
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default function purchaseReturnsPage() {
             <RotateCcw className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No purchaseReturns yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Record your first purchaseReturn bill to update stock</p>
-            <Link href="/dashboard/purchaseReturns/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
+            <Link href="/dashboard/purchases/returns/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Add purchaseReturn Bill
             </Link>
           </div>
@@ -125,7 +125,7 @@ export default function purchaseReturnsPage() {
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                            <Link href={`/dashboard/purchaseReturns/${pur._id}/edit`} className="px-2 py-1 rounded-lg text-xs text-blue-500 hover:bg-blue-100 transition">Edit</Link>
+                            <Link href={`/dashboard/purchases/returns/${pur._id}/edit`} className="px-2 py-1 rounded-lg text-xs text-blue-500 hover:bg-blue-100 transition">Edit</Link>
                             {pur.status !== 'cancelled' && (
                               <button onClick={() => handleCancel(pur._id, pur.billNumber)} className="px-2 py-1 rounded-lg text-xs text-red-500 hover:bg-red-100 transition">Cancel</button>
                             )}
