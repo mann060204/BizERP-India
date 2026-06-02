@@ -46,37 +46,21 @@ export const suppliersApi = {
 // ─── Purchases ────────────────────────────────────────────────────────────────
 export const salesReturnsApi = {
   list: (params?: any) => api.get('/sales-returns', { params }),
-  get: (id: string) => api.get(/sales-returns/),
+  get: (id: string) => api.get(`/sales-returns/${id}`),
   create: (data: any) => api.post('/sales-returns', data),
-  update: (id: string, data: any) => api.put(/sales-returns/, data),
-  delete: (id: string) => api.delete(/sales-returns/),
+  update: (id: string, data: any) => api.put(`/sales-returns/${id}`, data),
+  delete: (id: string) => api.delete(`/sales-returns/${id}`),
 };
 export const salesReturnApi = salesReturnsApi;
 
-export const salesReturnApi = {
-  list: (params?: any) => api.get('/sales-returns', { params }),
-  get: (id: string) => api.get(/sales-returns/),
-  create: (data: any) => api.post('/sales-returns', data),
-  update: (id: string, data: any) => api.put(/sales-returns/, data),
-  delete: (id: string) => api.delete(/sales-returns/),
-};
-
 export const purchaseReturnsApi = {
   list: (params?: any) => api.get('/purchase-returns', { params }),
-  get: (id: string) => api.get(/purchase-returns/),
+  get: (id: string) => api.get(`/purchase-returns/${id}`),
   create: (data: any) => api.post('/purchase-returns', data),
-  update: (id: string, data: any) => api.put(/purchase-returns/, data),
-  delete: (id: string) => api.delete(/purchase-returns/),
+  update: (id: string, data: any) => api.put(`/purchase-returns/${id}`, data),
+  delete: (id: string) => api.delete(`/purchase-returns/${id}`),
 };
 export const purchaseReturnApi = purchaseReturnsApi;
-
-export const purchaseReturnApi = {
-  list: (params?: any) => api.get('/purchase-returns', { params }),
-  get: (id: string) => api.get(/purchase-returns/),
-  create: (data: any) => api.post('/purchase-returns', data),
-  update: (id: string, data: any) => api.put(/purchase-returns/, data),
-  delete: (id: string) => api.delete(/purchase-returns/),
-};
 
 export const purchasesApi = {
   list: (params?: any) => api.get('/purchases', { params }),
