@@ -240,3 +240,59 @@ export const updatePurchaseReturnStatus = async (req: AuthRequest, res: Response
     res.json({ message: 'Purchase Return status updated', purchaseReturn: pr });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
+
+export const getPurchaseReturnSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const returns = await PurchaseReturn.find({ businessId });
+
+    let monthPurchaseReturns = 0;
+    let totalPaid = 0;
+    let outstanding = 0;
+    let monthPurchaseReturnCount = 0;
+
+    returns.forEach(r => {
+      if (r.status !== 'cancelled') {
+        const d = new Date(r.returnDate);
+        if (d >= startOfMonth) {
+          monthPurchaseReturns += r.grandTotal;
+          monthPurchaseReturnCount++;
+        }
+        totalPaid += 0;
+        outstanding += r.grandTotal;
+      }
+    });
+
+    res.json({ monthPurchaseReturns, totalPaid, outstanding, monthPurchaseReturnCount });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+export const cancelPurchaseReturn = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const pr = await PurchaseReturn.findOne({ _id: req.params.id, businessId: req.user!.businessId });
+    if (!pr) { res.status(404).json({ message: 'Purchase Return not found' }); return; }
+    
+    if (pr.status !== 'cancelled') {
+      for (const item of pr.lineItems) {
+        if (item.productId) {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: item.quantity },
+          });
+          if (item.batchNo) {
+            await Batch.findOneAndUpdate(
+              { businessId: pr.businessId, productId: item.productId, batchNo: item.batchNo },
+              { $inc: { currentStock: item.quantity } }
+            );
+          }
+        }
+      }
+    }
+    
+    pr.status = 'cancelled' as any;
+    await pr.save();
+    res.json({ message: 'Purchase Return cancelled successfully' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};

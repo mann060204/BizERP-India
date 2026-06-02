@@ -122,7 +122,7 @@ const SalesReturnSchema = new Schema<ISalesReturn>(
     shippingGstRate: { type: Number, default: 0 },
     
     
-    status: { type: String, enum: ['draft', 'approved'], default: 'draft' },
+    status: { type: String, enum: ['draft', 'approved', 'cancelled'], default: 'draft' },
     notes: String,
     remarks: String,
     deliveryTerms: String,

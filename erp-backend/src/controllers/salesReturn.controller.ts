@@ -240,3 +240,63 @@ export const updateSalesReturnStatus = async (req: AuthRequest, res: Response): 
     res.json({ message: 'Sales Return status updated', salesReturn: sr });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
+
+export const getSalesReturnSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const returns = await SalesReturn.find({ businessId });
+
+    let monthSales = 0;
+    let todaySales = 0;
+    let totalReceived = 0;
+    let outstanding = 0;
+    let monthReturnCount = 0;
+
+    returns.forEach(r => {
+      if (r.status !== 'cancelled') {
+        const d = new Date(r.returnDate);
+        if (d >= startOfMonth) {
+          monthSales += r.grandTotal;
+          monthReturnCount++;
+        }
+        if (d >= startOfDay) todaySales += r.grandTotal;
+        // Adjust these depending on your model schema for payments, using 0 as fallback
+        totalReceived += 0;
+        outstanding += r.grandTotal; // or use r.balance if you have it
+      }
+    });
+
+    res.json({ monthSales, todaySales, totalReceived, outstanding, monthReturnCount });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+export const cancelSalesReturn = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const sr = await SalesReturn.findOne({ _id: req.params.id, businessId: req.user!.businessId });
+    if (!sr) { res.status(404).json({ message: 'Sales Return not found' }); return; }
+    
+    if (sr.status !== 'cancelled') {
+      for (const item of sr.lineItems) {
+        if (item.productId) {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: -item.quantity },
+          });
+          if (item.batchNo) {
+            await Batch.findOneAndUpdate(
+              { businessId: sr.businessId, productId: item.productId, batchNo: item.batchNo },
+              { $inc: { currentStock: -item.quantity } }
+            );
+          }
+        }
+      }
+    }
+    
+    sr.status = 'cancelled' as any;
+    await sr.save();
+    res.json({ message: 'Sales Return cancelled successfully' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};

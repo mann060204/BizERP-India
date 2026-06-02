@@ -108,7 +108,7 @@ const PurchaseReturnSchema = new Schema<IPurchaseReturn>(
     
     
     
-    status: { type: String, enum: ['draft', 'approved'], default: 'draft' },
+    status: { type: String, enum: ['draft', 'approved', 'cancelled'], default: 'draft' },
     notes: String,
     remarks: String,
     deliveryTerms: String,
