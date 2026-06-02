@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Topbar from '../../../../components/layout/Topbar';
 import { salesReturnApi } from '../../../../lib/erp-api';
-import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3 } from 'lucide-react';
+import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface salesReturn { _id: string; salesReturnNumber: string; salesReturnDate: string; customerSnapshot: { name: string; mobile?: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
