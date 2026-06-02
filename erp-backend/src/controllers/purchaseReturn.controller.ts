@@ -5,30 +5,37 @@ import Product from '../models/Product.model';
 import Batch from '../models/Batch.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
+import { generateSequenceNumber } from '../utils/sequenceGenerator';
 
 const getNextPurchaseReturnNumber = async (businessId: string): Promise<string> => {
+  const docKey = 'PURCHASE_RETURN';
   const business = await Business.findByIdAndUpdate(
     businessId,
-    { $inc: { purchaseReturnCounter: 1 } },
+    { $inc: { [`documentSequences.${docKey}.nextNumber`]: 1 } },
     { new: true }
   );
-  const year = new Date().getFullYear();
-  const counterVal = business!.purchaseReturnCounter;
-  const prefixVal = business!.purchaseReturnPrefix || 'DBN';
-  const counter = String(counterVal).padStart(4, '0');
-  return `-${year}-${counter}`;
+  if (!business) throw new Error('Business not found');
+  
+  const seqConfig = business.documentSequences?.get(docKey);
+  const nextNum = seqConfig?.nextNumber || 1;
+  const format = seqConfig?.format || `${business.purchaseReturnPrefix || 'DBN'}-YYYY-SEQ`;
+  
+  return generateSequenceNumber(format, nextNum - 1, business.financialYearStart || 4);
 };
 
 export const getPredictedPurchaseReturnNumber = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
+    const docKey = 'PURCHASE_RETURN';
     const business = await Business.findById(businessId);
     if (!business) { res.status(404).json({ message: 'Business not found' }); return; }
-    const year = new Date().getFullYear();
-    const counterVal = business.purchaseReturnCounter;
-    const prefixVal = business.purchaseReturnPrefix || 'DBN';
-    const counter = String(counterVal).padStart(4, '0');
-    res.json({ nextReturnNumber: `-${year}-${counter}` });
+    
+    const seqConfig = business.documentSequences?.get(docKey);
+    const nextNum = seqConfig?.nextNumber || 1;
+    const format = seqConfig?.format || `${business.purchaseReturnPrefix || 'DBN'}-YYYY-SEQ`;
+    
+    const nextReturnNumber = generateSequenceNumber(format, nextNum, business.financialYearStart || 4);
+    res.json({ nextReturnNumber });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 

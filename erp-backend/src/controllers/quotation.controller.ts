@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import Quotation from '../models/Quotation.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
+import { generateSequenceNumber } from '../utils/sequenceGenerator';
 
 export const getQuotations = async (req: Request, res: Response) => {
   try {
@@ -62,12 +63,14 @@ export const createQuotation = async (req: Request, res: Response) => {
     // Auto increment logic
     const business = await Business.findById(businessId);
     if (business) {
-      if (data.quotationType === 'NON-GST') {
-        business.nonGstQuotationCounter = (business.nonGstQuotationCounter || 1) + 1;
-      } else {
-        business.quotationCounter = (business.quotationCounter || 1) + 1;
-      }
-      await business.save();
+      const docKey = data.quotationType === 'NON-GST' ? 'PROFORMA_INVOICE' : 'QUOTATION';
+      const seqConfig = business.documentSequences?.get(docKey);
+      const nextNum = seqConfig?.nextNumber || 1;
+      
+      const updateData: any = {};
+      updateData[`documentSequences.${docKey}.nextNumber`] = nextNum + 1;
+      
+      await Business.findByIdAndUpdate(businessId, { $set: updateData });
     }
     
     if (!['Draft', 'Sent', 'Accepted', 'Rejected', 'Invoiced', 'Cancelled'].includes(data.status)) data.status = 'Draft';
@@ -118,10 +121,15 @@ export const getNextQuotationNumber = async (req: Request, res: Response) => {
     const business = await Business.findById(businessId);
     if (!business) return res.status(404).json({ message: 'Business not found' });
     
-    const prefix = type === 'NON-GST' ? (business.nonGstQuotationPrefix || 'EST-') : (business.quotationPrefix || 'QUT-');
-    const counter = type === 'NON-GST' ? (business.nonGstQuotationCounter || 1) : (business.quotationCounter || 1);
+    const docKey = type === 'NON-GST' ? 'PROFORMA_INVOICE' : 'QUOTATION';
+    const seqConfig = business.documentSequences?.get(docKey);
+    const nextNum = seqConfig?.nextNumber || 1;
     
-    const nextNumber = `${prefix}${new Date().getFullYear()}-${counter.toString().padStart(4, '0')}`;
+    // Fallback formats
+    const fallbackPrefix = type === 'NON-GST' ? (business.nonGstQuotationPrefix || 'EST') : (business.quotationPrefix || 'QTN');
+    const format = seqConfig?.format || `${fallbackPrefix}-YYYY-SEQ`;
+    
+    const nextNumber = generateSequenceNumber(format, nextNum, business.financialYearStart || 4);
     res.json({ nextQuotationNumber: nextNumber });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -136,22 +144,20 @@ export const convertToInvoice = async (req: Request, res: Response) => {
     
     // Auto increment logic for invoice
     const business = await Business.findById(businessId);
-    let counter = 1;
-    let prefix = 'GST-';
+    let nextNumber = '';
     if (business) {
-      if (quotation.quotationType === 'NON-GST') {
-        prefix = 'NON-GST-';
-        counter = business.nonGstInvoiceCounter || 1;
-        business.nonGstInvoiceCounter = counter + 1;
-      } else {
-        prefix = 'GST-';
-        counter = business.invoiceCounter || 1;
-        business.invoiceCounter = counter + 1;
-      }
-      await business.save();
+      const docKey = quotation.quotationType === 'NON-GST' ? 'NON_GST_INVOICE' : 'GST_INVOICE';
+      const seqConfig = business.documentSequences?.get(docKey);
+      const nextNum = seqConfig?.nextNumber || 1;
+      
+      const fallbackPrefix = quotation.quotationType === 'NON-GST' ? (business.nonGstInvoicePrefix || 'NON-GST') : (business.invoicePrefix || 'INV');
+      const format = seqConfig?.format || `${fallbackPrefix}-YYYY-SEQ`;
+      nextNumber = generateSequenceNumber(format, nextNum, business.financialYearStart || 4);
+      
+      const updateData: any = {};
+      updateData[`documentSequences.${docKey}.nextNumber`] = nextNum + 1;
+      await Business.findByIdAndUpdate(businessId, { $set: updateData });
     }
-    
-    const nextNumber = `${prefix}${new Date().getFullYear()}-${counter.toString().padStart(4, '0')}`;
 
     // Explicit mapping to prevent any schema mismatch issues
     const invoiceData = {

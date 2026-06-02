@@ -47,7 +47,7 @@ export interface ISalesReturn extends Document {
   shippingGstRate: number;
   
   
-  status: 'draft' | 'approved';
+  status: 'draft' | 'approved' | 'cancelled';
   notes?: string;
   remarks?: string;
   deliveryTerms?: string;

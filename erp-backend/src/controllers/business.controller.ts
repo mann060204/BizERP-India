@@ -61,3 +61,25 @@ export const updateBusinessProfile = async (req: AuthRequest, res: Response): Pr
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// PUT /api/v1/business/sequences
+export const updateSequences = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { sequences } = req.body; // Expecting an object or array of sequences
+    
+    // Construct $set update object for Map
+    const updateData: any = {};
+    for (const [key, config] of Object.entries(sequences)) {
+      updateData[`documentSequences.${key}`] = config;
+    }
+
+    const business = await Business.findByIdAndUpdate(
+      req.user!.businessId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!business) { res.status(404).json({ message: 'Business not found' }); return; }
+    res.json({ message: 'Sequences updated successfully', documentSequences: business.documentSequences });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+

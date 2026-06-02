@@ -4,6 +4,7 @@ import Topbar from '../../../components/layout/Topbar';
 import { businessApi } from '../../../lib/erp-api';
 import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import DocumentSequencesTab from './components/DocumentSequencesTab';
 
 
 
@@ -11,7 +12,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'business' | 'application'>('business');
+  const [activeTab, setActiveTab] = useState<'business' | 'sequences' | 'application'>('business');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -82,8 +83,9 @@ export default function SettingsPage() {
           )}
         </div>
 
-        <div className="flex gap-6 border-b border-slate-200">
+        <div className="flex gap-6 border-b border-slate-200 overflow-x-auto whitespace-nowrap hide-scrollbar">
           <button onClick={() => setActiveTab('business')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'business' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Business Profile</button>
+          <button onClick={() => setActiveTab('sequences')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'sequences' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Document Sequences</button>
           <button onClick={() => setActiveTab('application')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'application' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Application Settings</button>
         </div>
 
@@ -276,6 +278,8 @@ export default function SettingsPage() {
             </div>
 
           </div>
+        ) : activeTab === 'sequences' ? (
+          <DocumentSequencesTab initialSequences={form.documentSequences} onUpdate={() => {}} />
         ) : (
           <div className="grid grid-cols-1 gap-6">
             <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">

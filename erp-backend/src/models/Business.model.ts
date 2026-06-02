@@ -60,6 +60,11 @@ export interface IBusiness extends Document {
     isActive: boolean;
   }[];
   inventorySequencing: 'FIFO' | 'FEFO' | 'LIFO';
+  documentSequences: Map<string, {
+    nextNumber: number;
+    format: string;
+    resetMonthly: boolean;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -152,6 +157,15 @@ const BusinessSchema = new Schema<IBusiness>(
       type: String,
       enum: ['FIFO', 'FEFO', 'LIFO'],
       default: 'FIFO'
+    },
+    documentSequences: {
+      type: Map,
+      of: new Schema({
+        nextNumber: { type: Number, default: 1 },
+        format: { type: String, default: 'SEQ' },
+        resetMonthly: { type: Boolean, default: false }
+      }, { _id: false }),
+      default: {}
     }
   },
   { timestamps: true }

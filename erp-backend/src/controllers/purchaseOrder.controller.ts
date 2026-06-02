@@ -2,6 +2,8 @@ import PurchaseBill from '../models/PurchaseBill.model';
 import { Request, Response } from 'express';
 import PurchaseOrder from '../models/PurchaseOrder.model';
 import Business from '../models/Business.model';
+import { calculateInvoiceTotals } from '../services/gst.service';
+import { generateSequenceNumber } from '../utils/sequenceGenerator';
 
 export const getPurchaseOrders = async (req: Request, res: Response) => {
   try {
@@ -60,8 +62,14 @@ export const createPurchaseOrder = async (req: Request, res: Response) => {
     
     const business = await Business.findById(businessId);
     if (business) {
-      business.purchaseOrderCounter = (business.purchaseOrderCounter || 1) + 1;
-      await business.save();
+      const docKey = 'PURCHASE_ORDER';
+      const seqConfig = business.documentSequences?.get(docKey);
+      const nextNum = seqConfig?.nextNumber || 1;
+      
+      const updateData: any = {};
+      updateData[`documentSequences.${docKey}.nextNumber`] = nextNum + 1;
+      
+      await Business.findByIdAndUpdate(businessId, { $set: updateData });
     }
     
     if (!['Draft', 'Sent', 'Accepted', 'Rejected', 'Billed', 'Cancelled'].includes(data.status)) data.status = 'Draft';
@@ -108,13 +116,15 @@ export const deletePurchaseOrder = async (req: Request, res: Response) => {
 export const getNextPurchaseOrderNumber = async (req: Request, res: Response) => {
   try {
     const businessId = (req as any).user.businessId;
+    const docKey = 'PURCHASE_ORDER';
     const business = await Business.findById(businessId);
     if (!business) return res.status(404).json({ message: 'Business not found' });
     
-    const prefix = business.purchaseOrderPrefix || 'PO';
-    const counter = business.purchaseOrderCounter || 1;
+    const seqConfig = business.documentSequences?.get(docKey);
+    const nextNum = seqConfig?.nextNumber || 1;
+    const format = seqConfig?.format || `${business.purchaseOrderPrefix || 'PO'}-YYYY-SEQ`;
     
-    const nextNumber = `${prefix}-${new Date().getFullYear()}-${counter.toString().padStart(4, '0')}`;
+    const nextNumber = generateSequenceNumber(format, nextNum, business.financialYearStart || 4);
     res.json({ nextPurchaseOrderNumber: nextNumber });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

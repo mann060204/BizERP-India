@@ -120,6 +120,7 @@ export const reportsApi = {
 export const businessApi = {
   getProfile: () => api.get('/business'),
   updateProfile: (data: any) => api.put('/business', data),
+  updateSequences: (data: any) => api.put('/business/sequences', data).then(res => res.data),
 };
 
 

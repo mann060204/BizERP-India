@@ -4,6 +4,7 @@ import Topbar from '../../../components/layout/Topbar';
 import { inventoryApi } from '../../../lib/erp-api';
 import { Search, Database, AlertCircle, TrendingDown, TrendingUp, Settings2, Loader2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExportDropdown from '../../../components/shared/ExportDropdown';
 
 interface Product { _id: string; name: string; sku?: string; category?: string; unit: string; currentStock: number; reorderLevel: number; purchasePrice: number; }
 
@@ -83,6 +84,19 @@ export default function InventoryPage() {
               </button>
             ))}
           </div>
+          <ExportDropdown 
+            data={inventory}
+            filename={`Inventory_Export_${filter}`}
+            columns={[
+              { header: 'Product Name', key: 'name' },
+              { header: 'SKU', key: 'sku' },
+              { header: 'Category', key: 'category' },
+              { header: 'Current Stock', render: (p) => `${p.currentStock} ${p.unit}` },
+              { header: 'Reorder Level', key: 'reorderLevel' },
+              { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(2) },
+              { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(2) }
+            ]}
+          />
         </div>
 
         {/* Table */}

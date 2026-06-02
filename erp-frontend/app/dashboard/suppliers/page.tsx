@@ -4,6 +4,7 @@ import Topbar from '../../../components/layout/Topbar';
 import { suppliersApi } from '../../../lib/erp-api';
 import { Search, Loader2, Save, X, Truck, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExportDropdown from '../../../components/shared/ExportDropdown';
 
 interface Supplier { 
   _id: string; name: string; mobile?: string; email?: string; gstin?: string; pan?: string;
@@ -95,9 +96,25 @@ export default function SuppliersPage() {
             <h2 className="text-xl font-bold text-slate-900">Supplier Directory</h2>
             <p className="text-slate-600 text-sm mt-0.5">{suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
-            + Add Supplier
-          </button>
+          <div className="flex items-center gap-3">
+            <ExportDropdown 
+              data={suppliers}
+              filename="Suppliers_Export"
+              columns={[
+                { header: 'Name', key: 'name' },
+                { header: 'Mobile', key: 'mobile' },
+                { header: 'Email', key: 'email' },
+                { header: 'GSTIN', key: 'gstin' },
+                { header: 'PAN', key: 'pan' },
+                { header: 'City', render: (s) => s.address?.city || '' },
+                { header: 'State', render: (s) => s.address?.state || '' },
+                { header: 'Balance', render: (s) => (s.openingBalance || 0).toFixed(2) }
+              ]}
+            />
+            <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
+              + Add Supplier
+            </button>
+          </div>
         </div>
 
         <div className="relative max-w-sm">

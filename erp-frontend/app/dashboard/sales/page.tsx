@@ -5,6 +5,7 @@ import Topbar from '../../../components/layout/Topbar';
 import { invoicesApi } from '../../../lib/erp-api';
 import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExportDropdown from '../../../components/shared/ExportDropdown';
 
 interface Invoice { _id: string; invoiceNumber: string; invoiceDate: string; customerSnapshot: { name: string; mobile?: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
 
@@ -91,6 +92,19 @@ export default function SalesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-900">All Invoices</h2>
           <div className="flex items-center gap-3">
+            <ExportDropdown 
+              data={filteredInvoices}
+              filename="Sales_Export"
+              columns={[
+                { header: 'Date', render: (inv) => new Date(inv.invoiceDate).toLocaleDateString('en-GB') },
+                { header: 'Invoice No.', key: 'invoiceNumber' },
+                { header: 'Customer', render: (inv) => inv.customerSnapshot?.name || '' },
+                { header: 'Mobile', render: (inv) => inv.customerSnapshot?.mobile || '' },
+                { header: 'Total Amount', render: (inv) => (inv.grandTotal || 0).toFixed(2) },
+                { header: 'Balance', render: (inv) => (inv.balance || 0).toFixed(2) },
+                { header: 'Status', render: (inv) => STATUS_CONFIG[inv.status]?.label || inv.status }
+              ]}
+            />
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 

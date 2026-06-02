@@ -6,28 +6,34 @@ import Batch from '../models/Batch.model';
 import BatchLog from '../models/BatchLog.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
+import { generateSequenceNumber } from '../utils/sequenceGenerator';
 
 // Helper: generate next invoice number
 const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' = 'GST'): Promise<string> => {
-  const isGst = invoiceType === 'GST';
-  const incrementField = isGst ? 'invoiceCounter' : 'nonGstInvoiceCounter';
+  const docKey = invoiceType === 'GST' ? 'GST_INVOICE' : 'NON_GST_INVOICE';
+  
   const business = await Business.findByIdAndUpdate(
     businessId,
-    { $inc: { [incrementField]: 1 } },
+    { $inc: { [`documentSequences.${docKey}.nextNumber`]: 1 } },
     { new: true }
   );
-  const year = new Date().getFullYear();
-  const counterVal = isGst ? business!.invoiceCounter : business!.nonGstInvoiceCounter;
-  const prefixVal = isGst ? business!.invoicePrefix : business!.nonGstInvoicePrefix;
-  const counter = String(counterVal).padStart(4, '0');
-  return `${prefixVal}-${year}-${counter}`;
+  
+  if (!business) throw new Error('Business not found');
+  
+  const seqConfig = business.documentSequences?.get(docKey);
+  const nextNum = seqConfig?.nextNumber || 1;
+  // Use format if available, fallback to old prefix + year + counter if not configured yet
+  const format = seqConfig?.format || (invoiceType === 'GST' ? `${business.invoicePrefix || 'INV'}-YYYY-SEQ` : `${business.nonGstInvoicePrefix || 'NON-GST'}-YYYY-SEQ`);
+  
+  return generateSequenceNumber(format, nextNum - 1, business.financialYearStart || 4);
 };
 
 // GET /api/v1/invoices/next-number
 export const getPredictedInvoiceNumber = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
-    const type = req.query.type === 'NON-GST' ? 'NON-GST' : 'GST';
+    const invoiceType = req.query.type === 'NON-GST' ? 'NON-GST' : 'GST';
+    const docKey = invoiceType === 'GST' ? 'GST_INVOICE' : 'NON_GST_INVOICE';
     
     const business = await Business.findById(businessId);
     if (!business) {
@@ -35,13 +41,13 @@ export const getPredictedInvoiceNumber = async (req: AuthRequest, res: Response)
       return;
     }
 
-    const year = new Date().getFullYear();
-    const isGst = type === 'GST';
-    const counterVal = isGst ? business.invoiceCounter : business.nonGstInvoiceCounter;
-    const prefixVal = isGst ? business.invoicePrefix : business.nonGstInvoicePrefix;
-    const counter = String(counterVal).padStart(4, '0');
+    const seqConfig = business.documentSequences?.get(docKey);
+    const nextNum = seqConfig?.nextNumber || 1;
+    const format = seqConfig?.format || (invoiceType === 'GST' ? `${business.invoicePrefix || 'INV'}-YYYY-SEQ` : `${business.nonGstInvoicePrefix || 'NON-GST'}-YYYY-SEQ`);
     
-    res.json({ nextInvoiceNumber: `${prefixVal}-${year}-${counter}` });
+    const nextInvoiceNumber = generateSequenceNumber(format, nextNum, business.financialYearStart || 4);
+    
+    res.json({ nextInvoiceNumber });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }

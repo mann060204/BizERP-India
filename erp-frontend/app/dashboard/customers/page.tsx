@@ -6,6 +6,7 @@ import Topbar from '../../../components/layout/Topbar';
 import { customersApi } from '../../../lib/erp-api';
 import { Plus, Search, Users, Phone, Edit2, Trash2, Loader2, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExportDropdown from '../../../components/shared/ExportDropdown';
 
 interface Customer { _id: string; name: string; mobile?: string; email?: string; gstin?: string; billingAddress?: any; openingBalance: number; photo?: string; }
 
@@ -49,9 +50,24 @@ export default function CustomersPage() {
             <h2 className="text-xl font-bold text-slate-900">Customer Directory</h2>
             <p className="text-slate-600 text-sm mt-0.5">{customers.length} customer{customers.length !== 1 ? 's' : ''} total</p>
           </div>
-          <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
-            <Plus className="w-4 h-4" /> Add Customer
-          </Link>
+          <div className="flex items-center gap-3">
+            <ExportDropdown 
+              data={customers}
+              filename="Customers_Export"
+              columns={[
+                { header: 'Name', key: 'name' },
+                { header: 'Mobile', key: 'mobile' },
+                { header: 'Email', key: 'email' },
+                { header: 'GSTIN', key: 'gstin' },
+                { header: 'City', render: (c) => c.billingAddress?.city || '' },
+                { header: 'State', render: (c) => c.billingAddress?.state || '' },
+                { header: 'Balance', render: (c) => (c.openingBalance || 0).toFixed(2) }
+              ]}
+            />
+            <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+              <Plus className="w-4 h-4" /> Add Customer
+            </Link>
+          </div>
         </div>
 
         {/* Search */}

@@ -5,6 +5,7 @@ import Topbar from '../../../components/layout/Topbar';
 import { purchasesApi } from '../../../lib/erp-api';
 import { Plus, Search, FileText, Loader2, CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ExportDropdown from '../../../components/shared/ExportDropdown';
 
 interface Purchase { _id: string; billNumber: string; billDate: string; supplierSnapshot: { name: string }; grandTotal: number; amountPaid: number; balance: number; status: string; paymentMode: string; }
 
@@ -67,9 +68,24 @@ export default function PurchasesPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-900">All Purchases</h2>
-          <Link href="/dashboard/purchases/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
-            <Plus className="w-4 h-4" /> Add Purchase Bill
-          </Link>
+          <div className="flex items-center gap-3">
+            <ExportDropdown 
+              data={purchases.filter(p => !statusFilter || p.status === statusFilter)}
+              filename="Purchases_Export"
+              columns={[
+                { header: 'Date', render: (p) => new Date(p.billDate).toLocaleDateString('en-GB') },
+                { header: 'Bill No.', key: 'billNumber' },
+                { header: 'Supplier', render: (p) => p.supplierSnapshot?.name || '' },
+                { header: 'Total Amount', render: (p) => (p.grandTotal || 0).toFixed(2) },
+                { header: 'Amount Paid', render: (p) => (p.amountPaid || 0).toFixed(2) },
+                { header: 'Balance', render: (p) => (p.balance || 0).toFixed(2) },
+                { header: 'Status', render: (p) => STATUS_CONFIG[p.status]?.label || p.status }
+              ]}
+            />
+            <Link href="/dashboard/purchases/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+              <Plus className="w-4 h-4" /> Add Purchase Bill
+            </Link>
+          </div>
         </div>
 
         {/* Status Filters */}

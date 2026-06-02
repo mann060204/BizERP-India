@@ -68,14 +68,14 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const balance = totals.grandTotal - paid;
 
     // Add stock for product items
-    if (!batches) batches = [];
+    let batchesArray = batches || [];
     
     for (const item of lineItems) {
       if (item.productId) {
         if (!item.batchNo) {
           item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
           // Auto-generated batch goes to batches array
-          batches.push({
+          batchesArray.push({
             productId: item.productId,
             batchNo: item.batchNo,
             mrp: item.mrp,
@@ -90,7 +90,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Process ALL batches from the batches array for stock increment and upsert
-    for (const batch of batches) {
+    for (const batch of batchesArray) {
       if (batch.productId && batch.batchNo) {
         const batchQty = Number(batch.quantity) || 0;
         
@@ -237,14 +237,14 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const balance = totals.grandTotal - paid;
 
     // Add new stock
-    if (!batches) batches = [];
+    let newBatchesArray = batches || [];
     
     for (const item of lineItems) {
       if (item.productId) {
         if (!item.batchNo) {
           item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
           // Auto-generated batch goes to batches array
-          batches.push({
+          newBatchesArray.push({
             productId: item.productId,
             batchNo: item.batchNo,
             mrp: item.mrp,
@@ -259,7 +259,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     }
 
     // Process ALL batches from the batches array for stock increment and upsert
-    for (const batch of batches) {
+    for (const batch of newBatchesArray) {
       if (batch.productId && batch.batchNo) {
         const batchQty = Number(batch.quantity) || 0;
         
