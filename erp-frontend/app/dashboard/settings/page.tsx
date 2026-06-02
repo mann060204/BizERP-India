@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'business' | 'application'>('business');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -69,15 +70,23 @@ export default function SettingsPage() {
       <main className="flex-1 p-6 space-y-6 max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Business Settings</h2>
-            <p className="text-slate-600 text-sm mt-0.5">Manage your company profile and compliance details</p>
+            <h2 className="text-xl font-bold text-slate-900">Settings</h2>
+            <p className="text-slate-600 text-sm mt-0.5">Manage your business and application preferences</p>
           </div>
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
-          </button>
+          {activeTab === 'business' && (
+            <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
+            </button>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex gap-6 border-b border-slate-200">
+          <button onClick={() => setActiveTab('business')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'business' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Business Profile</button>
+          <button onClick={() => setActiveTab('application')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'application' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Application Settings</button>
+        </div>
+
+        {activeTab === 'business' ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
             <div className="glass rounded-2xl p-5 border border-slate-200 text-center">
               <div className="w-20 h-20 mx-auto rounded-full bg-white border-2 border-slate-200 flex items-center justify-center mb-4 overflow-hidden relative group">
@@ -235,8 +244,42 @@ export default function SettingsPage() {
             </div>
 
 
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">
+               <h3 className="font-semibold text-slate-900 border-b border-slate-200 pb-3">Application Preferences</h3>
+               <div className="space-y-4 max-w-lg">
+                 <div>
+                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Theme</label>
+                   <select disabled className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-sm cursor-not-allowed">
+                     <option>System Default (Coming Soon)</option>
+                     <option>Light</option>
+                     <option>Dark</option>
+                   </select>
+                   <p className="text-[10px] text-slate-500 mt-1">Theme customization is currently locked to System Default.</p>
+                 </div>
+                 <div>
+                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Language</label>
+                   <select disabled className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-sm cursor-not-allowed">
+                     <option>English (Default)</option>
+                   </select>
+                   <p className="text-[10px] text-slate-500 mt-1">More languages will be supported in future updates.</p>
+                 </div>
+                 <div>
+                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Date Format</label>
+                   <select disabled className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-sm cursor-not-allowed">
+                     <option>DD/MM/YYYY</option>
+                     <option>MM/DD/YYYY</option>
+                     <option>YYYY-MM-DD</option>
+                   </select>
+                   <p className="text-[10px] text-slate-500 mt-1">Date formatting is currently standard across the app.</p>
+                 </div>
+               </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

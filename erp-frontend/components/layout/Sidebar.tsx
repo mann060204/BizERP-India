@@ -12,8 +12,12 @@ import { logout } from '../../store/slices/authSlice';
 
 const NAV_ITEMS = [
   { label: 'Dashboard',       href: '/dashboard',          icon: LayoutDashboard },
-  { label: 'Sales',           href: '/dashboard/sales',    icon: ShoppingCart },
-  { label: 'Quotations',      href: '/dashboard/quotations', icon: FileText },
+  { label: 'Sales',           href: '#',                   icon: ShoppingCart,
+    subItems: [
+      { label: 'Sales Invoices', href: '/dashboard/sales' },
+      { label: 'Quotations',     href: '/dashboard/quotations' },
+    ]
+  },
   { label: 'Purchases',       href: '/dashboard/purchases',icon: Package },
   { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },
   { label: 'Accounts',        href: '/dashboard/accounts', icon: Landmark, 
@@ -108,10 +112,10 @@ export default function Sidebar() {
       {/* User + Logout */}
       <div className="p-3 border-t border-slate-200">
         {!collapsed && (
-          <div className="px-3 py-2 mb-2">
+          <Link href="/dashboard/settings" className="block px-3 py-2 mb-2 rounded-xl hover:bg-slate-100 transition-colors">
             <p className="text-slate-900 text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
             <p className="text-slate-600 text-xs capitalize">{user?.role}</p>
-          </div>
+          </Link>
         )}
         <button onClick={() => dispatch(logout())}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:text-red-400 hover:bg-red-900/10 transition-all ${collapsed ? 'justify-center' : ''}`}>
