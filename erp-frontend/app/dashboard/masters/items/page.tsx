@@ -35,7 +35,7 @@ const emptyForm = {
 };
 
 // Reusable styling components defined OUTSIDE to prevent focus loss
-const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '' }: any) => (
+const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '', onQuickAdd }: any) => (
   <div>
     <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider flex items-center justify-between">
       <span>{label} {required && <span className="text-red-500">*</span>}</span>
