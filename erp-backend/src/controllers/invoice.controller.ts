@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 import Invoice from '../models/Invoice.model';
 import Product from '../models/Product.model';
 import Batch from '../models/Batch.model';
+import BatchLog from '../models/BatchLog.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 
@@ -157,10 +158,25 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
         });
 
         if (item.batchNo) {
-          await Batch.findOneAndUpdate(
+          const updatedBatch = await Batch.findOneAndUpdate(
             { businessId, productId: item.productId, batchNo: item.batchNo },
-            { $inc: { currentStock: -item.quantity } }
+            { $inc: { currentStock: -item.quantity } },
+            { new: true }
           );
+
+          if (updatedBatch) {
+            await BatchLog.create({
+              businessId,
+              batchId: updatedBatch._id,
+              productId: item.productId,
+              action: 'STOCK_OUT',
+              quantityChanged: -item.quantity,
+              currentStock: updatedBatch.currentStock,
+              documentType: 'Invoice',
+              documentNumber: invoiceNumber,
+              userId: req.user!.userId,
+            });
+          }
         }
       }
     }

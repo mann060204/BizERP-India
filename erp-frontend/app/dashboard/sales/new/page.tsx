@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi, businessApi } from '../../../../lib/erp-api';
+import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi } from '../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -283,6 +283,65 @@ export default function NewInvoicePage() {
     });
     setItemSearch('');
     setLastPriceInfo(null);
+  };
+
+  const handleAutoAssign = async () => {
+    if (lineItems.length === 0) {
+      toast.error('Add items first to auto-assign batches');
+      return;
+    }
+    
+    // Check if we need to auto-assign any items (items without batchNo but with product Id)
+    const itemsToAssign = lineItems.filter(i => !i.batchNo && i.productId);
+    if (itemsToAssign.length === 0) {
+      toast.error('All items already have batches assigned or no products selected.');
+      return;
+    }
+
+    const toastId = toast.loading('Auto-assigning batches...');
+    try {
+      const payload = {
+        items: itemsToAssign.map(i => ({ productId: i.productId, quantity: i.quantity }))
+      };
+      const res = await inventoryApi.autoSequence(payload);
+      
+      const newItems: LineItem[] = [];
+      let didAssign = false;
+
+      lineItems.forEach(item => {
+        if (item.batchNo || !item.productId) {
+          newItems.push(item);
+          return;
+        }
+
+        const allocationInfo = res.allocations.find((a: any) => a.productId === item.productId);
+        if (!allocationInfo || allocationInfo.allocatedBatches.length === 0) {
+          newItems.push(item); // couldn't allocate
+          return;
+        }
+
+        didAssign = true;
+        // Split item if multiple batches are assigned
+        allocationInfo.allocatedBatches.forEach((alloc: any) => {
+          newItems.push({
+            ...item,
+            batchNo: alloc.batchNo,
+            quantity: alloc.allocatedQuantity,
+            rate: alloc.salePrice || item.rate, // Optionally use batch salePrice
+            mrp: alloc.mrp || item.mrp
+          });
+        });
+      });
+
+      if (didAssign) {
+        setLineItems(newItems.map(item => calculateItem(item)));
+        toast.success(`Batches auto-assigned via ${res.strategy} strategy!`, { id: toastId });
+      } else {
+        toast.error('Could not auto-assign batches (insufficient stock?).', { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error('Failed to auto-assign batches', { id: toastId });
+    }
   };
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
@@ -671,6 +730,12 @@ export default function NewInvoicePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
+           <div className="flex justify-between items-center bg-[#F8FAFC] px-2 py-1 border-b border-slate-200">
+             <div className="text-xs font-bold text-slate-700">Added Items</div>
+             <button onClick={handleAutoAssign} className="text-[10px] bg-action-100 text-action-700 font-bold px-2 py-1 rounded hover:bg-action-200 transition">
+               ✨ Auto-Assign Batches
+             </button>
+           </div>
            <div className="grid grid-cols-12 erp-grid-header border-b border-slate-200">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>

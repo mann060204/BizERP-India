@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 import PurchaseBill from '../models/PurchaseBill.model';
 import Product from '../models/Product.model';
 import Batch from '../models/Batch.model';
+import BatchLog from '../models/BatchLog.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 
 // GET /api/v1/purchases
@@ -69,6 +70,9 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     // Add stock for product items and process batches
     for (const item of lineItems) {
       if (item.productId) {
+        if (!item.batchNo) {
+          item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
+        }
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
@@ -76,7 +80,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
         if (item.batchNo) {
           const batchConfig = (batches || []).find((b: any) => String(b.productId) === String(item.productId) && String(b.batchNo) === String(item.batchNo));
           
-          await Batch.findOneAndUpdate(
+          const updatedBatch = await Batch.findOneAndUpdate(
             { businessId, productId: item.productId, batchNo: item.batchNo },
             {
               $setOnInsert: {
@@ -89,6 +93,20 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
             },
             { upsert: true, new: true }
           );
+
+          if (updatedBatch) {
+            await BatchLog.create({
+              businessId,
+              batchId: updatedBatch._id,
+              productId: item.productId,
+              action: 'STOCK_IN',
+              quantityChanged: item.quantity,
+              currentStock: updatedBatch.currentStock,
+              documentType: 'PurchaseBill',
+              documentNumber: billNumber,
+              userId: req.user!.userId,
+            });
+          }
         }
       }
     }

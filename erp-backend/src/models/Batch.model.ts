@@ -9,6 +9,9 @@ export interface IBatch extends Document {
   salePrice: number;
   minSalePrice?: number;
   expiryDate?: Date;
+  manufacturingDate?: Date;
+  supplierId?: mongoose.Types.ObjectId;
+  qualityStatus: 'Pending' | 'Passed' | 'Failed';
   currentStock: number;
   isActive: boolean;
   createdAt: Date;
@@ -25,6 +28,9 @@ const BatchSchema = new Schema<IBatch>(
     salePrice: { type: Number, required: true },
     minSalePrice: { type: Number },
     expiryDate: { type: Date },
+    manufacturingDate: { type: Date },
+    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier' },
+    qualityStatus: { type: String, enum: ['Pending', 'Passed', 'Failed'], default: 'Passed' },
     currentStock: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
   },

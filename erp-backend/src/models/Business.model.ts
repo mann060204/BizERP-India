@@ -59,6 +59,7 @@ export interface IBusiness extends Document {
     value: number;
     isActive: boolean;
   }[];
+  inventorySequencing: 'FIFO' | 'FEFO' | 'LIFO';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -146,6 +147,11 @@ const BusinessSchema = new Schema<IBusiness>(
         isActive: { type: Boolean, default: true }
       }],
       default: []
+    },
+    inventorySequencing: {
+      type: String,
+      enum: ['FIFO', 'FEFO', 'LIFO'],
+      default: 'FIFO'
     }
   },
   { timestamps: true }

@@ -95,6 +95,9 @@ export const inventoryApi = {
   list: (params?: any) => api.get('/inventory', { params }),
   adjust: (data: any) => api.post('/inventory/adjust', data),
   getAdjustments: () => api.get('/inventory/adjustments'),
+  autoSequence: (data: any) => api.post('/inventory/auto-sequence', data).then(res => res.data),
+  getBatchAlerts: () => api.get('/inventory/batch-alerts').then(res => res.data),
+  getBatchLogs: (params?: any) => api.get('/inventory/batch-logs', { params }).then(res => res.data),
 };
 
 // ─── Expenses ─────────────────────────────────────────────────────────────────

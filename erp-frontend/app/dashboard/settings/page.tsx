@@ -55,7 +55,8 @@ export default function SettingsPage() {
         nonGstInvoicePrefix: form.nonGstInvoicePrefix || 'NON-GST',
         purchaseOrderPrefix: form.purchaseOrderPrefix || 'PO',
         productGroups: form.productGroups || [],
-        productBrands: form.productBrands || []
+        productBrands: form.productBrands || [],
+        inventorySequencing: form.inventorySequencing || 'FIFO'
       });
       toast.success('Settings updated successfully');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
