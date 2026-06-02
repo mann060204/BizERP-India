@@ -78,6 +78,10 @@ export default function NewpurchaseReturnPage() {
   const [showItemDD, setShowItemDD] = useState(false);
   const [itemIdentifierType, setItemIdentifierType] = useState<'tag' | 'code'>('tag');
   const [lastPrices, setLastPrices] = useState<any[]>([]);
+  
+  const [searchBillNo, setSearchBillNo] = useState('');
+  const [isFetchingBill, setIsFetchingBill] = useState(false);
+
 
   // Main List
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -119,6 +123,47 @@ export default function NewpurchaseReturnPage() {
 
   const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+
+
+  const fetchOriginalBill = async () => {
+    if (!searchBillNo) return;
+    setIsFetchingBill(true);
+    try {
+      const res = await purchasesApi.list({ billNumber: searchBillNo, limit: 1 });
+      const purchases = res.data.purchases;
+      if (!purchases || purchases.length === 0) {
+        toast.error('Purchase bill not found');
+        return;
+      }
+      const pb = purchases[0];
+      
+      // Populate supplier
+      if (pb.supplierId) {
+        const s = suppliers.find(x => x._id === pb.supplierId._id || x._id === pb.supplierId);
+        if (s) pickSupplier(s);
+      } else {
+        setSupplierSearch(pb.supplierSnapshot?.name || 'Walk-in Supplier');
+        setSupplierSnapshot(pb.supplierSnapshot);
+        setSupplierId('');
+      }
+      
+      setPlaceOfSupply(pb.isInterState ? 'Other' : 'Gujarat');
+      
+      // Populate line items
+      const newItems = pb.lineItems.map((item: any) => ({
+        ...item,
+        productId: item.productId?._id || item.productId,
+        productName: item.productName || item.name,
+      }));
+      setLineItems(newItems.map((item: any) => calculateItem(item)));
+      
+      toast.success('Original Purchase Bill Fetched');
+    } catch (err) {
+      toast.error('Failed to fetch purchase bill');
+    } finally {
+      setIsFetchingBill(false);
+    }
+  };
 
   const pickSupplier = (s: Supplier) => {
     setSupplierId(s._id);

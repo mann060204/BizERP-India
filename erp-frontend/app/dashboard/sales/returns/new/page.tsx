@@ -63,6 +63,10 @@ export default function NewSalesReturnPage() {
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
   const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
+  
+  const [searchInvoiceNo, setSearchInvoiceNo] = useState('');
+  const [isFetchingInvoice, setIsFetchingInvoice] = useState(false);
+
 
   // Advanced Search Modal State
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
@@ -163,6 +167,47 @@ export default function NewSalesReturnPage() {
     if (advText && !p.name.toLowerCase().includes(advText.toLowerCase()) && !p.hsnCode?.includes(advText)) return false;
     return true;
   });
+
+
+  const fetchOriginalInvoice = async () => {
+    if (!searchInvoiceNo) return;
+    setIsFetchingInvoice(true);
+    try {
+      const res = await invoicesApi.list({ invoiceNumber: searchInvoiceNo, limit: 1 });
+      const invoices = res.data.invoices;
+      if (!invoices || invoices.length === 0) {
+        toast.error('Invoice not found');
+        return;
+      }
+      const inv = invoices[0];
+      
+      // Populate customer
+      if (inv.customerId) {
+        const c = customers.find(x => x._id === inv.customerId._id || x._id === inv.customerId);
+        if (c) pickCustomer(c);
+      } else {
+        setCustomerSearch(inv.customerSnapshot?.name || 'Walk-in Customer');
+        setSelectedCustomer(null);
+      }
+      
+      setPlaceOfSupply(inv.placeOfSupply || 'Gujarat');
+      setIsInterState(inv.isInterState || false);
+      
+      // Populate line items
+      const newItems = inv.lineItems.map((item: any) => ({
+        ...item,
+        productId: item.productId?._id || item.productId,
+        productName: item.productName || item.name,
+      }));
+      setLineItems(newItems.map((item: any) => calculateItem(item)));
+      
+      toast.success('Original Invoice Fetched');
+    } catch (err) {
+      toast.error('Failed to fetch invoice');
+    } finally {
+      setIsFetchingInvoice(false);
+    }
+  };
 
   const pickCustomer = (c: Customer) => {
     setSelectedCustomer(c);
@@ -386,6 +431,19 @@ export default function NewSalesReturnPage() {
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Sales Return Information</div>
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
+            <div className="col-span-6 flex items-end gap-2 bg-slate-100 p-2 rounded mb-2">
+              <div className="flex-1">
+                <label className="erp-label">Fetch Original Invoice</label>
+                <div className="flex gap-2">
+                  <input value={searchInvoiceNo} onChange={e => setSearchInvoiceNo(e.target.value)} placeholder="Enter exact Invoice No (e.g. INV-2026-0001)" className="erp-input w-full" />
+                  <button onClick={fetchOriginalInvoice} disabled={isFetchingInvoice || !searchInvoiceNo} className="btn-action bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 flex items-center gap-1 shrink-0">
+                    {isFetchingInvoice ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    Fetch Details
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label className="erp-label">Sales Return Type</label>
               <select value={salesReturnType} onChange={e => setsalesReturnType(e.target.value)} className="erp-input w-full">
