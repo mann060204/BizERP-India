@@ -128,8 +128,8 @@ export default function DashboardPage() {
   const dragKpiItem = useRef<number | null>(null);
   const dragOverKpiItem = useRef<number | null>(null);
   const defaultKpiOrder = [
-    'Sales (Monthly)', 'Purchases (Monthly)', 'Expenses (Monthly)', 
-    'Received (Monthly)', 'Outstanding (Monthly)', 'Paid Out (Monthly)', 'Low Stock'
+    'Sales', 'Purchases', 'Expenses', 
+    'Received', 'Outstanding', 'Paid Out', 'Low Stock'
   ];
   const [kpiOrder, setKpiOrder] = useState<string[]>(defaultKpiOrder);
   const [selectedKpi, setSelectedKpi] = useState<any>(null);
@@ -171,6 +171,7 @@ export default function DashboardPage() {
 
   const [kpiLoading, setKpiLoading] = useState(true);
   const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0, expenses: 0 });
+  const [kpiPeriod, setKpiPeriod] = useState('month');
 
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendLoading, setTrendLoading] = useState(true);
@@ -193,28 +194,31 @@ export default function DashboardPage() {
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
     }).catch(() => {});
 
-    Promise.all([
-      invoicesApi.summary().catch(() => ({ data: {} })),
-      purchasesApi.summary().catch(() => ({ data: {} })),
-      inventoryApi.list({ lowStock: 'true', limit: 1 }).catch(() => ({ data: {} })),
-      expensesApi.summary().catch(() => ({ data: {} })),
-    ]).then(([inv, pur, inven, exp]) => {
-      setStats({
-        sales: inv.data.monthSales || 0,
-        received: inv.data.totalReceived || 0,
-        salesOutstanding: inv.data.totalOutstanding || 0,
-        purchases: pur.data.monthPurchases || 0,
-        paid: pur.data.totalPaid || 0,
-        lowStock: inven.data.lowStockCount || 0,
-        expenses: exp.data.monthExpenses || 0,
-      });
-    }).finally(() => setKpiLoading(false));
-
     dashboardApi.customerPending()
       .then(d => setPendingCustomers(d.data || []))
       .catch(() => {})
       .finally(() => setPendingLoading(false));
   }, []);
+
+  useEffect(() => {
+    setKpiLoading(true);
+    Promise.all([
+      invoicesApi.summary({ period: kpiPeriod }).catch(() => ({ data: {} })),
+      purchasesApi.summary({ period: kpiPeriod }).catch(() => ({ data: {} })),
+      inventoryApi.list({ lowStock: 'true', limit: 1 }).catch(() => ({ data: {} })),
+      expensesApi.summary({ period: kpiPeriod }).catch(() => ({ data: {} })),
+    ]).then(([inv, pur, inven, exp]) => {
+      setStats({
+        sales: inv.data.monthSales || 0,
+        received: inv.data.totalReceived || 0,
+        salesOutstanding: inv.data.outstanding || inv.data.totalOutstanding || 0,
+        purchases: pur.data.monthPurchases || 0,
+        paid: pur.data.totalPaid || 0,
+        lowStock: inven.data.lowStockCount || 0,
+        expenses: exp.data.monthTotal || 0,
+      });
+    }).finally(() => setKpiLoading(false));
+  }, [kpiPeriod]);
 
   const fetchAll = useCallback((params: any) => {
     setTrendLoading(true); setInventoryLoading(true); setTopProfitLoading(true);
@@ -231,12 +235,12 @@ export default function DashboardPage() {
   useEffect(() => { fetchAll({ period: 'month' }); }, []);
 
   const ALL_KPI_CARDS = [
-    { label: 'Sales (Monthly)', type: 'sales', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Purchases (Monthly)', type: 'purchases', value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Expenses (Monthly)', type: 'expenses', value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Received (Monthly)', type: 'received', value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Outstanding (Monthly)', type: 'outstanding', value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Paid Out (Monthly)', type: 'paid', value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Sales', type: 'sales', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Purchases', type: 'purchases', value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Expenses', type: 'expenses', value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Received', type: 'received', value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Outstanding', type: 'outstanding', value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Paid Out', type: 'paid', value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Low Stock', type: 'lowStock', value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
@@ -247,11 +251,20 @@ export default function DashboardPage() {
       <Topbar title="Dashboard" />
 
       <main className="flex-1 p-5 overflow-auto">
-        {/* Greeting */}
-        <div className="mb-5 flex items-start justify-between">
+        {/* Greeting & KPI Period */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Good {greeting}, {businessName}</h2>
-            <p className="text-slate-500 text-sm mt-1 font-medium">Here's your business snapshot.</p>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Welcome back, {businessName || 'Admin'} 👋</h1>
+            <p className="text-slate-500 font-medium tracking-wide mt-1">Here is what's happening with your business.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Metrics:</span>
+            <select value={kpiPeriod} onChange={e => setKpiPeriod(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-sm font-bold text-slate-700 rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer outline-none">
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
           </div>
           <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">
             <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Chart Size:</span>

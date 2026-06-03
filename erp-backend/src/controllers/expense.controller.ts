@@ -84,15 +84,20 @@ export const getExpenseSummary = async (req: AuthRequest, res: Response): Promis
   try {
     const businessId = req.user!.businessId;
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const { period } = req.query as any;
+    
+    let startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (period === 'today') startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    else if (period === 'week') { startDate = new Date(now); startDate.setDate(now.getDate() - now.getDay()); startDate.setHours(0,0,0,0); }
+    else if (period === 'year') startDate = new Date(now.getFullYear(), 0, 1);
 
     const [monthExpenses, byCategory] = await Promise.all([
       Expense.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), date: { $gte: startOfMonth } } },
+        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), date: { $gte: startDate } } },
         { $group: { _id: null, total: { $sum: '$totalWithTax' } } },
       ]),
       Expense.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), date: { $gte: startOfMonth } } },
+        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), date: { $gte: startDate } } },
         { $group: { _id: '$category', total: { $sum: '$totalWithTax' } } },
         { $sort: { total: -1 } }
       ])

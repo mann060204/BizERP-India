@@ -387,12 +387,18 @@ export const getSalesSummary = async (req: AuthRequest, res: Response): Promise<
   try {
     const businessId = req.user!.businessId;
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const { period } = req.query as any;
+    
+    let startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (period === 'today') startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    else if (period === 'week') { startDate = new Date(now); startDate.setDate(now.getDate() - now.getDay()); startDate.setHours(0,0,0,0); }
+    else if (period === 'year') startDate = new Date(now.getFullYear(), 0, 1);
+
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const [monthSales, todaySales, outstanding, totalReceived] = await Promise.all([
       Invoice.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), invoiceDate: { $gte: startOfMonth }, status: { $ne: 'cancelled' } } },
+        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), invoiceDate: { $gte: startDate }, status: { $ne: 'cancelled' } } },
         { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
       ]),
       Invoice.aggregate([

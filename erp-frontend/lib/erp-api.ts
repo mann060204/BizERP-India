@@ -31,7 +31,7 @@ export const invoicesApi = {
   update: (id: string, data: any) => api.put(`/invoices/${id}`, data),
   updateStatus: (id: string, data: any) => api.put(`/invoices/${id}/status`, data),
   cancel: (id: string) => api.delete(`/invoices/${id}`),
-  summary: () => api.get('/invoices/analytics/summary'),
+  summary: (params?: any) => api.get('/invoices/analytics/summary', { params }),
   getNextNumber: (type: 'GST' | 'NON-GST') => api.get('/invoices/next-number', { params: { type } }),
   getLastPrice: (customerId: string, productId: string) => api.get('/invoices/last-price', { params: { customerId, productId } }),
 };
@@ -80,7 +80,7 @@ export const purchasesApi = {
   updateStatus: (id: string, status: string) => api.put(`/purchases/${id}/status`, { status }),
   getLastPrices: (supplierId: string, productId: string) => api.get(`/purchases/last-prices?supplierId=${supplierId}&productId=${productId}`),
   cancel: (id: string) => api.delete(`/purchases/${id}`),
-  summary: () => api.get('/purchases/analytics/summary'),
+  summary: (params?: any) => api.get('/purchases/analytics/summary', { params }),
 };
 
 export const purchaseOrdersApi = {
@@ -109,7 +109,7 @@ export const expensesApi = {
   list: (params?: any) => api.get('/expenses', { params }),
   create: (data: any) => api.post('/expenses', data),
   delete: (id: string) => api.delete(`/expenses/${id}`),
-  summary: () => api.get('/expenses/analytics/summary'),
+  summary: (params?: any) => api.get('/expenses/analytics/summary', { params }),
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
