@@ -4,26 +4,26 @@ import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
   const columns: any[] = [
-    
-      { key: 'itemCode', label: 'Code' },
-      { key: 'name', label: 'Item Name' },
-      { key: 'category', label: 'Category' },
-      { key: 'unit', label: 'Unit' },
-      { key: 'salePrice', label: 'Price', align: 'right', format: (v: any) => `₹${(v||0).toFixed(2)}` }
-        
+    { key: 'itemCode', label: 'Code' },
+    { key: 'name', label: 'Item Name' },
+    { key: 'category', label: 'Category' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'currentStock', label: 'Stock', align: 'right' },
+    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },  // Backend maps sellingPrice → salePrice
+    { key: 'mrp', label: 'MRP', align: 'right', format: (v: any) => v ? `₹${Number(v).toFixed(2)}` : '—' },
+    { key: 'gstRate', label: 'GST %', align: 'center', format: (v: any) => `${v || 0}%` },
   ];
 
-  
-        const fetchData = async () => {
-          const res = await reportsApi.getItemList();
-          return res.data?.data || [];
-        };
-        
+  const fetchData = async () => {
+    const res = await reportsApi.getItemList();
+    return res.data?.data || [];
+  };
 
   return (
-    <ReportLayout 
+    <ReportLayout
       title="Item List"
-      subtitle="Master list of inventory products"
+      subtitle="Master price list with stock and tax details"
       category="Inventory"
       columns={columns}
       fetchData={fetchData}

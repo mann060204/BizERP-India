@@ -19,11 +19,35 @@ const sendError = (res: Response, message: string, status = 500) => res.status(s
 export const getCashBook = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const cashAccount = await Account.findOne({ businessId, accountType: 'Cash' });
-    if (!cashAccount) return sendError(res, 'Cash account not found', 404);
+    // Find all Cash type accounts for this business
+    const cashAccounts = await Account.find({ businessId, type: 'Bank' });
+    const cashAccount = await Account.findOne({ businessId, type: { $in: ['Bank', 'Cash'] } });
+    if (!cashAccount) {
+      // Return empty if no cash/bank account
+      return sendSuccess(res, []);
+    }
     
-    const ledgers = await AccountLedger.find({ businessId, accountId: cashAccount._id }).sort({ date: -1, createdAt: -1 });
-    sendSuccess(res, ledgers);
+    const cashAccountIds = cashAccounts.map(a => a._id);
+    // Include Cash accounts too
+    const allCashAccounts = await Account.find({ businessId, type: { $in: ['Bank', 'Cash'] } });
+    const allIds = allCashAccounts.map(a => a._id);
+    
+    const ledgers = await AccountLedger.find({ businessId, accountId: { $in: allIds } })
+      .populate('accountId', 'name type')
+      .sort({ date: -1, createdAt: -1 });
+    
+    // Transform to expected frontend format
+    const transformed = ledgers.map((l: any) => ({
+      date: l.date,
+      particulars: l.description,
+      voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+      debit: l.debit || 0,
+      credit: l.credit || 0,
+      balance: l.closingBalance || (l.debit - l.credit),
+      referenceType: l.referenceType,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -32,8 +56,22 @@ export const getCashBook = async (req: AuthRequest, res: Response) => {
 export const getBusinessBook = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const ledgers = await AccountLedger.find({ businessId }).populate('accountId', 'name accountType').sort({ date: -1 }).limit(1000);
-    sendSuccess(res, ledgers);
+    const ledgers = await AccountLedger.find({ businessId })
+      .populate('accountId', 'name type')
+      .sort({ date: -1 })
+      .limit(1000);
+    
+    // Transform to expected frontend format
+    const transformed = ledgers.map((l: any) => ({
+      date: l.date,
+      accountId: l.accountId, // populated: { name, type }
+      particulars: l.description,
+      voucherType: l.referenceType || 'Journal',
+      debit: l.debit || 0,
+      credit: l.credit || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -43,12 +81,22 @@ export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
     // Find ledgers where bank/cash is credited (money going out)
-    const bankCashAccounts = await Account.find({ businessId, accountType: { $in: ['Bank', 'Cash'] } });
+    const bankCashAccounts = await Account.find({ businessId, type: { $in: ['Bank', 'Cash'] } });
     const accountIds = bankCashAccounts.map(a => a._id);
     const ledgers = await AccountLedger.find({ businessId, accountId: { $in: accountIds }, credit: { $gt: 0 } })
-      .populate('accountId', 'name')
+      .populate('accountId', 'name type')
       .sort({ date: -1 });
-    sendSuccess(res, ledgers);
+    
+    // Transform to expected frontend format
+    const transformed = ledgers.map((l: any) => ({
+      date: l.date,
+      accountId: l.accountId, // populated: { name }
+      particulars: l.description,
+      voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+      credit: l.credit || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -58,12 +106,22 @@ export const getPaymentReceived = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
     // Find ledgers where bank/cash is debited (money coming in)
-    const bankCashAccounts = await Account.find({ businessId, accountType: { $in: ['Bank', 'Cash'] } });
+    const bankCashAccounts = await Account.find({ businessId, type: { $in: ['Bank', 'Cash'] } });
     const accountIds = bankCashAccounts.map(a => a._id);
     const ledgers = await AccountLedger.find({ businessId, accountId: { $in: accountIds }, debit: { $gt: 0 } })
-      .populate('accountId', 'name')
+      .populate('accountId', 'name type')
       .sort({ date: -1 });
-    sendSuccess(res, ledgers);
+    
+    // Transform to expected frontend format
+    const transformed = ledgers.map((l: any) => ({
+      date: l.date,
+      accountId: l.accountId, // populated: { name }
+      particulars: l.description,
+      voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+      debit: l.debit || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -72,8 +130,19 @@ export const getPaymentReceived = async (req: AuthRequest, res: Response) => {
 export const getChartOfAccounts = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const accounts = await Account.find({ businessId }).sort({ group: 1, name: 1 });
-    sendSuccess(res, accounts);
+    const accounts = await Account.find({ businessId }).sort({ type: 1, name: 1 });
+    
+    // Transform to match frontend columns: name, accountType, group, openingBalance
+    const transformed = accounts.map((a: any) => ({
+      name: a.name,
+      accountType: a.type, // Account model uses 'type' field
+      group: a.bankName || a.type, // use bankName as group for banks, else type
+      openingBalance: a.openingBalance || 0,
+      currentBalance: a.currentBalance || 0,
+      balanceType: a.balanceType || 'Dr',
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -83,12 +152,26 @@ export const getBalanceSheet = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
     const accounts = await Account.find({ businessId });
-    // In a real app this groups by Assets/Liabilities/Equity
-    const assets = accounts.filter(a => ['Asset', 'Bank', 'Cash', 'Accounts Receivable', 'Current Asset', 'Fixed Asset'].includes(a.accountType));
-    const liabilities = accounts.filter(a => ['Liability', 'Accounts Payable', 'Current Liability', 'Long Term Liability'].includes(a.accountType));
-    const equity = accounts.filter(a => ['Equity'].includes(a.accountType));
     
-    sendSuccess(res, { assets, liabilities, equity });
+    // Account model types: 'Bank', 'Loan', 'Asset', 'Capital', 'Income', 'Tax'
+    const assets = accounts.filter((a: any) => ['Bank', 'Asset'].includes(a.type));
+    const liabilities = accounts.filter((a: any) => ['Loan', 'Tax'].includes(a.type));
+    const equity = accounts.filter((a: any) => ['Capital', 'Income'].includes(a.type));
+    
+    // Transform each account to include accountType
+    const transformAccount = (a: any) => ({
+      name: a.name,
+      accountType: a.type,
+      balance: a.currentBalance || a.openingBalance || 0,
+      openingBalance: a.openingBalance || 0,
+      balanceType: a.balanceType || 'Dr',
+    });
+    
+    sendSuccess(res, {
+      assets: assets.map(transformAccount),
+      liabilities: liabilities.map(transformAccount),
+      equity: equity.map(transformAccount),
+    });
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -100,7 +183,19 @@ export const getItemRegister = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
     const products = await Product.find({ businessId }).sort({ name: 1 });
-    sendSuccess(res, products);
+    
+    const transformed = products.map((p: any) => ({
+      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+      name: p.name,
+      category: p.category || p.productType || 'General',
+      currentStock: p.currentStock || 0,
+      salePrice: p.sellingPrice || 0,
+      purchasePrice: p.purchasePrice || 0,
+      unit: p.unit || 'Nos',
+      gstRate: p.gstRate || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -109,10 +204,22 @@ export const getItemRegister = async (req: AuthRequest, res: Response) => {
 export const getLowLevelStock = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const products = await Product.find({ businessId, 
-      $expr: { $lte: ['$currentStock', '$lowStockAlert'] } 
+    // Use reorderLevel (not lowStockAlert) - that's the actual field name in Product model
+    const products = await Product.find({
+      businessId,
+      $expr: { $lte: ['$currentStock', '$reorderLevel'] }
     }).sort({ currentStock: 1 });
-    sendSuccess(res, products);
+    
+    const transformed = products.map((p: any) => ({
+      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+      name: p.name,
+      currentStock: p.currentStock || 0,
+      lowStockAlert: p.reorderLevel || 0, // Map reorderLevel to lowStockAlert for display
+      supplierId: 'N/A', // Product model doesn't have supplierId
+      unit: p.unit || 'Nos',
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -122,7 +229,17 @@ export const getStockAvailability = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
     const products = await Product.find({ businessId, currentStock: { $gt: 0 } }).sort({ name: 1 });
-    sendSuccess(res, products);
+    
+    const transformed = products.map((p: any) => ({
+      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+      name: p.name,
+      category: p.category || p.productType || 'General',
+      unit: p.unit || 'Nos',
+      currentStock: p.currentStock || 0,
+      reorderLevel: p.reorderLevel || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -131,8 +248,20 @@ export const getStockAvailability = async (req: AuthRequest, res: Response) => {
 export const getStockAdjustment = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const adjustments = await InventoryAdjustment.find({ businessId }).populate('productId', 'name').sort({ date: -1, createdAt: -1 });
-    sendSuccess(res, adjustments);
+    const adjustments = await InventoryAdjustment.find({ businessId })
+      .populate('productId', 'name sku')
+      .sort({ createdAt: -1 });
+    
+    const transformed = adjustments.map((a: any) => ({
+      date: a.createdAt, // InventoryAdjustment doesn't have a 'date' field, uses createdAt
+      productId: a.productId, // populated: { name, sku }
+      type: a.type === 'add' ? 'Stock In (+)' : 'Stock Out (-)',
+      quantity: a.quantity || 0,
+      reason: a.reason || '',
+      notes: a.notes || '',
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -141,9 +270,24 @@ export const getStockAdjustment = async (req: AuthRequest, res: Response) => {
 export const getConsumableStock = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    // Assuming product category or type defines consumable
-    const products = await Product.find({ businessId, category: /consumable/i }).sort({ name: 1 });
-    sendSuccess(res, products);
+    // Consumable = products with category containing 'consumable' OR productType General with low stock
+    const products = await Product.find({
+      businessId,
+      $or: [
+        { category: /consumable/i },
+        { productType: 'General' }
+      ]
+    }).sort({ name: 1 });
+    
+    const transformed = products.map((p: any) => ({
+      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+      name: p.name,
+      currentStock: p.currentStock || 0,
+      unit: p.unit || 'Nos',
+      category: p.category || p.productType || 'General',
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -152,20 +296,33 @@ export const getConsumableStock = async (req: AuthRequest, res: Response) => {
 export const getFastMovingItems = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    // Aggregate from invoices over last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const pipeline: any[] = [
-      { $match: { businessId, date: { $gte: thirtyDaysAgo } } },
-      { $unwind: "$items" },
-      { $group: { _id: "$items.productId", totalSold: { $sum: "$items.quantity" }, productName: { $first: "$items.productName" } } },
+      { $match: { businessId, invoiceDate: { $gte: thirtyDaysAgo }, status: { $ne: 'cancelled' } } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.productId',
+          totalSold: { $sum: '$items.quantity' },
+          productName: { $first: '$items.productName' },
+          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.unitPrice'] } }
+        }
+      },
       { $sort: { totalSold: -1 } },
       { $limit: 20 }
     ];
     
     const fastItems = await Invoice.aggregate(pipeline);
-    sendSuccess(res, fastItems);
+    
+    const transformed = fastItems.map((item: any) => ({
+      productName: item.productName || 'Unknown Product',
+      totalSold: item.totalSold || 0,
+      totalRevenue: item.totalRevenue || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -174,14 +331,31 @@ export const getFastMovingItems = async (req: AuthRequest, res: Response) => {
 export const getSlowMovingItems = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    // Products with no sales in last 90 days
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
-    const activeProductIds = await Invoice.distinct('items.productId', { businessId, date: { $gte: ninetyDaysAgo } });
+    const activeProductIds = await Invoice.distinct('items.productId', {
+      businessId,
+      invoiceDate: { $gte: ninetyDaysAgo },
+      status: { $ne: 'cancelled' }
+    });
     
-    const slowProducts = await Product.find({ businessId, _id: { $nin: activeProductIds as any[] }, currentStock: { $gt: 0 } } as any).sort({ name: 1 });
-    sendSuccess(res, slowProducts);
+    const slowProducts = await Product.find({
+      businessId,
+      _id: { $nin: activeProductIds as any[] },
+      currentStock: { $gt: 0 }
+    } as any).sort({ name: 1 });
+    
+    const transformed = slowProducts.map((p: any) => ({
+      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+      name: p.name,
+      category: p.category || p.productType || 'General',
+      currentStock: p.currentStock || 0,
+      purchasePrice: p.purchasePrice || 0,
+      unit: p.unit || 'Nos',
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -190,8 +364,21 @@ export const getSlowMovingItems = async (req: AuthRequest, res: Response) => {
 export const getAvailableSerials = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const batches = await Batch.find({ businessId, currentStock: { $gt: 0 } }).populate('productId', 'name itemCode').sort({ 'productId.name': 1 });
-    sendSuccess(res, batches);
+    const batches = await Batch.find({ businessId, currentStock: { $gt: 0 } })
+      .populate('productId', 'name sku')
+      .sort({ createdAt: -1 });
+    
+    const transformed = batches.map((b: any) => ({
+      batchNo: b.batchNo,
+      productId: b.productId, // populated: { name, sku }
+      expiryDate: b.expiryDate || null,
+      currentStock: b.currentStock || 0,
+      salePrice: b.salePrice || 0,
+      mrp: b.mrp || 0,
+      qualityStatus: b.qualityStatus || 'Passed',
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -200,21 +387,40 @@ export const getAvailableSerials = async (req: AuthRequest, res: Response) => {
 export const getItemList = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    const products = await Product.find({ businessId }).select('name itemCode category unit purchasePrice salePrice mrp currentStock').sort({ name: 1 });
-    sendSuccess(res, products);
+    const products = await Product.find({ businessId })
+      .select('name sku barcode category unit purchasePrice sellingPrice mrp currentStock gstRate productType')
+      .sort({ name: 1 });
+    
+    const transformed = products.map((p: any) => ({
+      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+      name: p.name,
+      category: p.category || p.productType || 'General',
+      unit: p.unit || 'Nos',
+      salePrice: p.sellingPrice || 0, // sellingPrice is the actual field
+      purchasePrice: p.purchasePrice || 0,
+      mrp: p.mrp || 0,
+      currentStock: p.currentStock || 0,
+      gstRate: p.gstRate || 0,
+    }));
+    
+    sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
   }
 };
 
 
-// --- OLD REPORTS RESTORED ---
+// --- FINANCIAL REPORTS ---
 
 // Helper to get date range
 const getDateRange = (from?: string, to?: string) => {
   const query: any = {};
   if (from) query.$gte = new Date(from);
-  if (to) query.$lte = new Date(to);
+  if (to) {
+    const toDate = new Date(to);
+    toDate.setHours(23, 59, 59, 999); // Include full end day
+    query.$lte = toDate;
+  }
   return Object.keys(query).length > 0 ? query : null;
 };
 
@@ -236,18 +442,25 @@ export const getProfitAndLoss = async (req: AuthRequest, res: Response): Promise
     }
 
     const [salesResult, purchasesResult, expensesResult] = await Promise.all([
-      Invoice.aggregate([{ $match: invoiceQuery }, { $group: { _id: null, totalSales: { $sum: '$totalTaxableAmount' } } }]),
-      PurchaseBill.aggregate([{ $match: purchaseQuery }, { $group: { _id: null, totalPurchases: { $sum: '$totalTaxableAmount' } } }]),
-      Expense.aggregate([{ $match: expenseQuery }, { $group: { _id: null, totalExpenses: { $sum: '$amount' } } }])
+      Invoice.aggregate([
+        { $match: invoiceQuery },
+        { $group: { _id: null, totalSales: { $sum: '$grandTotal' } } }
+      ]),
+      PurchaseBill.aggregate([
+        { $match: purchaseQuery },
+        { $group: { _id: null, totalPurchases: { $sum: '$grandTotal' } } }
+      ]),
+      Expense.aggregate([
+        { $match: expenseQuery },
+        { $group: { _id: null, totalExpenses: { $sum: '$totalWithTax' } } }
+      ])
     ]);
 
     const totalSales = salesResult[0]?.totalSales || 0;
     const totalPurchases = purchasesResult[0]?.totalPurchases || 0;
     const totalExpenses = expensesResult[0]?.totalExpenses || 0;
     
-    // Simplified Gross Profit: Sales - Purchases
     const grossProfit = totalSales - totalPurchases;
-    // Net Profit: Gross Profit - Expenses
     const netProfit = grossProfit - totalExpenses;
 
     res.json({ totalSales, totalPurchases, grossProfit, totalExpenses, netProfit });
@@ -284,7 +497,7 @@ export const getGstReport = async (req: AuthRequest, res: Response): Promise<voi
       }}
     ]);
 
-    // GSTR-3B: ITC (Purchases + Expenses with GST)
+    // ITC: Purchases with GST
     const purchaseGst = await PurchaseBill.aggregate([
       { $match: purchaseQuery },
       { $group: {
@@ -297,6 +510,7 @@ export const getGstReport = async (req: AuthRequest, res: Response): Promise<voi
       }}
     ]);
 
+    // ITC: Expenses with GST
     const expenseGst = await Expense.aggregate([
       { $match: expenseQuery },
       { $group: {
@@ -313,19 +527,24 @@ export const getGstReport = async (req: AuthRequest, res: Response): Promise<voi
     const pGst = purchaseGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
     const eGst = expenseGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
 
+    // Clean up _id fields from outward
+    delete outward._id;
+    delete pGst._id;
+    delete eGst._id;
+
     const inward = {
-      taxableValue: pGst.taxableValue + eGst.taxableValue,
-      cgst: pGst.cgst + eGst.cgst,
-      sgst: pGst.sgst + eGst.sgst,
-      igst: pGst.igst + eGst.igst,
-      totalTax: pGst.totalTax + eGst.totalTax
+      taxableValue: (pGst.taxableValue || 0) + (eGst.taxableValue || 0),
+      cgst: (pGst.cgst || 0) + (eGst.cgst || 0),
+      sgst: (pGst.sgst || 0) + (eGst.sgst || 0),
+      igst: (pGst.igst || 0) + (eGst.igst || 0),
+      totalTax: (pGst.totalTax || 0) + (eGst.totalTax || 0),
     };
 
-    // Net GST Payable = Outward Tax - Inward Tax (ITC)
+    // Net GST Payable = Outward Tax - ITC (cannot be negative)
     const netGstPayable = {
-      cgst: Math.max(0, outward.cgst - inward.cgst),
-      sgst: Math.max(0, outward.sgst - inward.sgst),
-      igst: Math.max(0, outward.igst - inward.igst),
+      cgst: Math.max(0, (outward.cgst || 0) - inward.cgst),
+      sgst: Math.max(0, (outward.sgst || 0) - inward.sgst),
+      igst: Math.max(0, (outward.igst || 0) - inward.igst),
     };
     const totalNetPayable = netGstPayable.cgst + netGstPayable.sgst + netGstPayable.igst;
 
@@ -337,60 +556,79 @@ export const getGstReport = async (req: AuthRequest, res: Response): Promise<voi
 export const getDaybook = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
-    const { date } = req.query as any; // expects YYYY-MM-DD
+    const { date } = req.query as any;
     
     let targetDate = new Date();
     if (date) targetDate = new Date(date);
     
-    const startOfDay = new Date(targetDate.setHours(0,0,0,0));
-    const endOfDay = new Date(targetDate.setHours(23,59,59,999));
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const invoiceQuery = { businessId, invoiceDate: { $gte: startOfDay, $lte: endOfDay } };
     const purchaseQuery = { businessId, billDate: { $gte: startOfDay, $lte: endOfDay } };
     const expenseQuery = { businessId, date: { $gte: startOfDay, $lte: endOfDay } };
 
     const [invoices, purchases, expenses] = await Promise.all([
-      Invoice.find(invoiceQuery, 'invoiceNumber invoiceDate customerSnapshot grandTotal amountReceived paymentMode').lean(),
-      PurchaseBill.find(purchaseQuery, 'billNumber billDate supplierSnapshot grandTotal amountPaid paymentMode').lean(),
-      Expense.find(expenseQuery, 'category date vendorName totalWithTax paymentMode notes').lean()
+      Invoice.find(invoiceQuery, 'invoiceNumber invoiceDate customerSnapshot grandTotal amountReceived paymentMode status').lean(),
+      PurchaseBill.find(purchaseQuery, 'billNumber billDate supplierSnapshot grandTotal amountPaid paymentMode status').lean(),
+      Expense.find(expenseQuery, 'category date vendorName totalWithTax amount paymentMode notes').lean()
     ]);
 
     const transactions: any[] = [];
 
-    invoices.forEach(i => transactions.push({
-      type: 'Sale',
-      ref: i.invoiceNumber,
-      date: i.invoiceDate,
-      party: i.customerSnapshot.name,
-      amount: i.grandTotal,
-      received: i.amountReceived,
-      mode: i.paymentMode
-    }));
+    invoices.forEach((i: any) => {
+      if (i.status === 'cancelled') return;
+      transactions.push({
+        type: 'Sale',
+        ref: i.invoiceNumber,
+        date: i.invoiceDate,
+        party: i.customerSnapshot?.name || 'Unknown Customer',
+        amount: i.grandTotal || 0,
+        received: i.amountReceived || 0,
+        mode: i.paymentMode || 'Cash',
+        paid: 0,
+      });
+    });
 
-    purchases.forEach(p => transactions.push({
-      type: 'Purchase',
-      ref: p.billNumber,
-      date: p.billDate,
-      party: p.supplierSnapshot.name,
-      amount: p.grandTotal,
-      paid: p.amountPaid,
-      mode: p.paymentMode
-    }));
+    purchases.forEach((p: any) => {
+      if (p.status === 'cancelled') return;
+      transactions.push({
+        type: 'Purchase',
+        ref: p.billNumber,
+        date: p.billDate,
+        party: p.supplierSnapshot?.name || 'Unknown Supplier',
+        amount: p.grandTotal || 0,
+        paid: p.amountPaid || 0,
+        received: 0,
+        mode: p.paymentMode || 'Cash',
+      });
+    });
 
-    expenses.forEach(e => transactions.push({
+    expenses.forEach((e: any) => transactions.push({
       type: 'Expense',
       ref: e.category,
       date: e.date,
       party: e.vendorName || 'Self',
-      amount: e.totalWithTax,
-      paid: e.totalWithTax,
-      mode: e.paymentMode
+      amount: e.totalWithTax || e.amount || 0,
+      paid: e.totalWithTax || e.amount || 0,
+      received: 0,
+      mode: e.paymentMode || 'Cash',
     }));
 
     // Sort descending by date
     transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    res.json({ date: startOfDay, transactions });
+    // Calculate totals
+    const totalInflow = transactions
+      .filter(t => t.type === 'Sale')
+      .reduce((sum, t) => sum + (t.received || 0), 0);
+    const totalOutflow = transactions
+      .filter(t => t.type !== 'Sale')
+      .reduce((sum, t) => sum + (t.paid || 0), 0);
+
+    res.json({ date: startOfDay, transactions, totalInflow, totalOutflow, netCashFlow: totalInflow - totalOutflow });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
@@ -402,12 +640,12 @@ export const getDashboardCharts = async (req: AuthRequest, res: Response): Promi
 
     // 1. Sales Chart (Last 30 Days)
     const thirtyDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
-    thirtyDaysAgo.setHours(0,0,0,0);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
 
     const salesAggregation = await Invoice.aggregate([
-      { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $ne: 'cancelled' }, invoiceDate: { $gte: thirtyDaysAgo } } },
+      { $match: { businessId, status: { $ne: 'cancelled' }, invoiceDate: { $gte: thirtyDaysAgo } } },
       { $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$invoiceDate", timezone: "+05:30" } },
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$invoiceDate', timezone: '+05:30' } },
           totalSales: { $sum: '$grandTotal' }
       }},
       { $sort: { _id: 1 } }
@@ -430,16 +668,16 @@ export const getDashboardCharts = async (req: AuthRequest, res: Response): Promi
     
     const [monthlySales, monthlyPurchases, monthlyExpenses] = await Promise.all([
       Invoice.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $ne: 'cancelled' }, invoiceDate: { $gte: sixMonthsAgo } } },
-        { $group: { _id: { year: { $year: "$invoiceDate" }, month: { $month: "$invoiceDate" } }, total: { $sum: '$grandTotal' } } }
+        { $match: { businessId, status: { $ne: 'cancelled' }, invoiceDate: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { year: { $year: '$invoiceDate' }, month: { $month: '$invoiceDate' } }, total: { $sum: '$grandTotal' } } }
       ]),
       PurchaseBill.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $ne: 'cancelled' }, billDate: { $gte: sixMonthsAgo } } },
-        { $group: { _id: { year: { $year: "$billDate" }, month: { $month: "$billDate" } }, total: { $sum: '$grandTotal' } } }
+        { $match: { businessId, status: { $ne: 'cancelled' }, billDate: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { year: { $year: '$billDate' }, month: { $month: '$billDate' } }, total: { $sum: '$grandTotal' } } }
       ]),
       Expense.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), date: { $gte: sixMonthsAgo } } },
-        { $group: { _id: { year: { $year: "$date" }, month: { $month: "$date" } }, total: { $sum: '$amount' } } }
+        { $match: { businessId, date: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { year: { $year: '$date' }, month: { $month: '$date' } }, total: { $sum: '$totalWithTax' } } }
       ])
     ]);
 
@@ -456,6 +694,7 @@ export const getDashboardCharts = async (req: AuthRequest, res: Response): Promi
       profitData.push({
         month: d.toLocaleDateString('en-IN', { month: 'short' }),
         revenue: s,
+        expenses: p + e,
         profit: s - p - e
       });
     }

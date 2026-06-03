@@ -4,23 +4,21 @@ import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
   const columns: any[] = [
-    
-      { key: 'name', label: 'Account Name' },
-      { key: 'accountType', label: 'Type' },
-      { key: 'group', label: 'Group' },
-      { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => `₹${(v||0).toFixed(2)}` }
-        
+    { key: 'name', label: 'Account Name' },
+    { key: 'accountType', label: 'Type' },    // Backend transforms 'type' → 'accountType'
+    { key: 'group', label: 'Group / Bank' },  // Backend maps bankName → group
+    { key: 'balanceType', label: 'Dr/Cr' },
+    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
   ];
 
-  
-        const fetchData = async () => {
-          const res = await reportsApi.getChartOfAccounts();
-          return res.data?.data || [];
-        };
-        
+  const fetchData = async () => {
+    const res = await reportsApi.getChartOfAccounts();
+    return res.data?.data || [];
+  };
 
   return (
-    <ReportLayout 
+    <ReportLayout
       title="Chart Of Accounts"
       subtitle="Directory of all ledger accounts"
       category="Accounts"

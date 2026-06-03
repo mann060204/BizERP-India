@@ -4,26 +4,23 @@ import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
   const columns: any[] = [
-    
-      { key: 'itemCode', label: 'Code' },
-      { key: 'name', label: 'Item Name' },
-      { key: 'category', label: 'Category' },
-      { key: 'unit', label: 'Unit' },
-      { key: 'currentStock', label: 'Available Stock', align: 'right' }
-        
+    { key: 'itemCode', label: 'Code' },
+    { key: 'name', label: 'Item Name' },
+    { key: 'category', label: 'Category' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'currentStock', label: 'Available Stock', align: 'right' },
+    { key: 'reorderLevel', label: 'Reorder Level', align: 'right' },
   ];
 
-  
-        const fetchData = async () => {
-          const res = await reportsApi.getStockAvailability();
-          return res.data?.data || [];
-        };
-        
+  const fetchData = async () => {
+    const res = await reportsApi.getStockAvailability();
+    return res.data?.data || [];
+  };
 
   return (
-    <ReportLayout 
+    <ReportLayout
       title="Stock Availability"
-      subtitle="Current available stock balances"
+      subtitle="Products with stock currently available"
       category="Inventory"
       columns={columns}
       fetchData={fetchData}

@@ -4,26 +4,25 @@ import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
   const columns: any[] = [
-    
-      { key: 'itemCode', label: 'Code' },
-      { key: 'name', label: 'Item Name' },
-      { key: 'category', label: 'Category' },
-      { key: 'currentStock', label: 'Current Stock', align: 'right' },
-      { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => `₹${(v||0).toFixed(2)}` }
-        
+    { key: 'itemCode', label: 'Code' },
+    { key: 'name', label: 'Item Name' },
+    { key: 'category', label: 'Category' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'currentStock', label: 'Current Stock', align: 'right' },
+    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'gstRate', label: 'GST %', align: 'right', format: (v: any) => `${v || 0}%` },
   ];
 
-  
-        const fetchData = async () => {
-          const res = await reportsApi.getItemRegister();
-          return res.data?.data || [];
-        };
-        
+  const fetchData = async () => {
+    const res = await reportsApi.getItemRegister();
+    return res.data?.data || [];
+  };
 
   return (
-    <ReportLayout 
+    <ReportLayout
       title="Item Register"
-      subtitle="Complete registry of all items"
+      subtitle="Complete registry of all inventory items"
       category="Inventory"
       columns={columns}
       fetchData={fetchData}

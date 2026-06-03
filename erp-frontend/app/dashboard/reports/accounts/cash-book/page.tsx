@@ -4,27 +4,23 @@ import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
   const columns: any[] = [
-    
-      { key: 'date', label: 'Date', format: (v: any) => new Date(v).toLocaleDateString() },
-      { key: 'particulars', label: 'Particulars' },
-      { key: 'voucherNo', label: 'Voucher No.' },
-      { key: 'debit', label: 'Debit (In)', align: 'right', format: (v: any) => v ? `₹${v.toFixed(2)}` : '-' },
-      { key: 'credit', label: 'Credit (Out)', align: 'right', format: (v: any) => v ? `₹${v.toFixed(2)}` : '-' },
-      { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => `₹${v.toFixed(2)}` }
-        
+    { key: 'date', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
+    { key: 'particulars', label: 'Particulars' },   // Backend maps description → particulars
+    { key: 'voucherNo', label: 'Voucher No.' },     // Backend maps referenceId → voucherNo
+    { key: 'referenceType', label: 'Type' },
+    { key: 'debit', label: 'Debit (In)', align: 'right', format: (v: any) => v ? `₹${Number(v).toFixed(2)}` : '—' },
+    { key: 'credit', label: 'Credit (Out)', align: 'right', format: (v: any) => v ? `₹${Number(v).toFixed(2)}` : '—' },
   ];
 
-  
-        const fetchData = async () => {
-          const res = await reportsApi.getCashBook();
-          return res.data?.data || [];
-        };
-        
+  const fetchData = async () => {
+    const res = await reportsApi.getCashBook();
+    return res.data?.data || [];
+  };
 
   return (
-    <ReportLayout 
+    <ReportLayout
       title="Cash Book"
-      subtitle="Daily cash transaction summary"
+      subtitle="Daily cash & bank transaction summary"
       category="Accounts"
       columns={columns}
       fetchData={fetchData}

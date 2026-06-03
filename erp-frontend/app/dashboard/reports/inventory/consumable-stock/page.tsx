@@ -4,25 +4,22 @@ import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
   const columns: any[] = [
-    
-      { key: 'itemCode', label: 'Code' },
-      { key: 'name', label: 'Item Name' },
-      { key: 'currentStock', label: 'Current Stock', align: 'right' },
-      { key: 'unit', label: 'Unit' }
-        
+    { key: 'itemCode', label: 'Code' },
+    { key: 'name', label: 'Item Name' },
+    { key: 'category', label: 'Category' },
+    { key: 'unit', label: 'Unit' },
+    { key: 'currentStock', label: 'Current Stock', align: 'right' },
   ];
 
-  
-        const fetchData = async () => {
-          const res = await reportsApi.getConsumableStock();
-          return res.data?.data || [];
-        };
-        
+  const fetchData = async () => {
+    const res = await reportsApi.getConsumableStock();
+    return res.data?.data || [];
+  };
 
   return (
-    <ReportLayout 
+    <ReportLayout
       title="Consumable Stock"
-      subtitle="Tracking of consumable inventory"
+      subtitle="Products categorized as consumables or general items"
       category="Inventory"
       columns={columns}
       fetchData={fetchData}
