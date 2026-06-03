@@ -12,6 +12,8 @@ export interface ILineItem {
   rate: number;
   mrp?: number;
   discount: number;
+  discountAmount?: number;
+  discountType?: 'percentage' | 'amount';
   taxableAmount: number;
   gstRate: number;
   cess?: number;
@@ -80,6 +82,8 @@ const LineItemSchema = new Schema<ILineItem>({
   rate: { type: Number, required: true },
   mrp: { type: Number, default: 0 },
   discount: { type: Number, default: 0 },
+  discountAmount: { type: Number, default: 0 },
+  discountType: { type: String, enum: ['percentage', 'amount'], default: 'percentage' },
   taxableAmount: { type: Number, required: true },
   gstRate: { type: Number, default: 18 },
   cess: { type: Number, default: 0 },

@@ -230,6 +230,16 @@ export default function SettingsPage() {
                     </select>
                     <p className="text-[10px] text-slate-500 mt-2 leading-relaxed">This determines the default sequence used when auto-assigning batches to sales invoices and production consumption.</p>
                   </div>
+                  <div className="pt-2 border-t border-slate-200 mt-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={form.enableManufacturing || false} onChange={e => setForm({ ...form, enableManufacturing: e.target.checked })}
+                        className="w-4 h-4 text-action-600 rounded border-slate-300 focus:ring-action-500 bg-white" />
+                      <div>
+                        <span className="block text-sm font-medium text-slate-900">Enable Manufacturing Module</span>
+                        <span className="block text-[10px] text-slate-500">Unlocks Bill of Materials (BOM) and multi-stage Production Orders.</span>
+                      </div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

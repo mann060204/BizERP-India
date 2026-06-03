@@ -12,7 +12,7 @@ interface Supplier { _id: string; name: string; mobile?: string; gstin?: string;
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
-  quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
+  quantity: number; unit: string; rate: number; mrp: number; discount: number; discountAmount?: number; discountType?: 'percentage' | 'amount'; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
 }
 
@@ -75,7 +75,7 @@ export default function EditPurchasePage() {
   // Particulars (Input Row) State
   const [itemInput, setItemInput] = useState<LineItem>({
     productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
+    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
     taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
   });
   const [itemSearch, setItemSearch] = useState('');
@@ -232,13 +232,21 @@ export default function EditPurchasePage() {
 
   const calculateItem = (item: LineItem) => {
     const gross = item.quantity * item.rate;
-    const discountAmt = (gross * item.discount) / 100;
+    let discountAmt = item.discountAmount || 0;
+    let discountPerc = item.discount || 0;
+    
+    if (item.discountType === 'amount') {
+      discountPerc = gross > 0 ? (discountAmt / gross) * 100 : 0;
+    } else {
+      discountAmt = (gross * discountPerc) / 100;
+    }
+    
     const taxableAmount = round2(gross - discountAmt);
     const cgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
     const sgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
     const igst = isInterState ? round2((taxableAmount * item.gstRate) / 100) : 0;
     const cessAmt = round2((taxableAmount * item.cess) / 100);
-    return { ...item, taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
+    return { ...item, discount: round2(discountPerc), discountAmount: round2(discountAmt), taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
   };
 
   const addItem = () => {
@@ -247,7 +255,7 @@ export default function EditPurchasePage() {
     setLineItems([...lineItems, newItem]);
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
+      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
@@ -504,14 +512,18 @@ export default function EditPurchasePage() {
                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-l-0 flex items-center">%</span>
                 </div>
               </div>
-              <div>
-                <label className="erp-label block mb-1">Tax (%)</label>
-                <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
-              </div>
-              <div>
-                 <label className="erp-label block mb-1">Cess (%)</label>
-                 <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
-               </div>
+                            {purchaseType !== 'Non-GST' && (
+                <>
+                  <div>
+                    <label className="erp-label block mb-1">Tax (%)</label>
+                    <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0}) } className="erp-input w-full" />
+                  </div>
+                  <div>
+                    <label className="erp-label block mb-1">Cess (%)</label>
+                    <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0}) } className="erp-input w-full" />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
@@ -543,16 +555,24 @@ export default function EditPurchasePage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="grid grid-cols-11 bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200">
+           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-11' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Disc (%)</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
-             <div className="col-span-3 px-2 py-1.5 text-center">Amount</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Disc (₹)</div>
+             {purchaseType !== 'Non-GST' && (
+                <>
+                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
+                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">CGST</div>
+                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">SGST</div>
+                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">IGST</div>
+                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
+                </>
+             )}
+             <div className="col-span-2 px-2 py-1.5 text-center">Amount</div>
            </div>
            
            <div className="flex-1 overflow-y-auto bg-[#E2E8F0]">

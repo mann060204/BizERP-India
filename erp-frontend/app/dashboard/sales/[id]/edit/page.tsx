@@ -59,7 +59,7 @@ export default function NewInvoicePage() {
   // Particulars (Input Row) State
   const [itemInput, setItemInput] = useState<LineItem>({
     productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
+    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
     taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
   });
   const [itemSearch, setItemSearch] = useState('');
@@ -335,7 +335,7 @@ export default function NewInvoicePage() {
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
+      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
@@ -362,7 +362,7 @@ export default function NewInvoicePage() {
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, gstRate: 0, cess: 0,
+      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');

@@ -65,6 +65,7 @@ export interface IBusiness extends Document {
     format: string;
     resetMonthly: boolean;
   }>;
+  enableManufacturing: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -166,7 +167,8 @@ const BusinessSchema = new Schema<IBusiness>(
         resetMonthly: { type: Boolean, default: false }
       }, { _id: false }),
       default: {}
-    }
+    },
+    enableManufacturing: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

@@ -1,14 +1,15 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   BarChart3, LayoutDashboard, ShoppingCart, Package, Users, Truck,
   Receipt, FileText, Wrench, Settings, LogOut, ChevronLeft, ChevronRight,
-  Menu, Database, Wallet, ChevronDown, Landmark
+  Menu, Database, Wallet, ChevronDown, Landmark, Factory
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
 import { logout } from '../../store/slices/authSlice';
+import { businessApi } from '../../lib/erp-api';
 
 const NAV_ITEMS = [
   { label: 'Dashboard',       href: '/dashboard',          icon: LayoutDashboard },
@@ -53,6 +54,27 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [enableManufacturing, setEnableManufacturing] = useState(false);
+
+  useEffect(() => {
+    businessApi.getProfile().then(res => {
+      if (res.data.business?.enableManufacturing) {
+        setEnableManufacturing(true);
+      }
+    }).catch(err => console.error(err));
+  }, []);
+
+  const dynamicNavItems = [...NAV_ITEMS];
+  if (enableManufacturing) {
+    const insertIndex = dynamicNavItems.findIndex(i => i.label === 'Inventory') + 1;
+    dynamicNavItems.splice(insertIndex, 0, {
+      label: 'Manufacturing', href: '#', icon: Factory,
+      subItems: [
+        { label: 'Bill of Materials', href: '/dashboard/manufacturing/bom' },
+        { label: 'Production Orders', href: '/dashboard/manufacturing/orders' },
+      ]
+    });
+  }
 
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === href : pathname.startsWith(href);
@@ -75,7 +97,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {NAV_ITEMS.map((item) => {
+        {dynamicNavItems.map((item) => {
           const { label, href, icon: Icon, subItems } = item;
           const active = isActive(href);
           const expanded = expandedMenus[label];

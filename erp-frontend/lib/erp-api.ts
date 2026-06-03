@@ -156,3 +156,18 @@ export const banksApi = {
   delete: (id: string) => api.delete(`/banks/${id}`).then(res => res.data),
 };
 
+// ─── Manufacturing & BOM ──────────────────────────────────────────────────────
+export const bomApi = {
+  create: (data: any) => api.post('/bom', data),
+  getAll: () => api.get('/bom'),
+  getById: (id: string) => api.get(`/bom/${id}`),
+  update: (id: string, data: any) => api.put(`/bom/${id}`, data),
+  delete: (id: string) => api.delete(`/bom/${id}`),
+};
+
+export const manufacturingApi = {
+  create: (data: any) => api.post('/manufacturing', data),
+  getAll: () => api.get('/manufacturing'),
+  updateStatus: (id: string, status: string) => api.put(`/manufacturing/${id}/status`, { status }),
+  delete: (id: string) => api.delete(`/manufacturing/${id}`),
+};

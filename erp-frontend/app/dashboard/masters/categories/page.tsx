@@ -288,7 +288,7 @@ export default function CategoryMasterPage() {
                           value={newBrandInputs[cat.name] || ''} 
                           onChange={e => setNewBrandInputs({...newBrandInputs, [cat.name]: e.target.value})} 
                           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBrand(cat.name); } }} 
-                          className="flex-1 px-3 py-2 rounded-lg bg-[#0F0F0F] border border-slate-300 text-slate-900 focus:outline-none focus:border-action-400 text-xs transition" 
+                          className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-action-400 text-xs transition" 
                           placeholder={`Add brand to ${cat.name} (e.g. ZARA)...`} 
                         />
                         <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 bg-[#E2E8F0] hover:bg-slate-100 text-slate-900 rounded-lg text-xs font-semibold transition">Add Brand</button>

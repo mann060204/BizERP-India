@@ -399,7 +399,7 @@ export default function MastersPage() {
                           </div>
                         </div>
                         <Input label="Low Level Limit" type="number" keyName="lowLevelLimit" form={form} setForm={setForm} />
-                        <Select label="Product Type" keyName="productType" options={['General', 'Raw Material', 'Finished Good', 'Consumable']} form={form} setForm={setForm} />
+                        <Select label="Product Type" keyName="productType" options={['General', 'Raw Material', 'Finished Good', 'WIP Component', 'Consumable']} form={form} setForm={setForm} />
                         <Input label="Location/Rack" keyName="location" form={form} setForm={setForm} />
                         <div className="col-span-2">
                           <Input label="Batch No." keyName="batchNo" form={form} setForm={setForm} />
