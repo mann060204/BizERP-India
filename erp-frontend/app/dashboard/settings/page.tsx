@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const [erasing, setErasing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [startingNewYear, setStartingNewYear] = useState(false);
+  const [customYearLabel, setCustomYearLabel] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -144,7 +145,7 @@ export default function SettingsPage() {
     }
     setStartingNewYear(true);
     try {
-      const res = await financialYearApi.startNewYear();
+      const res = await financialYearApi.startNewYear(customYearLabel);
       toast.success(res.message || 'New financial year started successfully!');
       if (res.token) {
         localStorage.setItem('erp_token', res.token);
@@ -456,7 +457,16 @@ export default function SettingsPage() {
                    Close the current financial year and start a new one. This will carry forward your closing balances (customers, suppliers, accounts, inventory) as opening balances for the new year, and reset all invoice numbers to 1.
                  </p>
                  
-                 <div className="mt-4">
+                 <div className="mt-4 space-y-3">
+                   <div>
+                     <label className="block text-xs font-medium text-slate-600 mb-1.5">Custom Year Label (Optional)</label>
+                     <input 
+                       value={customYearLabel} 
+                       onChange={(e) => setCustomYearLabel(e.target.value)} 
+                       placeholder="e.g. FY 2026-27"
+                       className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-purple-300 text-sm transition" 
+                     />
+                   </div>
                    <button onClick={handleStartNewYear} disabled={startingNewYear} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl hover:bg-purple-100 transition text-sm font-bold text-purple-700 disabled:opacity-50">
                      {startingNewYear ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />} 
                      Start New Financial Year

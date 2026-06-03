@@ -12,6 +12,7 @@ import Product from '../models/Product.model';
 
 export const startNewYear = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { customYearLabel } = req.body || {};
     const oldBusinessId = req.user!.businessId;
     const oldBusiness = await Business.findById(oldBusinessId);
     if (!oldBusiness) {
@@ -28,7 +29,7 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
 
     // Determine new financial year label
     const newYearNumber = parseInt(oldBusiness.financialYearLabel?.match(/\d{4}/)?.[0] || new Date().getFullYear().toString()) + 1;
-    const newFinancialYearLabel = `FY ${newYearNumber}-${(newYearNumber + 1).toString().slice(2)}`;
+    const newFinancialYearLabel = customYearLabel?.trim() || `FY ${newYearNumber}-${(newYearNumber + 1).toString().slice(2)}`;
 
     // Create the new business document
     const newBusiness = await Business.create({

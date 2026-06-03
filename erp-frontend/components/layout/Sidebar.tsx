@@ -130,6 +130,13 @@ const isActive = (href: string) =>
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Logout</span>}
         </button>
+        
+        {!collapsed && (
+          <div className="mt-4 pt-3 border-t border-slate-100 text-center">
+            <p className="text-[10px] text-slate-400">© {new Date().getFullYear()} Ozen Studio.</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Build and Design by Mann Monapra</p>
+          </div>
+        )}
       </div>
     </div>
   );
