@@ -493,17 +493,28 @@ export default function NewpurchaseReturnPage() {
                 </div>
               </div>
                             <div>
-                <label className="erp-label block mb-1">Disc. (%)</label>
+                <label className="erp-label block mb-1">Discount</label>
                 <div className="flex">
-                  <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0, discountType: 'percentage'})} className="erp-input w-full rounded-none" />
-                  <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-l-0 flex items-center">%</span>
-                </div>
-              </div>
-              <div>
-                <label className="erp-label block mb-1">Disc. (₹)</label>
-                <div className="flex">
-                  <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                  <input type="number" value={itemInput.discountAmount === 0 ? '' : itemInput.discountAmount} onChange={e => setItemInput({...itemInput, discountAmount: parseFloat(e.target.value) || 0, discountType: 'amount'})} className="erp-input w-full rounded-none" />
+                  <input 
+                    type="number" 
+                    value={itemInput.discountType === 'percentage' ? (itemInput.discount === 0 ? '' : itemInput.discount) : (itemInput.discountAmount === 0 ? '' : itemInput.discountAmount)} 
+                    onChange={e => {
+                      const val = parseFloat(e.target.value) || 0;
+                      if(itemInput.discountType === 'percentage') {
+                        setItemInput({...itemInput, discount: val, discountAmount: 0});
+                      } else {
+                        setItemInput({...itemInput, discountAmount: val, discount: 0});
+                      }
+                    }} 
+                    className="erp-input w-full rounded-none" 
+                  />
+                  <select 
+                    value={itemInput.discountType || 'percentage'} 
+                    onChange={e => setItemInput({...itemInput, discountType: e.target.value as 'percentage' | 'amount', discount: 0, discountAmount: 0})} 
+                    className="erp-input rounded-l-none bg-slate-100 px-1 border-l-0 text-xs w-12 cursor-pointer outline-none focus:ring-0">
+                    <option value="percentage">%</option>
+                    <option value="amount">₹</option>
+                  </select>
                 </div>
               </div>
                             {purchaseType !== 'Non-GST' && (
@@ -549,14 +560,13 @@ export default function NewpurchaseReturnPage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-11' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
+           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-13' : 'grid-cols-10' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
              <div className="border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Disc (%)</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Disc (₹)</div>
+             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Discount</div>
              {purchaseType !== 'Non-GST' && (
                 <>
                   <div className="border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
@@ -574,7 +584,7 @@ export default function NewpurchaseReturnPage() {
                 <div className="p-10 text-center text-slate-400 italic text-sm">No items added yet.</div>
               ) : (
                 lineItems.map((item, idx) => (
-                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-11' } hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}>
+                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-13' : 'grid-cols-10' } hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}>
                     <div className="border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
                     <div className="border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
                       {item.productName}
@@ -583,8 +593,10 @@ export default function NewpurchaseReturnPage() {
                     <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
                     <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
                     <div className="border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.discount || ''}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.discountAmount > 0 ? '₹' + item.discountAmount.toFixed(2) : ''}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-center text-red-500">
+                      {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
+                      {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
+                    </div>
                     {purchaseType !== 'Non-GST' && (
                         <>
                           <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.gstRate}</div>

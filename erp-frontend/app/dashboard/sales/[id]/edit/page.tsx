@@ -733,8 +733,29 @@ export default function NewInvoicePage() {
                 </div>
               </div>
               <div>
-                <label className="erp-label">Disc. (%)</label>
-                <input type="number" value={itemInput.discount === 0 ? '' : itemInput.discount} onChange={e => setItemInput({...itemInput, discount: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <label className="erp-label block mb-1">Discount</label>
+                <div className="flex">
+                  <input 
+                    type="number" 
+                    value={itemInput.discountType === 'percentage' ? (itemInput.discount === 0 ? '' : itemInput.discount) : (itemInput.discountAmount === 0 ? '' : itemInput.discountAmount)} 
+                    onChange={e => {
+                      const val = parseFloat(e.target.value) || 0;
+                      if(itemInput.discountType === 'percentage') {
+                        setItemInput({...itemInput, discount: val, discountAmount: 0});
+                      } else {
+                        setItemInput({...itemInput, discountAmount: val, discount: 0});
+                      }
+                    }} 
+                    className="erp-input w-full rounded-none" 
+                  />
+                  <select 
+                    value={itemInput.discountType || 'percentage'} 
+                    onChange={e => setItemInput({...itemInput, discountType: e.target.value as 'percentage' | 'amount', discount: 0, discountAmount: 0})} 
+                    className="erp-input rounded-l-none bg-slate-100 px-1 border-l-0 text-xs w-12 cursor-pointer outline-none focus:ring-0">
+                    <option value="percentage">%</option>
+                    <option value="amount">₹</option>
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="erp-label">Tax (%)</label>
@@ -798,7 +819,10 @@ export default function NewInvoicePage() {
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
                     <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="col-span-1 erp-grid-cell text-center text-red-400">{item.discount}%</div>
+                    <div className="col-span-1 erp-grid-cell text-center text-red-400">
+                      {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
+                      {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
+                    </div>
                     {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
                     {invoiceType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
                     <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${invoiceType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>

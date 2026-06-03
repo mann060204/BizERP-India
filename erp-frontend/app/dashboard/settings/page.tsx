@@ -57,9 +57,10 @@ export default function SettingsPage() {
         purchaseOrderPrefix: form.purchaseOrderPrefix || 'PO',
         productGroups: form.productGroups || [],
         productBrands: form.productBrands || [],
-        inventorySequencing: form.inventorySequencing || 'FIFO'
+        inventorySequencing: form.inventorySequencing || 'FIFO',
+        enableManufacturing: form.enableManufacturing || false
       });
-      toast.success('Settings updated successfully');
+      toast.success('Settings saved successfully');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
     finally { setSaving(false); }
   };
