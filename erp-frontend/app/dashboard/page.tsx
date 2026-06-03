@@ -473,7 +473,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-//
-Trigger
-Vercel
-Build
