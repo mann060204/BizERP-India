@@ -167,6 +167,9 @@ export const bomApi = {
 
 export const manufacturingApi = {
   create: (data: any) => api.post('/manufacturing', data),
+  createDirect: (data: any) => api.post('/manufacturing/direct', data),
+  createReverse: (data: any) => api.post('/manufacturing/reverse', data),
+  getPlan: (data: any) => api.post('/manufacturing/plan', data),
   getAll: () => api.get('/manufacturing'),
   updateStatus: (id: string, status: string) => api.put(`/manufacturing/${id}/status`, { status }),
   delete: (id: string) => api.delete(`/manufacturing/${id}`),

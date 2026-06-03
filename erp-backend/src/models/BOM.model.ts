@@ -9,12 +9,22 @@ export interface IBOMComponent {
   totalCost: number;
 }
 
+export interface IBOMScrap {
+  productId: mongoose.Types.ObjectId;
+  productName: string;
+  quantity: number;
+  unit: string;
+  recoveryCostPerUnit: number;
+  totalRecoveryValue: number;
+}
+
 export interface IBOM extends Document {
   businessId: mongoose.Types.ObjectId;
   productId: mongoose.Types.ObjectId;
   productName: string;
   bomNumber: string;
   components: IBOMComponent[];
+  scrapItems?: IBOMScrap[];
   directLaborCost: number;
   manufacturingOverhead: number;
   totalEstimatedCost: number;
@@ -34,6 +44,15 @@ const BOMComponentSchema = new Schema<IBOMComponent>({
   totalCost: { type: Number, default: 0 },
 }, { _id: false });
 
+const BOMScrapSchema = new Schema<IBOMScrap>({
+  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  productName: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  unit: { type: String, default: 'Nos' },
+  recoveryCostPerUnit: { type: Number, default: 0 },
+  totalRecoveryValue: { type: Number, default: 0 },
+}, { _id: false });
+
 const BOMSchema = new Schema<IBOM>(
   {
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
@@ -41,6 +60,7 @@ const BOMSchema = new Schema<IBOM>(
     productName: { type: String, required: true },
     bomNumber: { type: String, required: true, index: true },
     components: [BOMComponentSchema],
+    scrapItems: [BOMScrapSchema],
     directLaborCost: { type: Number, default: 0 },
     manufacturingOverhead: { type: Number, default: 0 },
     totalEstimatedCost: { type: Number, default: 0 },

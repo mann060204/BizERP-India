@@ -19,7 +19,9 @@ export default function BOMPage() {
     directLaborCost: 0,
     manufacturingOverhead: 0,
   });
-  const [components, setComponents] = useState<any[]>([]);
+  const [components,
+        scrapItems, setComponents] = useState<any[]>([]);
+  const [scrapItems, setScrapItems] = useState<any[]>([]);
   
   useEffect(() => {
     fetchData();
@@ -49,8 +51,33 @@ export default function BOMPage() {
     }
   };
 
+  
+  const handleAddScrap = () => {
+    setScrapItems([...scrapItems, { productId: '', productName: '', quantity: 1, recoveryCostPerUnit: 0, unit: 'Nos', totalRecoveryValue: 0 }]);
+  };
+
+  const updateScrap = (index: number, field: string, value: any) => {
+    const updated = [...scrapItems];
+    updated[index][field] = value;
+    if (field === 'productId') {
+      const prod = products.find(p => p._id === value);
+      if (prod) {
+        updated[index].productName = prod.name;
+        updated[index].recoveryCostPerUnit = prod.sellingPrice || 0;
+        updated[index].unit = prod.unit || 'Nos';
+      }
+    }
+    updated[index].totalRecoveryValue = updated[index].quantity * updated[index].recoveryCostPerUnit;
+    setScrapItems(updated);
+  };
+
+  const removeScrap = (index: number) => {
+    setScrapItems(scrapItems.filter((_, i) => i !== index));
+  };
+
   const handleAddComponent = () => {
-    setComponents([...components, { productId: '', productName: '', quantity: 1, costPerUnit: 0, unit: 'Nos', totalCost: 0 }]);
+    setComponents([...components,
+        scrapItems, { productId: '', productName: '', quantity: 1, costPerUnit: 0, unit: 'Nos', totalCost: 0 }]);
   };
 
   const updateComponent = (index: number, field: string, value: any) => {
@@ -86,6 +113,7 @@ export default function BOMPage() {
       const payload = {
         ...form,
         components,
+        scrapItems,
         totalEstimatedCost
       };
 
@@ -94,6 +122,7 @@ export default function BOMPage() {
       setIsModalOpen(false);
       setForm({ productId: '', productName: '', directLaborCost: 0, manufacturingOverhead: 0 });
       setComponents([]);
+        setScrapItems([]);
       fetchData();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to save BOM');

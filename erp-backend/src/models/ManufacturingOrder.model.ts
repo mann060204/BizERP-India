@@ -8,6 +8,17 @@ export interface IMORawMaterial {
   unit: string;
   costPerUnit: number;
   totalCost: number;
+  batchNo?: string;
+}
+
+export interface IMOScrapItem {
+  productId: mongoose.Types.ObjectId;
+  productName: string;
+  quantity: number;
+  unit: string;
+  recoveryCostPerUnit: number;
+  totalRecoveryValue: number;
+  batchNoGenerated?: string;
 }
 
 export interface IManufacturingOrder extends Document {
@@ -17,8 +28,12 @@ export interface IManufacturingOrder extends Document {
   productId: mongoose.Types.ObjectId; // Finished Good
   productName: string;
   quantityToProduce: number;
+  type: 'Direct' | 'WIP' | 'Disassembly';
   status: 'Pending' | 'In-Progress' | 'Completed' | 'Cancelled';
+  sourceLocation?: string;
+  destinationLocation?: string;
   rawMaterials: IMORawMaterial[];
+  scrapItems?: IMOScrapItem[];
   startDate?: Date;
   endDate?: Date;
   estimatedLaborCost: number;
@@ -42,6 +57,17 @@ const MORawMaterialSchema = new Schema<IMORawMaterial>({
   unit: { type: String, default: 'Nos' },
   costPerUnit: { type: Number, default: 0 },
   totalCost: { type: Number, default: 0 },
+  batchNo: { type: String }
+}, { _id: false });
+
+const MOScrapItemSchema = new Schema<IMOScrapItem>({
+  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  productName: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  unit: { type: String, default: 'Nos' },
+  recoveryCostPerUnit: { type: Number, default: 0 },
+  totalRecoveryValue: { type: Number, default: 0 },
+  batchNoGenerated: { type: String }
 }, { _id: false });
 
 const ManufacturingOrderSchema = new Schema<IManufacturingOrder>(
@@ -52,8 +78,12 @@ const ManufacturingOrderSchema = new Schema<IManufacturingOrder>(
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     productName: { type: String, required: true },
     quantityToProduce: { type: Number, required: true, min: 1 },
+    type: { type: String, enum: ['Direct', 'WIP', 'Disassembly'], default: 'WIP' },
     status: { type: String, enum: ['Pending', 'In-Progress', 'Completed', 'Cancelled'], default: 'Pending' },
+    sourceLocation: { type: String },
+    destinationLocation: { type: String },
     rawMaterials: [MORawMaterialSchema],
+    scrapItems: [MOScrapItemSchema],
     startDate: { type: Date },
     endDate: { type: Date },
     estimatedLaborCost: { type: Number, default: 0 },
