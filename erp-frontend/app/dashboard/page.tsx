@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../components/layout/Topbar';
 import { useAppSelector } from '../../hooks/useRedux';
-import { invoicesApi, purchasesApi, inventoryApi, dashboardApi, businessApi } from '../../lib/erp-api';
+import { invoicesApi, purchasesApi, inventoryApi, dashboardApi, businessApi, expensesApi } from '../../lib/erp-api';
 import {
   TrendingUp, TrendingDown, CreditCard, Wallet, AlertTriangle,
   ArrowUpRight, ShoppingCart, Loader2, FilePlus, PackagePlus,
@@ -137,7 +137,7 @@ export default function DashboardPage() {
   };
 
   const [kpiLoading, setKpiLoading] = useState(true);
-  const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0 });
+  const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0, expenses: 0 });
 
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendLoading, setTrendLoading] = useState(true);
@@ -164,7 +164,8 @@ export default function DashboardPage() {
       invoicesApi.summary().catch(() => ({ data: {} })),
       purchasesApi.summary().catch(() => ({ data: {} })),
       inventoryApi.list({ lowStock: 'true', limit: 1 }).catch(() => ({ data: {} })),
-    ]).then(([inv, pur, inven]) => {
+      expensesApi.summary().catch(() => ({ data: {} })),
+    ]).then(([inv, pur, inven, exp]) => {
       setStats({
         sales: inv.data.monthSales || 0,
         received: inv.data.totalReceived || 0,
@@ -172,6 +173,7 @@ export default function DashboardPage() {
         purchases: pur.data.monthPurchases || 0,
         paid: pur.data.totalPaid || 0,
         lowStock: inven.data.lowStockCount || 0,
+        expenses: exp.data.monthExpenses || 0,
       });
     }).finally(() => setKpiLoading(false));
 
@@ -198,6 +200,7 @@ export default function DashboardPage() {
   const KPI_CARDS = [
     { label: 'Sales (Monthly)', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Purchases (Monthly)',     value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Expenses (Monthly)',      value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
     { label: 'Received (Monthly)',      value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
     { label: 'Outstanding (Monthly)',   value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
     { label: 'Paid Out (Monthly)',      value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
@@ -239,7 +242,7 @@ export default function DashboardPage() {
             {kpiLoading
               ? <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
               : (
-                <div className="grid grid-cols-3 xl:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 xl:grid-cols-7 gap-3">
                   {KPI_CARDS.map(({ label, value, icon: Icon, color, bg }) => (
                     <div key={label} className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 shadow-sm hover:shadow-md transition">
                       <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center`}>
@@ -256,7 +259,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-4">
 
               {/* Business Trend — full width */}
-              <ChartCard span={2} title="Business Trend — Revenue vs Purchases" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
+              <ChartCard span={2} title="Business Trend — Sales vs Purchases vs Expenses" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
                 filter={<MiniFilter onChange={p => { setTrendLoading(true); dashboardApi.businessTrend(p).then(d => setTrendData(d.data || [])).finally(() => setTrendLoading(false)); }} />}
                 loading={trendLoading}>
                 <div className={chartHeight}>
@@ -267,8 +270,9 @@ export default function DashboardPage() {
                       <YAxis fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" tickFormatter={v => fmt(v)} />
                       <Tooltip content={<CustomTip />} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                      <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#6366f1" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="sales" name="Sales" stroke="#6366f1" strokeWidth={2} dot={false} />
                       <Line type="monotone" dataKey="purchases" name="Purchases" stroke="#f97316" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#eab308" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -280,7 +284,7 @@ export default function DashboardPage() {
                 loading={inventoryLoading}>
                 <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={inventoryData.high.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
+                    <BarChart data={inventoryData.high.slice(0, chartHeight === 'h-48' ? 4 : 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
                       <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
                       <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
                       <Tooltip content={<CustomTip />} />
@@ -294,7 +298,7 @@ export default function DashboardPage() {
               <ChartCard title="Low Volume Inventory" icon={<TrendingDown className="w-5 h-5 text-orange-500" />} filter={null} loading={inventoryLoading}>
                 <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={inventoryData.low.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
+                    <BarChart data={inventoryData.low.slice(0, chartHeight === 'h-48' ? 4 : 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
                       <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
                       <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
                       <Tooltip content={<CustomTip />} />

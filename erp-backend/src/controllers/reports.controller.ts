@@ -1671,7 +1671,7 @@ export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response)
 
     const salesAgg = await Invoice.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
-      { $group: { _id: { $dateToString: { format: dateFmt, date: '$invoiceDate' } }, revenue: { $sum: '$grandTotal' } } },
+      { $group: { _id: { $dateToString: { format: dateFmt, date: '$invoiceDate' } }, sales: { $sum: '$grandTotal' } } },
       { $sort: { '_id': 1 } }
     ]);
 
@@ -1681,11 +1681,21 @@ export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response)
       { $sort: { '_id': 1 } }
     ]);
 
+    const expensesAgg = await require('../models/expense.model').default.aggregate([
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), date: { $gte: start, $lte: end } } },
+      { $group: { _id: { $dateToString: { format: dateFmt, date: '$date' } }, expenses: { $sum: '$totalWithTax' } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
     const map: Record<string, any> = {};
-    for (const s of salesAgg) { map[s._id] = { date: s._id, revenue: s.revenue, purchases: 0 }; }
+    for (const s of salesAgg) { map[s._id] = { date: s._id, sales: s.sales, purchases: 0, expenses: 0 }; }
     for (const p of purchasesAgg) {
-      if (!map[p._id]) map[p._id] = { date: p._id, revenue: 0, purchases: 0 };
+      if (!map[p._id]) map[p._id] = { date: p._id, sales: 0, purchases: 0, expenses: 0 };
       map[p._id].purchases = p.purchases;
+    }
+    for (const e of expensesAgg) {
+      if (!map[e._id]) map[e._id] = { date: e._id, sales: 0, purchases: 0, expenses: 0 };
+      map[e._id].expenses = e.expenses;
     }
     const data = Object.values(map).sort((a: any, b: any) => a.date.localeCompare(b.date));
     sendSuccess(res, data);
