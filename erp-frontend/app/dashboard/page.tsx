@@ -119,6 +119,7 @@ export default function DashboardPage() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
   const [businessName, setBusinessName] = useState('My Business');
+  const [chartHeight, setChartHeight] = useState('h-64');
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -195,11 +196,11 @@ export default function DashboardPage() {
   useEffect(() => { fetchAll({ period: 'month' }); }, []);
 
   const KPI_CARDS = [
-    { label: 'Sales (Month)', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Purchases',     value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Received',      value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Outstanding',   value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Paid Out',      value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Sales (Monthly)', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Purchases (Monthly)',     value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Received (Monthly)',      value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Outstanding (Monthly)',   value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Paid Out (Monthly)',      value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Low Stock',     value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
@@ -209,9 +210,23 @@ export default function DashboardPage() {
 
       <main className="flex-1 p-5 overflow-auto">
         {/* Greeting */}
-        <div className="mb-5">
-          <h2 className="text-2xl font-bold text-slate-900">Good {greeting}, {businessName}</h2>
-          <p className="text-slate-500 text-sm mt-1 font-medium">Here's your business snapshot.</p>
+        <div className="mb-5 flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Good {greeting}, {businessName}</h2>
+            <p className="text-slate-500 text-sm mt-1 font-medium">Here's your business snapshot.</p>
+          </div>
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">
+            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Chart Size:</span>
+            <select 
+              value={chartHeight}
+              onChange={(e) => setChartHeight(e.target.value)}
+              className="text-sm border-none bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
+            >
+              <option value="h-48">Small</option>
+              <option value="h-64">Medium</option>
+              <option value="h-96">Large</option>
+            </select>
+          </div>
         </div>
 
         {/* ── Two-column layout ────────────────────────────────────────────── */}
@@ -244,12 +259,12 @@ export default function DashboardPage() {
               <ChartCard span={2} title="Business Trend — Revenue vs Purchases" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
                 filter={<MiniFilter onChange={p => { setTrendLoading(true); dashboardApi.businessTrend(p).then(d => setTrendData(d.data || [])).finally(() => setTrendLoading(false)); }} />}
                 loading={trendLoading}>
-                <div className="h-64">
+                <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={trendData} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="date" fontSize={9} tickLine={false} axisLine={false} stroke="#94a3b8" minTickGap={24} />
-                      <YAxis fontSize={9} tickLine={false} axisLine={false} stroke="#94a3b8" tickFormatter={v => fmt(v)} />
+                      <XAxis dataKey="date" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" minTickGap={24} />
+                      <YAxis fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" tickFormatter={v => fmt(v)} />
                       <Tooltip content={<CustomTip />} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
                       <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#6366f1" strokeWidth={2} dot={false} />
@@ -263,11 +278,11 @@ export default function DashboardPage() {
               <ChartCard title="High Volume Inventory" icon={<Package className="w-5 h-5 text-emerald-500" />}
                 filter={<MiniFilter onChange={p => { setInventoryLoading(true); dashboardApi.inventoryVolume(p).then(d => setInventoryData(d.data || { high: [], low: [] })).finally(() => setInventoryLoading(false)); }} />}
                 loading={inventoryLoading}>
-                <div className="h-64">
+                <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.high.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
-                      <XAxis type="number" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
-                      <YAxis type="category" dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" width={54} />
+                      <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
+                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
                       <Tooltip content={<CustomTip />} />
                       <Bar dataKey="stock" name="Stock" fill="#6366f1" radius={[0, 3, 3, 0]} />
                     </BarChart>
@@ -277,11 +292,11 @@ export default function DashboardPage() {
 
               {/* Low Volume Inventory */}
               <ChartCard title="Low Volume Inventory" icon={<TrendingDown className="w-5 h-5 text-orange-500" />} filter={null} loading={inventoryLoading}>
-                <div className="h-64">
+                <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.low.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
-                      <XAxis type="number" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
-                      <YAxis type="category" dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" width={54} />
+                      <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
+                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
                       <Tooltip content={<CustomTip />} />
                       <Bar dataKey="stock" name="Stock" fill="#f97316" radius={[0, 3, 3, 0]} />
                     </BarChart>
@@ -293,11 +308,11 @@ export default function DashboardPage() {
               <ChartCard title="Top 5 Items by Revenue" icon={<ArrowUpRight className="w-5 h-5 text-purple-500" />}
                 filter={<MiniFilter onChange={p => { setTopProfitLoading(true); dashboardApi.topItemsProfit(p).then(d => setTopProfit(d.data || [])).finally(() => setTopProfitLoading(false)); }} />}
                 loading={topProfitLoading}>
-                <div className="h-64">
+                <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topProfit} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
-                      <XAxis dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
-                      <YAxis fontSize={9} tickLine={false} axisLine={false} stroke="#94a3b8" tickFormatter={v => fmt(v)} />
+                      <XAxis dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
+                      <YAxis fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" tickFormatter={v => fmt(v)} />
                       <Tooltip content={<CustomTip />} />
                       <Bar dataKey="revenue" name="Revenue" radius={[3, 3, 0, 0]}>
                         {topProfit.map((_, i) => <Cell key={i} fill={TOP_COLORS[i % TOP_COLORS.length]} />)}
@@ -311,11 +326,11 @@ export default function DashboardPage() {
               <ChartCard title="Bottom 5 Items by Revenue" icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
                 filter={<MiniFilter onChange={p => { setBottomProfitLoading(true); dashboardApi.bottomItemsProfit(p).then(d => setBottomProfit(d.data || [])).finally(() => setBottomProfitLoading(false)); }} />}
                 loading={bottomProfitLoading}>
-                <div className="h-64">
+                <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={bottomProfit} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
-                      <XAxis dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
-                      <YAxis fontSize={9} tickLine={false} axisLine={false} stroke="#94a3b8" tickFormatter={v => fmt(v)} />
+                      <XAxis dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
+                      <YAxis fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" tickFormatter={v => fmt(v)} />
                       <Tooltip content={<CustomTip />} />
                       <Bar dataKey="revenue" name="Revenue" radius={[3, 3, 0, 0]}>
                         {bottomProfit.map((_, i) => <Cell key={i} fill={BOT_COLORS[i % BOT_COLORS.length]} />)}
@@ -359,11 +374,11 @@ export default function DashboardPage() {
               <ChartCard title="Top 5 Customers by Revenue" icon={<Users className="w-5 h-5 text-amber-500" />}
                 filter={<MiniFilter onChange={p => { setTopCustLoading(true); dashboardApi.topCustomers(p).then(d => setTopCustomers(d.data || [])).finally(() => setTopCustLoading(false)); }} />}
                 loading={topCustLoading}>
-                <div className="h-64">
+                <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topCustomers} layout="vertical" margin={{ top: 0, right: 4, left: 60, bottom: 0 }}>
-                      <XAxis type="number" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" tickFormatter={v => fmt(v)} />
-                      <YAxis type="category" dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" width={60} />
+                      <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" tickFormatter={v => fmt(v)} />
+                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
                       <Tooltip content={<CustomTip />} />
                       <Bar dataKey="totalRevenue" name="Revenue" radius={[0, 3, 3, 0]}>
                         {topCustomers.map((_: any, i: number) => <Cell key={i} fill={TOP_COLORS[i % TOP_COLORS.length]} />)}
@@ -449,17 +464,7 @@ export default function DashboardPage() {
                   <p className="text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Month Sales</p>
                   <p className="text-white font-black text-2xl">{fmtFull(stats.sales)}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/10 rounded-lg p-2.5">
-                    <p className="text-indigo-100 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Outstanding</p>
-                    <p className="text-white font-bold text-base">{fmtFull(stats.salesOutstanding)}</p>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-2.5">
-                    <p className="text-indigo-100 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Low Stock</p>
-                    <p className="text-white font-bold text-base">{stats.lowStock}</p>
-                  </div>
                 </div>
-              </div>
             </div>
           </div>
 
