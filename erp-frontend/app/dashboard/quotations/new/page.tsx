@@ -655,9 +655,10 @@ export default function NewQuotationPage() {
              <div className="col-span-1 erp-grid-cell">Unit</div>
              <div className="col-span-1 erp-grid-cell text-right">Unit Price</div>
              <div className="col-span-1 erp-grid-cell text-center">Disc%</div>
-             <div className="col-span-1 erp-grid-cell text-center">Tax%</div>
-             <div className="col-span-1 erp-grid-cell text-center">Cess%</div>
-             <div className="col-span-2 erp-grid-cell text-right">Total</div>
+             {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">Tax%</div>}
+             {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">Cess%</div>}
+             <div className={`erp-grid-cell text-right ${quotationType === 'GST' ? 'col-span-1' : 'col-span-3'}`}>Total</div>
+             <div className="col-span-1 erp-grid-cell text-center"></div>
            </div>
            <div className="flex-1 overflow-y-auto bg-white">
               {lineItems.length === 0 ? (
@@ -683,16 +684,16 @@ export default function NewQuotationPage() {
                     </div>
                     {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
                     {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
-                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex justify-between items-center ${quotationType === 'GST' ? 'col-span-2' : 'col-span-4'}`}>
-                      <span>₹{item.totalAmount.toFixed(2)}</span>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                        <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-action-500/10 rounded">
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                    <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex items-center justify-end ${quotationType === 'GST' ? 'col-span-1' : 'col-span-3'}`}>
+                      ₹{item.totalAmount.toFixed(2)}
+                    </div>
+                    <div className="col-span-1 erp-grid-cell flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                      <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-action-500/10 rounded">
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
                 ))

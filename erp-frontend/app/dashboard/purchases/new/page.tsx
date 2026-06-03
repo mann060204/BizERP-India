@@ -538,8 +538,8 @@ export default function NewPurchasePage() {
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div 
-             className={`erp-grid-header grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} sticky top-0 z-10`}
-             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+             className={`erp-grid-header grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} sticky top-0 z-10`}
+             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
            >
                <div className="col-span-1 erp-grid-cell text-center">S.No.</div>
                <div className="col-span-3 erp-grid-cell">Item Details</div>
@@ -556,7 +556,8 @@ export default function NewPurchasePage() {
                    <div className="col-span-1 erp-grid-cell text-center">Cess</div>
                  </>
                )}
-               <div className={`erp-grid-cell text-center ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
+               <div className={`erp-grid-cell text-right ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
+               <div className="col-span-1 erp-grid-cell text-center"></div>
              </div>
            
            <div className="flex-1 overflow-y-auto bg-white">
@@ -566,8 +567,8 @@ export default function NewPurchasePage() {
                 lineItems.map((item, idx) => (
                   <div 
                     key={idx} 
-                    className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}
-                    style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+                    className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}
+                    style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
                   >
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
                     <div className="col-span-3 border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
@@ -590,8 +591,10 @@ export default function NewPurchasePage() {
                           <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
                         </>
                     )}
-                    <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} px-2 py-1.5 text-right font-medium flex justify-between items-center`}>
-                      <span>₹{item.totalAmount.toFixed(2)}</span>
+                    <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} border-r border-slate-100 px-2 py-1.5 text-right font-medium flex items-center justify-end`}>
+                      ₹{item.totalAmount.toFixed(2)}
+                    </div>
+                    <div className="col-span-1 px-2 py-1.5 flex items-center justify-center">
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
