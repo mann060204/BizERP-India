@@ -92,6 +92,7 @@ export default function EditPurchasePage() {
   const [additionalDiscount, setAdditionalDiscount] = useState(0);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
+  const [roundOff, setRoundOff] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
@@ -160,6 +161,7 @@ export default function EditPurchasePage() {
           setAdditionalDiscount(p.additionalDiscount || 0);
           setShippingCharge(p.shippingCharge || 0);
           setShippingGstRate(p.shippingGstRate || 0);
+          setRoundOff(p.roundOff || 0);
           setRemarks(p.notes || '');
           
           setPaymentMode(p.paymentMode || 'Cash');
@@ -286,7 +288,7 @@ export default function EditPurchasePage() {
   const totalGST = totalCGST + totalSGST + totalIGST;
   const subtotal = round2(totalTaxableAmount + totalGST);
   const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
-  const grandTotal = round2(subtotal - additionalDiscount + shippingCharge);
+  const grandTotal = round2(subtotal - additionalDiscount + shippingCharge + roundOff);
   const balance = round2(grandTotal - amountPaid);
 
   const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
@@ -334,6 +336,7 @@ export default function EditPurchasePage() {
         grandTotal,
         shippingCharge,
         shippingGstRate,
+        roundOff,
         additionalDiscount,
         amountPaid,
         txnId,
@@ -647,10 +650,9 @@ export default function EditPurchasePage() {
                 </div>
               )}
               <div>
-                <label className="erp-label block mb-1 mt-2">Shipping / GST%</label>
+                <label className="erp-label block mb-1 mt-2">Shipping Charge</label>
                 <div className="flex gap-1">
-                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
-                  <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="Amount" />
                 </div>
               </div>
            </div>
@@ -701,10 +703,15 @@ export default function EditPurchasePage() {
                    <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                   <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping / GST%</span>
+                   <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping Charge</span>
                    <div className="flex gap-2">
                      <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
-                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right" placeholder="GST %" />
+                   </div>
+                 </div>
+                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                   <span className="text-[10px] text-slate-500 font-medium uppercase">Round Off</span>
+                   <div className="flex gap-2">
+                     <input type="number" value={roundOff === 0 ? '' : roundOff} onChange={e => setRoundOff(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
                    </div>
                  </div>
                  <div className="flex justify-between items-center pt-2">

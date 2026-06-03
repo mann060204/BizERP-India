@@ -93,6 +93,7 @@ export default function NewPurchasePage() {
   const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
+  const [roundOff, setRoundOff] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
@@ -236,7 +237,7 @@ export default function NewPurchasePage() {
   const totalGST = totalCGST + totalSGST + totalIGST;
   const subtotal = round2(totalTaxableAmount + totalGST);
   const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
-  const grandTotal = round2(subtotal - additionalDiscount + shippingCharge);
+  const grandTotal = round2(subtotal - additionalDiscount + shippingCharge + roundOff);
   const balance = round2(grandTotal - amountPaid);
 
   const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
@@ -289,6 +290,7 @@ export default function NewPurchasePage() {
         grandTotal,
         shippingCharge,
         shippingGstRate,
+        roundOff,
         additionalDiscount,
         amountPaid,
         paymentMode,
@@ -614,10 +616,9 @@ export default function NewPurchasePage() {
                   </div>
                 )}
                 <div className="mt-2">
-                  <label className="erp-label block mb-1">Shipping / GST%</label>
+                  <label className="erp-label block mb-1">Shipping Charge</label>
                   <div className="flex gap-1">
-                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
-                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="Amount" />
                   </div>
                 </div>
              </div>
@@ -687,9 +688,9 @@ export default function NewPurchasePage() {
                     <span>Grand Total</span>
                     <span>₹{grandTotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-slate-500">
+                  <div className="flex justify-between text-xs text-slate-500 items-center">
                     <span>Round Off</span>
-                    <span>{round2(grandTotal - (subtotal - globalDiscountAmount + shippingCharge)).toFixed(2)}</span>
+                    <input type="number" value={roundOff === 0 ? '' : roundOff} onChange={e => setRoundOff(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right h-7 p-1 text-xs" placeholder="0.00" />
                   </div>
                   <div className="flex justify-between font-bold text-sm text-blue-600 mt-1">
                     <span>Balance</span>

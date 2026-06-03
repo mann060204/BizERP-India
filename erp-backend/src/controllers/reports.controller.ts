@@ -417,11 +417,13 @@ export const getItemList = async (req: AuthRequest, res: Response) => {
 // Helper to get date range
 const getDateRange = (from?: string, to?: string) => {
   const query: any = {};
-  if (from) query.$gte = new Date(from);
+  if (from) {
+    const [y, m, d] = from.split('-');
+    query.$gte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0);
+  }
   if (to) {
-    const toDate = new Date(to);
-    toDate.setHours(23, 59, 59, 999); // Include full end day
-    query.$lte = toDate;
+    const [y, m, d] = to.split('-');
+    query.$lte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 23, 59, 59, 999);
   }
   return Object.keys(query).length > 0 ? query : null;
 };
@@ -560,13 +562,16 @@ export const getDaybook = async (req: AuthRequest, res: Response): Promise<void>
     const businessId = req.user!.businessId;
     const { date } = req.query as any;
     
-    let targetDate = new Date();
-    if (date) targetDate = new Date(date);
-    
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    let startOfDay, endOfDay;
+    if (date) {
+      const [y, m, d] = (date as string).split('-');
+      startOfDay = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0);
+      endOfDay = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 23, 59, 59, 999);
+    } else {
+      const now = new Date();
+      startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    }
 
     const invoiceQuery = { businessId, invoiceDate: { $gte: startOfDay, $lte: endOfDay } };
     const purchaseQuery = { businessId, billDate: { $gte: startOfDay, $lte: endOfDay } };
@@ -712,8 +717,14 @@ const buildDateFilter = (from?: string, to?: string, field = 'invoiceDate') => {
   const filter: any = {};
   if (from || to) {
     filter[field] = {};
-    if (from) filter[field].$gte = new Date(from);
-    if (to) { const d = new Date(to); d.setHours(23,59,59,999); filter[field].$lte = d; }
+    if (from) {
+      const [y, m, d] = from.split('-');
+      filter[field].$gte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0);
+    }
+    if (to) {
+      const [y, m, d] = to.split('-');
+      filter[field].$lte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 23, 59, 59, 999);
+    }
   }
   return filter;
 };
