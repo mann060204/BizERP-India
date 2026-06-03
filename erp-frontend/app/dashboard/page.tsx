@@ -131,7 +131,19 @@ export default function DashboardPage() {
     'Sales (Monthly)', 'Purchases (Monthly)', 'Expenses (Monthly)', 
     'Received (Monthly)', 'Outstanding (Monthly)', 'Paid Out (Monthly)', 'Low Stock'
   ];
-  const [kpiOrder, setKpiOrder] = useState(defaultKpiOrder);
+  const [kpiOrder, setKpiOrder] = useState<string[]>(defaultKpiOrder);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('erp_kpi_order');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length === defaultKpiOrder.length) {
+          setKpiOrder(parsed);
+        }
+      }
+    } catch {}
+  }, []);
 
   const handleKpiSort = () => {
     let _order = [...kpiOrder];
@@ -139,6 +151,7 @@ export default function DashboardPage() {
       const draggedItem = _order.splice(dragKpiItem.current, 1)[0];
       _order.splice(dragOverKpiItem.current, 0, draggedItem);
       setKpiOrder(_order);
+      try { localStorage.setItem('erp_kpi_order', JSON.stringify(_order)); } catch {}
     }
     dragKpiItem.current = null;
     dragOverKpiItem.current = null;
