@@ -1,6 +1,6 @@
 // @ts-nocheck
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../components/layout/Topbar';
 import { useAppSelector } from '../../hooks/useRedux';
@@ -92,7 +92,7 @@ function ChartCard({ title, icon, filter, loading, children, span = 1 }: any) {
         {filter}
       </div>
       {loading
-        ? <div className="h-36 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
+        ? <div className="h-64 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
         : children}
     </div>
   );
@@ -119,6 +119,21 @@ export default function DashboardPage() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
   const [businessName, setBusinessName] = useState('My Business');
+
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+  const [actions, setActions] = useState(QUICK_ACTIONS);
+
+  const handleSort = () => {
+    let _actions = [...actions];
+    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+      const draggedItemContent = _actions.splice(dragItem.current, 1)[0];
+      _actions.splice(dragOverItem.current, 0, draggedItemContent);
+      setActions(_actions);
+    }
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
 
   const [kpiLoading, setKpiLoading] = useState(true);
   const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0 });
@@ -229,7 +244,7 @@ export default function DashboardPage() {
               <ChartCard span={2} title="Business Trend — Revenue vs Purchases" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
                 filter={<MiniFilter onChange={p => { setTrendLoading(true); dashboardApi.businessTrend(p).then(d => setTrendData(d.data || [])).finally(() => setTrendLoading(false)); }} />}
                 loading={trendLoading}>
-                <div className="h-36">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={trendData} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -248,7 +263,7 @@ export default function DashboardPage() {
               <ChartCard title="High Volume Inventory" icon={<Package className="w-5 h-5 text-emerald-500" />}
                 filter={<MiniFilter onChange={p => { setInventoryLoading(true); dashboardApi.inventoryVolume(p).then(d => setInventoryData(d.data || { high: [], low: [] })).finally(() => setInventoryLoading(false)); }} />}
                 loading={inventoryLoading}>
-                <div className="h-36">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.high.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
                       <XAxis type="number" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
@@ -262,7 +277,7 @@ export default function DashboardPage() {
 
               {/* Low Volume Inventory */}
               <ChartCard title="Low Volume Inventory" icon={<TrendingDown className="w-5 h-5 text-orange-500" />} filter={null} loading={inventoryLoading}>
-                <div className="h-36">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.low.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
                       <XAxis type="number" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
@@ -278,7 +293,7 @@ export default function DashboardPage() {
               <ChartCard title="Top 5 Items by Revenue" icon={<ArrowUpRight className="w-5 h-5 text-purple-500" />}
                 filter={<MiniFilter onChange={p => { setTopProfitLoading(true); dashboardApi.topItemsProfit(p).then(d => setTopProfit(d.data || [])).finally(() => setTopProfitLoading(false)); }} />}
                 loading={topProfitLoading}>
-                <div className="h-36">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topProfit} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
                       <XAxis dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
@@ -296,7 +311,7 @@ export default function DashboardPage() {
               <ChartCard title="Bottom 5 Items by Revenue" icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
                 filter={<MiniFilter onChange={p => { setBottomProfitLoading(true); dashboardApi.bottomItemsProfit(p).then(d => setBottomProfit(d.data || [])).finally(() => setBottomProfitLoading(false)); }} />}
                 loading={bottomProfitLoading}>
-                <div className="h-36">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={bottomProfit} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
                       <XAxis dataKey="name" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" />
@@ -314,7 +329,7 @@ export default function DashboardPage() {
               <ChartCard title="Dead vs Fast Moving Stock" icon={<SlidersHorizontal className="w-5 h-5 text-blue-500" />}
                 filter={<MiniFilter onChange={p => { setStockLoading(true); dashboardApi.stockMovement(p).then(d => setStockMovement(d.data || { summary: [], deadItems: [] })).finally(() => setStockLoading(false)); }} />}
                 loading={stockLoading}>
-                <div className="flex items-center gap-3 h-36">
+                <div className="flex items-center gap-3 h-64">
                   <div className="w-32 h-full flex-shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -326,7 +341,7 @@ export default function DashboardPage() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex-1 overflow-y-auto space-y-1 max-h-36 pr-1">
+                  <div className="flex-1 overflow-y-auto space-y-1 max-h-64 pr-1">
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dead Stock</p>
                     {stockMovement.deadItems?.slice(0, 5).map((item: any, i: number) => (
                       <div key={i} className="flex items-center justify-between py-0.5 border-b border-slate-50">
@@ -344,7 +359,7 @@ export default function DashboardPage() {
               <ChartCard title="Top 5 Customers by Revenue" icon={<Users className="w-5 h-5 text-amber-500" />}
                 filter={<MiniFilter onChange={p => { setTopCustLoading(true); dashboardApi.topCustomers(p).then(d => setTopCustomers(d.data || [])).finally(() => setTopCustLoading(false)); }} />}
                 loading={topCustLoading}>
-                <div className="h-36">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topCustomers} layout="vertical" margin={{ top: 0, right: 4, left: 60, bottom: 0 }}>
                       <XAxis type="number" fontSize={8} tickLine={false} axisLine={false} stroke="#94a3b8" tickFormatter={v => fmt(v)} />
@@ -363,7 +378,7 @@ export default function DashboardPage() {
                 {pendingCustomers.length === 0
                   ? <p className="text-xs text-emerald-600 font-medium py-2">All customers are settled — no pending dues! 🎉</p>
                   : (
-                    <div className="overflow-x-auto max-h-40">
+                    <div className="overflow-x-auto max-h-64">
                       <table className="w-full text-xs">
                         <thead className="sticky top-0 bg-white">
                           <tr className="border-b border-slate-100">
@@ -402,18 +417,28 @@ export default function DashboardPage() {
           {/* RIGHT: Quick Actions sidebar */}
           <div className="w-52 flex-shrink-0 space-y-3 sticky top-5">
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Quick Actions</h3>
-            {QUICK_ACTIONS.map(({ label, href, icon: Icon, color, bg, desc }) => (
-              <button key={label} onClick={() => router.push(href)}
-                className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group">
-                <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                  <Icon className={`w-4 h-4 ${color}`} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
-                  <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-400 ml-auto flex-shrink-0 transition" />
-              </button>
+            {actions.map(({ label, href, icon: Icon, color, bg, desc }, index) => (
+              <div key={label} 
+                draggable
+                onDragStart={(e) => (dragItem.current = index)}
+                onDragEnter={(e) => (dragOverItem.current = index)}
+                onDragEnd={handleSort}
+                onDragOver={(e) => e.preventDefault()}
+                className="w-full">
+                <button onClick={() => router.push(href)}
+                  className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing">
+                  <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                    <Icon className={`w-4 h-4 ${color}`} />
+                  </div>
+                  <div className="min-w-0 pointer-events-none">
+                    <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
+                    <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
+                  </div>
+                  <div className="ml-auto flex items-center text-slate-300 group-hover:text-indigo-400 transition">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </button>
+              </div>
             ))}
 
             {/* Mini KPI card below QA */}
