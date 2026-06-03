@@ -77,14 +77,15 @@ export default function SettingsPage() {
     setExporting(true);
     try {
       const data = await dataApi.export();
-      const blob = new Blob([JSON.stringify(data.backup, null, 2)], { type: 'application/json' });
+      // Save as encrypted .erp file
+      const blob = new Blob([data.encryptedBackup], { type: 'application/octet-stream' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bissness_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `bizerp_backup_${new Date().toISOString().split('T')[0]}.erp`;
       a.click();
       window.URL.revokeObjectURL(url);
-      toast.success('Backup downloaded successfully!');
+      toast.success('Encrypted backup downloaded as .erp file!');
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to export data');
     } finally {
@@ -113,6 +114,12 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!file.name.endsWith('.erp')) {
+      toast.error('Please upload a valid .erp backup file.');
+      e.target.value = '';
+      return;
+    }
+
     if (!confirm('WARNING: Restoring from a backup will permanently overwrite and erase ALL current data. Do you want to proceed?')) {
       e.target.value = '';
       return;
@@ -123,8 +130,9 @@ export default function SettingsPage() {
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
-          const backup = JSON.parse(event.target?.result as string);
-          await dataApi.import({ backup });
+          // The file contains the raw encrypted string
+          const encryptedBackup = event.target?.result as string;
+          await dataApi.import({ encryptedBackup });
           toast.success('Data restored successfully!');
           setTimeout(() => window.location.reload(), 2000);
         } catch (err: any) {
@@ -414,7 +422,7 @@ export default function SettingsPage() {
                </div>
                <div className="space-y-4 max-w-lg">
                  <p className="text-xs text-slate-600 leading-relaxed">
-                   Manage your entire business database. You can download a complete backup of all your records, restore from a previous backup, or completely erase your data to start fresh.
+                   Manage your entire business database. Backups are <strong>AES-256 encrypted</strong> and saved as <code className="bg-slate-100 px-1 rounded">.erp</code> files — only this system can restore them.
                  </p>
                  
                  <div className="flex flex-col gap-3 mt-4">
@@ -423,7 +431,7 @@ export default function SettingsPage() {
                        {exporting ? <Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> : <Download className="w-4 h-4 text-blue-500" />} 
                        Download Full Backup
                      </span>
-                     <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">.JSON File</span>
+                     <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">.ERP Encrypted File</span>
                    </button>
                    
                    <label className={`w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-slate-700 ${importing || erasing || exporting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
@@ -432,7 +440,7 @@ export default function SettingsPage() {
                        Restore from Backup
                      </span>
                      <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Upload</span>
-                     <input type="file" accept=".json" className="hidden" disabled={importing || erasing || exporting} onChange={handleImportData} />
+                     <input type="file" accept=".erp" className="hidden" disabled={importing || erasing || exporting} onChange={handleImportData} />
                    </label>
 
                    <div className="mt-4 pt-4 border-t border-slate-100">

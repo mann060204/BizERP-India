@@ -42,6 +42,8 @@ export default function NewInvoicePage() {
   // Header State
   const [invoiceType, setInvoiceType] = useState('GST');
   const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
+  // FY date range — clamped to selected financial year
+  const [fyDateRange, setFyDateRange] = useState<{ min: string; max: string; default: string } | null>(null);
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
@@ -122,6 +124,23 @@ export default function NewInvoicePage() {
         if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
         const bizDiscounts = bRes.data?.business?.discountSchemes || [];
         setDiscountSchemes(bizDiscounts.filter((d: any) => d.isActive));
+
+        // ── Parse Financial Year to clamp invoice dates ──────────────────
+        const fyLabel: string = bRes.data?.business?.financialYearLabel || '';
+        // Expected format: "FY 2025-26" or "FY 2024-25"
+        const match = fyLabel.match(/(\d{4})-(\d{2,4})/);
+        if (match) {
+          const startYear = parseInt(match[1]);
+          // Indian FY: 1 Apr YYYY to 31 Mar YYYY+1
+          const fyStart = `${startYear}-04-01`;
+          const fyEnd   = `${startYear + 1}-03-31`;
+          const today   = new Date().toISOString().split('T')[0];
+          // Default to today if within FY range, else clamp to FY start
+          const defaultDate = today >= fyStart && today <= fyEnd ? today : fyStart;
+          setFyDateRange({ min: fyStart, max: fyEnd, default: defaultDate });
+          setInvoiceDate(defaultDate);
+          setDueDate(defaultDate);
+        }
       } catch (err) {
         toast.error('Failed to load data');
       } finally {
@@ -509,8 +528,12 @@ export default function NewInvoicePage() {
               <input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label">Date</label>
-              <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label">Date {fyDateRange && <span className="ml-1 text-[9px] bg-indigo-100 text-indigo-600 font-semibold px-1.5 py-0.5 rounded-full">{fyDateRange.min.slice(0,4)}-{fyDateRange.max.slice(0,4)}</span>}</label>
+              <input type="date" value={invoiceDate}
+                min={fyDateRange?.min}
+                max={fyDateRange?.max}
+                title={fyDateRange ? `FY: ${fyDateRange.min} to ${fyDateRange.max}` : ''}
+                onChange={e => setInvoiceDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
@@ -520,7 +543,10 @@ export default function NewInvoicePage() {
             </div>
             <div>
               <label className="erp-label">Due Date</label>
-              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
+              <input type="date" value={dueDate}
+                min={fyDateRange?.min}
+                max={fyDateRange?.max}
+                onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div className="flex items-center gap-2 pt-4">
                <label className="flex items-center gap-1 text-[10px] cursor-pointer">
