@@ -588,7 +588,7 @@ export default function NewPurchaseOrderPage() {
            <div className="col-span-1">
               <div className="erp-container border-slate-200">
                 <div className="erp-header bg-transparent border-none py-1">Remarks (Private Use)</div>
-                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-12 resize-none border-none border-t border-slate-200" />
+                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y border-none border-t border-slate-200" />
               </div>
            </div>
 

@@ -773,11 +773,11 @@ export default function NewQuotationPage() {
               <div className="grid grid-cols-2 gap-4 mt-2">
                  <div>
                     <label className="erp-label block mb-1">Delivery Terms</label>
-                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
                  </div>
                  <div>
                     <label className="erp-label block mb-1">Remarks (Private)</label>
-                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
                  </div>
               </div>
            </div>

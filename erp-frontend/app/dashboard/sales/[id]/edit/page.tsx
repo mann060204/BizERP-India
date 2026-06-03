@@ -40,8 +40,7 @@ export default function NewInvoicePage() {
   const [selectedSchemeId, setSelectedSchemeId] = useState('');
 
   // Header State
-  const [invoiceType,
-        discountAmount: globalDiscountAmount, setInvoiceType] = useState('GST');
+  const [invoiceType, setInvoiceType] = useState('GST');
   const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -429,6 +428,7 @@ export default function NewInvoicePage() {
         placeOfSupply,
         isInterState,
         invoiceType,
+        discountAmount: globalDiscountAmount,
         lineItems,
         paymentMode: combinedPaymentMode,
         paymentHistory: [
@@ -947,15 +947,15 @@ export default function NewInvoicePage() {
               <div className="grid grid-cols-2 gap-4 mt-2">
                  <div>
                     <label className="erp-label block mb-1">Delivery Terms</label>
-                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
                  </div>
                  <div>
                     <label className="erp-label block mb-1">Delivery Remarks (Printed)</label>
-                    <textarea value={deliveryRemarks} onChange={e => setDeliveryRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" placeholder="e.g. Courier Name, LR No." />
+                    <textarea value={deliveryRemarks} onChange={e => setDeliveryRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" placeholder="e.g. Courier Name, LR No." />
                  </div>
                  <div>
                     <label className="erp-label block mb-1">Remarks (Private)</label>
-                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full h-10 resize-none" />
+                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
                  </div>
               </div>
            </div>
