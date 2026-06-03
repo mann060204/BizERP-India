@@ -1681,7 +1681,7 @@ export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response)
       { $sort: { '_id': 1 } }
     ]);
 
-    const expensesAgg = await require('../models/expense.model').default.aggregate([
+    const expensesAgg = await Expense.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), date: { $gte: start, $lte: end } } },
       { $group: { _id: { $dateToString: { format: dateFmt, date: '$date' } }, expenses: { $sum: '$totalWithTax' } } },
       { $sort: { '_id': 1 } }
