@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../components/layout/Topbar';
 import { useAppSelector } from '../../hooks/useRedux';
-import { invoicesApi, purchasesApi, inventoryApi, dashboardApi } from '../../lib/erp-api';
+import { invoicesApi, purchasesApi, inventoryApi, dashboardApi, businessApi } from '../../lib/erp-api';
 import {
   TrendingUp, TrendingDown, CreditCard, Wallet, AlertTriangle,
   ArrowUpRight, ShoppingCart, Loader2, FilePlus, PackagePlus,
@@ -22,8 +22,6 @@ const QUICK_ACTIONS = [
   { label: 'Add Customer',     href: '/dashboard/customers/new',  icon: UserPlus,       color: 'text-emerald-600', bg: 'bg-emerald-50', desc: 'Add new customer' },
   { label: 'Stock Adjust',     href: '/dashboard/inventory',      icon: SlidersHorizontal, color: 'text-orange-600', bg: 'bg-orange-50', desc: 'Manage inventory' },
   { label: 'New Expense',      href: '/dashboard/expenses',       icon: Receipt,        color: 'text-red-600',     bg: 'bg-red-50',     desc: 'Record an expense' },
-  { label: 'View Reports',     href: '/dashboard/reports',        icon: FileText,       color: 'text-purple-600',  bg: 'bg-purple-50',  desc: 'Check business reports' },
-  { label: 'Tools',            href: '/dashboard/tools',          icon: Wrench,         color: 'text-slate-600',   bg: 'bg-slate-100',  desc: 'Utilities & tools' },
 ];
 
 const DONUT_COLORS = ['#6366f1', '#f97316'];
@@ -88,8 +86,8 @@ function ChartCard({ title, icon, filter, loading, children, span = 1 }: any) {
     <div className={`bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition ${span === 2 ? 'col-span-2' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-base">{icon}</span>
-          <h3 className="text-xs font-bold text-slate-700">{title}</h3>
+          <span className="text-lg">{icon}</span>
+          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
         </div>
         {filter}
       </div>
@@ -120,6 +118,7 @@ export default function DashboardPage() {
   const { user } = useAppSelector((s) => s.auth);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+  const [businessName, setBusinessName] = useState('My Business');
 
   const [kpiLoading, setKpiLoading] = useState(true);
   const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0 });
@@ -140,6 +139,11 @@ export default function DashboardPage() {
   const [pendingLoading, setPendingLoading] = useState(true);
 
   useEffect(() => {
+    businessApi.getProfile().then(res => {
+      if (res.data.business?.name) setBusinessName(res.data.business.name);
+      else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
+    }).catch(() => {});
+
     Promise.all([
       invoicesApi.summary().catch(() => ({ data: {} })),
       purchasesApi.summary().catch(() => ({ data: {} })),
@@ -176,11 +180,11 @@ export default function DashboardPage() {
   useEffect(() => { fetchAll({ period: 'month' }); }, []);
 
   const KPI_CARDS = [
-    { label: 'Sales (Month)', value: fmt(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Purchases',     value: fmt(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Received',      value: fmt(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Outstanding',   value: fmt(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Paid Out',      value: fmt(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Sales (Month)', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Purchases',     value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Received',      value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Outstanding',   value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Paid Out',      value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Low Stock',     value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
@@ -191,8 +195,8 @@ export default function DashboardPage() {
       <main className="flex-1 p-5 overflow-auto">
         {/* Greeting */}
         <div className="mb-5">
-          <h2 className="text-xl font-bold text-slate-900">Good {greeting}, {user?.name?.split(' ')[0] || 'Admin'} 👋</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Here's your business snapshot.</p>
+          <h2 className="text-2xl font-bold text-slate-900">Good {greeting}, {businessName}</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Here's your business snapshot.</p>
         </div>
 
         {/* ── Two-column layout ────────────────────────────────────────────── */}
@@ -208,11 +212,11 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-3 xl:grid-cols-6 gap-3">
                   {KPI_CARDS.map(({ label, value, icon: Icon, color, bg }) => (
                     <div key={label} className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 shadow-sm hover:shadow-md transition">
-                      <div className={`w-7 h-7 rounded-lg ${bg} flex items-center justify-center`}>
-                        <Icon className={`w-3.5 h-3.5 ${color}`} />
+                      <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center`}>
+                        <Icon className={`w-4 h-4 ${color}`} />
                       </div>
-                      <p className="text-slate-900 text-base font-bold">{value}</p>
-                      <p className="text-slate-400 text-[10px] font-medium leading-tight">{label}</p>
+                      <p className="text-slate-900 text-xl font-bold">{value}</p>
+                      <p className="text-slate-500 text-xs font-bold leading-tight tracking-wide">{label}</p>
                     </div>
                   ))}
                 </div>
@@ -222,7 +226,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-4">
 
               {/* Business Trend — full width */}
-              <ChartCard span={2} title="Business Trend — Revenue vs Purchases" icon="📈"
+              <ChartCard span={2} title="Business Trend — Revenue vs Purchases" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
                 filter={<MiniFilter onChange={p => { setTrendLoading(true); dashboardApi.businessTrend(p).then(d => setTrendData(d.data || [])).finally(() => setTrendLoading(false)); }} />}
                 loading={trendLoading}>
                 <div className="h-36">
@@ -241,7 +245,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* High Volume Inventory */}
-              <ChartCard title="High Volume Inventory" icon="📦"
+              <ChartCard title="High Volume Inventory" icon={<Package className="w-5 h-5 text-emerald-500" />}
                 filter={<MiniFilter onChange={p => { setInventoryLoading(true); dashboardApi.inventoryVolume(p).then(d => setInventoryData(d.data || { high: [], low: [] })).finally(() => setInventoryLoading(false)); }} />}
                 loading={inventoryLoading}>
                 <div className="h-36">
@@ -257,7 +261,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Low Volume Inventory */}
-              <ChartCard title="Low Volume Inventory" icon="📉" filter={null} loading={inventoryLoading}>
+              <ChartCard title="Low Volume Inventory" icon={<TrendingDown className="w-5 h-5 text-orange-500" />} filter={null} loading={inventoryLoading}>
                 <div className="h-36">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.low.slice(0, 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
@@ -271,7 +275,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Top 5 by Revenue */}
-              <ChartCard title="Top 5 Items by Revenue" icon="🏆"
+              <ChartCard title="Top 5 Items by Revenue" icon={<ArrowUpRight className="w-5 h-5 text-purple-500" />}
                 filter={<MiniFilter onChange={p => { setTopProfitLoading(true); dashboardApi.topItemsProfit(p).then(d => setTopProfit(d.data || [])).finally(() => setTopProfitLoading(false)); }} />}
                 loading={topProfitLoading}>
                 <div className="h-36">
@@ -289,7 +293,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Bottom 5 by Revenue */}
-              <ChartCard title="Bottom 5 Items by Revenue" icon="⚠️"
+              <ChartCard title="Bottom 5 Items by Revenue" icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
                 filter={<MiniFilter onChange={p => { setBottomProfitLoading(true); dashboardApi.bottomItemsProfit(p).then(d => setBottomProfit(d.data || [])).finally(() => setBottomProfitLoading(false)); }} />}
                 loading={bottomProfitLoading}>
                 <div className="h-36">
@@ -307,7 +311,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Dead vs Fast Moving */}
-              <ChartCard title="Dead vs Fast Moving Stock" icon="🔄"
+              <ChartCard title="Dead vs Fast Moving Stock" icon={<SlidersHorizontal className="w-5 h-5 text-blue-500" />}
                 filter={<MiniFilter onChange={p => { setStockLoading(true); dashboardApi.stockMovement(p).then(d => setStockMovement(d.data || { summary: [], deadItems: [] })).finally(() => setStockLoading(false)); }} />}
                 loading={stockLoading}>
                 <div className="flex items-center gap-3 h-36">
@@ -337,7 +341,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Top 5 Customers */}
-              <ChartCard title="Top 5 Customers by Revenue" icon="🌟"
+              <ChartCard title="Top 5 Customers by Revenue" icon={<Users className="w-5 h-5 text-amber-500" />}
                 filter={<MiniFilter onChange={p => { setTopCustLoading(true); dashboardApi.topCustomers(p).then(d => setTopCustomers(d.data || [])).finally(() => setTopCustLoading(false)); }} />}
                 loading={topCustLoading}>
                 <div className="h-36">
@@ -355,7 +359,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Customer Pending — full width */}
-              <ChartCard span={2} title="Customer Pending Payments" icon="⏳" filter={null} loading={pendingLoading}>
+              <ChartCard span={2} title="Customer Pending Payments" icon={<AlertCircle className="w-5 h-5 text-rose-500" />} filter={null} loading={pendingLoading}>
                 {pendingCustomers.length === 0
                   ? <p className="text-xs text-emerald-600 font-medium py-2">All customers are settled — no pending dues! 🎉</p>
                   : (
@@ -363,10 +367,10 @@ export default function DashboardPage() {
                       <table className="w-full text-xs">
                         <thead className="sticky top-0 bg-white">
                           <tr className="border-b border-slate-100">
-                            <th className="text-left py-1.5 px-2 text-[10px] text-slate-400 font-semibold uppercase">#</th>
-                            <th className="text-left py-1.5 px-2 text-[10px] text-slate-400 font-semibold uppercase">Customer</th>
-                            <th className="text-left py-1.5 px-2 text-[10px] text-slate-400 font-semibold uppercase">Mobile</th>
-                            <th className="text-right py-1.5 px-2 text-[10px] text-slate-400 font-semibold uppercase">Pending</th>
+                            <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">#</th>
+                            <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Customer</th>
+                            <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Mobile</th>
+                            <th className="text-right py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Pending</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -381,8 +385,8 @@ export default function DashboardPage() {
                         </tbody>
                         <tfoot className="sticky bottom-0 bg-white">
                           <tr className="border-t-2 border-slate-200">
-                            <td colSpan={3} className="py-1.5 px-2 text-[10px] font-bold text-slate-600 uppercase">Total Pending</td>
-                            <td className="py-1.5 px-2 text-right font-bold text-red-600">
+                            <td colSpan={3} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
+                            <td className="py-2 px-2 text-right font-bold text-red-600">
                               {fmtFull(pendingCustomers.reduce((s, c) => s + c.currentBalance, 0))}
                             </td>
                           </tr>
@@ -405,8 +409,8 @@ export default function DashboardPage() {
                   <Icon className={`w-4 h-4 ${color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 group-hover:text-indigo-600 transition">{label}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{desc}</p>
+                  <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
+                  <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-400 ml-auto flex-shrink-0 transition" />
               </button>
@@ -417,17 +421,17 @@ export default function DashboardPage() {
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Today's Snapshot</h3>
               <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white space-y-3">
                 <div>
-                  <p className="text-indigo-200 text-[10px] font-medium uppercase tracking-wider">Month Sales</p>
-                  <p className="text-white font-bold text-lg">{fmt(stats.sales)}</p>
+                  <p className="text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Month Sales</p>
+                  <p className="text-white font-black text-2xl">{fmtFull(stats.sales)}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-white/10 rounded-lg p-2">
-                    <p className="text-indigo-200 text-[9px]">Outstanding</p>
-                    <p className="text-white font-bold text-sm">{fmt(stats.salesOutstanding)}</p>
+                  <div className="bg-white/10 rounded-lg p-2.5">
+                    <p className="text-indigo-100 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Outstanding</p>
+                    <p className="text-white font-bold text-base">{fmtFull(stats.salesOutstanding)}</p>
                   </div>
-                  <div className="bg-white/10 rounded-lg p-2">
-                    <p className="text-indigo-200 text-[9px]">Low Stock</p>
-                    <p className="text-white font-bold text-sm">{stats.lowStock}</p>
+                  <div className="bg-white/10 rounded-lg p-2.5">
+                    <p className="text-indigo-100 text-[10px] font-semibold uppercase tracking-wider mb-0.5">Low Stock</p>
+                    <p className="text-white font-bold text-base">{stats.lowStock}</p>
                   </div>
                 </div>
               </div>
