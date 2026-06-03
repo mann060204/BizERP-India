@@ -886,25 +886,7 @@ export default function NewInvoicePage() {
                   </select>
                 </div>
               )}
-              <div>
-                <label className="erp-label block mb-1">Add'l Discount</label>
-                <div className="flex w-full">
-                   <input 
-                     type="number" 
-                     value={additionalDiscount === 0 ? '' : additionalDiscount} 
-                     onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} 
-                     className="erp-input w-full rounded-none" 
-                     placeholder="Discount..."
-                   />
-                   <select 
-                     value={additionalDiscountType} 
-                     onChange={e => setAdditionalDiscountType(e.target.value as 'amount'|'percentage')} 
-                     className="erp-input rounded-l-none bg-slate-100 px-2 border-l-0 text-xs cursor-pointer outline-none focus:ring-0">
-                     <option value="percentage">%</option>
-                     <option value="amount">₹</option>
-                   </select>
-                </div>
-              </div>
+
               <div>
                 <label className="erp-label block mb-1">Shipping / GST%</label>
                 <div className="flex gap-1">

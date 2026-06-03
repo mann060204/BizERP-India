@@ -97,8 +97,8 @@ export default function NewInvoicePage() {
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
-  const [additionalDiscount, setAdditionalDiscount] = useState(0);
-  const [additionalDiscountType, setAdditionalDiscountType] = useState<'amount'|'percentage'>('amount');
+  const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0);
+  const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const formatDate = (d: string) => d.split('-').reverse().join('/');
@@ -162,7 +162,7 @@ export default function NewInvoicePage() {
         
         setShippingCharge(inv.shippingCharge || 0);
           setShippingGstRate(inv.shippingGstRate || 0);
-        if (inv.discountAmount) { setAdditionalDiscount(inv.discountAmount); setAdditionalDiscountType('amount'); }
+        if (inv.discountAmount) { setDiscountAmountFlat(inv.discountAmount); }
         setRemarks(inv.notes || '');
         setDeliveryTerms(inv.deliveryTerms || '');
         setDeliveryRemarks(inv.deliveryRemarks || '');
@@ -385,7 +385,8 @@ export default function NewInvoicePage() {
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
-  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
+  const totalDiscount = lineItems.reduce((s, i) => s + (i.discountType === 'percentage' ? (i.quantity * i.rate * i.discount / 100) : (i.discountAmount || 0)), 0);
+  const globalDiscountAmount = (subtotal * (globalDiscountPercent || 0) / 100) + (discountAmountFlat || 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
   let shipCGST = 0;
   let shipSGST = 0;
@@ -872,25 +873,7 @@ export default function NewInvoicePage() {
                   </select>
                 </div>
               )}
-              <div>
-                <label className="erp-label block mb-1">Add'l Discount</label>
-                <div className="flex w-full">
-                   <input 
-                     type="number" 
-                     value={additionalDiscount === 0 ? '' : additionalDiscount} 
-                     onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} 
-                     className="erp-input w-full rounded-none" 
-                     placeholder="Discount..."
-                   />
-                   <select 
-                     value={additionalDiscountType} 
-                     onChange={e => setAdditionalDiscountType(e.target.value as 'amount'|'percentage')} 
-                     className="erp-input rounded-l-none bg-slate-100 px-2 border-l-0 text-xs cursor-pointer outline-none focus:ring-0">
-                     <option value="percentage">%</option>
-                     <option value="amount">₹</option>
-                   </select>
-                </div>
-              </div>
+
               <div>
                 <label className="erp-label block mb-1">Shipping / GST%</label>
                 <div className="flex gap-1">
