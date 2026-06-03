@@ -69,7 +69,7 @@ export default function SalesPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Topbar title="Sales" />
+      <Topbar title="Credit Notes (Sale Returns)" />
       <main className="flex-1 p-6 space-y-6">
         {/* KPI Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -89,7 +89,7 @@ export default function SalesPage() {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-slate-900">All salesReturns</h2>
+          <h2 className="text-xl font-bold text-slate-900">All Credit Notes</h2>
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -102,7 +102,7 @@ export default function SalesPage() {
               />
             </div>
             <Link href="/dashboard/sales/returns/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
-              <Plus className="w-4 h-4" /> New salesReturn
+              <Plus className="w-4 h-4" /> New Credit Note
             </Link>
           </div>
         </div>
@@ -123,10 +123,10 @@ export default function SalesPage() {
         ) : filteredsalesReturns.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <RotateCcw className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
-            <p className="text-slate-900 font-semibold text-lg">No salesReturns yet</p>
-            <p className="text-slate-600 text-sm mt-1 mb-6">Create your first GST salesReturn to get started</p>
+            <p className="text-slate-900 font-semibold text-lg">No Credit Notes yet</p>
+            <p className="text-slate-600 text-sm mt-1 mb-6">Create your first Credit Note to get started</p>
             <Link href="/dashboard/sales/returns/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
-              <Plus className="w-4 h-4" /> Create salesReturn
+              <Plus className="w-4 h-4" /> Create Credit Note
             </Link>
           </div>
         ) : (
@@ -135,7 +135,7 @@ export default function SalesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    {['salesReturn #', 'Date', 'Customer', 'Amount', 'Received', 'Balance', 'Mode', 'Status', 'Actions'].map(h => (
+                    {['Credit Note #', 'Date', 'Customer', 'Amount', 'Received', 'Balance', 'Mode', 'Status', 'Actions'].map(h => (
                       <th key={h} className="text-left px-5 py-3.5 text-slate-600 font-medium text-xs uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>

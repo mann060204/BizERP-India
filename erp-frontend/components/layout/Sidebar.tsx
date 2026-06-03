@@ -16,14 +16,14 @@ const NAV_ITEMS = [
     subItems: [
       { label: 'Sales Invoices', href: '/dashboard/sales' },
       { label: 'Quotations',     href: '/dashboard/quotations' },
-      { label: 'Sales Returns',  href: '/dashboard/sales/returns' },
+      { label: 'Credit Notes (Returns)',  href: '/dashboard/sales/returns' },
     ]
   },
   { label: 'Purchases',       href: '#',                   icon: Package,
     subItems: [
       { label: 'Purchase Bills', href: '/dashboard/purchases' },
       { label: 'Purchase Orders', href: '/dashboard/purchases/orders' },
-      { label: 'Purchase Returns', href: '/dashboard/purchases/returns' },
+      { label: 'Debit Notes (Returns)', href: '/dashboard/purchases/returns' },
     ]
   },
   { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },

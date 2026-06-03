@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import Topbar from '../../../../components/layout/Topbar';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Info } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Info, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 import { productsApi, customersApi } from '../../../../lib/erp-api';
@@ -14,6 +14,27 @@ export default function BulkImportPage() {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const downloadTemplate = () => {
+    let headers = '';
+    let filename = '';
+    if (importType === 'products') {
+      headers = 'Name,SKU,Category,Unit,Selling Price,Purchase Price,GST %,HSN Code,Stock\n"Sample Item","SKU001","General","Nos","100","80","18","1234","50"';
+      filename = 'products_import_template.csv';
+    } else {
+      headers = 'Name,Mobile,Email,GSTIN,Street,City,State,Pincode\n"John Doe","9876543210","john@example.com","27AADCB2230M1Z2","123 Main St","Mumbai","Maharashtra","400001"';
+      filename = 'customers_import_template.csv';
+    }
+    const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
@@ -146,6 +167,10 @@ export default function BulkImportPage() {
                       <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, Street, City, State, Pincode
                     </div>
                   )}
+
+                  <button onClick={downloadTemplate} className="mt-4 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 shadow-sm">
+                    <Download className="w-4 h-4" /> Download Template
+                  </button>
                 </div>
               </div>
             </div>

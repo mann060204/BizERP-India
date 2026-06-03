@@ -5,6 +5,7 @@ import Topbar from '../../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../../lib/erp-api';
 import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CategoryMasterModal from '../../../../components/masters/CategoryMasterModal';
 
 interface Product {
   _id: string; name: string; printName?: string; group?: string; brand?: string;
@@ -92,6 +93,7 @@ export default function MastersPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
@@ -161,27 +163,11 @@ export default function MastersPage() {
   };
 
   const handleAddGroup = async () => {
-    const name = window.prompt('Enter new Group name:');
-    if (!name || !name.trim()) return;
-    try {
-      const newGroups = [...productGroups, name.trim()];
-      await businessApi.updateProfile({ productGroups: newGroups });
-      setProductGroups(newGroups);
-      setForm(prev => ({...prev, group: name.trim()}));
-      toast.success('Group added successfully');
-    } catch (e) { toast.error('Failed to add group'); }
+    setShowCategoryModal(true);
   };
 
   const handleAddBrand = async () => {
-    const name = window.prompt('Enter new Brand name:');
-    if (!name || !name.trim()) return;
-    try {
-      const newBrands = [...productBrands, name.trim()];
-      await businessApi.updateProfile({ productBrands: newBrands });
-      setProductBrands(newBrands);
-      setForm(prev => ({...prev, brand: name.trim()}));
-      toast.success('Brand added successfully');
-    } catch (e) { toast.error('Failed to add brand'); }
+    setShowCategoryModal(true);
   };
 
   const handleSave = async () => {
@@ -551,6 +537,14 @@ export default function MastersPage() {
             </div>
           </div>
         </div>
+      )}
+      {showCategoryModal && (
+        <CategoryMasterModal 
+          onClose={() => setShowCategoryModal(false)} 
+          onSaveSuccess={() => {
+            fetchSettings();
+          }} 
+        />
       )}
     </div>
   );

@@ -41,13 +41,14 @@ export default function purchaseReturnsPage() {
 
   const handleCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel purchaseReturn bill ${num}?`)) return;
-    try { await purchaseReturnApi.cancel(id); toast.success('purchaseReturn bill cancelled'); setpurchaseReturns(pur => pur.filter(p => p._id !== id)); }
+    if (!confirm(`Cancel Debit Note ${num}?`)) return;
+    try { await purchaseReturnApi.cancel(id); toast.success('Debit Note cancelled'); setpurchaseReturns(pur => pur.filter(p => p._id !== id)); }
     catch { toast.error('Failed to cancel'); }
   };
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Topbar title="purchaseReturns" />
+      <Topbar title="Debit Notes" />
       <main className="flex-1 p-6 space-y-6">
         {/* KPI Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -66,9 +67,9 @@ export default function purchaseReturnsPage() {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-slate-900">All purchaseReturns</h2>
+          <h2 className="text-xl font-bold text-slate-900">All Debit Notes</h2>
           <Link href="/dashboard/purchases/returns/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
-            <Plus className="w-4 h-4" /> Add purchaseReturn Bill
+            <Plus className="w-4 h-4" /> Add Debit Note
           </Link>
         </div>
 
@@ -88,10 +89,10 @@ export default function purchaseReturnsPage() {
         ) : purchaseReturns.length === 0 ? (
           <div className="glass rounded-2xl p-16 text-center">
             <RotateCcw className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
-            <p className="text-slate-900 font-semibold text-lg">No purchaseReturns yet</p>
-            <p className="text-slate-600 text-sm mt-1 mb-6">Record your first purchaseReturn bill to update stock</p>
+            <p className="text-slate-900 font-semibold text-lg">No Debit Notes yet</p>
+            <p className="text-slate-600 text-sm mt-1 mb-6">Record your first Debit Note to update stock</p>
             <Link href="/dashboard/purchases/returns/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
-              <Plus className="w-4 h-4" /> Add purchaseReturn Bill
+              <Plus className="w-4 h-4" /> Add Debit Note
             </Link>
           </div>
         ) : (
@@ -100,7 +101,7 @@ export default function purchaseReturnsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    {['Bill #', 'Date', 'Supplier', 'Amount', 'Paid', 'Balance', 'Mode', 'Status', 'Actions'].map(h => (
+                    {['Debit Note #', 'Date', 'Supplier', 'Amount', 'Paid', 'Balance', 'Mode', 'Status', 'Actions'].map(h => (
                       <th key={h} className="text-left px-5 py-3.5 text-slate-600 font-medium text-xs uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
