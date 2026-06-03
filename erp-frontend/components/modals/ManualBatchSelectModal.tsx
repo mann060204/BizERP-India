@@ -21,6 +21,7 @@ interface SelectedBatch {
 interface ManualBatchSelectModalProps {
   productName: string;
   requestedQuantity: number;
+  unit: string;
   availableBatches: BatchInfo[];
   onClose: () => void;
   onConfirm: (selectedBatches: SelectedBatch[]) => void;
@@ -29,6 +30,7 @@ interface ManualBatchSelectModalProps {
 export default function ManualBatchSelectModal({
   productName,
   requestedQuantity,
+  unit,
   availableBatches,
   onClose,
   onConfirm
@@ -88,10 +90,10 @@ export default function ManualBatchSelectModal({
           <div className="mb-4 bg-blue-50 border border-blue-100 p-3 rounded flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-900">
-              You requested <span className="font-bold text-blue-700">{requestedQuantity}</span> items. 
+              You requested <span className="font-bold text-blue-700">{requestedQuantity} {unit}</span>. 
               Please allocate this quantity across the available batches below.
               <br/>
-              Currently allocated: <span className={`font-bold ${totalSelected === requestedQuantity ? 'text-green-600' : 'text-red-500'}`}>{totalSelected}</span>
+              Currently allocated: <span className={`font-bold ${totalSelected === requestedQuantity ? 'text-green-600' : 'text-red-500'}`}>{totalSelected} {unit}</span>
             </div>
           </div>
 
@@ -104,12 +106,12 @@ export default function ManualBatchSelectModal({
               <thead>
                 <tr className="bg-slate-100 text-xs uppercase text-slate-600">
                   <th className="p-2 border border-slate-200">Batch No</th>
-                  <th className="p-2 border border-slate-200 text-center">In Stock</th>
+                  <th className="p-2 border border-slate-200 text-center">In Stock ({unit})</th>
                   <th className="p-2 border border-slate-200 text-center">Mfg Date</th>
                   <th className="p-2 border border-slate-200 text-center">Expiry</th>
                   <th className="p-2 border border-slate-200 text-right">M.R.P.</th>
                   <th className="p-2 border border-slate-200 text-right">Sale Price</th>
-                  <th className="p-2 border border-slate-200 text-center bg-blue-50">Allocated Qty</th>
+                  <th className="p-2 border border-slate-200 text-center bg-blue-50">Allocated Qty ({unit})</th>
                 </tr>
               </thead>
               <tbody>

@@ -1080,6 +1080,7 @@ export default function NewInvoicePage() {
         <ManualBatchSelectModal
           productName={pendingBatchItem.product.name}
           requestedQuantity={pendingBatchItem.quantity}
+          unit={pendingBatchItem.itemInputData.unit}
           availableBatches={pendingBatchItem.product.availableBatches || pendingBatchItem.product.batches || []}
           onClose={() => {
             setShowBatchModal(false);

@@ -19,10 +19,10 @@ export default function BulkImportPage() {
     let headers = '';
     let filename = '';
     if (importType === 'products') {
-      headers = 'Name,SKU,Category,Unit,Selling Price,Purchase Price,GST %,HSN Code,Stock\n"Sample Item","SKU001","General","Nos","100","80","18","1234","50"';
+      headers = 'Name,Print Name,SKU,Category,Group,Brand,Unit,Secondary Unit,Conversion Rate,Purchase Price,Selling Price,MRP,Sale Discount,Discount Type,GST %,HSN Code,Stock\n"Sample Item","Sample P-Name","SKU001","General","Main Group","Brand X","Nos","Box","10","80","100","120","5","percentage","18","1234","50"';
       filename = 'products_import_template.csv';
     } else {
-      headers = 'Name,Mobile,Email,GSTIN,Street,City,State,Pincode\n"John Doe","9876543210","john@example.com","27AADCB2230M1Z2","123 Main St","Mumbai","Maharashtra","400001"';
+      headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Credit Limit,Opening Balance,Street,City,State,Pincode\n"John Doe","9876543210","john@example.com","27AADCB2230M1Z2","ABCDE1234F","Doe Enterprises","50000","0","123 Main St","Mumbai","Maharashtra","400001"';
       filename = 'customers_import_template.csv';
     }
     const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
@@ -71,11 +71,19 @@ export default function BulkImportPage() {
         const payload = {
           products: data.map(item => ({
             name: item.name || item.Name,
+            printName: item.printName || item['Print Name'] || '',
             sku: item.sku || item.SKU || '',
             category: item.category || item.Category || 'General',
+            group: item.group || item.Group || '',
+            brand: item.brand || item.Brand || '',
             unit: item.unit || item.Unit || 'Nos',
+            secondaryUnit: item.secondaryUnit || item['Secondary Unit'] || '',
+            conversionRate: parseFloat(item.conversionRate || item['Conversion Rate'] || '1'),
             sellingPrice: parseFloat(item.sellingPrice || item['Selling Price'] || '0'),
             purchasePrice: parseFloat(item.purchasePrice || item['Purchase Price'] || '0'),
+            mrp: parseFloat(item.mrp || item.MRP || '0'),
+            saleDiscount: parseFloat(item.saleDiscount || item['Sale Discount'] || '0'),
+            saleDiscountType: (item.saleDiscountType || item['Discount Type'] || 'percentage').toLowerCase(),
             gstRate: parseFloat(item.gstRate || item['GST %'] || '18'),
             hsnCode: item.hsnCode || item['HSN Code'] || '',
             openingStock: parseFloat(item.openingStock || item.Stock || '0'),
@@ -91,6 +99,10 @@ export default function BulkImportPage() {
             mobile: item.mobile || item.Mobile || '',
             email: item.email || item.Email || '',
             gstin: item.gstin || item.GSTIN || '',
+            panNo: item.panNo || item['PAN No'] || '',
+            tradeName: item.tradeName || item['Trade Name'] || '',
+            creditLimit: parseFloat(item.creditLimit || item['Credit Limit'] || '0'),
+            openingBalance: parseFloat(item.openingBalance || item['Opening Balance'] || '0'),
             billingAddress: {
               street: item.street || item.Street || '',
               city: item.city || item.City || '',
@@ -159,12 +171,12 @@ export default function BulkImportPage() {
                   {importType === 'products' ? (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
                       Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, SKU, Category, Unit, <span className="text-emerald-400">Selling Price</span>, Purchase Price, GST %, HSN Code, Stock
+                      <span className="text-emerald-400">Name</span>, Print Name, SKU, Category, Group, Brand, Unit, Secondary Unit, Conversion Rate, <span className="text-emerald-400">Selling Price</span>, Purchase Price, MRP, Sale Discount, Discount Type, GST %, HSN Code, Stock
                     </div>
                   ) : (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
                       Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, Street, City, State, Pincode
+                      <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, PAN No, Trade Name, Credit Limit, Opening Balance, Street, City, State, Pincode
                     </div>
                   )}
 
