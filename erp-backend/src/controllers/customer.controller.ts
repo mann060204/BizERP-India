@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import Customer from '../models/Customer.model';
+import AccountLedger from '../models/AccountLedger.model';
+import { AccountingService } from '../services/accounting.service';
 
 // GET /api/v1/customers
 export const getCustomers = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -89,5 +91,42 @@ export const createBulkCustomers = async (req: AuthRequest, res: Response): Prom
 
     const inserted = await Customer.insertMany(bulkData);
     res.status(201).json({ message: `${inserted.length} customers imported successfully`, insertedCount: inserted.length });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+// GET /api/v1/customers/:id/ledger
+export const getCustomerLedger = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const customerId = req.params['id'];
+    
+    // Auto-update balance first to ensure it's synced
+    const currentBalance = await AccountingService.updateCustomerBalance(customerId, businessId);
+    
+    const ledger = await AccountLedger.find({ businessId, customerId }).sort({ date: -1, createdAt: -1 });
+    res.json({ ledger, currentBalance });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+// POST /api/v1/customers/:id/payments
+export const recordPayment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const customerId = req.params['id'];
+    const { amount, paymentMode, date, referenceNo, notes } = req.body;
+    
+    if (!amount || amount <= 0) { res.status(400).json({ message: 'Valid amount is required' }); return; }
+    
+    const newBalance = await AccountingService.recordCustomerPayment(
+      businessId, 
+      customerId, 
+      Number(amount), 
+      paymentMode || 'Cash', 
+      date ? new Date(date) : new Date(), 
+      referenceNo || '', 
+      notes || ''
+    );
+    
+    res.json({ message: 'Payment recorded successfully', newBalance });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

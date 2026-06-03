@@ -2,7 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IAccountLedger extends Document {
   businessId: mongoose.Types.ObjectId;
-  accountId: mongoose.Types.ObjectId;
+  accountId?: mongoose.Types.ObjectId;
+  customerId?: mongoose.Types.ObjectId;
+  supplierId?: mongoose.Types.ObjectId;
   date: Date;
   description: string;
   debit: number;
@@ -15,7 +17,9 @@ export interface IAccountLedger extends Document {
 const accountLedgerSchema = new Schema(
   {
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
-    accountId: { type: Schema.Types.ObjectId, ref: 'Account', required: true },
+    accountId: { type: Schema.Types.ObjectId, ref: 'Account' },
+    customerId: { type: Schema.Types.ObjectId, ref: 'Customer' },
+    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier' },
     date: { type: Date, required: true },
     description: { type: String, required: true },
     debit: { type: Number, default: 0 },

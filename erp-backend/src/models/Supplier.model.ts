@@ -9,6 +9,7 @@ export interface ISupplier extends Document {
   pan?: string;
   address?: { street?: string; city?: string; state?: string; pinCode?: string; country?: string };
   openingBalance: number;
+  currentBalance: number;
   balanceType?: 'Debit' | 'Credit';
   contactPerson?: string;
   note?: string;
@@ -42,6 +43,7 @@ const SupplierSchema = new Schema<ISupplier>(
       street: String, city: String, state: String, pinCode: String, country: { type: String, default: 'India' }
     },
     openingBalance: { type: Number, default: 0 },
+    currentBalance: { type: Number, default: 0 },
     balanceType: { type: String, enum: ['Debit', 'Credit'], default: 'Credit' },
     contactPerson: { type: String, trim: true },
     note: { type: String },

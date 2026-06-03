@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import PurchaseBill from '../models/PurchaseBill.model';
+import { AccountingService } from '../services/accounting.service';
 import Product from '../models/Product.model';
 import Batch from '../models/Batch.model';
 import BatchLog from '../models/BatchLog.model';
@@ -156,6 +157,9 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       notes,
       createdBy: req.user!.userId,
     });
+
+    // Record in ledger
+    await AccountingService.recordPurchaseBill(purchase);
 
     res.status(201).json({ message: 'Purchase bill created', purchase });
   } catch (e: any) { res.status(500).json({ message: e.message }); }

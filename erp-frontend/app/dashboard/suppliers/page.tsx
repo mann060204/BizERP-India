@@ -9,7 +9,7 @@ import ExportDropdown from '../../../components/shared/ExportDropdown';
 interface Supplier { 
   _id: string; name: string; mobile?: string; email?: string; gstin?: string; pan?: string;
   address?: { street?: string; city?: string; state?: string; pinCode?: string; country?: string; }; 
-  openingBalance: number; balanceType?: 'Debit'|'Credit'; 
+  openingBalance: number; currentBalance?: number; balanceType?: 'Debit'|'Credit'; 
   contactPerson?: string; note?: string;
   bankDetails?: { bankName?: string; accountNumber?: string; ifsc?: string; };
 }

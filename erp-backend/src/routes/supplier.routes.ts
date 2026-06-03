@@ -7,6 +7,9 @@ router.use(protect);
 
 router.get('/', getSuppliers);
 router.get('/:id', getSupplier);
+router.get('/:id/ledger', getSupplierLedger);
+router.post('/:id/payments', recordPayment);
+
 router.post('/', createSupplier);
 router.put('/:id', updateSupplier);
 router.delete('/:id', deleteSupplier);

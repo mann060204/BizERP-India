@@ -135,6 +135,21 @@ export default function EditCustomerPage() {
     if (id) fetchCustomer();
   }, [id, router]);
 
+  
+  const handlePaymentSubmit = async () => {
+    if (!paymentForm.amount) return toast.error('Enter amount');
+    try {
+      await customersApi.recordPayment(id as string, paymentForm);
+      toast.success('Payment recorded');
+      setShowPaymentModal(false);
+      
+      // Refresh ledger
+      const res = await customersApi.getLedger(id as string);
+      setLedger(res.data.ledger || []);
+      setCurrentBalance(res.data.currentBalance || 0);
+    } catch(e:any) { toast.error(e.response?.data?.message || 'Error'); }
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Full Name is required'); return; }
     if (!form.mobile.trim()) { toast.error('Contact No is required'); return; }
@@ -164,6 +179,11 @@ export default function EditCustomerPage() {
     }
   };
 
+  
+  const [ledger, setLedger] = useState<any[]>([]);
+  const [currentBalance, setCurrentBalance] = useState<number>(0);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({ amount: '', mode: 'Cash', date: new Date().toISOString().split('T')[0], referenceNo: '', notes: '' });
   const [invoices, setInvoices] = useState<any[]>([]);
   useEffect(() => {
     if (id) {
@@ -527,6 +547,48 @@ export default function EditCustomerPage() {
           </div>
         </div>
       </main>
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Receive Payment</h2>
+              <button onClick={() => setShowPaymentModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="erp-label">Amount Received (₹)</label>
+                <input type="number" value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className="erp-input w-full" placeholder="0.00" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="erp-label">Payment Mode</label>
+                  <select value={paymentForm.mode} onChange={e => setPaymentForm({...paymentForm, mode: e.target.value})} className="erp-input w-full">
+                    <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Cheque</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="erp-label">Date</label>
+                  <input type="date" value={paymentForm.date} onChange={e => setPaymentForm({...paymentForm, date: e.target.value})} className="erp-input w-full" />
+                </div>
+              </div>
+              <div>
+                <label className="erp-label">Reference No. (Cheque / UTR)</label>
+                <input type="text" value={paymentForm.referenceNo} onChange={e => setPaymentForm({...paymentForm, referenceNo: e.target.value})} className="erp-input w-full" placeholder="Optional" />
+              </div>
+              <div>
+                <label className="erp-label">Narration / Notes</label>
+                <textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} className="erp-input w-full h-20 resize-none" placeholder="Enter ledger narration..." />
+              </div>
+            </div>
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button onClick={() => setShowPaymentModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900">Cancel</button>
+              <button onClick={handlePaymentSubmit} className="px-6 py-2 bg-action-600 text-white text-sm font-medium rounded-xl hover:bg-action-700 shadow-sm shadow-action-600/20">Record Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
