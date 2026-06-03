@@ -1,25 +1,42 @@
 'use client';
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
-import { FileText, TrendingUp, BookOpen, Calculator, BarChart3, Receipt, FileStack } from 'lucide-react';
+import { 
+  FileText, TrendingUp, BookOpen, Calculator, BarChart3, Receipt, FileStack,
+  Banknote, Briefcase, CreditCard, Download, Activity, Scale, CheckSquare,
+  Archive, AlertTriangle, CheckCircle, SlidersHorizontal, BatteryCharging,
+  Zap, Clock, Hash, List
+} from 'lucide-react';
 
 const REPORTS = [
   {
-    category: 'Financial & Accounting',
+    category: 'Accounts',
     items: [
-      { name: 'Profit & Loss (P&L)', desc: 'Net profit summary: Sales vs Purchases vs Expenses', icon: TrendingUp, href: '/dashboard/reports/pnl' },
-      { name: 'Daybook', desc: 'Chronological ledger of all daily transactions', icon: BookOpen, href: '/dashboard/reports/daybook' },
-      { name: 'Balance Sheet', desc: 'Point-in-time snapshot of assets & liabilities', icon: Calculator, href: '#', disabled: true },
+      { name: 'Cash Book', desc: 'Daily cash transaction summary', icon: Banknote, href: '#', disabled: true },
+      { name: 'Business Book', desc: 'Comprehensive business ledger', icon: Briefcase, href: '#', disabled: true },
+      { name: 'Payment Paid', desc: 'Summary of all outgoing payments', icon: CreditCard, href: '#', disabled: true },
+      { name: 'Payment - Received', desc: 'Summary of all incoming payments', icon: Download, href: '#', disabled: true },
+      { name: 'Daily Summary', desc: 'Daybook and chronological ledger', icon: Activity, href: '/dashboard/reports/daybook', disabled: false },
+      { name: 'Input/Output Tax', desc: 'Tax collection and payment summary', icon: FileStack, href: '/dashboard/reports/gstr', disabled: false },
+      { name: 'Profit & Loss Summary', desc: 'Sales vs Purchases vs Expenses', icon: TrendingUp, href: '/dashboard/reports/pnl', disabled: false },
+      { name: 'Chart Of Accounts', desc: 'Directory of all ledger accounts', icon: List, href: '#', disabled: true },
+      { name: 'Balance Sheet', desc: 'Snapshot of assets & liabilities', icon: Scale, href: '#', disabled: true },
     ]
   },
   {
-    category: 'Tax & GST Compliance',
+    category: 'Inventory',
     items: [
-      { name: 'GSTR-3B Summary', desc: 'Monthly auto-computed GST summary with ITC', icon: FileStack, href: '/dashboard/reports/gstr' },
-      { name: 'GSTR-1 Outward', desc: 'Detailed B2B and B2C outward supplies', icon: FileText, href: '/dashboard/reports/gstr' },
-      { name: 'GSTR-2A Reconciliation', desc: 'Match purchase bills with portal data', icon: Receipt, href: '#', disabled: true },
+      { name: 'Item Register', desc: 'Complete registry of all items', icon: Archive, href: '#', disabled: true },
+      { name: 'Low Level Stock', desc: 'Items below minimum stock threshold', icon: AlertTriangle, href: '#', disabled: true },
+      { name: 'Stock Availability', desc: 'Current available stock balances', icon: CheckCircle, href: '#', disabled: true },
+      { name: 'Stock Adjustment', desc: 'History of manual stock adjustments', icon: SlidersHorizontal, href: '#', disabled: true },
+      { name: 'Consumable Stock', desc: 'Tracking of consumable inventory', icon: BatteryCharging, href: '#', disabled: true },
+      { name: 'Fast Moving Item', desc: 'High velocity inventory items', icon: Zap, href: '#', disabled: true },
+      { name: 'Items Not Moving', desc: 'Dead stock or slow-moving items', icon: Clock, href: '#', disabled: true },
+      { name: 'Available Serials', desc: 'Available serial/batch numbers', icon: Hash, href: '#', disabled: true },
+      { name: 'Item List', desc: 'Master list of inventory products', icon: FileText, href: '#', disabled: true },
     ]
-  },
+  }
 ];
 
 export default function ReportsPage() {
@@ -29,7 +46,7 @@ export default function ReportsPage() {
       <main className="flex-1 p-6 space-y-8 max-w-6xl mx-auto w-full">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Reports Center</h2>
-          <p className="text-slate-600 text-sm mt-1">Real-time financial and compliance reports for your business.</p>
+          <p className="text-slate-600 text-sm mt-1">Real-time financial and inventory reports for your business.</p>
         </div>
 
         <div className="space-y-8">
@@ -46,11 +63,11 @@ export default function ReportsPage() {
                       <span className="inline-block mt-3 px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-600 border border-slate-200">COMING SOON</span>
                     </div>
                   ) : (
-                    <Link key={item.name} href={item.href} className="glass ngrok-card-hover rounded-2xl p-5 transition group">
+                    <Link key={item.name} href={item.href} className="glass ngrok-card-hover rounded-2xl p-5 transition group border border-slate-200">
                       <div className="w-10 h-10 rounded-xl bg-[#F1F5F9] flex items-center justify-center mb-3 group-hover:bg-orange-500/20 transition">
-                        <item.icon className="w-5 h-5 text-slate-600 group-hover:text-[#D4D4D4] transition" />
+                        <item.icon className="w-5 h-5 text-slate-600 group-hover:text-orange-500 transition" />
                       </div>
-                      <h4 className="text-slate-900 font-medium text-base mb-1 group-hover:text-[#D4D4D4] transition">{item.name}</h4>
+                      <h4 className="text-slate-900 font-medium text-base mb-1 group-hover:text-orange-600 transition">{item.name}</h4>
                       <p className="text-slate-600 text-xs">{item.desc}</p>
                     </Link>
                   )
