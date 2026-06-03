@@ -3,10 +3,9 @@ import * as reportsController from '../controllers/reports.controller';
 import { protect } from '../middlewares/auth.middleware';
 
 const router = express.Router();
-
 router.use(protect);
 
-// --- RESTORED OLD REPORTS ---
+// --- CORE REPORTS ---
 router.get('/dashboard-charts', reportsController.getDashboardCharts as any);
 router.get('/pnl', reportsController.getProfitAndLoss as any);
 router.get('/gstr', reportsController.getGstReport as any);
@@ -30,5 +29,44 @@ router.get('/inventory/fast-moving', reportsController.getFastMovingItems as any
 router.get('/inventory/slow-moving', reportsController.getSlowMovingItems as any);
 router.get('/inventory/available-serials', reportsController.getAvailableSerials as any);
 router.get('/inventory/item-list', reportsController.getItemList as any);
+
+// --- SALES REPORTS ---
+router.get('/sales/aging', reportsController.getSalesAging as any);
+router.get('/sales/itemwise', reportsController.getSalesItemwise as any);
+router.get('/sales/invoicewise', reportsController.getSalesInvoicewise as any);
+router.get('/sales/invoicewise-margin', reportsController.getInvoicewiseMargin as any);
+router.get('/sales/itemwise-margin', reportsController.getItemwiseMargin as any);
+router.get('/sales/customerwise-margin', reportsController.getCustomerwiseMargin as any);
+router.get('/sales/invoicewise-summary', reportsController.getSalesInvoicewiseSummary as any);
+router.get('/sales/customerwise-summary', reportsController.getSalesCustomerwiseSummary as any);
+router.get('/sales/itemwise-summary', reportsController.getSalesItemwiseSummary as any);
+router.get('/sales/gst', reportsController.getSalesGST as any);
+router.get('/sales/recurring', reportsController.getActiveRecurringInvoices as any);
+
+// --- CUSTOMER REPORTS ---
+router.get('/customers/amount-due', reportsController.getCustomerAmountDue as any);
+router.get('/customers/payment-history', reportsController.getCustomerPaymentHistory as any);
+router.get('/customers/account-balances', reportsController.getCustomerAccountBalances as any);
+
+// --- PURCHASE REPORTS ---
+router.get('/purchases/aging', reportsController.getPurchaseAging as any);
+router.get('/purchases/billwise', reportsController.getPurchasesBillwise as any);
+router.get('/purchases/itemwise', reportsController.getPurchasesItemwise as any);
+router.get('/purchases/billwise-summary', reportsController.getPurchasesBillwiseSummary as any);
+router.get('/purchases/itemwise-summary', reportsController.getPurchasesItemwiseSummary as any);
+router.get('/purchases/supplierwise-summary', reportsController.getPurchasesSupplierwise as any);
+router.get('/purchases/gst', reportsController.getPurchasesGST as any);
+
+// --- SUPPLIER REPORTS ---
+router.get('/suppliers/account-balances', reportsController.getSupplierAccountBalances as any);
+router.get('/suppliers/payment-history', reportsController.getSupplierPaymentHistory as any);
+
+// --- EXPENSE REPORTS ---
+router.get('/expenses/search', reportsController.getExpensesSearch as any);
+router.get('/expenses/indirect', reportsController.getIndirectExpenses as any);
+
+// --- EXTENDED GSTR ---
+router.get('/gstr/gstr1', reportsController.getGSTR1 as any);
+router.get('/gstr/gstr3b', reportsController.getGSTR3B as any);
 
 export default router;

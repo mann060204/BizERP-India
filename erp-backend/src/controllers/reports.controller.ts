@@ -8,6 +8,8 @@ import InventoryAdjustment from '../models/InventoryAdjustment.model';
 import Invoice from '../models/Invoice.model';
 import PurchaseBill from '../models/PurchaseBill.model';
 import Expense from '../models/Expense.model';
+import Customer from '../models/Customer.model';
+import Supplier from '../models/Supplier.model';
 
 
 // Helper for sending success response
@@ -701,4 +703,864 @@ export const getDashboardCharts = async (req: AuthRequest, res: Response): Promi
 
     res.json({ salesData, profitData });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+// =================== SALES REPORTS ===================
+
+// Helper: safe date range from query
+const buildDateFilter = (from?: string, to?: string, field = 'invoiceDate') => {
+  const filter: any = {};
+  if (from || to) {
+    filter[field] = {};
+    if (from) filter[field].$gte = new Date(from);
+    if (to) { const d = new Date(to); d.setHours(23,59,59,999); filter[field].$lte = d; }
+  }
+  return filter;
+};
+
+// GET /api/v1/reports/sales/aging
+export const getSalesAging = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const today = new Date();
+    const invoices = await Invoice.find({
+      businessId,
+      status: { $in: ['sent', 'partial', 'overdue'] },
+      balance: { $gt: 0 }
+    }, 'invoiceNumber invoiceDate dueDate customerSnapshot grandTotal amountReceived balance status').lean();
+
+    const buckets: Record<string, any[]> = { '0-30': [], '31-60': [], '61-90': [], '90+': [] };
+    invoices.forEach((inv: any) => {
+      const due = inv.dueDate ? new Date(inv.dueDate) : new Date(inv.invoiceDate);
+      const days = Math.floor((today.getTime() - due.getTime()) / 86400000);
+      const row = {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        dueDate: inv.dueDate || inv.invoiceDate,
+        customer: inv.customerSnapshot?.name || 'Cash',
+        grandTotal: inv.grandTotal,
+        amountReceived: inv.amountReceived,
+        balance: inv.balance,
+        daysOverdue: Math.max(0, days),
+        status: inv.status,
+      };
+      if (days <= 30) buckets['0-30'].push(row);
+      else if (days <= 60) buckets['31-60'].push(row);
+      else if (days <= 90) buckets['61-90'].push(row);
+      else buckets['90+'].push(row);
+    });
+
+    const summary = Object.entries(buckets).map(([range, items]) => ({
+      range,
+      count: items.length,
+      totalBalance: items.reduce((s, i) => s + i.balance, 0),
+      items
+    }));
+    sendSuccess(res, { summary, allItems: invoices });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/itemwise
+export const getSalesItemwise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await Invoice.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.productId',
+          productName: { $first: '$lineItems.productName' },
+          totalQty: { $sum: '$lineItems.quantity' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
+          totalAmount: { $sum: '$lineItems.totalAmount' },
+          totalDiscount: { $sum: '$lineItems.discountAmount' },
+          invoiceCount: { $addToSet: '$_id' }
+      }},
+      { $project: {
+          productName: 1, totalQty: 1, totalTaxable: 1, totalGST: 1, totalAmount: 1, totalDiscount: 1,
+          invoiceCount: { $size: '$invoiceCount' }
+      }},
+      { $sort: { totalAmount: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/invoicewise
+export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to, status } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, ...dateFilter };
+    if (status) match.status = status;
+    else match.status = { $ne: 'cancelled' };
+
+    const invoices = await Invoice.find(match,
+      'invoiceNumber invoiceDate invoiceType customerSnapshot grandTotal totalTaxableAmount totalGST amountReceived balance status paymentMode dueDate'
+    ).sort({ invoiceDate: -1 }).lean();
+    sendSuccess(res, invoices);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/invoicewise-margin
+export const getInvoicewiseMargin = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const invoices = await Invoice.find(match,
+      'invoiceNumber invoiceDate customerSnapshot grandTotal totalTaxableAmount totalGST lineItems'
+    ).lean();
+
+    const result = invoices.map((inv: any) => {
+      // Estimate cost from lineItems using rate as purchase proxy isn't ideal;
+      // cost is approximated as taxableAmount * (purchasePrice/sellingPrice) — 
+      // for now use totalTaxableAmount as revenue base and calculate margin on grand total
+      const revenue = inv.grandTotal || 0;
+      const taxable = inv.totalTaxableAmount || 0;
+      const gst = inv.totalGST || 0;
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        customer: inv.customerSnapshot?.name || 'Cash',
+        taxableValue: taxable,
+        gstAmount: gst,
+        grandTotal: revenue,
+        itemCount: inv.lineItems?.length || 0,
+      };
+    });
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/itemwise-margin
+export const getItemwiseMargin = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await Invoice.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $lookup: {
+          from: 'products',
+          localField: 'lineItems.productId',
+          foreignField: '_id',
+          as: 'product'
+      }},
+      { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+      { $group: {
+          _id: '$lineItems.productId',
+          productName: { $first: '$lineItems.productName' },
+          totalQtySold: { $sum: '$lineItems.quantity' },
+          totalSaleAmount: { $sum: '$lineItems.totalAmount' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+          avgSaleRate: { $avg: '$lineItems.rate' },
+          purchasePrice: { $first: '$product.purchasePrice' },
+      }},
+      { $project: {
+          productName: 1,
+          totalQtySold: 1,
+          totalSaleAmount: 1,
+          totalTaxable: 1,
+          avgSaleRate: 1,
+          purchasePrice: { $ifNull: ['$purchasePrice', 0] },
+          estimatedCost: { $multiply: [{ $ifNull: ['$purchasePrice', 0] }, '$totalQtySold'] },
+          grossProfit: {
+            $subtract: ['$totalTaxable', { $multiply: [{ $ifNull: ['$purchasePrice', 0] }, '$totalQtySold'] }]
+          },
+      }},
+      { $sort: { grossProfit: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/customerwise-margin
+export const getCustomerwiseMargin = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await Invoice.aggregate([
+      { $match: match },
+      { $group: {
+          _id: '$customerId',
+          customerName: { $first: '$customerSnapshot.name' },
+          invoiceCount: { $sum: 1 },
+          totalRevenue: { $sum: '$grandTotal' },
+          totalTaxable: { $sum: '$totalTaxableAmount' },
+          totalGST: { $sum: '$totalGST' },
+          totalReceived: { $sum: '$amountReceived' },
+          totalBalance: { $sum: '$balance' },
+      }},
+      { $sort: { totalRevenue: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/invoicewise-summary
+export const getSalesInvoicewiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const invoices = await Invoice.find(match,
+      'invoiceNumber invoiceDate customerSnapshot totalTaxableAmount totalCGST totalSGST totalIGST totalGST totalDiscount grandTotal amountReceived balance status'
+    ).sort({ invoiceDate: -1 }).lean();
+    sendSuccess(res, invoices);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/customerwise-summary
+export const getSalesCustomerwiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await Invoice.aggregate([
+      { $match: match },
+      { $group: {
+          _id: '$customerId',
+          customerName: { $first: '$customerSnapshot.name' },
+          invoiceCount: { $sum: 1 },
+          totalSales: { $sum: '$grandTotal' },
+          totalTaxable: { $sum: '$totalTaxableAmount' },
+          totalGST: { $sum: '$totalGST' },
+          totalDiscount: { $sum: '$totalDiscount' },
+          totalReceived: { $sum: '$amountReceived' },
+          totalBalance: { $sum: '$balance' },
+      }},
+      { $sort: { totalSales: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/itemwise-summary
+export const getSalesItemwiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await Invoice.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.productId',
+          productName: { $first: '$lineItems.productName' },
+          hsnCode: { $first: '$lineItems.hsnCode' },
+          totalQty: { $sum: '$lineItems.quantity' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+          totalCGST: { $sum: '$lineItems.cgst' },
+          totalSGST: { $sum: '$lineItems.sgst' },
+          totalIGST: { $sum: '$lineItems.igst' },
+          totalAmount: { $sum: '$lineItems.totalAmount' },
+          totalDiscount: { $sum: '$lineItems.discountAmount' },
+      }},
+      { $addFields: { totalGST: { $add: ['$totalCGST', '$totalSGST', '$totalIGST'] } } },
+      { $sort: { totalAmount: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/gst
+export const getSalesGST = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const invoices = await Invoice.find(match,
+      'invoiceNumber invoiceDate invoiceType customerSnapshot gstin placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal'
+    ).sort({ invoiceDate: -1 }).lean();
+
+    // Group by GST rate
+    const rateSummary = await Invoice.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.gstRate',
+          taxableValue: { $sum: '$lineItems.taxableAmount' },
+          cgst: { $sum: '$lineItems.cgst' },
+          sgst: { $sum: '$lineItems.sgst' },
+          igst: { $sum: '$lineItems.igst' },
+          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
+      }},
+      { $sort: { _id: 1 } }
+    ]);
+
+    sendSuccess(res, { invoices, rateSummary });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/sales/recurring
+export const getActiveRecurringInvoices = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const invoices = await Invoice.find({
+      businessId,
+      status: { $in: ['sent', 'partial', 'overdue'] },
+      balance: { $gt: 0 }
+    }, 'invoiceNumber invoiceDate dueDate customerSnapshot grandTotal amountReceived balance status paymentMode'
+    ).sort({ dueDate: 1, invoiceDate: 1 }).lean();
+
+    const today = new Date();
+    const result = invoices.map((inv: any) => ({
+      ...inv,
+      daysOverdue: inv.dueDate
+        ? Math.max(0, Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / 86400000))
+        : 0,
+    }));
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// =================== CUSTOMER REPORTS ===================
+
+// GET /api/v1/reports/customers/amount-due
+export const getCustomerAmountDue = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const customers = await Customer.find({ businessId, isActive: true },
+      'name mobile gstin currentBalance balanceType creditLimit openingBalance'
+    ).sort({ currentBalance: -1 }).lean();
+
+    // Merge with outstanding invoices
+    const outstanding = await Invoice.aggregate([
+      { $match: { businessId, status: { $in: ['sent', 'partial', 'overdue'] }, balance: { $gt: 0 } } },
+      { $group: {
+          _id: '$customerId',
+          outstandingBalance: { $sum: '$balance' },
+          invoiceCount: { $sum: 1 },
+          oldestDue: { $min: '$dueDate' },
+      }}
+    ]);
+
+    const outstandingMap: Record<string, any> = {};
+    outstanding.forEach((o: any) => { if (o._id) outstandingMap[o._id.toString()] = o; });
+
+    const result = customers.map((c: any) => ({
+      name: c.name,
+      mobile: c.mobile || '—',
+      gstin: c.gstin || '—',
+      currentBalance: c.currentBalance || 0,
+      balanceType: c.balanceType || 'Debit',
+      creditLimit: c.creditLimit || 0,
+      outstandingInvoices: outstandingMap[c._id?.toString()]?.invoiceCount || 0,
+      outstandingBalance: outstandingMap[c._id?.toString()]?.outstandingBalance || 0,
+      oldestDue: outstandingMap[c._id?.toString()]?.oldestDue || null,
+    })).filter(c => c.currentBalance > 0 || c.outstandingBalance > 0);
+
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/customers/payment-history
+export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to, customerId } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, ...dateFilter };
+    if (customerId) match.customerId = customerId;
+
+    const invoices = await Invoice.find(match,
+      'invoiceNumber invoiceDate customerSnapshot amountReceived paymentMode paymentHistory balance grandTotal'
+    ).sort({ invoiceDate: -1 }).lean();
+
+    // Flatten payment history entries
+    const payments: any[] = [];
+    invoices.forEach((inv: any) => {
+      if (inv.paymentHistory && inv.paymentHistory.length > 0) {
+        inv.paymentHistory.forEach((ph: any) => {
+          payments.push({
+            customer: inv.customerSnapshot?.name || 'Cash',
+            invoiceNumber: inv.invoiceNumber,
+            invoiceDate: inv.invoiceDate,
+            paymentDate: ph.date,
+            amount: ph.amount,
+            mode: ph.mode,
+            txnId: ph.txnId || '—',
+            invoiceTotal: inv.grandTotal,
+          });
+        });
+      } else if (inv.amountReceived > 0) {
+        payments.push({
+          customer: inv.customerSnapshot?.name || 'Cash',
+          invoiceNumber: inv.invoiceNumber,
+          invoiceDate: inv.invoiceDate,
+          paymentDate: inv.invoiceDate,
+          amount: inv.amountReceived,
+          mode: inv.paymentMode || 'Cash',
+          txnId: '—',
+          invoiceTotal: inv.grandTotal,
+        });
+      }
+    });
+    payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+    sendSuccess(res, payments);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/customers/account-balances
+export const getCustomerAccountBalances = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const customers = await Customer.find({ businessId, isActive: true },
+      'name mobile gstin currentBalance openingBalance balanceType creditLimit priceCategory'
+    ).sort({ name: 1 }).lean();
+
+    const result = customers.map((c: any) => ({
+      name: c.name,
+      mobile: c.mobile || '—',
+      gstin: c.gstin || '—',
+      openingBalance: c.openingBalance || 0,
+      currentBalance: c.currentBalance || 0,
+      balanceType: c.balanceType || 'Debit',
+      creditLimit: c.creditLimit || 0,
+      priceCategory: c.priceCategory || 'Retail',
+    }));
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// =================== PURCHASE REPORTS ===================
+
+// GET /api/v1/reports/purchases/aging
+export const getPurchaseAging = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const today = new Date();
+    const bills = await PurchaseBill.find({
+      businessId,
+      status: { $in: ['received', 'partial', 'overdue'] },
+      balance: { $gt: 0 }
+    }, 'billNumber billDate dueDate supplierSnapshot grandTotal amountPaid balance status').lean();
+
+    const buckets: Record<string, any[]> = { '0-30': [], '31-60': [], '61-90': [], '90+': [] };
+    bills.forEach((bill: any) => {
+      const due = bill.dueDate ? new Date(bill.dueDate) : new Date(bill.billDate);
+      const days = Math.floor((today.getTime() - due.getTime()) / 86400000);
+      const row = {
+        billNumber: bill.billNumber,
+        billDate: bill.billDate,
+        dueDate: bill.dueDate || bill.billDate,
+        supplier: bill.supplierSnapshot?.name || 'Unknown',
+        grandTotal: bill.grandTotal,
+        amountPaid: bill.amountPaid,
+        balance: bill.balance,
+        daysOverdue: Math.max(0, days),
+        status: bill.status,
+      };
+      if (days <= 30) buckets['0-30'].push(row);
+      else if (days <= 60) buckets['31-60'].push(row);
+      else if (days <= 90) buckets['61-90'].push(row);
+      else buckets['90+'].push(row);
+    });
+
+    const summary = Object.entries(buckets).map(([range, items]) => ({
+      range, count: items.length,
+      totalBalance: items.reduce((s, i) => s + i.balance, 0),
+      items
+    }));
+    sendSuccess(res, { summary, allItems: bills });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/purchases/billwise
+export const getPurchasesBillwise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to, status } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, ...dateFilter };
+    if (status) match.status = status;
+    else match.status = { $ne: 'cancelled' };
+
+    const bills = await PurchaseBill.find(match,
+      'billNumber billDate purchaseType supplierSnapshot grandTotal totalTaxableAmount totalGST amountPaid balance status paymentMode dueDate'
+    ).sort({ billDate: -1 }).lean();
+    sendSuccess(res, bills);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/purchases/itemwise
+export const getPurchasesItemwise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await PurchaseBill.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.productId',
+          productName: { $first: '$lineItems.productName' },
+          hsnCode: { $first: '$lineItems.hsnCode' },
+          totalQty: { $sum: '$lineItems.quantity' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
+          totalAmount: { $sum: '$lineItems.totalAmount' },
+          avgRate: { $avg: '$lineItems.rate' },
+          billCount: { $addToSet: '$_id' }
+      }},
+      { $project: {
+          productName: 1, hsnCode: 1, totalQty: 1, totalTaxable: 1, totalGST: 1, totalAmount: 1, avgRate: 1,
+          billCount: { $size: '$billCount' }
+      }},
+      { $sort: { totalAmount: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/purchases/billwise-summary
+export const getPurchasesBillwiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const bills = await PurchaseBill.find(match,
+      'billNumber billDate supplierSnapshot totalTaxableAmount totalCGST totalSGST totalIGST totalGST totalDiscount grandTotal amountPaid balance status'
+    ).sort({ billDate: -1 }).lean();
+    sendSuccess(res, bills);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/purchases/itemwise-summary
+export const getPurchasesItemwiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await PurchaseBill.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.productId',
+          productName: { $first: '$lineItems.productName' },
+          hsnCode: { $first: '$lineItems.hsnCode' },
+          totalQty: { $sum: '$lineItems.quantity' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+          totalCGST: { $sum: '$lineItems.cgst' },
+          totalSGST: { $sum: '$lineItems.sgst' },
+          totalIGST: { $sum: '$lineItems.igst' },
+          totalAmount: { $sum: '$lineItems.totalAmount' },
+      }},
+      { $addFields: { totalGST: { $add: ['$totalCGST', '$totalSGST', '$totalIGST'] } } },
+      { $sort: { totalAmount: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/purchases/supplierwise-summary
+export const getPurchasesSupplierwise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const result = await PurchaseBill.aggregate([
+      { $match: match },
+      { $group: {
+          _id: '$supplierId',
+          supplierName: { $first: '$supplierSnapshot.name' },
+          billCount: { $sum: 1 },
+          totalPurchases: { $sum: '$grandTotal' },
+          totalTaxable: { $sum: '$totalTaxableAmount' },
+          totalGST: { $sum: '$totalGST' },
+          totalDiscount: { $sum: '$totalDiscount' },
+          totalPaid: { $sum: '$amountPaid' },
+          totalBalance: { $sum: '$balance' },
+      }},
+      { $sort: { totalPurchases: -1 } }
+    ]);
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/purchases/gst
+export const getPurchasesGST = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+
+    const bills = await PurchaseBill.find(match,
+      'billNumber billDate purchaseType supplierSnapshot placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal'
+    ).sort({ billDate: -1 }).lean();
+
+    const rateSummary = await PurchaseBill.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.gstRate',
+          taxableValue: { $sum: '$lineItems.taxableAmount' },
+          cgst: { $sum: '$lineItems.cgst' },
+          sgst: { $sum: '$lineItems.sgst' },
+          igst: { $sum: '$lineItems.igst' },
+          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
+      }},
+      { $sort: { _id: 1 } }
+    ]);
+    sendSuccess(res, { bills, rateSummary });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// =================== SUPPLIER REPORTS ===================
+
+// GET /api/v1/reports/suppliers/account-balances
+export const getSupplierAccountBalances = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const suppliers = await Supplier.find({ businessId, isActive: true },
+      'name mobile gstin currentBalance openingBalance balanceType creditLimit'
+    ).sort({ name: 1 }).lean();
+
+    const result = suppliers.map((s: any) => ({
+      name: s.name,
+      mobile: s.mobile || '—',
+      gstin: s.gstin || '—',
+      openingBalance: s.openingBalance || 0,
+      currentBalance: s.currentBalance || 0,
+      balanceType: s.balanceType || 'Credit',
+      creditLimit: s.creditLimit || 0,
+    }));
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/suppliers/payment-history
+export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to, supplierId } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'billDate');
+    const match: any = { businessId, ...dateFilter };
+    if (supplierId) match.supplierId = supplierId;
+
+    const bills = await PurchaseBill.find(match,
+      'billNumber billDate supplierSnapshot amountPaid paymentMode balance grandTotal status'
+    ).sort({ billDate: -1 }).lean();
+
+    const payments = bills.filter((b: any) => b.amountPaid > 0).map((b: any) => ({
+      supplier: b.supplierSnapshot?.name || '—',
+      billNumber: b.billNumber,
+      billDate: b.billDate,
+      paymentDate: b.billDate,
+      amountPaid: b.amountPaid,
+      mode: b.paymentMode || 'Cash',
+      billTotal: b.grandTotal,
+      balance: b.balance,
+      status: b.status,
+    }));
+    sendSuccess(res, payments);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// =================== EXPENSE REPORTS ===================
+
+// GET /api/v1/reports/expenses/search
+export const getExpensesSearch = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to, category, paymentMode } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'date');
+    const match: any = { businessId, ...dateFilter };
+    if (category) match.category = { $regex: category, $options: 'i' };
+    if (paymentMode) match.paymentMode = paymentMode;
+
+    const expenses = await Expense.find(match,
+      'category date vendorName amount gstRate cgst sgst igst totalWithTax paymentMode notes'
+    ).sort({ date: -1 }).lean();
+
+    const result = expenses.map((e: any) => ({
+      date: e.date,
+      category: e.category,
+      vendorName: e.vendorName || 'Self',
+      amount: e.amount || 0,
+      gstRate: e.gstRate || 0,
+      cgst: e.cgst || 0,
+      sgst: e.sgst || 0,
+      igst: e.igst || 0,
+      gstTotal: (e.cgst || 0) + (e.sgst || 0) + (e.igst || 0),
+      totalWithTax: e.totalWithTax || e.amount || 0,
+      paymentMode: e.paymentMode || 'Cash',
+      notes: e.notes || '—',
+    }));
+    sendSuccess(res, result);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/expenses/indirect
+export const getIndirectExpenses = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to, 'date');
+    const match: any = { businessId, ...dateFilter };
+
+    const summary = await Expense.aggregate([
+      { $match: match },
+      { $group: {
+          _id: '$category',
+          totalAmount: { $sum: '$amount' },
+          totalGST: { $sum: { $add: [{ $ifNull: ['$cgst', 0] }, { $ifNull: ['$sgst', 0] }, { $ifNull: ['$igst', 0] }] } },
+          totalWithTax: { $sum: '$totalWithTax' },
+          count: { $sum: 1 },
+      }},
+      { $sort: { totalWithTax: -1 } }
+    ]);
+
+    const grandTotal = summary.reduce((s: number, c: any) => s + (c.totalWithTax || 0), 0);
+    sendSuccess(res, { summary, grandTotal });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// =================== EXTENDED GSTR ===================
+
+// GET /api/v1/reports/gstr/gstr1
+export const getGSTR1 = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const match: any = { businessId, status: { $ne: 'cancelled' }, invoiceType: 'GST', ...dateFilter };
+
+    const invoices = await Invoice.find(match,
+      'invoiceNumber invoiceDate customerSnapshot totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal isInterState placeOfSupply'
+    ).sort({ invoiceDate: -1 }).lean();
+
+    // B2B vs B2C split
+    const b2b = invoices.filter((i: any) => i.customerSnapshot?.gstin);
+    const b2c = invoices.filter((i: any) => !i.customerSnapshot?.gstin);
+
+    // HSN summary
+    const hsnSummary = await Invoice.aggregate([
+      { $match: match },
+      { $unwind: '$lineItems' },
+      { $group: {
+          _id: '$lineItems.hsnCode',
+          description: { $first: '$lineItems.productName' },
+          totalQty: { $sum: '$lineItems.quantity' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+          totalCGST: { $sum: '$lineItems.cgst' },
+          totalSGST: { $sum: '$lineItems.sgst' },
+          totalIGST: { $sum: '$lineItems.igst' },
+          gstRate: { $first: '$lineItems.gstRate' },
+      }},
+      { $sort: { totalTaxable: -1 } }
+    ]);
+
+    const totals = {
+      b2bCount: b2b.length,
+      b2cCount: b2c.length,
+      totalTaxable: invoices.reduce((s: number, i: any) => s + (i.totalTaxableAmount || 0), 0),
+      totalCGST: invoices.reduce((s: number, i: any) => s + (i.totalCGST || 0), 0),
+      totalSGST: invoices.reduce((s: number, i: any) => s + (i.totalSGST || 0), 0),
+      totalIGST: invoices.reduce((s: number, i: any) => s + (i.totalIGST || 0), 0),
+      totalGST: invoices.reduce((s: number, i: any) => s + (i.totalGST || 0), 0),
+      grandTotal: invoices.reduce((s: number, i: any) => s + (i.grandTotal || 0), 0),
+    };
+
+    sendSuccess(res, { invoices, b2b, b2c, hsnSummary, totals });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /api/v1/reports/gstr/gstr3b
+export const getGSTR3B = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { from, to } = req.query as any;
+    const dateFilter = buildDateFilter(from, to);
+    const purchaseDateFilter = buildDateFilter(from, to, 'billDate');
+    const expenseDateFilter = buildDateFilter(from, to, 'date');
+
+    const [salesGst, purchaseGst, expenseGst, cancelledSales] = await Promise.all([
+      Invoice.aggregate([
+        { $match: { businessId, status: { $ne: 'cancelled' }, ...dateFilter } },
+        { $group: {
+            _id: null,
+            taxableValue: { $sum: '$totalTaxableAmount' },
+            cgst: { $sum: '$totalCGST' }, sgst: { $sum: '$totalSGST' }, igst: { $sum: '$totalIGST' },
+            totalTax: { $sum: '$totalGST' }, grandTotal: { $sum: '$grandTotal' }
+        }}
+      ]),
+      PurchaseBill.aggregate([
+        { $match: { businessId, status: { $ne: 'cancelled' }, ...purchaseDateFilter } },
+        { $group: {
+            _id: null,
+            taxableValue: { $sum: '$totalTaxableAmount' },
+            cgst: { $sum: '$totalCGST' }, sgst: { $sum: '$totalSGST' }, igst: { $sum: '$totalIGST' },
+            totalTax: { $sum: '$totalGST' }
+        }}
+      ]),
+      Expense.aggregate([
+        { $match: { businessId, gstRate: { $gt: 0 }, ...expenseDateFilter } },
+        { $group: {
+            _id: null,
+            taxableValue: { $sum: '$amount' },
+            cgst: { $sum: '$cgst' }, sgst: { $sum: '$sgst' }, igst: { $sum: '$igst' },
+            totalTax: { $sum: { $add: [{ $ifNull: ['$cgst', 0] }, { $ifNull: ['$sgst', 0] }, { $ifNull: ['$igst', 0] }] } }
+        }}
+      ]),
+      Invoice.countDocuments({ businessId, status: 'cancelled', ...dateFilter })
+    ]);
+
+    const outward = salesGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0 };
+    const pGst = purchaseGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
+    const eGst = expenseGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
+    delete outward._id; delete pGst._id; delete eGst._id;
+
+    const itcClaimed = {
+      taxableValue: (pGst.taxableValue || 0) + (eGst.taxableValue || 0),
+      cgst: (pGst.cgst || 0) + (eGst.cgst || 0),
+      sgst: (pGst.sgst || 0) + (eGst.sgst || 0),
+      igst: (pGst.igst || 0) + (eGst.igst || 0),
+      totalTax: (pGst.totalTax || 0) + (eGst.totalTax || 0),
+    };
+
+    const netPayable = {
+      cgst: Math.max(0, (outward.cgst || 0) - itcClaimed.cgst),
+      sgst: Math.max(0, (outward.sgst || 0) - itcClaimed.sgst),
+      igst: Math.max(0, (outward.igst || 0) - itcClaimed.igst),
+    };
+    const totalNetPayable = netPayable.cgst + netPayable.sgst + netPayable.igst;
+
+    sendSuccess(res, {
+      outward, purchaseITC: pGst, expenseITC: eGst, itcClaimed, netPayable, totalNetPayable,
+      cancelledInvoiceCount: cancelledSales,
+    });
+  } catch (e: any) { sendError(res, e.message); }
 };

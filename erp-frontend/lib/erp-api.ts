@@ -115,15 +115,21 @@ export const expensesApi = {
 // ─── Reports ──────────────────────────────────────────────────────────────────
 export const reportsApi = {
 
-  // Accounts
+  // --- Core ---
+  pnl: (params?: any) => api.get('/reports/pnl', { params }),
+  gstr: (params?: any) => api.get('/reports/gstr', { params }),
+  daybook: (params?: any) => api.get('/reports/daybook', { params }),
+  dashboardCharts: () => api.get('/reports/dashboard-charts'),
+
+  // --- Accounts ---
   getCashBook: () => api.get('/reports/accounts/cash-book'),
   getBusinessBook: () => api.get('/reports/accounts/business-book'),
   getPaymentPaid: () => api.get('/reports/accounts/payment-paid'),
   getPaymentReceived: () => api.get('/reports/accounts/payment-received'),
   getChartOfAccounts: () => api.get('/reports/accounts/chart-of-accounts'),
   getBalanceSheet: () => api.get('/reports/accounts/balance-sheet'),
-  
-  // Inventory
+
+  // --- Inventory ---
   getItemRegister: () => api.get('/reports/inventory/item-register'),
   getLowLevelStock: () => api.get('/reports/inventory/low-level-stock'),
   getStockAvailability: () => api.get('/reports/inventory/stock-availability'),
@@ -134,10 +140,44 @@ export const reportsApi = {
   getAvailableSerials: () => api.get('/reports/inventory/available-serials'),
   getItemList: () => api.get('/reports/inventory/item-list'),
 
-  pnl: (params?: any) => api.get('/reports/pnl', { params }),
-  gstr: (params?: any) => api.get('/reports/gstr', { params }),
-  daybook: (params?: any) => api.get('/reports/daybook', { params }),
-  dashboardCharts: () => api.get('/reports/dashboard-charts'),
+  // --- Sales ---
+  getSalesAging: (params?: any) => api.get('/reports/sales/aging', { params }),
+  getSalesItemwise: (params?: any) => api.get('/reports/sales/itemwise', { params }),
+  getSalesInvoicewise: (params?: any) => api.get('/reports/sales/invoicewise', { params }),
+  getInvoicewiseMargin: (params?: any) => api.get('/reports/sales/invoicewise-margin', { params }),
+  getItemwiseMargin: (params?: any) => api.get('/reports/sales/itemwise-margin', { params }),
+  getCustomerwiseMargin: (params?: any) => api.get('/reports/sales/customerwise-margin', { params }),
+  getSalesInvoicewiseSummary: (params?: any) => api.get('/reports/sales/invoicewise-summary', { params }),
+  getSalesCustomerwiseSummary: (params?: any) => api.get('/reports/sales/customerwise-summary', { params }),
+  getSalesItemwiseSummary: (params?: any) => api.get('/reports/sales/itemwise-summary', { params }),
+  getSalesGST: (params?: any) => api.get('/reports/sales/gst', { params }),
+  getActiveRecurring: (params?: any) => api.get('/reports/sales/recurring', { params }),
+
+  // --- Customers ---
+  getCustomerAmountDue: (params?: any) => api.get('/reports/customers/amount-due', { params }),
+  getCustomerPaymentHistory: (params?: any) => api.get('/reports/customers/payment-history', { params }),
+  getCustomerAccountBalances: (params?: any) => api.get('/reports/customers/account-balances', { params }),
+
+  // --- Purchases ---
+  getPurchaseAging: (params?: any) => api.get('/reports/purchases/aging', { params }),
+  getPurchasesBillwise: (params?: any) => api.get('/reports/purchases/billwise', { params }),
+  getPurchasesItemwise: (params?: any) => api.get('/reports/purchases/itemwise', { params }),
+  getPurchasesBillwiseSummary: (params?: any) => api.get('/reports/purchases/billwise-summary', { params }),
+  getPurchasesItemwiseSummary: (params?: any) => api.get('/reports/purchases/itemwise-summary', { params }),
+  getPurchasesSupplierwise: (params?: any) => api.get('/reports/purchases/supplierwise-summary', { params }),
+  getPurchasesGST: (params?: any) => api.get('/reports/purchases/gst', { params }),
+
+  // --- Suppliers ---
+  getSupplierAccountBalances: (params?: any) => api.get('/reports/suppliers/account-balances', { params }),
+  getSupplierPaymentHistory: (params?: any) => api.get('/reports/suppliers/payment-history', { params }),
+
+  // --- Expenses ---
+  getExpensesSearch: (params?: any) => api.get('/reports/expenses/search', { params }),
+  getIndirectExpenses: (params?: any) => api.get('/reports/expenses/indirect', { params }),
+
+  // --- Extended GSTR ---
+  getGSTR1: (params?: any) => api.get('/reports/gstr/gstr1', { params }),
+  getGSTR3B: (params?: any) => api.get('/reports/gstr/gstr3b', { params }),
 };
 
 // ─── Business / Settings ──────────────────────────────────────────────────────

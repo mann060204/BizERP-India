@@ -10,15 +10,29 @@ interface Column {
   align?: 'left' | 'center' | 'right';
 }
 
+type ReportCategory = 'Accounts' | 'Inventory' | 'Sales' | 'Customers' | 'Purchases' | 'Suppliers' | 'Expenses' | 'GSTR';
+
+const categoryColors: Record<ReportCategory, { badge: string; text: string }> = {
+  Accounts: { badge: 'bg-orange-50 text-orange-600', text: 'text-orange-600' },
+  Inventory: { badge: 'bg-purple-50 text-purple-600', text: 'text-purple-600' },
+  Sales: { badge: 'bg-green-50 text-green-700', text: 'text-green-700' },
+  Customers: { badge: 'bg-blue-50 text-blue-700', text: 'text-blue-700' },
+  Purchases: { badge: 'bg-red-50 text-red-700', text: 'text-red-700' },
+  Suppliers: { badge: 'bg-yellow-50 text-yellow-700', text: 'text-yellow-700' },
+  Expenses: { badge: 'bg-rose-50 text-rose-700', text: 'text-rose-700' },
+  GSTR: { badge: 'bg-indigo-50 text-indigo-700', text: 'text-indigo-700' },
+};
+
 interface ReportLayoutProps {
   title: string;
   subtitle: string;
   columns: Column[];
   fetchData: () => Promise<any[]>;
-  category?: 'Accounts' | 'Inventory';
+  category?: ReportCategory;
+  extraHeader?: React.ReactNode;
 }
 
-export default function ReportLayout({ title, subtitle, columns, fetchData, category = 'Accounts' }: ReportLayoutProps) {
+export default function ReportLayout({ title, subtitle, columns, fetchData, category = 'Accounts', extraHeader }: ReportLayoutProps) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,9 +85,9 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
             <Link href="/dashboard/reports" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div>
+              <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold tracking-wider text-orange-600 uppercase bg-orange-50 px-2 py-0.5 rounded">
+                <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded ${categoryColors[category]?.badge || 'bg-orange-50 text-orange-600'}`}>
                   {category} Report
                 </span>
               </div>
@@ -112,6 +126,11 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
           </div>
         </div>
       </header>
+      {extraHeader && (
+        <div className="bg-white border-b border-slate-100 px-6 py-3 max-w-7xl mx-auto w-full flex items-center gap-4">
+          {extraHeader}
+        </div>
+      )}
 
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
         <div className="glass rounded-2xl border border-slate-200 overflow-hidden flex flex-col bg-white shadow-sm">
