@@ -480,24 +480,24 @@ export default function EditCustomerPage() {
                {activeTab === 'Payment History' && (
                  <div className="flex flex-col h-full">
                     <h3 className="font-semibold text-slate-900 mb-4">Payment History</h3>
-                    {invoices.filter((inv: any) => inv.amountReceived > 0).length > 0 ? (
+                    {ledger.filter((txn: any) => txn.referenceType === 'Payment' && txn.credit > 0).length > 0 ? (
                       <div className="overflow-x-auto border border-slate-200 rounded-xl flex-1">
                         <table className="w-full text-sm text-left">
                           <thead className="bg-[#F1F5F9] text-slate-600 text-xs uppercase">
                             <tr>
                               <th className="px-4 py-3 border-b border-slate-200">Date</th>
-                              <th className="px-4 py-3 border-b border-slate-200">Reference (Invoice No)</th>
-                              <th className="px-4 py-3 border-b border-slate-200">Mode</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Description</th>
+                              <th className="px-4 py-3 border-b border-slate-200">Ref / Txn ID</th>
                               <th className="px-4 py-3 border-b border-slate-200 text-right">Amount Received</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#1A1A1A]">
-                            {invoices.filter((inv: any) => inv.amountReceived > 0).map((inv: any) => (
-                               <tr key={inv._id} className="hover:bg-[#F1F5F9]">
-                                 <td className="px-4 py-3">{new Date(inv.createdAt).toLocaleDateString()}</td>
-                                 <td className="px-4 py-3 text-blue-400 font-mono">{inv.invoiceNumber}</td>
-                                 <td className="px-4 py-3">{inv.paymentMode || 'Cash'}</td>
-                                 <td className="px-4 py-3 text-right font-bold text-emerald-400">+ ₹{inv.amountReceived?.toFixed(2)}</td>
+                            {ledger.filter((txn: any) => txn.referenceType === 'Payment' && txn.credit > 0).map((txn: any) => (
+                               <tr key={txn._id} className="hover:bg-[#F1F5F9]">
+                                 <td className="px-4 py-3">{new Date(txn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
+                                 <td className="px-4 py-3 text-slate-800">{txn.description}</td>
+                                 <td className="px-4 py-3 text-blue-500 font-mono">{txn.referenceId || '—'}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-emerald-500">+ ₹{txn.credit?.toFixed(2)}</td>
                                </tr>
                             ))}
                           </tbody>
@@ -607,7 +607,7 @@ export default function EditCustomerPage() {
                                     // Tally often prefixes particulars with By/To or Dr/Cr.
                                     let vchType = txn.referenceType || 'Journal';
                                     if (txn.referenceType === 'Invoice') vchType = 'Sales';
-                                    else if (txn.referenceType === 'PaymentReceived') vchType = 'Receipt';
+                                    else if (txn.referenceType === 'Payment') vchType = 'Receipt';
 
                                     return (
                                       <tr key={txn._id || idx} className="hover:bg-slate-50 transition group/row">

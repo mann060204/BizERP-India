@@ -50,7 +50,8 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
   try {
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
-      additionalDiscount, shippingCharge, shippingGstRate, roundOff
+      additionalDiscount, shippingCharge, shippingGstRate, roundOff,
+      lineItems, amountPaid, batches, paymentMode, status, notes
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {

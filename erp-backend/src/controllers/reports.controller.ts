@@ -1097,41 +1097,29 @@ export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response)
     const match: any = { businessId, ...dateFilter };
     if (customerId) match.customerId = customerId;
 
-    const invoices = await Invoice.find(match,
-      'invoiceNumber invoiceDate customerSnapshot amountReceived paymentMode paymentHistory balance grandTotal'
-    ).sort({ invoiceDate: -1 }).lean();
+    const payments = await AccountLedger.find({ 
+      ...match, 
+      referenceType: 'Payment', 
+      credit: { $gt: 0 } 
+    }).populate('customerId', 'name').sort({ date: -1 }).lean();
 
-    // Flatten payment history entries
-    const payments: any[] = [];
-    invoices.forEach((inv: any) => {
-      if (inv.paymentHistory && inv.paymentHistory.length > 0) {
-        inv.paymentHistory.forEach((ph: any) => {
-          payments.push({
-            customer: inv.customerSnapshot?.name || 'Cash',
-            invoiceNumber: inv.invoiceNumber,
-            invoiceDate: inv.invoiceDate,
-            paymentDate: ph.date,
-            amount: ph.amount,
-            mode: ph.mode,
-            txnId: ph.txnId || '—',
-            invoiceTotal: inv.grandTotal,
-          });
-        });
-      } else if (inv.amountReceived > 0) {
-        payments.push({
-          customer: inv.customerSnapshot?.name || 'Cash',
-          invoiceNumber: inv.invoiceNumber,
-          invoiceDate: inv.invoiceDate,
-          paymentDate: inv.invoiceDate,
-          amount: inv.amountReceived,
-          mode: inv.paymentMode || 'Cash',
-          txnId: '—',
-          invoiceTotal: inv.grandTotal,
-        });
-      }
+    const formattedPayments = payments.map((l: any) => {
+      // Basic parsing of mode from description if not stored specifically in ledger
+      const modeMatch = l.description.match(/-\s*([A-Za-z]+)\s*(?:\(|$)/);
+      const parsedMode = modeMatch ? modeMatch[1] : 'Cash';
+      return {
+        customer: l.customerId?.name || 'Walk-in',
+        invoiceNumber: l.referenceId || '—',
+        invoiceDate: l.date,
+        paymentDate: l.date,
+        amount: l.credit,
+        mode: parsedMode,
+        txnId: l.referenceId || '—',
+        invoiceTotal: l.credit, // No access to grandTotal from just the payment ledger easily
+      };
     });
-    payments.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-    sendSuccess(res, payments);
+
+    sendSuccess(res, formattedPayments);
   } catch (e: any) { sendError(res, e.message); }
 };
 
@@ -1328,9 +1316,61 @@ export const getPurchasesGST = async (req: AuthRequest, res: Response) => {
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
 
-    const bills = await PurchaseBill.find(match,
-      'billNumber billDate purchaseType supplierSnapshot placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal'
+    const rawBills = await PurchaseBill.find(match,
+      'billNumber billDate purchaseType supplierSnapshot placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal lineItems'
     ).sort({ billDate: -1 }).lean();
+
+    const bills: any[] = [];
+    rawBills.forEach((bill: any) => {
+      if (!bill.lineItems || bill.lineItems.length === 0) {
+        bills.push({
+          _id: bill._id,
+          billNumber: bill.billNumber,
+          billDate: bill.billDate,
+          supplierName: bill.supplierSnapshot?.name || '—',
+          gstin: bill.supplierSnapshot?.gstin || '—',
+          placeOfSupply: bill.placeOfSupply,
+          grandTotal: bill.grandTotal,
+          rate: 0,
+          taxableValue: bill.totalTaxableAmount || 0,
+          igst: bill.totalIGST || 0,
+          cgst: bill.totalCGST || 0,
+          sgst: bill.totalSGST || 0
+        });
+        return;
+      }
+
+      const rateGroups: Record<number, any> = {};
+      bill.lineItems.forEach((item: any) => {
+        const rate = item.gstRate || 0;
+        if (!rateGroups[rate]) {
+          rateGroups[rate] = { taxableValue: 0, cgst: 0, sgst: 0, igst: 0 };
+        }
+        rateGroups[rate].taxableValue += (item.taxableAmount || 0);
+        rateGroups[rate].cgst += (item.cgst || 0);
+        rateGroups[rate].sgst += (item.sgst || 0);
+        rateGroups[rate].igst += (item.igst || 0);
+      });
+
+      Object.keys(rateGroups).forEach((rateStr) => {
+        const rate = Number(rateStr);
+        const data = rateGroups[rate];
+        bills.push({
+          _id: `${bill._id}_${rate}`,
+          billNumber: bill.billNumber,
+          billDate: bill.billDate,
+          supplierName: bill.supplierSnapshot?.name || '—',
+          gstin: bill.supplierSnapshot?.gstin || '—',
+          placeOfSupply: bill.placeOfSupply,
+          grandTotal: bill.grandTotal,
+          rate: rate,
+          taxableValue: data.taxableValue,
+          igst: data.igst,
+          cgst: data.cgst,
+          sgst: data.sgst
+        });
+      });
+    });
 
     const rateSummary = await PurchaseBill.aggregate([
       { $match: match },

@@ -146,7 +146,7 @@ export default function PrintableCustomerLedger() {
                 
                 let vchType = txn.referenceType || 'Journal';
                 if (txn.referenceType === 'Invoice') vchType = 'Sales';
-                else if (txn.referenceType === 'PaymentReceived') vchType = 'Receipt';
+                else if (txn.referenceType === 'Payment') vchType = 'Receipt';
 
                 return (
                   <tr key={txn._id || idx} className="align-top">
