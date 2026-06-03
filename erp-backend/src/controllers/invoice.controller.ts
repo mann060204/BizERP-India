@@ -331,6 +331,10 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
       { new: true }
     );
 
+    // Sync Ledger: Reverse old, record new
+    await AccountingService.reverseInvoice(existingInvoice);
+    await AccountingService.recordSalesInvoice(updatedInvoice);
+
     res.json({ message: 'Invoice updated', invoice: updatedInvoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -342,6 +346,8 @@ export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Prom
     const invoice = await Invoice.findOne({ _id: req.params['id'], businessId: req.user!.businessId });
     if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
 
+    const oldInvoiceCopy = { ...invoice.toObject() };
+
     if (status) invoice.status = status;
     if (amountReceived !== undefined) {
       invoice.amountReceived = Number(amountReceived);
@@ -350,6 +356,11 @@ export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Prom
       else if (invoice.amountReceived > 0) invoice.status = 'partial';
     }
     await invoice.save();
+
+    // Sync Ledger
+    await AccountingService.reverseInvoice(oldInvoiceCopy);
+    await AccountingService.recordSalesInvoice(invoice);
+
     res.json({ message: 'Invoice updated', invoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -363,6 +374,10 @@ export const cancelInvoice = async (req: AuthRequest, res: Response): Promise<vo
       { new: true }
     );
     if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
+    
+    // Sync Ledger
+    await AccountingService.reverseInvoice(invoice);
+    
     res.json({ message: 'Invoice cancelled', invoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

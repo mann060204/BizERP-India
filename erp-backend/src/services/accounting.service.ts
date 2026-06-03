@@ -97,6 +97,19 @@ export class AccountingService {
   }
 
   /**
+   * Reverses a Sales Invoice from the Customer's Ledger
+   */
+  static async reverseInvoice(invoice: any) {
+    if (!invoice.customerId) return;
+    await AccountLedger.deleteMany({
+      businessId: invoice.businessId,
+      referenceId: invoice._id.toString(),
+      referenceType: { $in: ['Invoice', 'Payment'] }
+    });
+    await this.updateCustomerBalance(invoice.customerId, invoice.businessId.toString());
+  }
+
+  /**
    * Records a Purchase Bill into the Supplier's Ledger
    */
   static async recordPurchaseBill(bill: any) {
@@ -128,6 +141,19 @@ export class AccountingService {
       });
     }
 
+    await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
+  }
+
+  /**
+   * Reverses a Purchase Bill from the Supplier's Ledger
+   */
+  static async reversePurchaseBill(bill: any) {
+    if (!bill.supplierId) return;
+    await AccountLedger.deleteMany({
+      businessId: bill.businessId,
+      referenceId: bill._id.toString(),
+      referenceType: { $in: ['Purchase', 'Payment'] }
+    });
     await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
   }
 

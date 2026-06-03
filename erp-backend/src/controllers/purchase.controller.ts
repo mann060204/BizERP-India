@@ -360,6 +360,10 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
       { new: true }
     );
 
+    // Sync Ledger
+    await AccountingService.reversePurchaseBill(existingPurchase);
+    await AccountingService.recordPurchaseBill(updatedPurchase);
+
     res.json({ message: 'Purchase bill updated', purchase: updatedPurchase });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -371,6 +375,8 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
     const purchase = await PurchaseBill.findOne({ _id: req.params['id'], businessId: req.user!.businessId });
     if (!purchase) { res.status(404).json({ message: 'Purchase bill not found' }); return; }
 
+    const oldPurchaseCopy = { ...purchase.toObject() };
+
     if (status) purchase.status = status;
     if (amountPaid !== undefined) {
       purchase.amountPaid = Number(amountPaid);
@@ -379,6 +385,11 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
       else if (purchase.amountPaid > 0) purchase.status = 'partial';
     }
     await purchase.save();
+
+    // Sync Ledger
+    await AccountingService.reversePurchaseBill(oldPurchaseCopy);
+    await AccountingService.recordPurchaseBill(purchase);
+
     res.json({ message: 'Purchase bill updated', purchase });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -392,6 +403,10 @@ export const cancelPurchase = async (req: AuthRequest, res: Response): Promise<v
       { new: true }
     );
     if (!purchase) { res.status(404).json({ message: 'Purchase bill not found' }); return; }
+
+    // Sync Ledger
+    await AccountingService.reversePurchaseBill(purchase);
+
     res.json({ message: 'Purchase bill cancelled', purchase });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

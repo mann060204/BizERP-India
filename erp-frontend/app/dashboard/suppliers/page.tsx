@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Topbar from '../../../components/layout/Topbar';
 import { suppliersApi } from '../../../lib/erp-api';
-import { Search, Loader2, Save, X, Truck, Edit2, Trash2 } from 'lucide-react';
+import { Search, Loader2, Save, X, Truck, Edit2, Trash2, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
 
@@ -28,14 +29,10 @@ const emptyForm = {
 };
 
 export default function SuppliersPage() {
+  const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
-  
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<Supplier | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<any>(emptyForm);
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
@@ -48,38 +45,12 @@ export default function SuppliersPage() {
 
   useEffect(() => { fetchSuppliers(); }, [fetchSuppliers]);
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setShowModal(true); };
+  const openCreate = () => { router.push('/dashboard/suppliers/new'); };
   const openEdit = (s: Supplier) => { 
-    setEditing(s); 
-    setForm({ 
-      name: s.name, mobile: s.mobile || '', email: s.email || '', gstin: s.gstin || '', pan: s.pan || '',
-      street: s.address?.street || '', city: s.address?.city || '', state: s.address?.state || '', pinCode: s.address?.pinCode || '', country: s.address?.country || 'India',
-      openingBalance: s.openingBalance, balanceType: s.balanceType || 'Credit', 
-      contactPerson: s.contactPerson || '', note: s.note || '',
-      bankName: s.bankDetails?.bankName || '', accountNumber: s.bankDetails?.accountNumber || '', ifsc: s.bankDetails?.ifsc || ''
-    }); 
-    setShowModal(true); 
+    router.push(`/dashboard/suppliers/${s._id}`);
   };
 
-  const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('Company Name is required'); return; }
-    if (!form.city.trim() || !form.state.trim()) { toast.error('City and State are required'); return; }
-    
-    setSaving(true);
-    try {
-      const payload = { 
-        name: form.name, mobile: form.mobile, email: form.email, gstin: form.gstin, pan: form.pan,
-        address: { street: form.street, city: form.city, state: form.state, pinCode: form.pinCode, country: form.country }, 
-        openingBalance: form.openingBalance, balanceType: form.balanceType,
-        contactPerson: form.contactPerson, note: form.note,
-        bankDetails: { bankName: form.bankName, accountNumber: form.accountNumber, ifsc: form.ifsc }
-      };
-      if (editing) { await suppliersApi.update(editing._id, payload); toast.success('Supplier updated'); }
-      else { await suppliersApi.create(payload); toast.success('Supplier created'); }
-      setShowModal(false); fetchSuppliers();
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to save'); }
-    finally { setSaving(false); }
-  };
+  const handleSave = async () => {};
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? This action is irreversible.`)) return;
@@ -163,6 +134,7 @@ export default function SuppliersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => router.push(`/dashboard/suppliers/${s._id}?mode=view`)} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 hover:text-blue-700 transition" title="View Profile"><Info className="w-4 h-4" /></button>
                           <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] hover:bg-action-600 text-slate-600 hover:text-slate-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
@@ -175,168 +147,6 @@ export default function SuppliersPage() {
           </div>
         )}
       </main>
-
-      {/* Supplier Modal Design (Screenshot Match) */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50 backdrop-blur-sm">
-          <div className="bg-[#F1F5F9] border border-slate-200 rounded-xl w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
-            
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <div className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-slate-600" />
-                <h3 className="text-slate-900 font-bold text-lg">{editing ? 'Edit Supplier Information' : 'New Supplier Information'}</h3>
-              </div>
-              <button onClick={() => setShowModal(false)} className="text-slate-600 hover:text-slate-900 hover:text-gray-900 transition"><X className="w-5 h-5" /></button>
-            </div>
-
-            <div className="border-b border-slate-200 px-6 py-2">
-              <span className="text-sm font-semibold text-slate-900 border-b-2 border-action-400 pb-2 inline-block">Profile</span>
-            </div>
-
-            <div className="flex flex-1 overflow-hidden">
-              {/* Left Fixed Column - Account Status */}
-              <div className="w-12 border-r border-slate-200 flex flex-col items-center py-6 bg-slate-50">
-                <div className="whitespace-nowrap -rotate-90 text-[10px] font-bold text-red-500 tracking-wider mt-20">
-                  ACCOUNT STATUS: UNSAVED
-                </div>
-                <div className="mt-auto -rotate-90 whitespace-nowrap mb-20 text-[10px] font-semibold text-action-500 cursor-pointer">
-                  CHECK GSTIN STATUS
-                </div>
-              </div>
-
-              {/* Main Form Content */}
-              <div className="flex-1 p-6 overflow-y-auto bg-white">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  {/* Left Main Column */}
-                  <div className="space-y-6">
-                    <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Supplier Details</legend>
-                      
-                      <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Company Name <span className="text-red-500">*</span></label>
-                          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right mt-1">Address</label>
-                          <textarea value={form.street} onChange={e => setForm({...form, street: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none resize-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">City <span className="text-red-500">*</span></label>
-                          <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">State <span className="text-red-500">*</span></label>
-                          <select value={form.state} onChange={e => setForm({...form, state: e.target.value})} className="col-span-2 px-2 py-1.5 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none">
-                            <option value="">Select</option>
-                            {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Pin Code</label>
-                          <input value={form.pinCode} onChange={e => setForm({...form, pinCode: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Country</label>
-                          <input value={form.country} onChange={e => setForm({...form, country: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Email</label>
-                          <input value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Phone No</label>
-                          <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                      </div>
-                    </fieldset>
-
-                    <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Bank Details</legend>
-                      <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Bank Name</label>
-                          <input value={form.bankName} onChange={e => setForm({...form, bankName: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Bank A/c No.</label>
-                          <input value={form.accountNumber} onChange={e => setForm({...form, accountNumber: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">IFSC Code</label>
-                          <input value={form.ifsc} onChange={e => setForm({...form, ifsc: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                      </div>
-                    </fieldset>
-                  </div>
-
-                  {/* Right Main Column */}
-                  <div className="space-y-6">
-                    <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Tax Details</legend>
-                      <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">PAN No.</label>
-                          <input value={form.pan} onChange={e => setForm({...form, pan: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">GSTIN</label>
-                          <input value={form.gstin} onChange={e => setForm({...form, gstin: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none uppercase" />
-                        </div>
-                      </div>
-                    </fieldset>
-
-                    <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Account Details</legend>
-                      <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Op. Balance</label>
-                          <div className="col-span-2 flex gap-2">
-                            <input type="number" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e => setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} className="flex-1 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                            <select value={form.balanceType} onChange={e => setForm({...form, balanceType: e.target.value})} className="w-24 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none">
-                              <option value="Credit">Credit</option>
-                              <option value="Debit">Debit</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </fieldset>
-
-                    <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Contact Details</legend>
-                      <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-3 items-center gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right">Contact Person</label>
-                          <input value={form.contactPerson} onChange={e => setForm({...form, contactPerson: e.target.value})} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none" />
-                        </div>
-                      </div>
-                    </fieldset>
-
-                    <fieldset className="border border-slate-300 p-4 rounded-md">
-                      <legend className="px-2 text-xs font-bold text-action-500 uppercase">Other Details</legend>
-                      <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <label className="text-xs font-semibold text-slate-600 text-right mt-1">Remark / Note</label>
-                          <textarea value={form.note} onChange={e => setForm({...form, note: e.target.value})} rows={3} className="col-span-2 px-2 py-1 border border-slate-300 bg-[#F1F5F9] rounded text-slate-900 text-sm focus:border-action-400 outline-none resize-none" />
-                        </div>
-                      </div>
-                    </fieldset>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 p-4 border-t border-slate-200 bg-[#F1F5F9] rounded-b-xl">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-lg border border-slate-300 text-slate-600 hover:text-slate-900 hover:text-gray-900 hover:bg-[#E2E8F0] hover:bg-white font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-lg bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm disabled:opacity-60 transition flex items-center justify-center gap-2">
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
