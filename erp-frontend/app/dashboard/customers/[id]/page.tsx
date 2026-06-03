@@ -184,6 +184,8 @@ export default function EditCustomerPage() {
   
   const [ledger, setLedger] = useState<any[]>([]);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ amount: '', mode: 'Cash', date: new Date().toISOString().split('T')[0], referenceNo: '', notes: '' });
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -528,8 +530,108 @@ export default function EditCustomerPage() {
                       </div>
                     </div>
                     
-                    <div className="text-sm text-slate-600 bg-[#F1F5F9] p-6 rounded-xl border border-slate-200 flex items-center justify-center italic">
-                       Full transaction ledger will be generated here in future updates.
+                    <div className="flex flex-col flex-1 h-full bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                      <div className="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-600 uppercase">From</span>
+                            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-600 uppercase">To</span>
+                            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white" />
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            const query = new URLSearchParams();
+                            if (fromDate) query.set('from', fromDate);
+                            if (toDate) query.set('to', toDate);
+                            window.open(`/print/ledger/customer/${id}?${query.toString()}`, '_blank');
+                          }}
+                          className="flex items-center gap-1.5 px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg transition"
+                        >
+                          Print Ledger
+                        </button>
+                      </div>
+
+                      <div className="flex-1 overflow-auto">
+                        <table className="w-full text-sm text-left">
+                          <thead className="bg-[#1A1A1A] sticky top-0">
+                            <tr>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider">Date</th>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider">Particulars</th>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider">Vch Type</th>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Debit</th>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Credit</th>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Balance</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {(() => {
+                              const sortedLedger = [...ledger].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                              
+                              const txnsBeforeFromDate = fromDate ? sortedLedger.filter(t => new Date(t.date) < new Date(fromDate)) : [];
+                              const displayTxns = sortedLedger.filter(t => {
+                                if (fromDate && new Date(t.date) < new Date(fromDate)) return false;
+                                if (toDate && new Date(t.date) > new Date(toDate)) return false;
+                                return true;
+                              });
+
+                              let initialOpening = form.balanceType === 'Credit' ? -Math.abs(form.openingBalance) : Math.abs(form.openingBalance);
+                              const priorDr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.debit || 0), 0);
+                              const priorCr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.credit || 0), 0);
+                              
+                              let currentBal = initialOpening + priorDr - priorCr;
+                              
+                              let periodDr = 0;
+                              let periodCr = 0;
+
+                              const formatBal = (b: number) => {
+                                return b >= 0 ? `${b.toFixed(2)} Dr` : `${Math.abs(b).toFixed(2)} Cr`;
+                              };
+
+                              return (
+                                <>
+                                  <tr className="bg-slate-50/80 font-semibold">
+                                    <td className="px-4 py-3 text-slate-600"></td>
+                                    <td className="px-4 py-3 text-slate-900" colSpan={4}>Opening Balance</td>
+                                    <td className="px-4 py-3 text-right text-slate-900">{formatBal(currentBal)}</td>
+                                  </tr>
+                                  {displayTxns.map((txn, idx) => {
+                                    currentBal = currentBal + (txn.debit || 0) - (txn.credit || 0);
+                                    periodDr += (txn.debit || 0);
+                                    periodCr += (txn.credit || 0);
+                                    
+                                    // Make 'Cr' vs 'Dr' explicit in particulars if needed, but we have Debit/Credit columns
+                                    // Tally often prefixes particulars with By/To or Dr/Cr.
+                                    let vchType = txn.referenceType || 'Journal';
+                                    if (txn.referenceType === 'Invoice') vchType = 'Sales';
+                                    else if (txn.referenceType === 'PaymentReceived') vchType = 'Receipt';
+
+                                    return (
+                                      <tr key={txn._id || idx} className="hover:bg-slate-50 transition group/row">
+                                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{new Date(txn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
+                                        <td className="px-4 py-3 text-slate-900">{txn.description}</td>
+                                        <td className="px-4 py-3 text-slate-600">{vchType}</td>
+                                        <td className="px-4 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
+                                        <td className="px-4 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
+                                        <td className="px-4 py-3 text-right text-slate-900 font-medium">{formatBal(currentBal)}</td>
+                                      </tr>
+                                    );
+                                  })}
+                                  <tr className="bg-slate-50/80 font-bold border-t-2 border-slate-200">
+                                    <td className="px-4 py-4 text-slate-800" colSpan={3}>Closing Balance</td>
+                                    <td className="px-4 py-4 text-right text-slate-900">{periodDr.toFixed(2)}</td>
+                                    <td className="px-4 py-4 text-right text-slate-900">{periodCr.toFixed(2)}</td>
+                                    <td className="px-4 py-4 text-right text-slate-900">{formatBal(currentBal)}</td>
+                                  </tr>
+                                </>
+                              );
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                  </div>
                )}
