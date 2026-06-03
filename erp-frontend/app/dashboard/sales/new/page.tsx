@@ -630,7 +630,7 @@ export default function NewInvoicePage() {
                   <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" placeholder="Optional" />
                 )}
               </div>
-              <div className="col-span-4 flex flex-col justify-end">
+              <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
