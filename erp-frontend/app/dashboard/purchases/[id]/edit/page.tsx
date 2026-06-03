@@ -645,6 +645,13 @@ export default function EditPurchasePage() {
                   ))}
                 </div>
               )}
+              <div>
+                <label className="erp-label block mb-1 mt-2">Shipping / GST%</label>
+                <div className="flex gap-1">
+                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
+                  <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+                </div>
+              </div>
            </div>
 
            <div className="col-span-1">

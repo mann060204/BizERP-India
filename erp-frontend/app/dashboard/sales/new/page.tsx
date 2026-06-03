@@ -96,6 +96,8 @@ export default function NewInvoicePage() {
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
+  const [additionalDiscount, setAdditionalDiscount] = useState(0);
+  const [additionalDiscountType, setAdditionalDiscountType] = useState<'amount'|'percentage'>('amount');
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const formatDate = (d: string) => d.split('-').reverse().join('/');
@@ -421,7 +423,8 @@ export default function NewInvoicePage() {
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   
-  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge;
+  const globalDiscountAmount = additionalDiscountType === 'percentage' ? round2((totalTaxable * additionalDiscount) / 100) : additionalDiscount;
+  const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
@@ -444,6 +447,7 @@ export default function NewInvoicePage() {
         placeOfSupply,
         isInterState,
         invoiceType,
+        discountAmount: globalDiscountAmount,
         lineItems,
         paymentMode: combinedPaymentMode,
         paymentHistory: [
@@ -882,6 +886,32 @@ export default function NewInvoicePage() {
                 </div>
               )}
               <div>
+                <label className="erp-label block mb-1">Add'l Discount</label>
+                <div className="flex w-full">
+                   <input 
+                     type="number" 
+                     value={additionalDiscount === 0 ? '' : additionalDiscount} 
+                     onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} 
+                     className="erp-input w-full rounded-none" 
+                     placeholder="Discount..."
+                   />
+                   <select 
+                     value={additionalDiscountType} 
+                     onChange={e => setAdditionalDiscountType(e.target.value as 'amount'|'percentage')} 
+                     className="erp-input rounded-l-none bg-slate-100 px-2 border-l-0 text-xs cursor-pointer outline-none focus:ring-0">
+                     <option value="percentage">%</option>
+                     <option value="amount">₹</option>
+                   </select>
+                </div>
+              </div>
+              <div>
+                <label className="erp-label block mb-1">Shipping / GST%</label>
+                <div className="flex gap-1">
+                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
+                  <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+                </div>
+              </div>
+              <div>
                 <label className="erp-label block mb-1">Sold By</label>
                 <select value={soldBy} onChange={e => setSoldBy(e.target.value)} className="erp-input w-full">
                   <option value="">Select Agent</option>
@@ -950,10 +980,16 @@ export default function NewInvoicePage() {
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-                {totalDiscount > 0 && (
+                {(totalDiscount + globalDiscountAmount) > 0 && (
                   <div className="flex justify-between text-red-400">
                     <span>Discount</span>
-                    <span>-₹{totalDiscount.toFixed(2)}</span>
+                    <span>-₹{(totalDiscount + globalDiscountAmount).toFixed(2)}</span>
+                  </div>
+                )}
+                {shippingCharge > 0 && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Shipping</span>
+                    <span>₹{shippingCharge.toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -978,14 +1014,6 @@ export default function NewInvoicePage() {
                     )}
                   </>
                 )}
-
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
-                  <span className="erp-label">Shipping / GST%</span>
-                  <div className="flex gap-1">
-                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right h-7" placeholder="Amt" />
-                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-12 text-right h-7" placeholder="GST%" />
-                  </div>
-                </div>
               </div>
 
               <div className="mt-4 pt-3 border-t-2 border-slate-300 space-y-1 bg-white -mx-2 -mb-2 p-3 rounded-b-lg">

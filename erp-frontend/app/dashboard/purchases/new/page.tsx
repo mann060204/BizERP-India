@@ -610,6 +610,13 @@ export default function NewPurchasePage() {
                   ))}
                 </div>
               )}
+              <div>
+                <label className="erp-label block mb-1 mt-2">Shipping / GST%</label>
+                <div className="flex gap-1">
+                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
+                  <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+                </div>
+              </div>
            </div>
 
            <div className="col-span-1">
@@ -657,13 +664,12 @@ export default function NewPurchasePage() {
                    <span className="text-xs font-bold text-slate-600">Sub Total</span>
                    <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
                  </div>
-                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                   <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping / GST%</span>
-                   <div className="flex gap-2">
-                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
-                     <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right" placeholder="GST %" />
+                 {shippingCharge > 0 && (
+                   <div className="flex justify-between items-center py-2 border-b border-slate-100">
+                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping</span>
+                     <span className="text-sm font-bold text-slate-800">₹ {shippingCharge.toFixed(2)}</span>
                    </div>
-                 </div>
+                 )}
                  <div className="flex justify-between items-center pt-2">
                    <span className="text-xs font-bold text-slate-800 uppercase">Total Amount</span>
                    <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(2)}</span>
