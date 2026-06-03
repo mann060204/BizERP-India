@@ -241,7 +241,7 @@ export const manufacturingApi = {
 
 // ─── Data Management ──────────────────────────────────────────────────────────
 export const dataApi = {
-  export: () => api.get('/data/export').then(res => res.data),
-  erase: () => api.delete('/data/erase').then(res => res.data),
-  import: (data: any) => api.post('/data/import', data).then(res => res.data),
+  export: () => api.get('/business/data/export').then(res => res.data),
+  erase: () => api.delete('/business/data/erase').then(res => res.data),
+  import: (data: any) => api.post('/business/data/import', data).then(res => res.data),
 };
