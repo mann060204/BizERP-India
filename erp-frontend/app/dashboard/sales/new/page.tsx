@@ -539,10 +539,15 @@ export default function NewInvoicePage() {
                      <UserPlus className="w-3.5 h-3.5" />
                    </button>
                  </label>
-                 {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
-                   <div className={`text-xs px-2 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : selectedCustomer.openingBalance < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                     A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
-                   </div>
+                 {selectedCustomer && (
+                   (() => {
+                     const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
+                     return (
+                       <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                         A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                       </div>
+                     );
+                   })()
                  )}
               </div>
               <div className="relative">
@@ -625,7 +630,7 @@ export default function NewInvoicePage() {
                   <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" placeholder="Optional" />
                 )}
               </div>
-              <div className="col-span-3 flex flex-col justify-end">
+              <div className="col-span-4 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
@@ -871,6 +876,21 @@ export default function NewInvoicePage() {
                 <label className="erp-label block mb-1">Total Quantity</label>
                 <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{totalQty}</div>
               </div>
+              
+              <div>
+                <label className="erp-label block mb-1">Overall Discount</label>
+                <div className="flex gap-1">
+                  <div className="relative w-1/2">
+                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">%</span>
+                    <input type="number" value={globalDiscountPercent === 0 ? '' : globalDiscountPercent} onChange={e => { setGlobalDiscountPercent(parseFloat(e.target.value) || 0); setDiscountAmountFlat(0); }} className="erp-input w-full pl-4" placeholder="Percent" />
+                  </div>
+                  <div className="relative w-1/2">
+                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
+                    <input type="number" value={discountAmountFlat === 0 ? '' : discountAmountFlat} onChange={e => { setDiscountAmountFlat(parseFloat(e.target.value) || 0); setGlobalDiscountPercent(0); }} className="erp-input w-full pl-3" placeholder="Amount" />
+                  </div>
+                </div>
+              </div>
+
               {discountSchemes.length > 0 && (
                 <div>
                   <label className="erp-label block mb-1">Discount Scheme</label>

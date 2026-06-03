@@ -452,10 +452,15 @@ export default function NewSalesReturnPage() {
                      <UserPlus className="w-3.5 h-3.5" />
                    </button>
                  </label>
-                 {selectedCustomer && selectedCustomer.openingBalance !== undefined && (
-                   <div className={`text-xs px-2 py-0.5 rounded font-bold border ${selectedCustomer.openingBalance > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : selectedCustomer.openingBalance < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                     A/C Bal: {selectedCustomer.openingBalance > 0 ? '₹' + selectedCustomer.openingBalance.toFixed(2) + ' Dr' : selectedCustomer.openingBalance < 0 ? '₹' + Math.abs(selectedCustomer.openingBalance).toFixed(2) + ' Cr' : '₹0.00'}
-                   </div>
+                 {selectedCustomer && (
+                   (() => {
+                     const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
+                     return (
+                       <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                         A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                       </div>
+                     );
+                   })()
                  )}
               </div>
               <div className="relative">

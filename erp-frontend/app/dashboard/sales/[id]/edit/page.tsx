@@ -407,7 +407,7 @@ export default function NewInvoicePage() {
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   const totalCess = lineItems.reduce((s, i) => s + (invoiceType === 'GST' ? round2((i.taxableAmount * i.cess) / 100) : 0), 0);
   
-  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + totalCess + shippingCharge;
+  const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + totalCess + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
@@ -820,6 +820,7 @@ export default function NewInvoicePage() {
                       <div>
                         {item.productName}
                         {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
+                        {item.batchNo && <span className="ml-2 text-[9px] text-slate-500 border border-slate-200 rounded px-1">Batch: {item.batchNo}</span>}
                       </div>
                       {item.description && <div className="text-[10px] text-slate-600 font-normal leading-tight mt-0.5">{item.description}</div>}
                     </div>
@@ -858,6 +859,21 @@ export default function NewInvoicePage() {
                 <label className="erp-label block mb-1">Total Quantity</label>
                 <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{totalQty}</div>
               </div>
+              
+              <div>
+                <label className="erp-label block mb-1">Overall Discount</label>
+                <div className="flex gap-1">
+                  <div className="relative w-1/2">
+                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">%</span>
+                    <input type="number" value={globalDiscountPercent === 0 ? '' : globalDiscountPercent} onChange={e => { setGlobalDiscountPercent(parseFloat(e.target.value) || 0); setDiscountAmountFlat(0); }} className="erp-input w-full pl-4" placeholder="Percent" />
+                  </div>
+                  <div className="relative w-1/2">
+                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
+                    <input type="number" value={discountAmountFlat === 0 ? '' : discountAmountFlat} onChange={e => { setDiscountAmountFlat(parseFloat(e.target.value) || 0); setGlobalDiscountPercent(0); }} className="erp-input w-full pl-3" placeholder="Amount" />
+                  </div>
+                </div>
+              </div>
+
               {discountSchemes.length > 0 && (
                 <div>
                   <label className="erp-label block mb-1">Discount Scheme</label>

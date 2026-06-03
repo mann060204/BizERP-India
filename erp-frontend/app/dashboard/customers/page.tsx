@@ -122,7 +122,7 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => router.push(`/dashboard/customers/${c._id}`)} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 hover:text-blue-700 transition" title="View Profile"><Info className="w-4 h-4" /></button>
+                          <button onClick={() => router.push(`/dashboard/customers/${c._id}?mode=view`)} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 hover:text-blue-700 transition" title="View Profile"><Info className="w-4 h-4" /></button>
                           <button onClick={() => router.push(`/dashboard/customers/${c._id}`)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] text-slate-600 hover:text-slate-900 transition" title="Edit Customer"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(c._id, c.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition" title="Delete Customer"><Trash2 className="w-4 h-4" /></button>
                         </div>

@@ -45,6 +45,25 @@ export const getCustomer = async (req: AuthRequest, res: Response): Promise<void
 // POST /api/v1/customers
 export const createCustomer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { name, mobile } = req.body;
+    
+    const orConditions: any[] = [];
+    if (name) orConditions.push({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    if (mobile && mobile.trim() !== '') orConditions.push({ mobile: mobile.trim() });
+    
+    if (orConditions.length > 0) {
+      const existing = await Customer.findOne({
+        businessId: req.user!.businessId,
+        isActive: true,
+        $or: orConditions
+      });
+      
+      if (existing) {
+        res.status(400).json({ message: 'A customer with this Name or Mobile No. already exists.' });
+        return;
+      }
+    }
+
     const customer = await Customer.create({ ...req.body, businessId: req.user!.businessId });
     res.status(201).json({ message: 'Customer created', customer });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
