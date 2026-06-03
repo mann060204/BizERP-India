@@ -1093,7 +1093,7 @@ export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response)
   try {
     const businessId = req.user!.businessId;
     const { from, to, customerId } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
+    const dateFilter = buildDateFilter(from, to, 'date');
     const match: any = { businessId, ...dateFilter };
     if (customerId) match.customerId = customerId;
 

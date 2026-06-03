@@ -191,37 +191,5 @@ export class AccountingService {
     return await this.updateSupplierBalance(supplierId, businessId);
   }
 
-  /**
-   * Reverses an invoice if cancelled or deleted
-   */
-  static async reverseInvoice(invoice: any) {
-    if (!invoice.customerId) return;
-    
-    // Find all ledger entries related to this invoice
-    await AccountLedger.deleteMany({
-      businessId: invoice.businessId,
-      customerId: invoice.customerId,
-      referenceId: invoice._id.toString(),
-      referenceType: { $in: ['Invoice', 'Payment'] }
-    });
 
-    await this.updateCustomerBalance(invoice.customerId, invoice.businessId.toString());
-  }
-
-  /**
-   * Reverses a purchase bill if cancelled or deleted
-   */
-  static async reversePurchaseBill(bill: any) {
-    if (!bill.supplierId) return;
-    
-    // Find all ledger entries related to this bill
-    await AccountLedger.deleteMany({
-      businessId: bill.businessId,
-      supplierId: bill.supplierId,
-      referenceId: bill._id.toString(),
-      referenceType: { $in: ['Purchase', 'Payment'] }
-    });
-
-    await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
-  }
 }
