@@ -98,7 +98,7 @@ export const createBulkCustomers = async (req: AuthRequest, res: Response): Prom
 export const getCustomerLedger = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
-    const customerId = req.params['id'];
+    const customerId = req.params['id'] as string;
     
     // Auto-update balance first to ensure it's synced
     const currentBalance = await AccountingService.updateCustomerBalance(customerId, businessId);
@@ -112,7 +112,7 @@ export const getCustomerLedger = async (req: AuthRequest, res: Response): Promis
 export const recordPayment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
-    const customerId = req.params['id'];
+    const customerId = req.params['id'] as string;
     const { amount, paymentMode, date, referenceNo, notes } = req.body;
     
     if (!amount || amount <= 0) { res.status(400).json({ message: 'Valid amount is required' }); return; }

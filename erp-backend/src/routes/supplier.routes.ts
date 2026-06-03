@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier } from '../controllers/supplier.controller';
+import { getSuppliers, getSupplier, createSupplier, updateSupplier, deleteSupplier, getSupplierLedger, recordPayment } from '../controllers/supplier.controller';
 import { protect } from '../middlewares/auth.middleware';
 
 const router = Router();

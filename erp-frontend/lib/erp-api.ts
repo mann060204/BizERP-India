@@ -8,6 +8,8 @@ export const customersApi = {
   bulkCreate: (data: any) => api.post('/customers/bulk', data),
   update: (id: string, data: any) => api.put(`/customers/${id}`, data),
   delete: (id: string) => api.delete(`/customers/${id}`),
+    getLedger: (id: string) => api.get(`/customers/${id}/ledger`),
+    recordPayment: (id: string, data: any) => api.post(`/customers/${id}/payments`, data),
 };
 
 // ─── Products ─────────────────────────────────────────────────────────────────
@@ -41,6 +43,8 @@ export const suppliersApi = {
   create: (data: any) => api.post('/suppliers', data),
   update: (id: string, data: any) => api.put(`/suppliers/${id}`, data),
   delete: (id: string) => api.delete(`/suppliers/${id}`),
+    getLedger: (id: string) => api.get(`/suppliers/${id}/ledger`),
+    recordPayment: (id: string, data: any) => api.post(`/suppliers/${id}/payments`, data),
 };
 
 // ─── Purchases ────────────────────────────────────────────────────────────────

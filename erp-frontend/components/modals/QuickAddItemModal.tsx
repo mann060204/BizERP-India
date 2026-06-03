@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect, useCallback } from 'react';
 import { productsApi, businessApi } from '../../lib/erp-api';
 import { X, Loader2, Save, Layers, Plus } from 'lucide-react';

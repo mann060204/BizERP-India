@@ -66,7 +66,7 @@ export const deleteSupplier = async (req: AuthRequest, res: Response): Promise<v
 export const getSupplierLedger = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
-    const supplierId = req.params['id'];
+    const supplierId = req.params['id'] as string;
     
     const currentBalance = await AccountingService.updateSupplierBalance(supplierId, businessId);
     
@@ -79,7 +79,7 @@ export const getSupplierLedger = async (req: AuthRequest, res: Response): Promis
 export const recordPayment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user!.businessId;
-    const supplierId = req.params['id'];
+    const supplierId = req.params['id'] as string;
     const { amount, paymentMode, date, referenceNo, notes } = req.body;
     
     if (!amount || amount <= 0) { res.status(400).json({ message: 'Valid amount is required' }); return; }
