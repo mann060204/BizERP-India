@@ -576,23 +576,23 @@ export default function EditPurchasePage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-13' : 'grid-cols-10' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Discount</div>
+           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
+             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
+             <div className="col-span-3 border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
+             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
+             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
+             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
+             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Discount</div>
              {purchaseType !== 'Non-GST' && (
                 <>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">CGST</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">SGST</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">IGST</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
+                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
+                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">CGST</div>
+                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">SGST</div>
+                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">IGST</div>
+                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
                 </>
              )}
-             <div className=" px-2 py-1.5 text-center">Amount</div>
+             <div className={`px-2 py-1.5 text-center ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
            </div>
            
            <div className="flex-1 overflow-y-auto bg-[#E2E8F0]">
@@ -600,19 +600,26 @@ export default function EditPurchasePage() {
                 <div className="p-10 text-center text-slate-600 italic text-sm"></div>
               ) : (
                 lineItems.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-10 erp-grid-row group text-[11px]">
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 font-medium">
+                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10' } erp-grid-row group text-[11px]`}>
+                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
+                    <div className="col-span-3 border-r border-slate-200 px-2 py-1.5 font-medium">
                       {item.productName}
                       {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
                     </div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.quantity}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
-                    <div className="col-span-3 px-2 py-1.5 text-right font-medium flex justify-between items-center">
+                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.quantity}</div>
+                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.unit}</div>
+                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
+                    {purchaseType !== 'Non-GST' && (
+                        <>
+                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
+                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">{item.cgst > 0 ? item.cgst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">{item.sgst > 0 ? item.sgst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">{item.igst > 0 ? item.igst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
+                        </>
+                    )}
+                    <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} px-2 py-1.5 text-right font-medium flex justify-between items-center`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />

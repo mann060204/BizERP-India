@@ -535,16 +535,23 @@ export default function NewPurchasePage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className="erp-grid-header grid grid-cols-12 sticky top-0 z-10">
+           <div className={`erp-grid-header grid ${purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10'} sticky top-0 z-10`}>
                <div className="col-span-1 erp-grid-cell">S.No.</div>
                <div className="col-span-3 erp-grid-cell">Item Details</div>
                <div className="col-span-1 erp-grid-cell text-center">Qty</div>
                <div className="col-span-1 erp-grid-cell text-center">Unit</div>
                <div className="col-span-1 erp-grid-cell text-center">Price</div>
                <div className="col-span-1 erp-grid-cell text-center">Disc</div>
-               {purchaseType !== 'Non-GST' && <div className="col-span-1 erp-grid-cell text-center">GST</div>}
-               {purchaseType !== 'Non-GST' && <div className="col-span-1 erp-grid-cell text-center">Cess</div>}
-               <div className={`erp-grid-cell text-center ${purchaseType !== 'Non-GST' ? 'col-span-2' : 'col-span-4'}`}>Amount</div>
+               {purchaseType !== 'Non-GST' && (
+                 <>
+                   <div className="col-span-1 erp-grid-cell text-center">Tax (%)</div>
+                   <div className="col-span-1 erp-grid-cell text-center">CGST</div>
+                   <div className="col-span-1 erp-grid-cell text-center">SGST</div>
+                   <div className="col-span-1 erp-grid-cell text-center">IGST</div>
+                   <div className="col-span-1 erp-grid-cell text-center">Cess</div>
+                 </>
+               )}
+               <div className={`erp-grid-cell text-center ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
              </div>
            
            <div className="flex-1 overflow-y-auto bg-white">
@@ -552,29 +559,29 @@ export default function NewPurchasePage() {
                 <div className="p-10 text-center text-slate-400 italic text-sm">No items added yet.</div>
               ) : (
                 lineItems.map((item, idx) => (
-                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-13' : 'grid-cols-10' } hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
+                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10' } hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
+                    <div className="col-span-3 border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
                       {item.productName}
                       {item.tag && <span className="ml-2 text-[9px] bg-slate-200 px-1 rounded text-slate-600">{item.tag}</span>}
                     </div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-center text-red-500">
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-red-500">
                       {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
                       {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
                     </div>
                     {purchaseType !== 'Non-GST' && (
                         <>
-                          <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.gstRate}</div>
-                          <div className="border-r border-slate-100 px-2 py-1.5 text-right">{item.cgst > 0 ? item.cgst.toFixed(2) : '-'}</div>
-                          <div className="border-r border-slate-100 px-2 py-1.5 text-right">{item.sgst > 0 ? item.sgst.toFixed(2) : '-'}</div>
-                          <div className="border-r border-slate-100 px-2 py-1.5 text-right">{item.igst > 0 ? item.igst.toFixed(2) : '-'}</div>
-                          <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.gstRate}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.cgst > 0 ? item.cgst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.sgst > 0 ? item.sgst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.igst > 0 ? item.igst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
                         </>
                     )}
-                    <div className=" px-2 py-1.5 text-right font-medium flex justify-between items-center">
+                    <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} px-2 py-1.5 text-right font-medium flex justify-between items-center`}>
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />
