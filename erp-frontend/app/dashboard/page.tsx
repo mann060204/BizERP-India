@@ -132,6 +132,7 @@ export default function DashboardPage() {
     'Received (Monthly)', 'Outstanding (Monthly)', 'Paid Out (Monthly)', 'Low Stock'
   ];
   const [kpiOrder, setKpiOrder] = useState<string[]>(defaultKpiOrder);
+  const [selectedKpi, setSelectedKpi] = useState<any>(null);
 
   useEffect(() => {
     try {
@@ -288,6 +289,7 @@ export default function DashboardPage() {
                       onDragEnter={() => (dragOverKpiItem.current = index)}
                       onDragEnd={handleKpiSort}
                       onDragOver={(e) => e.preventDefault()}
+                      onClick={() => setSelectedKpi(card)}
                       className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 shadow-sm hover:shadow-md transition cursor-grab active:cursor-grabbing">
                       <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center pointer-events-none`}>
                         <Icon className={`w-4 h-4 ${color}`} />
@@ -518,6 +520,106 @@ export default function DashboardPage() {
 
         </div>
       </main>
+      {selectedKpi && <KpiModal kpi={selectedKpi} onClose={() => setSelectedKpi(null)} />}
     </div>
   );
+}
+
+function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
+  const router = useRouter();
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    let promise;
+
+    if (['sales', 'received', 'outstanding'].includes(kpi.type)) {
+      promise = invoicesApi.list({ limit: 5 }).then(res => res.data?.invoices || []);
+    } else if (['purchases', 'paid'].includes(kpi.type)) {
+      promise = purchasesApi.list({ limit: 5 }).then(res => res.data?.purchases || []);
+    } else if (kpi.type === 'expenses') {
+      promise = expensesApi.list({ limit: 5 }).then(res => res.data?.expenses || []);
+    } else if (kpi.type === 'lowStock') {
+      promise = inventoryApi.list({ lowStock: 'true', limit: 5 }).then(res => res.data?.inventory || []);
+    } else {
+      promise = Promise.resolve([]);
+    }
+
+    promise.then(resData => {
+      if (active) { setData(resData); setLoading(false); }
+    }).catch(() => {
+      if (active) setLoading(false);
+    });
+
+    return () => { active = false; };
+  }, [kpi.type]);
+
+  const handleViewAll = () => {
+    onClose();
+    if (['sales', 'received', 'outstanding'].includes(kpi.type)) router.push('/dashboard/sales');
+    else if (['purchases', 'paid'].includes(kpi.type)) router.push('/dashboard/purchases');
+    else if (kpi.type === 'expenses') router.push('/dashboard/expenses');
+    else if (kpi.type === 'lowStock') router.push('/dashboard/inventory');
+  };
+
+  const renderRow = (item: any, i: number) => {
+    if (kpi.type === 'lowStock') {
+      return (
+        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
+          <div><p className="font-semibold text-slate-800">{item.name}</p><p className="text-xs text-slate-500">SKU: {item.sku || 'N/A'}</p></div>
+          <div className="text-right"><p className="font-bold text-red-600">{item.currentStock} left</p></div>
+        </div>
+      );
+    } else if (kpi.type === 'expenses') {
+      return (
+        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
+          <div><p className="font-semibold text-slate-800">{item.category}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
+          <div className="text-right"><p className="font-bold text-slate-900">₹{(item.totalWithTax || 0).toLocaleString('en-IN')}</p></div>
+        </div>
+      );
+    } else {
+      return (
+        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
+          <div>
+            <p className="font-semibold text-slate-800">{item.invoiceNumber || item.billNumber}</p>
+            <p className="text-xs text-slate-500">{item.customerId?.name || item.supplierId?.name || 'Walk-in'} • {new Date(item.invoiceDate || item.billDate).toLocaleDateString()}</p>
+          </div>
+          <div className="text-right">
+            <p className="font-bold text-slate-900">₹{(item.grandTotal || 0).toLocaleString('en-IN')}</p>
+            <p className={`text-[10px] font-bold uppercase tracking-wider ${item.status === 'paid' ? 'text-emerald-600' : item.status === 'partial' ? 'text-blue-600' : 'text-orange-600'}`}>{item.status}</p>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  const Icon = kpi.icon;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-slate-100 flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl ${kpi.bg} flex items-center justify-center`}>
+             <Icon className={`w-5 h-5 ${kpi.color}`} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900 text-lg leading-tight">{kpi.label}</h3>
+            <p className="text-slate-500 text-xs font-medium mt-0.5">Recent related activity</p>
+          </div>
+        </div>
+        <div className="p-5 min-h-[200px] max-h-[60vh] overflow-y-auto">
+           {loading ? <div className="h-32 flex flex-col gap-2 items-center justify-center"><Loader2 className="w-6 h-6 text-indigo-500 animate-spin"/><p className="text-xs text-slate-500 font-medium tracking-wide animate-pulse">Loading details...</p></div> 
+            : data.length === 0 ? <div className="h-32 flex flex-col gap-2 items-center justify-center text-slate-400"><FileText className="w-8 h-8 opacity-20" /><p className="text-sm font-medium">No recent records found.</p></div>
+            : <div className="flex flex-col">{data.map(renderRow)}</div>
+           }
+        </div>
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm">Close</button>
+          <button onClick={handleViewAll} className="flex-1 py-2.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm shadow-indigo-200">View All Module</button>
+        </div>
+      </div>
+    </div>
+  )
 }
