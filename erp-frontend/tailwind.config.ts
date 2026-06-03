@@ -60,6 +60,7 @@ const config: Config = {
       },
       gridTemplateColumns: {
         '13': 'repeat(13, minmax(0, 1fr))',
+        '14': 'repeat(14, minmax(0, 1fr))',
       },
     },
   },
