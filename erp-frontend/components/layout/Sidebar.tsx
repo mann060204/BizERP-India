@@ -54,29 +54,8 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
-  const [enableManufacturing, setEnableManufacturing] = useState(false);
-
-  useEffect(() => {
-    businessApi.getProfile().then(res => {
-      if (res.data.business?.enableManufacturing) {
-        setEnableManufacturing(true);
-      }
-    }).catch(err => console.error(err));
-  }, []);
-
   const dynamicNavItems = [...NAV_ITEMS];
-  if (enableManufacturing) {
-    const insertIndex = dynamicNavItems.findIndex(i => i.label === 'Inventory') + 1;
-    dynamicNavItems.splice(insertIndex, 0, {
-      label: 'Manufacturing', href: '#', icon: Factory,
-      subItems: [
-        { label: 'Bill of Materials', href: '/dashboard/manufacturing/bom' },
-        { label: 'Production Orders', href: '/dashboard/manufacturing/orders' },
-      ]
-    });
-  }
-
-  const isActive = (href: string) =>
+const isActive = (href: string) =>
     href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
   const toggleSubmenu = (label: string, e: React.MouseEvent) => {

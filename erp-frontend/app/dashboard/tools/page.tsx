@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
-import { Calculator, Barcode, Upload, RefreshCcw, Bell } from 'lucide-react';
+import { Calculator, Barcode, Upload, RefreshCcw, Bell, Factory } from 'lucide-react';
 
 const TOOLS = [
   { name: 'GST Calculator', desc: 'Standalone tool to compute CGST/SGST/IGST splits', icon: Calculator, href: '/dashboard/tools/gst-calc', status: 'live' },
@@ -9,6 +9,7 @@ const TOOLS = [
   { name: 'Bulk Import', desc: 'Import items or customers via CSV/Excel', icon: Upload, href: '/dashboard/tools/import', status: 'live' },
   { name: 'Bulk Tax Update', desc: 'Change HSN code or tax rate for multiple products', icon: RefreshCcw, href: '#', status: 'soon' },
   { name: 'Reminder System', desc: 'Schedule SMS/WhatsApp for overdue invoices', icon: Bell, href: '#', status: 'soon' },
+  { name: 'Manufacturing Module', desc: 'Manage Bill of Materials, production orders, and WIP', icon: Factory, href: '#', status: 'soon' },
 ];
 
 export default function ToolsPage() {
