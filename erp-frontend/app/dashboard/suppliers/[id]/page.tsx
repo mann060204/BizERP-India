@@ -195,6 +195,11 @@ export default function EditSupplierPage() {
          const supplierPurchaseBills = res.data.purchaseBills.filter((inv: any) => inv.supplierId === id || inv.supplierId?._id === id);
          setPurchaseBills(supplierPurchaseBills);
       }).catch(() => {});
+      
+      suppliersApi.getLedger(id as string).then(res => {
+         setLedger(res.data.ledger || []);
+         setCurrentBalance(res.data.currentBalance || 0);
+      }).catch(() => {});
     }
   }, [id]);
 
@@ -454,15 +459,15 @@ export default function EditSupplierPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#1A1A1A]">
-                            {purchaseBills.map((inv: any) => (
-                               <tr key={inv._id} className="hover:bg-[#F1F5F9] cursor-pointer" onClick={() => router.push(`/dashboard/purchases`)}>
-                                 <td className="px-4 py-3 text-blue-400 font-mono">{inv.purchaseBillNumber}</td>
-                                 <td className="px-4 py-3">{new Date(inv.purchaseBillDate).toLocaleDateString()}</td>
-                                 <td className="px-4 py-3">{inv.lineItems?.length || 0}</td>
+                            {purchaseBills.map((bill: any) => (
+                               <tr key={bill._id} className="hover:bg-[#F1F5F9] cursor-pointer" onClick={() => router.push(`/dashboard/purchases`)}>
+                                 <td className="px-4 py-3 text-blue-400 font-mono">{bill.purchaseBillNumber}</td>
+                                 <td className="px-4 py-3">{new Date(bill.purchaseBillDate).toLocaleDateString()}</td>
+                                 <td className="px-4 py-3">{bill.lineItems?.length || 0}</td>
                                  <td className="px-4 py-3">
-                                   <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide ${inv.status === 'paid' ? 'bg-emerald-900/40 text-emerald-400' : inv.status === 'partial' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>{inv.status}</span>
+                                   <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide ${bill.status === 'paid' ? 'bg-emerald-900/40 text-emerald-400' : bill.status === 'partial' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>{bill.status}</span>
                                  </td>
-                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.totalAmount?.toFixed(2) || '0.00'}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{bill.grandTotal?.toFixed(2) || '0.00'}</td>
                                </tr>
                             ))}
                           </tbody>

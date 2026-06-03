@@ -195,6 +195,11 @@ export default function EditCustomerPage() {
          const customerInvoices = res.data.invoices.filter((inv: any) => inv.customerId === id || inv.customerId?._id === id);
          setInvoices(customerInvoices);
       }).catch(() => {});
+      
+      customersApi.getLedger(id as string).then(res => {
+         setLedger(res.data.ledger || []);
+         setCurrentBalance(res.data.currentBalance || 0);
+      }).catch(() => {});
     }
   }, [id]);
 
@@ -462,7 +467,7 @@ export default function EditCustomerPage() {
                                  <td className="px-4 py-3">
                                    <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide ${inv.status === 'paid' ? 'bg-emerald-900/40 text-emerald-400' : inv.status === 'partial' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>{inv.status}</span>
                                  </td>
-                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.totalAmount?.toFixed(2) || '0.00'}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.grandTotal?.toFixed(2) || '0.00'}</td>
                                </tr>
                             ))}
                           </tbody>
