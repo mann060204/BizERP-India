@@ -12,29 +12,29 @@ const REPORTS = [
   {
     category: 'Accounts',
     items: [
-      { name: 'Cash Book', desc: 'Daily cash transaction summary', icon: Banknote, href: '#', disabled: true },
-      { name: 'Business Book', desc: 'Comprehensive business ledger', icon: Briefcase, href: '#', disabled: true },
-      { name: 'Payment Paid', desc: 'Summary of all outgoing payments', icon: CreditCard, href: '#', disabled: true },
-      { name: 'Payment - Received', desc: 'Summary of all incoming payments', icon: Download, href: '#', disabled: true },
+      { name: 'Cash Book', desc: 'Daily cash transaction summary', icon: Banknote, href: '/dashboard/reports/accounts/cash-book', disabled: false },
+      { name: 'Business Book', desc: 'Comprehensive business ledger', icon: Briefcase, href: '/dashboard/reports/accounts/business-book', disabled: false },
+      { name: 'Payment Paid', desc: 'Summary of all outgoing payments', icon: CreditCard, href: '/dashboard/reports/accounts/payment-paid', disabled: false },
+      { name: 'Payment - Received', desc: 'Summary of all incoming payments', icon: Download, href: '/dashboard/reports/accounts/payment-received', disabled: false },
       { name: 'Daily Summary', desc: 'Daybook and chronological ledger', icon: Activity, href: '/dashboard/reports/daybook', disabled: false },
       { name: 'Input/Output Tax', desc: 'Tax collection and payment summary', icon: FileStack, href: '/dashboard/reports/gstr', disabled: false },
       { name: 'Profit & Loss Summary', desc: 'Sales vs Purchases vs Expenses', icon: TrendingUp, href: '/dashboard/reports/pnl', disabled: false },
-      { name: 'Chart Of Accounts', desc: 'Directory of all ledger accounts', icon: List, href: '#', disabled: true },
-      { name: 'Balance Sheet', desc: 'Snapshot of assets & liabilities', icon: Scale, href: '#', disabled: true },
+      { name: 'Chart Of Accounts', desc: 'Directory of all ledger accounts', icon: List, href: '/dashboard/reports/accounts/chart-of-accounts', disabled: false },
+      { name: 'Balance Sheet', desc: 'Snapshot of assets & liabilities', icon: Scale, href: '/dashboard/reports/accounts/balance-sheet', disabled: false },
     ]
   },
   {
     category: 'Inventory',
     items: [
-      { name: 'Item Register', desc: 'Complete registry of all items', icon: Archive, href: '#', disabled: true },
-      { name: 'Low Level Stock', desc: 'Items below minimum stock threshold', icon: AlertTriangle, href: '#', disabled: true },
-      { name: 'Stock Availability', desc: 'Current available stock balances', icon: CheckCircle, href: '#', disabled: true },
-      { name: 'Stock Adjustment', desc: 'History of manual stock adjustments', icon: SlidersHorizontal, href: '#', disabled: true },
-      { name: 'Consumable Stock', desc: 'Tracking of consumable inventory', icon: BatteryCharging, href: '#', disabled: true },
-      { name: 'Fast Moving Item', desc: 'High velocity inventory items', icon: Zap, href: '#', disabled: true },
-      { name: 'Items Not Moving', desc: 'Dead stock or slow-moving items', icon: Clock, href: '#', disabled: true },
-      { name: 'Available Serials', desc: 'Available serial/batch numbers', icon: Hash, href: '#', disabled: true },
-      { name: 'Item List', desc: 'Master list of inventory products', icon: FileText, href: '#', disabled: true },
+      { name: 'Item Register', desc: 'Complete registry of all items', icon: Archive, href: '/dashboard/reports/inventory/item-register', disabled: false },
+      { name: 'Low Level Stock', desc: 'Items below minimum stock threshold', icon: AlertTriangle, href: '/dashboard/reports/inventory/low-level-stock', disabled: false },
+      { name: 'Stock Availability', desc: 'Current available stock balances', icon: CheckCircle, href: '/dashboard/reports/inventory/stock-availability', disabled: false },
+      { name: 'Stock Adjustment', desc: 'History of manual stock adjustments', icon: SlidersHorizontal, href: '/dashboard/reports/inventory/stock-adjustment', disabled: false },
+      { name: 'Consumable Stock', desc: 'Tracking of consumable inventory', icon: BatteryCharging, href: '/dashboard/reports/inventory/consumable-stock', disabled: false },
+      { name: 'Fast Moving Item', desc: 'High velocity inventory items', icon: Zap, href: '/dashboard/reports/inventory/fast-moving', disabled: false },
+      { name: 'Items Not Moving', desc: 'Dead stock or slow-moving items', icon: Clock, href: '/dashboard/reports/inventory/slow-moving', disabled: false },
+      { name: 'Available Serials', desc: 'Available serial/batch numbers', icon: Hash, href: '/dashboard/reports/inventory/available-serials', disabled: false },
+      { name: 'Item List', desc: 'Master list of inventory products', icon: FileText, href: '/dashboard/reports/inventory/item-list', disabled: false },
     ]
   }
 ];

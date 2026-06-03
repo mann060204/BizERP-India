@@ -114,6 +114,26 @@ export const expensesApi = {
 
 // ─── Reports ──────────────────────────────────────────────────────────────────
 export const reportsApi = {
+
+  // Accounts
+  getCashBook: () => api.get('/reports/accounts/cash-book'),
+  getBusinessBook: () => api.get('/reports/accounts/business-book'),
+  getPaymentPaid: () => api.get('/reports/accounts/payment-paid'),
+  getPaymentReceived: () => api.get('/reports/accounts/payment-received'),
+  getChartOfAccounts: () => api.get('/reports/accounts/chart-of-accounts'),
+  getBalanceSheet: () => api.get('/reports/accounts/balance-sheet'),
+  
+  // Inventory
+  getItemRegister: () => api.get('/reports/inventory/item-register'),
+  getLowLevelStock: () => api.get('/reports/inventory/low-level-stock'),
+  getStockAvailability: () => api.get('/reports/inventory/stock-availability'),
+  getStockAdjustment: () => api.get('/reports/inventory/stock-adjustment'),
+  getConsumableStock: () => api.get('/reports/inventory/consumable-stock'),
+  getFastMovingItems: () => api.get('/reports/inventory/fast-moving'),
+  getSlowMovingItems: () => api.get('/reports/inventory/slow-moving'),
+  getAvailableSerials: () => api.get('/reports/inventory/available-serials'),
+  getItemList: () => api.get('/reports/inventory/item-list'),
+
   pnl: (params?: any) => api.get('/reports/pnl', { params }),
   gstr: (params?: any) => api.get('/reports/gstr', { params }),
   daybook: (params?: any) => api.get('/reports/daybook', { params }),
