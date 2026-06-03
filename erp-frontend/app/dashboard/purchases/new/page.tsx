@@ -236,6 +236,8 @@ export default function NewPurchasePage() {
   
   const totalGST = totalCGST + totalSGST + totalIGST;
   const subtotal = round2(totalTaxableAmount + totalGST);
+  const globalDiscountAmount = round2((subtotal * globalDiscountPercent) / 100) + discountAmountFlat;
+  const additionalDiscount = globalDiscountAmount;
   const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
   const grandTotal = round2(subtotal - additionalDiscount + shippingCharge + roundOff);
   const balance = round2(grandTotal - amountPaid);
@@ -596,7 +598,7 @@ export default function NewPurchasePage() {
                 <div className="flex gap-2 mt-2">
                   <div className="flex-1">
                     <label className="erp-label block mb-1">Discount (%)</label>
-                    <input type="number" value={discountPercent === 0 ? '' : discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="%" />
+                    <input type="number" value={globalDiscountPercent === 0 ? '' : globalDiscountPercent} onChange={e => setGlobalDiscountPercent(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="%" />
                   </div>
                   <div className="flex-1">
                     <label className="erp-label block mb-1">Discount (₹)</label>
