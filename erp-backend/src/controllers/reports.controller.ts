@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { AccountLedger } from '../models/AccountLedger.model';
-import { Account } from '../models/Account.model';
-import { Product } from '../models/Product.model';
-import { Batch } from '../models/Batch.model';
-import { InventoryAdjustment } from '../models/InventoryAdjustment.model';
-import { Invoice } from '../models/Invoice.model';
+import AccountLedger from '../models/AccountLedger.model';
+import Account from '../models/Account.model';
+import Product from '../models/Product.model';
+import Batch from '../models/Batch.model';
+import InventoryAdjustment from '../models/InventoryAdjustment.model';
+import Invoice from '../models/Invoice.model';
 
 // Helper for sending success response
 const sendSuccess = (res: Response, data: any) => res.status(200).json({ success: true, data });
@@ -140,7 +140,7 @@ export const getFastMovingItems = async (req: Request, res: Response) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const pipeline = [
+    const pipeline: any[] = [
       { $match: { date: { $gte: thirtyDaysAgo } } },
       { $unwind: "$items" },
       { $group: { _id: "$items.productId", totalSold: { $sum: "$items.quantity" }, productName: { $first: "$items.productName" } } },
@@ -163,7 +163,7 @@ export const getSlowMovingItems = async (req: Request, res: Response) => {
     
     const activeProductIds = await Invoice.distinct('items.productId', { date: { $gte: ninetyDaysAgo } });
     
-    const slowProducts = await Product.find({ _id: { $nin: activeProductIds }, currentStock: { $gt: 0 } }).sort({ name: 1 });
+    const slowProducts = await Product.find({ _id: { $nin: activeProductIds as any[] }, currentStock: { $gt: 0 } } as any).sort({ name: 1 });
     sendSuccess(res, slowProducts);
   } catch (error: any) {
     sendError(res, error.message);

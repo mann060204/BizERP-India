@@ -42,7 +42,6 @@ import inventoryRoutes from './routes/inventory.routes';
 import expenseRoutes from './routes/expense.routes';
 import reportsRoutes from './routes/reports.routes';
 import businessRoutes from './routes/business.routes';
-import reportsRoutes from './routes/reports.routes';
 import accountRoutes from './routes/account.routes';
 import publicRoutes from './routes/public.routes';
 import bankRoutes from './routes/bank.routes';
