@@ -125,6 +125,25 @@ export default function DashboardPage() {
   const dragOverItem = useRef<number | null>(null);
   const [actions, setActions] = useState(QUICK_ACTIONS);
 
+  const dragKpiItem = useRef<number | null>(null);
+  const dragOverKpiItem = useRef<number | null>(null);
+  const defaultKpiOrder = [
+    'Sales (Monthly)', 'Purchases (Monthly)', 'Expenses (Monthly)', 
+    'Received (Monthly)', 'Outstanding (Monthly)', 'Paid Out (Monthly)', 'Low Stock'
+  ];
+  const [kpiOrder, setKpiOrder] = useState(defaultKpiOrder);
+
+  const handleKpiSort = () => {
+    let _order = [...kpiOrder];
+    if (dragKpiItem.current !== null && dragOverKpiItem.current !== null && dragKpiItem.current !== dragOverKpiItem.current) {
+      const draggedItem = _order.splice(dragKpiItem.current, 1)[0];
+      _order.splice(dragOverKpiItem.current, 0, draggedItem);
+      setKpiOrder(_order);
+    }
+    dragKpiItem.current = null;
+    dragOverKpiItem.current = null;
+  };
+
   const handleSort = () => {
     let _actions = [...actions];
     if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
@@ -197,7 +216,7 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchAll({ period: 'month' }); }, []);
 
-  const KPI_CARDS = [
+  const ALL_KPI_CARDS = [
     { label: 'Sales (Monthly)', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { label: 'Purchases (Monthly)',     value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
     { label: 'Expenses (Monthly)',      value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
@@ -206,6 +225,8 @@ export default function DashboardPage() {
     { label: 'Paid Out (Monthly)',      value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Low Stock',     value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
+
+  const orderedCards = kpiOrder.map(label => ALL_KPI_CARDS.find(c => c.label === label)).filter(Boolean);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -243,15 +264,25 @@ export default function DashboardPage() {
               ? <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
               : (
                 <div className="grid grid-cols-3 xl:grid-cols-7 gap-3">
-                  {KPI_CARDS.map(({ label, value, icon: Icon, color, bg }) => (
-                    <div key={label} className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 shadow-sm hover:shadow-md transition">
-                      <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center`}>
+                  {orderedCards.map((card, index) => {
+                    if (!card) return null;
+                    const { label, value, icon: Icon, color, bg } = card;
+                    return (
+                    <div 
+                      key={label} 
+                      draggable
+                      onDragStart={() => (dragKpiItem.current = index)}
+                      onDragEnter={() => (dragOverKpiItem.current = index)}
+                      onDragEnd={handleKpiSort}
+                      onDragOver={(e) => e.preventDefault()}
+                      className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 shadow-sm hover:shadow-md transition cursor-grab active:cursor-grabbing">
+                      <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center pointer-events-none`}>
                         <Icon className={`w-4 h-4 ${color}`} />
                       </div>
-                      <p className="text-slate-900 text-xl font-bold">{value}</p>
-                      <p className="text-slate-500 text-xs font-bold leading-tight tracking-wide">{label}</p>
+                      <p className="text-slate-900 text-xl font-bold pointer-events-none">{value}</p>
+                      <p className="text-slate-500 text-xs font-bold leading-tight tracking-wide pointer-events-none">{label}</p>
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
 
