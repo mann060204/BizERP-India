@@ -231,13 +231,13 @@ export default function DashboardPage() {
   useEffect(() => { fetchAll({ period: 'month' }); }, []);
 
   const ALL_KPI_CARDS = [
-    { label: 'Sales (Monthly)', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Purchases (Monthly)',     value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Expenses (Monthly)',      value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Received (Monthly)',      value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Outstanding (Monthly)',   value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Paid Out (Monthly)',      value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Low Stock',     value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { label: 'Sales (Monthly)', type: 'sales', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Purchases (Monthly)', type: 'purchases', value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Expenses (Monthly)', type: 'expenses', value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Received (Monthly)', type: 'received', value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Outstanding (Monthly)', type: 'outstanding', value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Paid Out (Monthly)', type: 'paid', value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Low Stock', type: 'lowStock', value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
   const orderedCards = kpiOrder.map(label => ALL_KPI_CARDS.find(c => c.label === label)).filter(Boolean);
