@@ -252,3 +252,15 @@ export const financialYearApi = {
   getAvailableYears: () => api.get('/business/financial-year/available').then(res => res.data),
   switchYear: (targetBusinessId: string) => api.post('/business/financial-year/switch', { targetBusinessId }).then(res => res.data),
 };
+
+// ─── Dashboard Analytics ─────────────────────────────────────────────────────
+export const dashboardApi = {
+  businessTrend: (params?: any) => api.get('/reports/dashboard/business-trend', { params }).then(res => res.data),
+  inventoryVolume: (params?: any) => api.get('/reports/dashboard/inventory-volume', { params }).then(res => res.data),
+  topItemsProfit: (params?: any) => api.get('/reports/dashboard/top-items-profit', { params }).then(res => res.data),
+  bottomItemsProfit: (params?: any) => api.get('/reports/dashboard/top-items-profit', { params: { ...params, order: 'asc' } }).then(res => res.data),
+  stockMovement: (params?: any) => api.get('/reports/dashboard/stock-movement', { params }).then(res => res.data),
+  topCustomers: (params?: any) => api.get('/reports/dashboard/top-customers', { params }).then(res => res.data),
+  customerPending: () => api.get('/reports/dashboard/customer-pending').then(res => res.data),
+};
+

@@ -1615,3 +1615,187 @@ export const getGSTR3B = async (req: AuthRequest, res: Response) => {
     });
   } catch (e: any) { sendError(res, e.message); }
 };
+
+// ─── DASHBOARD ANALYTICS HELPERS ─────────────────────────────────────────────
+
+function getDashboardDateRange(req: any): { start: Date; end: Date; groupBy: string } {
+  const { period, from, to } = req.query;
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  let start = new Date();
+  let groupBy = 'day';
+
+  if (from && to) {
+    start = new Date(from as string);
+    start.setHours(0, 0, 0, 0);
+    const endDate = new Date(to as string);
+    endDate.setHours(23, 59, 59, 999);
+    const diffDays = (endDate.getTime() - start.getTime()) / (1000 * 86400);
+    groupBy = diffDays <= 31 ? 'day' : diffDays <= 180 ? 'week' : 'month';
+    return { start, end: endDate, groupBy };
+  }
+
+  switch (period) {
+    case 'week':
+      start.setDate(end.getDate() - 6);
+      start.setHours(0, 0, 0, 0);
+      groupBy = 'day';
+      break;
+    case 'year':
+      start.setFullYear(end.getFullYear() - 1);
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      groupBy = 'month';
+      break;
+    default: // month
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      groupBy = 'day';
+  }
+  return { start, end, groupBy };
+}
+
+// GET /reports/dashboard/business-trend
+export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { start, end, groupBy } = getDashboardDateRange(req);
+    const mongoose = require('mongoose');
+
+    const dateFmt = groupBy === 'month' ? '%b %Y' : groupBy === 'week' ? 'W%V-%G' : '%d %b';
+
+    const salesAgg = await Invoice.aggregate([
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
+      { $group: { _id: { $dateToString: { format: dateFmt, date: '$invoiceDate' } }, revenue: { $sum: '$grandTotal' } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    const purchasesAgg = await PurchaseBill.aggregate([
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), billDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
+      { $group: { _id: { $dateToString: { format: dateFmt, date: '$billDate' } }, purchases: { $sum: '$grandTotal' } } },
+      { $sort: { '_id': 1 } }
+    ]);
+
+    const map: Record<string, any> = {};
+    for (const s of salesAgg) { map[s._id] = { date: s._id, revenue: s.revenue, purchases: 0 }; }
+    for (const p of purchasesAgg) {
+      if (!map[p._id]) map[p._id] = { date: p._id, revenue: 0, purchases: 0 };
+      map[p._id].purchases = p.purchases;
+    }
+    const data = Object.values(map).sort((a: any, b: any) => a.date.localeCompare(b.date));
+    sendSuccess(res, data);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /reports/dashboard/inventory-volume
+export const getDashboardInventoryVolume = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const products = await Product.find({ businessId, isActive: true })
+      .select('name currentStock')
+      .sort({ currentStock: -1 });
+
+    const sorted = products.map(p => ({ name: p.name, stock: p.currentStock }));
+    const high = sorted.slice(0, 10);
+    const low = [...sorted].reverse().slice(0, 10);
+    sendSuccess(res, { high, low });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /reports/dashboard/top-items-profit
+export const getDashboardTopItemsProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { start, end } = getDashboardDateRange(req);
+    const order = req.query.order === 'asc' ? 1 : -1;
+    const limit = parseInt(req.query.limit as string) || 5;
+    const mongoose = require('mongoose');
+
+    const agg = await Invoice.aggregate([
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
+      { $unwind: '$lineItems' },
+      {
+        $group: {
+          _id: '$lineItems.productName',
+          totalRevenue: { $sum: { $multiply: ['$lineItems.quantity', '$lineItems.rate'] } },
+          totalQty: { $sum: '$lineItems.quantity' },
+          totalTaxable: { $sum: '$lineItems.taxableAmount' },
+        }
+      },
+      { $addFields: { profit: '$totalTaxable' } },
+      { $sort: { profit: order } },
+      { $limit: limit },
+      { $project: { _id: 0, name: '$_id', revenue: '$totalRevenue', profit: 1, qty: '$totalQty' } }
+    ]);
+
+    sendSuccess(res, agg);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /reports/dashboard/stock-movement
+export const getDashboardStockMovement = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { start, end } = getDashboardDateRange(req);
+    const mongoose = require('mongoose');
+
+    const allProducts = await Product.find({ businessId, isActive: true, type: 'product' }).select('_id name currentStock');
+
+    const soldProducts = await Invoice.aggregate([
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
+      { $unwind: '$lineItems' },
+      { $match: { 'lineItems.productId': { $exists: true } } },
+      { $group: { _id: '$lineItems.productId' } }
+    ]);
+    const soldIds = new Set(soldProducts.map((s: any) => s._id?.toString()));
+
+    let dead = 0, fast = 0;
+    const deadItems: { name: string; stock: number }[] = [];
+    const fastItems: { name: string; stock: number }[] = [];
+
+    for (const p of allProducts) {
+      const isSold = soldIds.has((p._id as any).toString());
+      if (isSold) { fast++; fastItems.push({ name: p.name, stock: p.currentStock }); }
+      else { dead++; deadItems.push({ name: p.name, stock: p.currentStock }); }
+    }
+
+    sendSuccess(res, {
+      summary: [{ name: 'Fast Moving', value: fast }, { name: 'Dead Stock', value: dead }],
+      deadItems: deadItems.sort((a, b) => b.stock - a.stock).slice(0, 10),
+      fastItems: fastItems.sort((a, b) => b.stock - a.stock).slice(0, 10)
+    });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /reports/dashboard/top-customers
+export const getDashboardTopCustomers = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const { start, end } = getDashboardDateRange(req);
+    const limit = parseInt(req.query.limit as string) || 5;
+    const mongoose = require('mongoose');
+
+    const agg = await Invoice.aggregate([
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' }, billTo: 'Customer', customerId: { $exists: true } } },
+      { $group: { _id: '$customerId', name: { $first: '$customerSnapshot.name' }, totalRevenue: { $sum: '$grandTotal' }, invoiceCount: { $sum: 1 } } },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: limit },
+      { $project: { _id: 0, customerId: '$_id', name: 1, totalRevenue: 1, invoiceCount: 1 } }
+    ]);
+
+    sendSuccess(res, agg);
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+// GET /reports/dashboard/customer-pending
+export const getDashboardCustomerPending = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    const customers = await Customer.find({ businessId, currentBalance: { $gt: 0 } })
+      .select('name mobile currentBalance')
+      .sort({ currentBalance: -1 })
+      .limit(50);
+    sendSuccess(res, customers);
+  } catch (e: any) { sendError(res, e.message); }
+};
+

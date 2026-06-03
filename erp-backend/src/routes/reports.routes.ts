@@ -69,4 +69,13 @@ router.get('/expenses/indirect', reportsController.getIndirectExpenses as any);
 router.get('/gstr/gstr1', reportsController.getGSTR1 as any);
 router.get('/gstr/gstr3b', reportsController.getGSTR3B as any);
 
+// --- DASHBOARD ANALYTICS ---
+router.get('/dashboard/business-trend', reportsController.getDashboardBusinessTrend as any);
+router.get('/dashboard/inventory-volume', reportsController.getDashboardInventoryVolume as any);
+router.get('/dashboard/top-items-profit', reportsController.getDashboardTopItemsProfit as any);
+router.get('/dashboard/stock-movement', reportsController.getDashboardStockMovement as any);
+router.get('/dashboard/top-customers', reportsController.getDashboardTopCustomers as any);
+router.get('/dashboard/customer-pending', reportsController.getDashboardCustomerPending as any);
+
 export default router;
+
