@@ -40,6 +40,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       isCompositionScheme: isCompositionScheme || false,
     });
 
+    const currentYear = new Date().getFullYear();
+    business.businessGroupId = (business._id as any).toString();
+    business.financialYearLabel = `FY ${currentYear}-${(currentYear + 1).toString().slice(2)}`;
+    await business.save();
+
     // Create Admin User
     const user = await User.create({
       name: ownerName,
@@ -47,6 +52,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       password,
       role: 'admin',
       businessId: business._id,
+      businessGroupId: business.businessGroupId,
     });
 
     const token = generateToken(

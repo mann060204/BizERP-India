@@ -1,6 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IBusiness extends Document {
+  businessGroupId?: string;
+  financialYearLabel?: string;
   businessName: string;
   ownerName: string;
   gstin?: string;
@@ -72,6 +74,8 @@ export interface IBusiness extends Document {
 
 const BusinessSchema = new Schema<IBusiness>(
   {
+    businessGroupId: { type: String, trim: true },
+    financialYearLabel: { type: String, trim: true },
     businessName: { type: String, required: true, trim: true },
     ownerName: { type: String, required: true, trim: true },
     gstin: { type: String, trim: true, sparse: true, unique: true },

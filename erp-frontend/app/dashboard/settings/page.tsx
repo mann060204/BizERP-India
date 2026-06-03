@@ -2,8 +2,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { businessApi, dataApi } from '../../../lib/erp-api';
-import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X, Download, Upload, Trash2, AlertTriangle } from 'lucide-react';
+import { businessApi, dataApi, financialYearApi } from '../../../lib/erp-api';
+import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X, Download, Upload, Trash2, AlertTriangle, CalendarDays } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentSequencesTab from './components/DocumentSequencesTab';
 
@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [exporting, setExporting] = useState(false);
   const [erasing, setErasing] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [startingNewYear, setStartingNewYear] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -134,6 +135,24 @@ export default function SettingsPage() {
     } catch (err: any) {
       toast.error('Failed to read file');
       setImporting(false);
+    }
+  };
+
+  const handleStartNewYear = async () => {
+    if (!confirm('Are you sure you want to start a new financial year? This will create a fresh workspace and reset all invoice counters to 1. Your current data will remain safe in this year\'s profile.')) {
+      return;
+    }
+    setStartingNewYear(true);
+    try {
+      const res = await financialYearApi.startNewYear();
+      toast.success(res.message || 'New financial year started successfully!');
+      if (res.token) {
+        localStorage.setItem('erp_token', res.token);
+      }
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to start new year');
+      setStartingNewYear(false);
     }
   };
 
@@ -427,6 +446,25 @@ export default function SettingsPage() {
                  </div>
                </div>
             </div>
+             <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4 shadow-sm border-purple-100 mt-6">
+               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                 <CalendarDays className="w-5 h-5 text-purple-600" />
+                 <h3 className="font-semibold text-slate-900">Financial Year Management</h3>
+               </div>
+               <div className="space-y-4 max-w-lg">
+                 <p className="text-xs text-slate-600 leading-relaxed">
+                   Close the current financial year and start a new one. This will carry forward your closing balances (customers, suppliers, accounts, inventory) as opening balances for the new year, and reset all invoice numbers to 1.
+                 </p>
+                 
+                 <div className="mt-4">
+                   <button onClick={handleStartNewYear} disabled={startingNewYear} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl hover:bg-purple-100 transition text-sm font-bold text-purple-700 disabled:opacity-50">
+                     {startingNewYear ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarDays className="w-4 h-4" />} 
+                     Start New Financial Year
+                   </button>
+                 </div>
+               </div>
+             </div>
+
           </div>
         )}
       </main>

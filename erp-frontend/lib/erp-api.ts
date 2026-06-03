@@ -245,3 +245,10 @@ export const dataApi = {
   erase: () => api.delete('/business/data/erase').then(res => res.data),
   import: (data: any) => api.post('/business/data/import', data).then(res => res.data),
 };
+
+// ─── Financial Year Management ──────────────────────────────────────────────
+export const financialYearApi = {
+  startNewYear: () => api.post('/business/financial-year/start').then(res => res.data),
+  getAvailableYears: () => api.get('/business/financial-year/available').then(res => res.data),
+  switchYear: (targetBusinessId: string) => api.post('/business/financial-year/switch', { targetBusinessId }).then(res => res.data),
+};

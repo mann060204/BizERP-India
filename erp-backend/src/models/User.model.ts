@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password: string;
   role: 'admin' | 'staff' | 'accountant';
   businessId: mongoose.Types.ObjectId;
+  businessGroupId?: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -24,6 +25,7 @@ const UserSchema = new Schema<IUser>(
       default: 'admin',
     },
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
+    businessGroupId: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

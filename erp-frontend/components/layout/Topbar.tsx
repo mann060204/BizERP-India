@@ -1,6 +1,7 @@
 'use client';
 import { Bell, Search } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useRedux';
+import FinancialYearDropdown from './FinancialYearDropdown';
 
 export default function Topbar({ title }: { title?: string }) {
   const { user } = useAppSelector((s) => s.auth);
@@ -10,6 +11,10 @@ export default function Topbar({ title }: { title?: string }) {
       <div className="flex items-center gap-4">
         {/* Title pushed right of mobile menu btn */}
         <h1 className="text-slate-900 font-semibold text-lg ml-10 lg:ml-0">{title || 'Dashboard'}</h1>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <FinancialYearDropdown />
       </div>
 
 
