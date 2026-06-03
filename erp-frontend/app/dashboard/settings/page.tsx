@@ -61,6 +61,7 @@ export default function SettingsPage() {
         enableManufacturing: form.enableManufacturing || false
       });
       toast.success('Settings saved successfully');
+        setTimeout(() => window.location.reload(), 1500);
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
     finally { setSaving(false); }
   };

@@ -96,8 +96,9 @@ export default function NewInvoicePage() {
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
-  const [additionalDiscount, setAdditionalDiscount] = useState(0);
-  const [additionalDiscountType, setAdditionalDiscountType] = useState<'amount'|'percentage'>('amount');
+  const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0);
+  const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
+  
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const formatDate = (d: string) => d.split('-').reverse().join('/');
@@ -423,7 +424,7 @@ export default function NewInvoicePage() {
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   
-  const globalDiscountAmount = additionalDiscountType === 'percentage' ? round2((totalTaxable * additionalDiscount) / 100) : additionalDiscount;
+  const globalDiscountAmount = round2((totalTaxable * globalDiscountPercent) / 100) + discountAmountFlat;
   const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
@@ -986,12 +987,7 @@ export default function NewInvoicePage() {
                     <span>-₹{(totalDiscount + globalDiscountAmount).toFixed(2)}</span>
                   </div>
                 )}
-                {shippingCharge > 0 && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>Shipping</span>
-                    <span>₹{shippingCharge.toFixed(2)}</span>
-                  </div>
-                )}
+                
                 
                 {invoiceType === 'GST' && (
                   <>

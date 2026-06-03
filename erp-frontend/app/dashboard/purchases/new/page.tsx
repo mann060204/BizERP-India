@@ -86,7 +86,8 @@ export default function NewPurchasePage() {
 
   // Footer State
   const [showAdditionalDiscount, setShowAdditionalDiscount] = useState(false);
-  const [additionalDiscount, setAdditionalDiscount] = useState(0);
+  const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0);
+  const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
   const [remarks, setRemarks] = useState('');
@@ -527,24 +528,17 @@ export default function NewPurchasePage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-13' : 'grid-cols-10' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
-             <div className="border-r border-slate-200 px-2 py-1.5 text-center">Discount</div>
-             {purchaseType !== 'Non-GST' && (
-                <>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">CGST</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">SGST</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">IGST</div>
-                  <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
-                </>
-             )}
-             <div className=" px-2 py-1.5 text-center">Amount</div>
-           </div>
+           <div className="erp-grid-header grid grid-cols-12 sticky top-0 z-10">
+               <div className="col-span-1 erp-grid-cell">S.No.</div>
+               <div className="col-span-3 erp-grid-cell">Item Details</div>
+               <div className="col-span-1 erp-grid-cell text-center">Qty</div>
+               <div className="col-span-1 erp-grid-cell text-center">Unit</div>
+               <div className="col-span-1 erp-grid-cell text-center">Price</div>
+               <div className="col-span-1 erp-grid-cell text-center">Disc</div>
+               {purchaseType !== 'Non-GST' && <div className="col-span-1 erp-grid-cell text-center">GST</div>}
+               {purchaseType !== 'Non-GST' && <div className="col-span-1 erp-grid-cell text-center">Cess</div>}
+               <div className={`erp-grid-cell text-center ${purchaseType !== 'Non-GST' ? 'col-span-2' : 'col-span-4'}`}>Amount</div>
+             </div>
            
            <div className="flex-1 overflow-y-auto bg-white">
               {lineItems.length === 0 ? (
@@ -585,97 +579,121 @@ export default function NewPurchasePage() {
            </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mt-1">
-           <div className="col-span-1 space-y-2">
-              <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-blue-600" />
-                <span className="text-slate-700">Add'l Discount</span>
-              </label>
-              {showAdditionalDiscount && (
-                <div className="flex">
-                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                   <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
+        <div className="grid grid-cols-4 gap-2">
+             
+             {/* Column 1: Summary */}
+             <div className="erp-footer-box flex flex-col justify-between">
+                <div>
+                  <label className="erp-label block mb-1">Total Quantity</label>
+                  <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{lineItems.reduce((s, i) => s + i.quantity, 0)}</div>
                 </div>
-              )}
-
-              {lastPrices.length > 0 && (
-                <div className="mt-4 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
-                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 Purchases ({itemInput.productName})</p>
-                  {lastPrices.map((lp, idx) => (
-                    <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-1">
-                      <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
-                      <span>{lp.billNumber}</span>
-                      <span className="font-medium text-sm">₹{lp.rate}</span>
-                    </div>
-                  ))}
+                
+                <div className="flex gap-2 mt-2">
+                  <div className="flex-1">
+                    <label className="erp-label block mb-1">Discount (%)</label>
+                    <input type="number" value={discountPercent === 0 ? '' : discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="%" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="erp-label block mb-1">Discount (₹)</label>
+                    <input type="number" value={discountAmountFlat === 0 ? '' : discountAmountFlat} onChange={e => setDiscountAmountFlat(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="₹" />
+                  </div>
                 </div>
-              )}
-              <div>
-                <label className="erp-label block mb-1 mt-2">Shipping / GST%</label>
-                <div className="flex gap-1">
-                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
-                  <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+
+                {lastPrices.length > 0 && (
+                  <div className="mt-2 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
+                    <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last Purchases</p>
+                    {lastPrices.slice(0,3).map((lp, idx) => (
+                      <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-0.5">
+                        <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
+                        <span className="font-medium text-xs">₹{lp.rate}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-2">
+                  <label className="erp-label block mb-1">Shipping / GST%</label>
+                  <div className="flex gap-1">
+                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
+                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-1/3" placeholder="GST%" />
+                  </div>
                 </div>
-              </div>
-           </div>
+             </div>
 
-           <div className="col-span-1">
-              <div className="erp-container border-slate-200">
-                <div className="erp-header bg-transparent border-none py-1">Remarks (Private Use)</div>
-                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y border-none border-t border-slate-200" />
-              </div>
-           </div>
-
-           <div className="col-span-1">
-              <div className="erp-container border-slate-200">
-                <div className="erp-header bg-transparent border-none py-1">Payments</div>
-                <div className="p-2 space-y-2 border-t border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Mode</span>
-                    <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input flex-1">
+             {/* Column 2 & 3: Payment Details & Remarks */}
+             <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
+                <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS & REMARKS</div>
+                
+                <div className="grid grid-cols-2 gap-4 flex-1">
+                  <div className="space-y-1">
+                    <div className="text-[9px] text-slate-600 font-bold">PAYMENT DETAILS</div>
+                    <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
                       {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                     </select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Txn. ID</span>
-                    <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input flex-1" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Amount</span>
-                    <div className="flex flex-1">
-                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
-                       <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
+                    <div className="relative">
+                      <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
+                      <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amount Paid" />
+                    </div>
+                    <div className="flex gap-1">
+                      <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Balance</span>
-                    <div className="flex flex-1">
-                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
-                       <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
-                    </div>
+                  
+                  <div className="space-y-1 h-full flex flex-col">
+                    <div className="text-[9px] text-slate-600 font-bold">REMARKS (PRIVATE)</div>
+                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full flex-1 min-h-[60px] resize-none" placeholder="Enter remarks here..." />
                   </div>
                 </div>
-              </div>
-           </div>
+             </div>
 
-           <div className="col-span-1">
-              <div className="erp-container border-slate-200 h-full flex flex-col p-3 space-y-2">
-                 <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                   <span className="text-xs font-bold text-slate-600">Sub Total</span>
-                   <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
-                 </div>
-                 {shippingCharge > 0 && (
-                   <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                     <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping</span>
-                     <span className="text-sm font-bold text-slate-800">₹ {shippingCharge.toFixed(2)}</span>
-                   </div>
-                 )}
-                 <div className="flex justify-between items-center pt-2">
-                   <span className="text-xs font-bold text-slate-800 uppercase">Total Amount</span>
-                   <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(2)}</span>
-                 </div>
-              </div>
-           </div>
+             {/* Column 4: Totals & Grand Total */}
+             <div className="erp-footer-box flex flex-col justify-between">
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  {(globalDiscountAmount) > 0 && (
+                    <div className="flex justify-between text-red-400">
+                      <span>Discount</span>
+                      <span>-₹{(globalDiscountAmount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  {purchaseType !== 'Non-GST' && (
+                    <>
+                      <div className="flex justify-between text-slate-600">
+                        <span>CGST</span>
+                        <span>₹{shipCGST.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>SGST</span>
+                        <span>₹{shipSGST.toFixed(2)}</span>
+                      </div>
+                      {shipIGST > 0 && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>IGST</span>
+                          <span>₹{shipIGST.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                
+                <div className="pt-2 border-t border-slate-200 mt-2 space-y-1">
+                  <div className="flex justify-between font-bold text-lg text-emerald-600">
+                    <span>Grand Total</span>
+                    <span>₹{grandTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500">
+                    <span>Round Off</span>
+                    <span>{round2(grandTotal - (subtotal - globalDiscountAmount + shippingCharge)).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-sm text-blue-600 mt-1">
+                    <span>Balance</span>
+                    <span>₹{balance.toFixed(2)}</span>
+                  </div>
+                </div>
+             </div>
         </div>
           </>
         ) : (
