@@ -292,7 +292,7 @@ export default function EditSupplierPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Account Balance</span>
-                  <span className={`font-bold ${form.openingBalance > 0 ? 'text-green-500' : 'text-slate-900'}`}>₹{form.openingBalance.toFixed(2)}</span>
+                  <span className={`font-bold ${currentBalance > 0 ? 'text-green-500' : 'text-slate-900'}`}>₹{currentBalance.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Account Status</span>
@@ -522,12 +522,12 @@ export default function EditSupplierPage() {
                     <h3 className="font-semibold text-slate-900 mb-4">Supplier Ledger (Statement of Account)</h3>
                     <div className="grid grid-cols-3 gap-4 mb-6">
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
-                         <div className="text-xs text-slate-600 uppercase">Opening Balance</div>
-                         <div className="text-xl font-bold mt-1 text-slate-900">₹{form.openingBalance.toFixed(2)}</div>
+                         <div className="text-xs text-slate-600 uppercase">Current Balance</div>
+                         <div className="text-xl font-bold mt-1 text-slate-900">₹{currentBalance.toFixed(2)}</div>
                       </div>
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Total Billed</div>
-                         <div className="text-xl font-bold mt-1 text-orange-400">₹{purchaseBills.reduce((acc, inv) => acc + (inv.totalAmount || 0), 0).toFixed(2)}</div>
+                         <div className="text-xl font-bold mt-1 text-orange-400">₹{purchaseBills.reduce((acc, inv) => acc + (inv.grandTotal || 0), 0).toFixed(2)}</div>
                       </div>
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Total Paid</div>

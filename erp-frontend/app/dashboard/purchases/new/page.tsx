@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';
 
-interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; }
+interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; currentBalance?: number; openingBalance?: number; }
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
@@ -345,7 +345,19 @@ export default function NewPurchasePage() {
             </div>
             <div>
               <div className="flex justify-between items-center mb-1">
-                 <label className="erp-label block">Supplier Name <span className="text-red-500">*</span></label>
+                 <div className="flex items-center gap-2">
+                   <label className="erp-label !mb-0">Supplier Name <span className="text-red-500">*</span></label>
+                   {supplierId && supplierSnapshot && (
+                     (() => {
+                       const bal = supplierSnapshot.currentBalance !== undefined ? supplierSnapshot.currentBalance : (supplierSnapshot.openingBalance || 0);
+                       return (
+                         <div className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-red-50 text-red-700 border-red-200' : bal < 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                           A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                         </div>
+                       );
+                     })()
+                   )}
+                 </div>
                  <div className="flex gap-2">
                    {supplierId && supplierSnapshot && (
                      <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
