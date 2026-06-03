@@ -22,5 +22,5 @@ export default function Page() {
     { key: 'sgst', label: 'SGST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
   ];
   const fetchData = useCallback(async () => { const res = await reportsApi.getPurchasesGST({ from, to }); return res.data?.data?.bills || []; }, [from, to]);
-  return <ReportLayout title="GST Purchase Register" subtitle={`Bill-level ITC/GST input register • ${from} to ${to}`} category="Purchases" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}`} extraHeader={<DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />} />;
+  return <ReportLayout title="GST Purchase Register" subtitle={`Bill-level ITC/GST input register • ${from} to ${to}`} category="Purchases" columns={columns} fetchData={fetchData} key={`${key}`} extraHeader={<DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />} />;
 }

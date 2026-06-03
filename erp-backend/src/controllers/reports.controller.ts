@@ -1314,7 +1314,12 @@ export const getPurchasesGST = async (req: AuthRequest, res: Response) => {
     const businessId = req.user!.businessId;
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+    const match: any = { 
+      businessId, 
+      status: { $ne: 'cancelled' }, 
+      'supplierSnapshot.gstin': { $exists: true, $nin: [null, '', '—'] },
+      ...dateFilter 
+    };
 
     const rawBills = await PurchaseBill.find(match,
       'billNumber billDate purchaseType supplierSnapshot placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal lineItems'
