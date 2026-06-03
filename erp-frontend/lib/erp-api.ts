@@ -238,3 +238,10 @@ export const manufacturingApi = {
   updateStatus: (id: string, status: string) => api.put(`/manufacturing/${id}/status`, { status }),
   delete: (id: string) => api.delete(`/manufacturing/${id}`),
 };
+
+// ─── Data Management ──────────────────────────────────────────────────────────
+export const dataApi = {
+  export: () => api.get('/data/export').then(res => res.data),
+  erase: () => api.delete('/data/erase').then(res => res.data),
+  import: (data: any) => api.post('/data/import', data).then(res => res.data),
+};

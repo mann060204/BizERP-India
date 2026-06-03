@@ -2,8 +2,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { businessApi } from '../../../lib/erp-api';
-import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X } from 'lucide-react';
+import { businessApi, dataApi } from '../../../lib/erp-api';
+import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X, Download, Upload, Trash2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentSequencesTab from './components/DocumentSequencesTab';
 
@@ -14,6 +14,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'business' | 'sequences' | 'application'>('business');
+  
+  const [exporting, setExporting] = useState(false);
+  const [erasing, setErasing] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -65,6 +69,72 @@ export default function SettingsPage() {
         setTimeout(() => window.location.reload(), 1500);
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update settings'); }
     finally { setSaving(false); }
+  };
+
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      const data = await dataApi.export();
+      const blob = new Blob([JSON.stringify(data.backup, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bissness_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Backup downloaded successfully!');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to export data');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleEraseData = async () => {
+    const confirmText = prompt('WARNING: This will permanently delete ALL invoices, customers, inventory, and ledgers! Your business profile and login will remain. Type "ERASE" to confirm:');
+    if (confirmText !== 'ERASE') {
+      if (confirmText) toast.error('Confirmation text did not match. Aborted.');
+      return;
+    }
+    setErasing(true);
+    try {
+      await dataApi.erase();
+      toast.success('All business data erased successfully.');
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to erase data');
+      setErasing(false);
+    }
+  };
+
+  const handleImportData = async (e: any) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm('WARNING: Restoring from a backup will permanently overwrite and erase ALL current data. Do you want to proceed?')) {
+      e.target.value = '';
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const backup = JSON.parse(event.target?.result as string);
+          await dataApi.import({ backup });
+          toast.success('Data restored successfully!');
+          setTimeout(() => window.location.reload(), 2000);
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Invalid backup file format');
+          setImporting(false);
+        }
+      };
+      reader.readAsText(file);
+    } catch (err: any) {
+      toast.error('Failed to read file');
+      setImporting(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-slate-700 animate-spin" /></div>;
@@ -313,6 +383,47 @@ export default function SettingsPage() {
                      <option>YYYY-MM-DD</option>
                    </select>
                    <p className="text-[10px] text-slate-500 mt-1">Date formatting is currently standard across the app.</p>
+                 </div>
+               </div>
+            </div>
+
+            <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4 shadow-sm border-red-100">
+               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                 <ShieldCheck className="w-5 h-5 text-red-500" />
+                 <h3 className="font-semibold text-slate-900">Data Management & Backup</h3>
+               </div>
+               <div className="space-y-4 max-w-lg">
+                 <p className="text-xs text-slate-600 leading-relaxed">
+                   Manage your entire business database. You can download a complete backup of all your records, restore from a previous backup, or completely erase your data to start fresh.
+                 </p>
+                 
+                 <div className="flex flex-col gap-3 mt-4">
+                   <button onClick={handleExportData} disabled={exporting || erasing || importing} className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-slate-700 disabled:opacity-50">
+                     <span className="flex items-center gap-2">
+                       {exporting ? <Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> : <Download className="w-4 h-4 text-blue-500" />} 
+                       Download Full Backup
+                     </span>
+                     <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">.JSON File</span>
+                   </button>
+                   
+                   <label className={`w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-slate-700 ${importing || erasing || exporting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                     <span className="flex items-center gap-2">
+                       {importing ? <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" /> : <Upload className="w-4 h-4 text-emerald-500" />} 
+                       Restore from Backup
+                     </span>
+                     <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Upload</span>
+                     <input type="file" accept=".json" className="hidden" disabled={importing || erasing || exporting} onChange={handleImportData} />
+                   </label>
+
+                   <div className="mt-4 pt-4 border-t border-slate-100">
+                     <button onClick={handleEraseData} disabled={erasing || importing || exporting} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition text-sm font-bold text-red-600 disabled:opacity-50">
+                       {erasing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} 
+                       Erase All Business Data
+                     </button>
+                     <p className="text-[10px] text-red-400 text-center mt-2 flex items-center justify-center gap-1">
+                       <AlertTriangle className="w-3 h-3" /> Danger Zone: This action cannot be undone.
+                     </p>
+                   </div>
                  </div>
                </div>
             </div>
