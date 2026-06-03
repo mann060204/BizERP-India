@@ -117,25 +117,16 @@ const isActive = (href: string) =>
         })}
       </nav>
 
-      {/* User + Logout */}
-      <div className="p-3 border-t border-slate-200">
-        {!collapsed && (
-          <Link href="/dashboard/settings" className="block px-3 py-2 mb-2 rounded-xl hover:bg-slate-100 transition-colors">
-            <p className="text-slate-900 text-sm font-semibold truncate">{user?.name || 'Admin'}</p>
-            <p className="text-slate-600 text-xs capitalize">{user?.role}</p>
-          </Link>
-        )}
-        <button onClick={() => dispatch(logout())}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:text-red-400 hover:bg-red-900/10 transition-all ${collapsed ? 'justify-center' : ''}`}>
-          <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="text-sm font-medium">Logout</span>}
-        </button>
-        
-        {!collapsed && (
-          <div className="mt-4 pt-3 border-t border-slate-100 text-center">
-            <p className="text-[10px] text-slate-400">© {new Date().getFullYear()} Ozen Studio.</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">Build and Design by Mann Monapra</p>
-          </div>
+      {/* Version + Copyright */}
+      <div className="p-3 border-t border-slate-200 text-center">
+        {!collapsed ? (
+          <>
+            <p className="text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg py-1.5 mb-2 inline-block px-3">v1.0.0</p>
+            <p className="text-[10px] text-slate-500 font-medium">© {new Date().getFullYear()} Ozen Studio.</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">Build and Design by Mann Monapra</p>
+          </>
+        ) : (
+          <p className="text-[10px] font-semibold text-slate-700 bg-slate-100 rounded-lg py-1.5 w-full text-center">v1.0</p>
         )}
       </div>
     </div>
