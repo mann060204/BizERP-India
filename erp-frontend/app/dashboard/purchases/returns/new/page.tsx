@@ -576,7 +576,7 @@ export default function NewpurchaseReturnPage() {
                   <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
                 </>
              )}
-             <div className="col-span-2 px-2 py-1.5 text-center">Amount</div>
+             <div className=" px-2 py-1.5 text-center">Amount</div>
            </div>
            
            <div className="flex-1 overflow-y-auto bg-white">
@@ -606,7 +606,7 @@ export default function NewpurchaseReturnPage() {
                           <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
                         </>
                     )}
-                    <div className="col-span-2 px-2 py-1.5 text-right font-medium flex justify-between items-center">
+                    <div className=" px-2 py-1.5 text-right font-medium flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />

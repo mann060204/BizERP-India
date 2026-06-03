@@ -58,6 +58,9 @@ const config: Config = {
           infoText: '#0C4A6E',
         }
       },
+      gridTemplateColumns: {
+        '13': 'repeat(13, minmax(0, 1fr))',
+      },
     },
   },
   plugins: [],

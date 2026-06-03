@@ -588,7 +588,7 @@ export default function EditPurchasePage() {
                   <div className="border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
                 </>
              )}
-             <div className="col-span-2 px-2 py-1.5 text-center">Amount</div>
+             <div className=" px-2 py-1.5 text-center">Amount</div>
            </div>
            
            <div className="flex-1 overflow-y-auto bg-[#E2E8F0]">
