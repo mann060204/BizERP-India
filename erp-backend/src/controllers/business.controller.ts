@@ -31,6 +31,7 @@ export const updateBusinessProfile = async (req: AuthRequest, res: Response): Pr
     if (body.invoiceTemplate !== undefined) updateData.invoiceTemplate = body.invoiceTemplate;
     if (body.isCompositionScheme !== undefined) updateData.isCompositionScheme = body.isCompositionScheme;
     if (body.businessType !== undefined) updateData.businessType = body.businessType;
+    if (body.enableManufacturing !== undefined) updateData.enableManufacturing = body.enableManufacturing;
 
     // Invoice numbering
     if (body.invoicePrefix) updateData.invoicePrefix = body.invoicePrefix;
