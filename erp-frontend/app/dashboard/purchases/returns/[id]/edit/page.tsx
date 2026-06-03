@@ -35,8 +35,6 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export default function EditpurchaseReturnPage() {
   const router = useRouter();
 
-const [purchaseType, setPurchaseType] = useState<string>('GST');
-const [amountPaid, setAmountPaid] = useState<number>(0);
 
   const params = useParams();
   const id = params?.id as string;
