@@ -98,6 +98,7 @@ export default function NewPurchasePage() {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
   const [txnId, setTxnId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -296,6 +297,7 @@ export default function NewPurchasePage() {
         additionalDiscount,
         amountPaid,
         paymentMode,
+        paymentDate,
         txnId,
         notes: remarks,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
@@ -535,8 +537,11 @@ export default function NewPurchasePage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className={`erp-grid-header grid ${purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10'} sticky top-0 z-10`}>
-               <div className="col-span-1 erp-grid-cell">S.No.</div>
+           <div 
+             className={`erp-grid-header grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} sticky top-0 z-10`}
+             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+           >
+               <div className="col-span-1 erp-grid-cell text-center">S.No.</div>
                <div className="col-span-3 erp-grid-cell">Item Details</div>
                <div className="col-span-1 erp-grid-cell text-center">Qty</div>
                <div className="col-span-1 erp-grid-cell text-center">Unit</div>
@@ -559,7 +564,11 @@ export default function NewPurchasePage() {
                 <div className="p-10 text-center text-slate-400 italic text-sm">No items added yet.</div>
               ) : (
                 lineItems.map((item, idx) => (
-                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10' } hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}>
+                  <div 
+                    key={idx} 
+                    className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}
+                    style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+                  >
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
                     <div className="col-span-3 border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
                       {item.productName}
@@ -647,6 +656,7 @@ export default function NewPurchasePage() {
                       <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amount Paid" />
                     </div>
                     <div className="flex gap-1">
+                      <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="erp-input w-full text-xs p-1 h-7" title="Payment Date" />
                       <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID" />
                     </div>
                   </div>
@@ -676,16 +686,16 @@ export default function NewPurchasePage() {
                     <>
                       <div className="flex justify-between text-slate-600">
                         <span>CGST</span>
-                        <span>₹{shipCGST.toFixed(2)}</span>
+                        <span>₹{totalCGST.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-slate-600">
                         <span>SGST</span>
-                        <span>₹{shipSGST.toFixed(2)}</span>
+                        <span>₹{totalSGST.toFixed(2)}</span>
                       </div>
-                      {shipIGST > 0 && (
+                      {totalIGST > 0 && (
                         <div className="flex justify-between text-slate-600">
                           <span>IGST</span>
-                          <span>₹{shipIGST.toFixed(2)}</span>
+                          <span>₹{totalIGST.toFixed(2)}</span>
                         </div>
                       )}
                     </>

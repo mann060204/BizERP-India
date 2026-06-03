@@ -165,6 +165,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       amountPaid: paid,
       balance,
       paymentMode: paymentMode || 'Cash',
+      paymentDate: req.body.paymentDate ? new Date(req.body.paymentDate) : undefined,
       status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
       notes,
       createdBy: req.user!.userId,
@@ -183,7 +184,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
       lineItems, batches, paymentMode, amountPaid, notes, status,
-      shippingCharge, shippingGstRate, additionalDiscount, roundOff
+      shippingCharge, shippingGstRate, additionalDiscount, roundOff, paymentDate
     } = req.body;
 
     const purchaseId = req.params['id'];
@@ -351,6 +352,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
         amountPaid: paid,
         balance,
         paymentMode: paymentMode || 'Cash',
+        paymentDate: paymentDate ? new Date(paymentDate) : undefined,
         status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
         notes,
       },

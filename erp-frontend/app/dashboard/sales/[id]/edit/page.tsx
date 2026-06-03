@@ -852,7 +852,7 @@ export default function NewInvoicePage() {
         <div className="grid grid-cols-4 gap-2">
            
            {/* Column 1: Summary */}
-           <div className="erp-footer-box flex flex-col justify-between">
+           <div className="erp-footer-box flex flex-col justify-start space-y-3">
               <div>
                 <label className="erp-label block mb-1">Total Quantity</label>
                 <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{totalQty}</div>
@@ -928,24 +928,24 @@ export default function NewInvoicePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid grid-cols-3 gap-2 mt-2">
                  <div>
                     <label className="erp-label block mb-1">Delivery Terms</label>
-                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
+                    <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full min-h-[40px] resize-y" />
                  </div>
                  <div>
-                    <label className="erp-label block mb-1">Delivery Remarks (Printed)</label>
-                    <textarea value={deliveryRemarks} onChange={e => setDeliveryRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" placeholder="e.g. Courier Name, LR No." />
+                    <label className="erp-label block mb-1">Delivery Remarks</label>
+                    <textarea value={deliveryRemarks} onChange={e => setDeliveryRemarks(e.target.value)} className="erp-input w-full min-h-[40px] resize-y" placeholder="e.g. Courier Name" />
                  </div>
                  <div>
                     <label className="erp-label block mb-1">Remarks (Private)</label>
-                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
+                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[40px] resize-y" />
                  </div>
               </div>
            </div>
 
            {/* Column 4: Totals & Grand Total */}
-           <div className="erp-footer-box flex flex-col justify-between">
+           <div className="erp-footer-box flex flex-col justify-start">
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>

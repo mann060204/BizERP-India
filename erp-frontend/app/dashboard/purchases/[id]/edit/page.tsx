@@ -97,6 +97,7 @@ export default function EditPurchasePage() {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
   const [txnId, setTxnId] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -167,6 +168,7 @@ export default function EditPurchasePage() {
           setPaymentMode(p.paymentMode || 'Cash');
           setAmountPaid(p.amountPaid || 0);
           setTxnId(p.txnId || '');
+          if (p.paymentDate) setPaymentDate(new Date(p.paymentDate).toISOString().split('T')[0]);
         }
       } catch (err) {
         toast.error('Failed to load data');
@@ -339,6 +341,8 @@ export default function EditPurchasePage() {
         roundOff,
         additionalDiscount,
         amountPaid,
+        paymentMode,
+        paymentDate,
         txnId,
         notes: remarks,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
@@ -576,7 +580,10 @@ export default function EditPurchasePage() {
         </div>
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
-           <div className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10' } bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}>
+           <div 
+             className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}
+             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+           >
              <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
              <div className="col-span-3 border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
              <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
@@ -600,7 +607,11 @@ export default function EditPurchasePage() {
                 <div className="p-10 text-center text-slate-600 italic text-sm"></div>
               ) : (
                 lineItems.map((item, idx) => (
-                  <div key={idx} className={`grid ${ purchaseType !== 'Non-GST' ? 'grid-cols-14' : 'grid-cols-10' } erp-grid-row group text-[11px]`}>
+                  <div 
+                    key={idx} 
+                    className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} erp-grid-row group text-[11px]`}
+                    style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+                  >
                     <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
                     <div className="col-span-3 border-r border-slate-200 px-2 py-1.5 font-medium">
                       {item.productName}
@@ -691,6 +702,10 @@ export default function EditPurchasePage() {
                        <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-600 w-12">Date</span>
+                    <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="erp-input flex-1" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Balance</span>
