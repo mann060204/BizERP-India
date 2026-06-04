@@ -476,7 +476,7 @@ export default function EditCustomerPage() {
                                  <td className="px-4 py-3">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
                                  <td className="px-4 py-3">{inv.lineItems?.length || 0}</td>
                                  <td className="px-4 py-3">
-                                   <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide ${inv.status === 'paid' ? 'bg-emerald-900/40 text-emerald-400' : inv.status === 'partial' ? 'bg-orange-900/40 text-orange-400' : 'bg-red-900/40 text-red-400'}`}>{inv.status}</span>
+                                   <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide border ${inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : inv.status === 'partial' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{inv.status}</span>
                                  </td>
                                  <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.grandTotal?.toFixed(2) || '0.00'}</td>
                                </tr>
