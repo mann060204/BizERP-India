@@ -42,10 +42,6 @@ export default function Topbar({ title }: { title?: string }) {
           <span className="topbar-clock px-3 py-1 text-[11px] font-bold rounded-lg min-w-[220px] text-center leading-5">
             {timeStr}
           </span>
-          <span className="text-[9px] font-bold mt-0.5 ml-1 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-            <Sparkles style={{ width: '9px', height: '9px' }} />
-            v 2.0.0
-          </span>
         </div>
       </div>
 

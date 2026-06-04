@@ -155,10 +155,6 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
                 <Zap style={{ width: '12px', height: '12px', color: '#fbbf24' }} />
                 <span className="text-[10px] font-bold" style={{ color: 'var(--sidebar-text)' }}>{VERSION}</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7' }}>
-                LIVE
-              </span>
             </div>
             <p className="text-[9px] text-center" style={{ color: 'var(--sidebar-text)', opacity: 0.5 }}>
               © {new Date().getFullYear()} Ozen Studio · Built by Mann Monapra
