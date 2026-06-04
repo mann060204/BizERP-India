@@ -631,7 +631,7 @@ export default function NewPurchasePage() {
            </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
              
              {/* Column 1: Summary */}
              <div className="erp-footer-box flex flex-col justify-between">
@@ -674,7 +674,7 @@ export default function NewPurchasePage() {
              <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
                 <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS & REMARKS</div>
                 
-                <div className="grid grid-cols-2 gap-4 flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                   <div className="space-y-1">
                     <div className="text-[9px] text-slate-600 font-bold">PAYMENT DETAILS</div>
                     <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
@@ -792,7 +792,7 @@ export default function NewPurchasePage() {
                  </div>
               </div>
               <div className="col-span-2">
-                 <div className="grid grid-cols-2 gap-2">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                    <div>
                      <label className="erp-label block mb-1">Mfg Date</label>
                      <input type="date" value={batchInput.manufacturingDate || ''} onChange={e => setBatchInput({...batchInput, manufacturingDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5 h-[30px]" />
@@ -829,6 +829,7 @@ export default function NewPurchasePage() {
                     <span className="text-sm">No batches added yet</span>
                  </div>
                ) : (
+                 <div className="overflow-x-auto w-full">
                  <table className="w-full text-left border-collapse bg-white shadow-sm border border-slate-200">
                    <thead>
                      <tr className="bg-[#F1F5F9] text-slate-700 text-[10px] uppercase">
@@ -857,6 +858,7 @@ export default function NewPurchasePage() {
                      ))}
                    </tbody>
                  </table>
+                 </div>
                )}
             </div>
           </div>

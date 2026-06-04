@@ -116,6 +116,7 @@ export default function PrintableCustomerLedger() {
           </div>
 
           {/* Ledger Table */}
+          <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-y-2 border-black font-bold">
@@ -202,6 +203,7 @@ export default function PrintableCustomerLedger() {
 
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </>

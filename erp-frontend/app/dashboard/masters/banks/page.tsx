@@ -121,6 +121,7 @@ export default function BankMasterPage() {
             {loading ? (
               <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-slate-400 animate-spin" /></div>
             ) : (
+              <div className="overflow-x-auto w-full">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium">
                   <tr>
@@ -158,6 +159,7 @@ export default function BankMasterPage() {
                   )}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>
@@ -190,7 +192,7 @@ export default function BankMasterPage() {
                 <input required type="text" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition font-mono" placeholder="e.g. 50200012345678" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">IFSC Code</label>
                   <input type="text" value={formData.ifsc} onChange={e => setFormData({...formData, ifsc: e.target.value.toUpperCase()})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition font-mono uppercase" placeholder="e.g. HDFC0001234" />

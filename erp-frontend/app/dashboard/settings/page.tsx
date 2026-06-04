@@ -251,7 +251,7 @@ export default function SettingsPage() {
                     <input value={form.pan || ''} onChange={e => setForm({ ...form, pan: e.target.value })} 
                       className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 font-mono focus:outline-none focus:border-[#D4D4D4] transition uppercase text-sm" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-medium text-slate-600 mb-1">Email</label>
                       <input value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} type="email"
@@ -269,7 +269,7 @@ export default function SettingsPage() {
               {/* Address */}
               <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">
                 <h3 className="font-semibold text-slate-900 border-b border-slate-200 pb-3">Registered Address</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-slate-600 mb-1.5">Street Address</label>
                     <input value={form.address?.street || ''} onChange={e => setForm({ ...form, address: { ...form.address, street: e.target.value } })}
@@ -299,7 +299,7 @@ export default function SettingsPage() {
               {/* Bank Details */}
               <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">
                 <h3 className="font-semibold text-slate-900 border-b border-slate-200 pb-3">Bank Account Details</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-xs font-medium text-slate-600 mb-1.5">Bank Name</label>
                     <input value={form.bankDetails?.bankName || ''} onChange={e => setForm({ ...form, bankDetails: { ...form.bankDetails, bankName: e.target.value } })}
@@ -369,7 +369,7 @@ export default function SettingsPage() {
                       <option value="POS">Thermal Receipt (POS)</option>
                     </select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-2">
                       <label className="block text-xs font-medium text-slate-600 mb-1.5">GST Invoice Prefix</label>
                       <input value={form.invoicePrefix || ''} onChange={e => setForm({ ...form, invoicePrefix: e.target.value.toUpperCase() })}
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold text-white" style={{ background: 'var(--primary)' }}>LIVE</span>
                </div>
                <p className="text-xs text-slate-500">Click any theme to apply it instantly across the entire application. Your choice is saved automatically.</p>
-               <div className="grid grid-cols-2 gap-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {THEME_CONFIG.map(theme => (
                    <button
                      key={theme.key}

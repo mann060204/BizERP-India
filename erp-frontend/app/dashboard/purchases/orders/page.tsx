@@ -62,7 +62,7 @@ export default function PurchaseOrdersPage() {
       <Topbar title="Purchase Orders" />
       <main className="flex-1 p-6 space-y-6">
         {/* KPI Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { label: 'This Month', value: `₹${(summary.monthOrders || 0).toFixed(2)}`, sub: `${summary.monthOrderCount || 0} orders`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
             { label: 'Today', value: `₹${(summary.todayOrders || 0).toFixed(2)}`, sub: 'Total orders today', color: 'text-blue-400', bg: 'bg-blue-400/10' },

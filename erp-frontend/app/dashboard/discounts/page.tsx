@@ -95,6 +95,7 @@ export default function DiscountSchemesPage() {
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-[#F1F5F9]">
@@ -144,6 +145,7 @@ export default function DiscountSchemesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {schemes.length === 0 && (
               <div className="p-12 text-center text-slate-600">

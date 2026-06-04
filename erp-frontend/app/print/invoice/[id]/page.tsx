@@ -121,6 +121,7 @@ export default function PrintableInvoicePage() {
             {invoice.customerSnapshot.mobile && <p><strong>Phone:</strong> {invoice.customerSnapshot.mobile}</p>}
           </div>
 
+          <div className="overflow-x-auto w-full">
           <table className="w-full text-left mb-2 border-t border-b border-dashed border-black py-2">
             <thead>
               <tr>
@@ -142,6 +143,7 @@ export default function PrintableInvoicePage() {
               ))}
             </tbody>
           </table>
+          </div>
 
           <div className="space-y-1 mb-4 text-right">
             <p>Subtotal: {invoice.totalTaxableAmount.toFixed(2)}</p>
@@ -260,6 +262,7 @@ export default function PrintableInvoicePage() {
 
           {/* Table */}
           <div className="flex-1 flex flex-col min-h-[200px] overflow-hidden">
+            <div className="overflow-x-auto w-full">
             <table className="w-full text-center border-collapse h-full text-[10px] table-fixed font-semibold text-gray-800">
               <thead>
                 <tr className="border-b-2 border-gray-800 bg-action-50 text-blue-900">
@@ -334,6 +337,7 @@ export default function PrintableInvoicePage() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Footer */}

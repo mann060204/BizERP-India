@@ -434,7 +434,7 @@ export default function NewSalesReturnPage() {
         {/* Section 1: Sales Return Information */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Sales Return Information</div>
-          <div className="p-2 grid grid-cols-3 gap-x-4 gap-y-3">
+          <div className="p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
             {/* Row 1 */}
             <div>
               <label className="erp-label block mb-1">Return Type <span className="text-red-500">*</span></label>
@@ -512,7 +512,7 @@ export default function NewSalesReturnPage() {
             </div>
             
             {/* Hidden / Extra fields */}
-            <div className="col-span-3 grid grid-cols-4 gap-x-2 gap-y-1 mt-2 p-2 bg-slate-50 border border-slate-200 rounded">
+            <div className="col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-2 gap-y-1 mt-2 p-2 bg-slate-50 border border-slate-200 rounded">
               <div>
                 <label className="erp-label block mb-1 text-[10px]">Due Date</label>
                 <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full text-xs" />
@@ -789,7 +789,7 @@ export default function NewSalesReturnPage() {
         </div>
 
         {/* Section 4: Footer */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
            
            {/* Column 1: Summary */}
            <div className="erp-footer-box flex flex-col justify-between">
@@ -827,7 +827,7 @@ export default function NewSalesReturnPage() {
            <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
               <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
               
-              <div className="grid grid-cols-2 gap-4 flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
@@ -860,7 +860,7 @@ export default function NewSalesReturnPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                  <div>
                     <label className="erp-label block mb-1">Delivery Terms</label>
                     <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
@@ -979,6 +979,7 @@ export default function NewSalesReturnPage() {
                    <p className="text-xs">No items found.</p>
                  </div>
               ) : (
+                 <div className="overflow-x-auto w-full">
                  <table className="w-full text-xs text-left">
                    <thead className="bg-white text-slate-600 sticky top-0">
                      <tr>
@@ -1003,6 +1004,7 @@ export default function NewSalesReturnPage() {
                      ))}
                    </tbody>
                  </table>
+                 </div>
               )}
             </div>
           </div>

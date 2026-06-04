@@ -118,6 +118,7 @@ export default function PnlReportPage() {
               <div className="p-4 bg-white border-b border-slate-200">
                 <h3 className="font-semibold text-slate-900">Statement of Profit & Loss</h3>
               </div>
+              <div className="overflow-x-auto w-full">
               <table className="w-full text-sm">
                 <tbody className="divide-y divide-slate-100">
                   {/* Income Section */}
@@ -167,6 +168,7 @@ export default function PnlReportPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         ) : (

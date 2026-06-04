@@ -357,7 +357,7 @@ export default function NewpurchaseReturnPage() {
           <>
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">purchaseReturn Return information</div>
-          <div className="p-2 grid grid-cols-3 gap-x-4 gap-y-3">
+          <div className="p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
             {/* Row 1 */}
             <div>
               <label className="erp-label block mb-1">Return Type <span className="text-red-500">*</span></label>
@@ -624,7 +624,7 @@ export default function NewpurchaseReturnPage() {
            </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mt-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-1">
            <div className="col-span-1 space-y-2">
               <label className="flex items-center gap-2 text-xs cursor-pointer">
                 <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-blue-600" />
@@ -783,6 +783,7 @@ export default function NewpurchaseReturnPage() {
                     <span className="text-sm">No batches added yet</span>
                  </div>
                ) : (
+                 <div className="overflow-x-auto w-full">
                  <table className="w-full text-left border-collapse bg-white shadow-sm border border-slate-200">
                    <thead>
                      <tr className="bg-[#F1F5F9] text-slate-700 text-[10px] uppercase">
@@ -811,6 +812,7 @@ export default function NewpurchaseReturnPage() {
                      ))}
                    </tbody>
                  </table>
+                 </div>
                )}
             </div>
           </div>

@@ -302,7 +302,7 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-sm font-bold text-slate-700">Amount (₹) *</label>
                       <input
@@ -335,7 +335,7 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-sm font-bold text-slate-700">Payment Mode *</label>
                       <select

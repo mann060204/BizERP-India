@@ -86,7 +86,7 @@ export default function QuotationsPage() {
       <Topbar title="Quotations" />
       <main className="flex-1 p-6 space-y-6">
         {/* KPI Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'This Month', value: `₹${(summary.monthQuotations || 0).toFixed(2)}`, sub: `${summary.monthQuotationCount || 0} quotations`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
             { label: "Today's Quotations", value: `₹${(summary.todayQuotations || 0).toFixed(2)}`, sub: 'Today', color: 'text-blue-400', bg: 'bg-blue-400/10' },

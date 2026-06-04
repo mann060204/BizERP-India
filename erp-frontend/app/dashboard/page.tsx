@@ -312,7 +312,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Two-column layout ────────────────────────────────────────────── */}
-        <div className="flex gap-5 items-start">
+        <div className="flex flex-col xl:flex-row gap-5 items-start">
 
           {/* LEFT: KPIs + Charts (main area) */}
           <div className="flex-1 min-w-0 space-y-4">
@@ -321,7 +321,7 @@ export default function DashboardPage() {
             {kpiLoading
               ? <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
               : (
-                <div className="grid grid-cols-3 xl:grid-cols-7 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3">
                   {orderedCards.map((card, index) => {
                     if (!card) return null;
                     const { label, value, icon: Icon, color, bg } = card;
@@ -346,7 +346,7 @@ export default function DashboardPage() {
               )}
 
             {/* Chart Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
               {/* Business Trend — full width */}
               {!privacyMode && (
@@ -566,7 +566,7 @@ export default function DashboardPage() {
           </div>
 
           {/* RIGHT: Quick Actions sidebar */}
-          <div className="w-52 flex-shrink-0 space-y-3 sticky top-5">
+          <div className="w-full xl:w-52 flex-shrink-0 space-y-3 xl:sticky xl:top-5">
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Quick Actions</h3>
             {actions.map(({ label, href, icon: Icon, color, bg, desc }, index) => (
               <div key={label} 
@@ -604,7 +604,7 @@ export default function DashboardPage() {
                 <p className="text-white font-black text-2xl">{renderAmount(stats.todaySales)}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button onClick={() => setPaymentModalMode('IN')} className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 hover:border-emerald-200 transition-colors group">
                   <div className="bg-emerald-100 p-1.5 rounded-lg group-hover:scale-105 transition-transform">
                     <IndianRupee className="w-4 h-4 text-emerald-600" />

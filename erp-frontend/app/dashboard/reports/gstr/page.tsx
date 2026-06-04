@@ -140,7 +140,7 @@ export default function GstReportPage() {
                   <h3 className="font-bold text-slate-900 text-lg">Net GST Payable (Cash Ledger)</h3>
                   <span className="text-slate-500 text-sm">= Output Tax − Eligible ITC</span>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">CGST</p>
                     <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.cgst))}</p>

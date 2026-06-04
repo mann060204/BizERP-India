@@ -115,6 +115,7 @@ export default function ManufacturingOrdersPage() {
 
         {/* Order List */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto w-full">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
               <tr>
@@ -161,6 +162,7 @@ export default function ManufacturingOrdersPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
       </main>

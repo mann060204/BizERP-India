@@ -118,7 +118,7 @@ export default function BatchAlertsPage() {
                   <p className="text-sm text-slate-700 font-medium">{alert.message}</p>
                 </div>
                 
-                <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-500">
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-500">
                   <div>Stock: <span className="font-bold text-slate-900">{alert.stock}</span></div>
                   {alert.expiryDate && <div>Exp: <span className="font-bold text-slate-900">{new Date(alert.expiryDate).toLocaleDateString()}</span></div>}
                 </div>

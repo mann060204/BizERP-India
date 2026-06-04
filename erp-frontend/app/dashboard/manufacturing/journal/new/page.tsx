@@ -175,6 +175,7 @@ export default function DirectManufacturingJournal() {
                 <h3 className="font-bold text-slate-800">Components Consumed (Source)</h3>
               </div>
               <div className="p-4 flex-1">
+                <div className="overflow-x-auto w-full">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -206,6 +207,7 @@ export default function DirectManufacturingJournal() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
               <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between font-bold text-slate-700">
                 <span>Total Component Cost:</span>
@@ -219,6 +221,7 @@ export default function DirectManufacturingJournal() {
                 <h3 className="font-bold text-slate-800">Scrap / By-Products (Destination)</h3>
               </div>
               <div className="p-4 flex-1">
+                <div className="overflow-x-auto w-full">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -250,6 +253,7 @@ export default function DirectManufacturingJournal() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
               <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between font-bold text-slate-700">
                 <span>Total Scrap Value:</span>

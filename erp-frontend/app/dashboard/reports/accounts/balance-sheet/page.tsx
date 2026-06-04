@@ -53,6 +53,7 @@ export default function BalanceSheetPage() {
       {items.length === 0 ? (
         <p className="p-4 text-slate-500 text-sm text-center">No accounts found</p>
       ) : (
+        <div className="overflow-x-auto w-full">
         <table className="w-full text-sm">
           <tbody className="divide-y divide-slate-100">
             {items.map((item, i) => (
@@ -70,6 +71,7 @@ export default function BalanceSheetPage() {
             </tr>
           </tfoot>
         </table>
+        </div>
       )}
     </div>
   );

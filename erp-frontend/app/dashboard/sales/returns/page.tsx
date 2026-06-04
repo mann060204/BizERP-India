@@ -72,7 +72,7 @@ export default function SalesPage() {
       <Topbar title="Credit Notes (Sale Returns)" />
       <main className="flex-1 p-6 space-y-6">
         {/* KPI Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'This Month', value: `₹${(summary.monthSales || 0).toFixed(2)}`, sub: `${summary.monthsalesReturnCount || 0} salesReturns`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
             { label: "Today's Sales", value: `₹${(summary.todaySales || 0).toFixed(2)}`, sub: 'Today', color: 'text-blue-400', bg: 'bg-blue-400/10' },

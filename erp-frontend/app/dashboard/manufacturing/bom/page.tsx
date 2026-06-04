@@ -145,6 +145,7 @@ export default function BOMPage() {
 
         {/* BOM List */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto w-full">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
               <tr>
@@ -177,6 +178,7 @@ export default function BOMPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
       </main>
@@ -202,7 +204,7 @@ export default function BOMPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Direct Labor Cost (₹)</label>
                   <input type="number" value={form.directLaborCost} onChange={e => setForm({ ...form, directLaborCost: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
@@ -219,6 +221,7 @@ export default function BOMPage() {
                   <button onClick={handleAddComponent} className="text-sm text-blue-600 hover:text-blue-700 font-medium">+ Add Component</button>
                 </div>
                 <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="overflow-x-auto w-full">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-slate-100 border-b border-slate-200">
                       <tr>
@@ -250,6 +253,7 @@ export default function BOMPage() {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                   {components.length === 0 && <div className="text-center text-sm text-slate-500 py-4">No components added.</div>}
                 </div>
               </div>

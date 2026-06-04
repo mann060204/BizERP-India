@@ -333,6 +333,7 @@ export default function AccountsPage() {
                 {loadingLedger ? (
                   <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-500" /></div>
                 ) : (
+                  <div className="overflow-x-auto w-full">
                   <table className="w-full text-sm text-left">
                     <thead className="bg-[#1A1A1A] sticky top-0">
                       <tr>
@@ -393,6 +394,7 @@ export default function AccountsPage() {
                       })()}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
             </div>
@@ -430,7 +432,7 @@ export default function AccountsPage() {
                   </div>
                 </>
               )}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Opening Balance</label>
                   <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
@@ -467,7 +469,7 @@ export default function AccountsPage() {
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Description <span className="text-red-500">*</span></label>
                 <input required value={txnDesc} onChange={e => setTxnDesc(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. Bank charges, Manual correction" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Amount (₹) <span className="text-red-500">*</span></label>
                   <input type="number" step="0.01" required min="0.01" value={txnAmt} onChange={e => setTxnAmt(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
@@ -511,7 +513,7 @@ export default function AccountsPage() {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Date <span className="text-red-500">*</span></label>
                   <input type="date" required value={transferDate} onChange={e => setTransferDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" />

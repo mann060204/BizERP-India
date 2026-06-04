@@ -42,7 +42,7 @@ export default function Page() {
         </div>
       </header>
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-5">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
             <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Total Outstanding</p>
             <p className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalBalance)}</p>

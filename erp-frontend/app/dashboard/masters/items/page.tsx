@@ -312,7 +312,7 @@ export default function MastersPage() {
                     {/* Product Details Section */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Product Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(() => {
                           const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
                           const currentCat = productCategories.find(c => c.name === form.group);
@@ -338,7 +338,7 @@ export default function MastersPage() {
                     {/* Price Details Section */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Price Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input label="Purchase Price (₹)" type="number" keyName="purchasePrice" form={form} setForm={setForm} />
                         <Input label="M.R.P. (₹)" type="number" keyName="mrp" form={form} setForm={setForm} />
                         <Input label="Sale Price 1 (Retail) (₹)" type="number" keyName="sellingPrice" required form={form} setForm={setForm} />
@@ -351,7 +351,7 @@ export default function MastersPage() {
                     {/* Stock and Unit Details */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Stock and Unit Details</h4>
-                      <div className="grid grid-cols-2 gap-4 items-end">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                         <div className="flex gap-2">
                           <div className="flex-1">
                              <Select label="Unit" keyName="unit" options={units} required form={form} setForm={setForm} />
@@ -378,7 +378,7 @@ export default function MastersPage() {
                     {/* GST Details */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">GST Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input label="HSN / SAC Code" keyName="hsnCode" form={form} setForm={setForm} />
                         <Select label="GST Rate (%)" keyName="gstRate" options={GST_RATES} form={form} setForm={setForm} />
                       </div>
@@ -387,7 +387,7 @@ export default function MastersPage() {
                     {/* Other Details */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Other Details</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">Sale Discount</label>
                           <div className="flex rounded-lg overflow-hidden border border-slate-200">
@@ -417,7 +417,7 @@ export default function MastersPage() {
                     {/* Product Settings */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Product Settings</h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Checkbox label="Print Description" keyName="printDescription" form={form} setForm={setForm} />
                         <Checkbox label="One Click Sale" keyName="oneClickSale" form={form} setForm={setForm} />
                         <Checkbox label="Enable Tracking" keyName="enableTracking" form={form} setForm={setForm} />
@@ -460,7 +460,7 @@ export default function MastersPage() {
             
             <div className="p-6 space-y-6 bg-[#F1F5F9]">
               {/* Base Unit & Secondary Unit */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                    <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Base Unit</label>
                    <input type="text" disabled value={form.unit || 'Pieces'} className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 focus:outline-none text-sm cursor-not-allowed" />
@@ -501,7 +501,7 @@ export default function MastersPage() {
               </div>
 
               {/* MRP & Min. Sale Price */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">M.R.P.</label>
                   <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#D4D4D4] transition">

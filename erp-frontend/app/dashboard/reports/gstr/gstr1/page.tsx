@@ -58,7 +58,7 @@ export default function GSTR1Page() {
       </div>
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-5">
         {/* KPI Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Total Taxable', value: totals.totalTaxable },
             { label: 'Total CGST', value: totals.totalCGST },
@@ -71,7 +71,7 @@ export default function GSTR1Page() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
             <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Total GST</p>
             <p className="text-xl font-bold text-indigo-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totals.totalGST||0))}</p>
@@ -138,6 +138,7 @@ export default function GSTR1Page() {
                 </tbody>
               </table>
             ) : (
+              <div className="overflow-x-auto w-full">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>{['HSN Code', 'Description', 'GST Rate', 'Total Qty', 'Taxable Value', 'CGST', 'SGST', 'IGST'].map(h => (
@@ -159,6 +160,7 @@ export default function GSTR1Page() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>

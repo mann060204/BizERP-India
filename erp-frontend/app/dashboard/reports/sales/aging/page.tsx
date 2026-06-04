@@ -50,7 +50,7 @@ export default function SalesAgingPage() {
       </header>
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-5">
         {/* Summary buckets */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-5 gap-4">
           <div onClick={() => setActiveTab('all')} className={`glass rounded-2xl p-4 border cursor-pointer transition ${activeTab === 'all' ? 'border-slate-600 bg-slate-800 text-white' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
             <p className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1">All Outstanding</p>
             <p className="text-xl font-bold">₹{totalBalance.toFixed(0)}</p>

@@ -164,6 +164,7 @@ export default function ReverseManufacturingJournal() {
               <h3 className="font-bold text-emerald-800">Raw Materials Returning to Stock</h3>
             </div>
             <div className="p-4">
+              <div className="overflow-x-auto w-full">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-slate-500 border-b border-slate-200">
@@ -183,6 +184,7 @@ export default function ReverseManufacturingJournal() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 

@@ -158,7 +158,7 @@ export default function ExpensesPage() {
               <button onClick={() => setShowModal(false)} className="text-slate-600 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Category *</label>
                   <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
@@ -172,7 +172,7 @@ export default function ExpensesPage() {
                     className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Date</label>
                   <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
@@ -194,7 +194,7 @@ export default function ExpensesPage() {
               
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
                 <p className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Tax Details (Optional)</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1.5">GST %</label>
                     <select value={form.gstRate} onChange={e => setForm({ ...form, gstRate: parseInt(e.target.value) })}

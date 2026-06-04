@@ -768,7 +768,7 @@ export default function NewQuotationPage() {
         </div>
 
         {/* Section 4: Footer */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
            
            {/* Column 1: Summary */}
            <div className="erp-footer-box flex flex-col justify-between">
@@ -806,7 +806,7 @@ export default function NewQuotationPage() {
            <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
               <div className="hidden bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS</div>
               
-              <div className="hidden grid grid-cols-2 gap-4 flex-1">
+              <div className="hidden grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
@@ -839,7 +839,7 @@ export default function NewQuotationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                  <div>
                     <label className="erp-label block mb-1">Delivery Terms</label>
                     <textarea value={deliveryTerms} onChange={e => setDeliveryTerms(e.target.value)} className="erp-input w-full min-h-[80px] resize-y" />
@@ -954,6 +954,7 @@ export default function NewQuotationPage() {
                    <p className="text-xs">No items found.</p>
                  </div>
               ) : (
+                 <div className="overflow-x-auto w-full">
                  <table className="w-full text-xs text-left">
                    <thead className="bg-white text-slate-600 sticky top-0">
                      <tr>
@@ -978,6 +979,7 @@ export default function NewQuotationPage() {
                      ))}
                    </tbody>
                  </table>
+                 </div>
               )}
             </div>
           </div>

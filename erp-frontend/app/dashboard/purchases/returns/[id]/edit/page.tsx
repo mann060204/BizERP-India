@@ -613,7 +613,7 @@ export default function EditpurchaseReturnPage() {
            </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mt-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-1">
            <div className="col-span-1 space-y-2">
               <label className="flex items-center gap-2 text-xs cursor-pointer">
                 <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-white" />
@@ -772,6 +772,7 @@ export default function EditpurchaseReturnPage() {
                     <span className="text-sm">No batches added yet</span>
                  </div>
                ) : (
+                 <div className="overflow-x-auto w-full">
                  <table className="w-full text-left border-collapse bg-white shadow-sm border border-slate-200">
                    <thead>
                      <tr className="bg-[#F1F5F9] text-slate-700 text-[10px] uppercase">
@@ -800,6 +801,7 @@ export default function EditpurchaseReturnPage() {
                      ))}
                    </tbody>
                  </table>
+                 </div>
                )}
             </div>
           </div>

@@ -51,7 +51,7 @@ export default function InventoryPage() {
       <Topbar title="Inventory Management" />
       <main className="flex-1 p-6 space-y-6">
         {/* KPI Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="glass rounded-2xl p-4">
             <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">Total Stock Value</p>
             <p className="text-xl font-bold text-emerald-400">₹{(summary.totalStockValue || 0).toFixed(2)}</p>

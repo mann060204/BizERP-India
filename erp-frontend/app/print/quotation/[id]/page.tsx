@@ -123,6 +123,7 @@ export default function PrintableQuotationPage() {
 
           {/* Table */}
           <div className="flex-1 flex flex-col min-h-[200px] overflow-hidden">
+            <div className="overflow-x-auto w-full">
             <table className="w-full text-center border-collapse h-full text-[10px] table-fixed font-semibold text-gray-800">
               <thead>
                 <tr className="border-b-2 border-gray-800 bg-action-50 text-blue-900">
@@ -197,6 +198,7 @@ export default function PrintableQuotationPage() {
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Footer */}

@@ -85,7 +85,7 @@ export default function BarcodeGeneratorPage() {
           <h3 className="text-slate-900 font-semibold text-sm uppercase tracking-wider mb-6 print:hidden">Print Preview</h3>
           
           {selectedProduct ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 print:grid-cols-4 print:gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 print:grid-cols-4 print:gap-2">
               {Array.from({ length: quantity }).map((_, i) => (
                 <div key={i} className="bg-white p-3 rounded-lg flex flex-col items-center justify-center border border-gray-200 print:border-dashed print:border-gray-400 print:rounded-none">
                   <p className="text-black text-xs font-bold mb-1 truncate w-full text-center">{selectedProduct.name}</p>

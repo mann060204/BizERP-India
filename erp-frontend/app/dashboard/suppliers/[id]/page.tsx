@@ -304,7 +304,7 @@ export default function EditSupplierPage() {
 
             <fieldset className="border border-slate-200 rounded bg-slate-50 p-4 relative pt-5 shadow-sm flex-1">
               <legend className="text-[11px] font-semibold px-2 bg-slate-50 text-slate-600 absolute -top-2 left-2">Account Actions</legend>
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
                 <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">New Purchase Bill</button>
                 <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">New Purchase Order</button>
                 <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send SMS</button>
@@ -521,7 +521,7 @@ export default function EditSupplierPage() {
                {activeTab === 'Accounts' && (
                  <div className="flex flex-col h-full">
                     <h3 className="font-semibold text-slate-900 mb-4">Supplier Ledger (Statement of Account)</h3>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Current Balance</div>
                          <div className={`text-xl font-bold mt-1 ${formatAccountingBalance(currentBalance, 'supplier').colorClass}`}>{formatAccountingBalance(currentBalance, 'supplier').text}</div>
@@ -562,6 +562,7 @@ export default function EditSupplierPage() {
                       </div>
 
                       <div className="flex-1 overflow-auto">
+                        <div className="overflow-x-auto w-full">
                         <table className="w-full text-sm text-left">
                           <thead className="bg-[#1A1A1A] sticky top-0">
                             <tr>
@@ -642,6 +643,7 @@ export default function EditSupplierPage() {
                             })()}
                           </tbody>
                         </table>
+                        </div>
                       </div>
                     </div>
                  </div>
@@ -678,7 +680,7 @@ export default function EditSupplierPage() {
                 <label className="erp-label">Amount Received (₹)</label>
                 <input type="number" value={paymentForm.amount} onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})} className="erp-input w-full" placeholder="0.00" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="erp-label">Payment Mode</label>
                   <select value={paymentForm.mode} onChange={e => setPaymentForm({...paymentForm, mode: e.target.value})} className="erp-input w-full">
