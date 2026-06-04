@@ -18,8 +18,6 @@ import {
 } from 'recharts';
 
 const QUICK_ACTIONS = [
-  { label: 'Payment In',       action: 'PAY_IN',                  icon: IndianRupee,    color: 'text-emerald-600', bg: 'bg-emerald-50', desc: 'Receive from Customer' },
-  { label: 'Payment Out',      action: 'PAY_OUT',                 icon: CreditCard,     color: 'text-rose-600',    bg: 'bg-rose-50',    desc: 'Pay to Supplier' },
   { label: 'New Invoice',      href: '/dashboard/sales/new',      icon: FilePlus,       color: 'text-indigo-600',  bg: 'bg-indigo-50',  desc: 'Create GST invoice' },
   { label: 'Add Purchase',     href: '/dashboard/purchases/new',  icon: PackagePlus,    color: 'text-blue-600',    bg: 'bg-blue-50',    desc: 'Record a purchase bill' },
   { label: 'Add Customer',     href: '/dashboard/customers/new',  icon: UserPlus,       color: 'text-emerald-600', bg: 'bg-emerald-50', desc: 'Add new customer' },
@@ -176,7 +174,7 @@ export default function DashboardPage() {
   };
 
   const [kpiLoading, setKpiLoading] = useState(true);
-  const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0, expenses: 0 });
+  const [stats, setStats] = useState({ sales: 0, received: 0, salesOutstanding: 0, purchases: 0, paid: 0, lowStock: 0, expenses: 0, todaySales: 0 });
   const [kpiPeriod, setKpiPeriod] = useState('month');
 
   const [trendData, setTrendData] = useState<any[]>([]);
@@ -216,6 +214,7 @@ export default function DashboardPage() {
     ]).then(([inv, pur, inven, exp]) => {
       setStats({
         sales: inv.data.monthSales || 0,
+        todaySales: inv.data.todaySales || 0,
         received: inv.data.totalReceived || 0,
         salesOutstanding: inv.data.outstanding || inv.data.totalOutstanding || 0,
         purchases: pur.data.monthPurchases || 0,
@@ -532,12 +531,31 @@ export default function DashboardPage() {
             {/* Mini KPI card below QA */}
             <div className="mt-2 pt-3 border-t border-slate-200">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Today's Snapshot</h3>
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white space-y-3">
-                <div>
-                  <p className="text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Month Sales</p>
-                  <p className="text-white font-black text-2xl">{fmtFull(stats.sales)}</p>
-                </div>
-                </div>
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white shadow-sm mb-3">
+                <p className="text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Today's Sales</p>
+                <p className="text-white font-black text-2xl">{fmtFull(stats.todaySales)}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => setPaymentModalMode('IN')} className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 hover:border-emerald-200 transition-colors group">
+                  <div className="bg-emerald-100 p-1.5 rounded-lg group-hover:scale-105 transition-transform">
+                    <IndianRupee className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-xs font-bold text-emerald-800">Pay In</span>
+                    <span className="block text-[9px] font-bold text-emerald-600/70 uppercase">Customer</span>
+                  </div>
+                </button>
+                <button onClick={() => setPaymentModalMode('OUT')} className="flex items-center gap-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 hover:border-rose-200 transition-colors group">
+                  <div className="bg-rose-100 p-1.5 rounded-lg group-hover:scale-105 transition-transform">
+                    <CreditCard className="w-4 h-4 text-rose-600" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-xs font-bold text-rose-800">Pay Out</span>
+                    <span className="block text-[9px] font-bold text-rose-600/70 uppercase">Supplier</span>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
 
