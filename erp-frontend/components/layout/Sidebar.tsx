@@ -5,57 +5,66 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3, LayoutDashboard, ShoppingCart, Package, Users, Truck,
   Receipt, FileText, Wrench, Settings, LogOut, ChevronLeft, ChevronRight,
-  Menu, Database, Wallet, ChevronDown, Landmark, Factory
+  Menu, Database, Wallet, ChevronDown, Landmark, Factory, Zap
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
 import { logout } from '../../store/slices/authSlice';
-import { businessApi } from '../../lib/erp-api';
+
+const VERSION = 'v 2.0.0';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',       href: '/dashboard',          icon: LayoutDashboard },
-  { label: 'Sales',           href: '#',                   icon: ShoppingCart,
+  { label: 'Dashboard',   href: '/dashboard',           icon: LayoutDashboard },
+  { label: 'Sales',       href: '#',                    icon: ShoppingCart,
     subItems: [
-      { label: 'Sales Invoices', href: '/dashboard/sales' },
-      { label: 'Quotations',     href: '/dashboard/quotations' },
-      { label: 'Credit Notes (Returns)',  href: '/dashboard/sales/returns' },
+      { label: 'Sales Invoices',        href: '/dashboard/sales' },
+      { label: 'Quotations',            href: '/dashboard/quotations' },
+      { label: 'Credit Notes (Returns)', href: '/dashboard/sales/returns' },
     ]
   },
-  { label: 'Purchases',       href: '#',                   icon: Package,
+  { label: 'Purchases',   href: '#',                    icon: Package,
     subItems: [
-      { label: 'Purchase Bills', href: '/dashboard/purchases' },
-      { label: 'Purchase Orders', href: '/dashboard/purchases/orders' },
+      { label: 'Purchase Bills',        href: '/dashboard/purchases' },
+      { label: 'Purchase Orders',       href: '/dashboard/purchases/orders' },
       { label: 'Debit Notes (Returns)', href: '/dashboard/purchases/returns' },
     ]
   },
-  { label: 'Inventory',       href: '/dashboard/inventory',icon: Database },
-  { label: 'Accounts',        href: '/dashboard/accounts', icon: Landmark, 
+  { label: 'Inventory',   href: '/dashboard/inventory', icon: Database },
+  { label: 'Accounts',    href: '/dashboard/accounts',  icon: Landmark,
     subItems: [
-      { label: 'Bank Account', href: '/dashboard/accounts/Bank' },
-      { label: 'Loan Account', href: '/dashboard/accounts/Loan' },
-      { label: 'Asset Account', href: '/dashboard/accounts/Asset' },
+      { label: 'Bank Account',    href: '/dashboard/accounts/Bank' },
+      { label: 'Loan Account',    href: '/dashboard/accounts/Loan' },
+      { label: 'Asset Account',   href: '/dashboard/accounts/Asset' },
       { label: 'Capital Account', href: '/dashboard/accounts/Capital' },
-      { label: 'Other Income', href: '/dashboard/accounts/Income' },
-      { label: 'Tax Payment', href: '/dashboard/accounts/Tax' },
+      { label: 'Other Income',    href: '/dashboard/accounts/Income' },
+      { label: 'Tax Payment',     href: '/dashboard/accounts/Tax' },
     ]
   },
-  { label: 'Customers',       href: '/dashboard/customers',icon: Users },
-  { label: 'Suppliers',       href: '/dashboard/suppliers',icon: Truck },
-  { label: 'Expenses',        href: '/dashboard/expenses', icon: Receipt },
-  { label: 'Reports',         href: '/dashboard/reports',  icon: FileText },
-  { label: 'Tools',           href: '/dashboard/tools',    icon: Wrench },
-  { label: 'Master',          href: '/dashboard/masters',  icon: Package },
-  { label: 'Settings',        href: '/dashboard/settings', icon: Settings },
+  { label: 'Customers',   href: '/dashboard/customers', icon: Users },
+  { label: 'Suppliers',   href: '/dashboard/suppliers', icon: Truck },
+  { label: 'Expenses',    href: '/dashboard/expenses',  icon: Receipt },
+  { label: 'Reports',     href: '/dashboard/reports',   icon: FileText },
+  { label: 'Tools',       href: '/dashboard/tools',     icon: Wrench },
+  { label: 'Master',      href: '/dashboard/masters',   icon: Package },
+  { label: 'Settings',    href: '/dashboard/settings',  icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((s) => s.auth);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
-  const dynamicNavItems = [...NAV_ITEMS];
-const isActive = (href: string) =>
+
+  // Auto-expand the active parent menu on load
+  useEffect(() => {
+    NAV_ITEMS.forEach(item => {
+      if (item.subItems?.some(sub => pathname.startsWith(sub.href))) {
+        setExpandedMenus(prev => ({ ...prev, [item.label]: true }));
+      }
+    });
+  }, [pathname]);
+
+  const isActive = (href: string) =>
     href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
   const toggleSubmenu = (label: string, e: React.MouseEvent) => {
@@ -66,47 +75,63 @@ const isActive = (href: string) =>
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-slate-200 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+      {/* Logo Area */}
+      <div className={`sidebar-logo-area flex items-center gap-3 px-4 py-4 ${collapsed ? 'justify-center' : ''}`}>
+        <div className="sidebar-logo-badge w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+          <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" onError={(e: any) => { e.target.style.display='none'; }} />
+        </div>
+        {!collapsed && (
+          <div className="flex flex-col">
+            <span className="text-white font-bold text-base tracking-tight leading-tight">BizERP</span>
+            <span className="text-[10px] font-semibold" style={{ color: 'var(--sidebar-text)' }}>India</span>
           </div>
-        {!collapsed && <span className="text-slate-900 font-bold text-base tracking-tight">Bissness</span>}
+        )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {dynamicNavItems.map((item) => {
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        {NAV_ITEMS.map((item) => {
           const { label, href, icon: Icon, subItems } = item;
-          const active = isActive(href);
+          const isParentActive = subItems?.some(sub => pathname.startsWith(sub.href));
+          const active = isActive(href) || (!!isParentActive && !subItems);
           const expanded = expandedMenus[label];
 
           return (
-            <div key={href}>
-              <Link href={subItems ? '#' : href} onClick={(e) => {
-                if (subItems) toggleSubmenu(label, e);
-                else setMobileOpen(false);
-              }}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group
-                  ${active && !subItems
-                    ? 'bg-action-50 text-action-600 border border-blue-200 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'}`}>
+            <div key={label}>
+              <Link
+                href={subItems ? '#' : href}
+                onClick={(e) => {
+                  if (subItems) toggleSubmenu(label, e);
+                  else setMobileOpen(false);
+                }}
+                className={`sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl group
+                  ${(active && !subItems) || isParentActive ? 'active' : ''}`}
+              >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${active && !subItems ? 'text-action-500' : ''}`} />
-                  {!collapsed && <span className="text-sm font-medium">{label}</span>}
+                  <Icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: '18px', height: '18px', opacity: (active && !subItems) || isParentActive ? 1 : 0.7 }} />
+                  {!collapsed && (
+                    <span className="text-[13px] font-medium">{label}</span>
+                  )}
                 </div>
                 {!collapsed && subItems && (
-                  <ChevronDown className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    style={{ width: '14px', height: '14px', opacity: 0.6 }}
+                    className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                  />
                 )}
               </Link>
 
-              {/* Sub items */}
+              {/* Sub-menu */}
               {!collapsed && subItems && expanded && (
-                <div className="mt-1 ml-4 pl-4 border-l border-slate-200 space-y-1">
+                <div className="mt-0.5 ml-3 pl-4 border-l space-y-0.5 py-1" style={{ borderColor: 'var(--sidebar-border)' }}>
                   {subItems.map(sub => (
-                    <Link key={sub.href} href={sub.href} onClick={() => setMobileOpen(false)}
-                      className={`block px-3 py-2 rounded-lg text-sm transition-all
-                        ${pathname === sub.href ? 'bg-action-50 text-action-600 font-medium' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}>
+                    <Link
+                      key={sub.href}
+                      href={sub.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`sidebar-sub-link block px-3 py-2 rounded-lg text-[12px] font-medium transition-all
+                        ${pathname === sub.href ? 'active' : ''}`}
+                    >
                       {sub.label}
                     </Link>
                   ))}
@@ -117,16 +142,28 @@ const isActive = (href: string) =>
         })}
       </nav>
 
-      {/* Version + Copyright */}
-      <div className="p-4 border-t border-slate-200 text-center">
+      {/* Footer */}
+      <div className="p-3 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
         {!collapsed ? (
-          <>
-            <p className="text-sm font-bold text-slate-800 bg-slate-100/80 rounded-lg py-1.5 mb-2 inline-block px-4 border border-slate-200">v1.0.3</p>
-            <p className="text-xs text-slate-700 font-semibold">© {new Date().getFullYear()} Ozen Studio.</p>
-            <p className="text-xs text-slate-700 mt-1 font-medium">Build and Design by Mann Monapra</p>
-          </>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-1.5">
+                <Zap style={{ width: '12px', height: '12px', color: '#fbbf24' }} />
+                <span className="text-[10px] font-bold" style={{ color: 'var(--sidebar-text)' }}>{VERSION}</span>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                style={{ background: 'rgba(16,185,129,0.2)', color: '#6ee7b7' }}>
+                LIVE
+              </span>
+            </div>
+            <p className="text-[9px] text-center" style={{ color: 'var(--sidebar-text)', opacity: 0.5 }}>
+              © {new Date().getFullYear()} Ozen Studio · Built by Mann Monapra
+            </p>
+          </div>
         ) : (
-          <p className="text-[10px] font-bold text-slate-800 bg-slate-100/80 rounded-lg py-2 w-full text-center border border-slate-200 truncate">v1.0.3</p>
+          <div className="text-center">
+            <span className="text-[9px] font-bold" style={{ color: 'var(--sidebar-text)', opacity: 0.6 }}>v2</span>
+          </div>
         )}
       </div>
     </div>
@@ -135,32 +172,41 @@ const isActive = (href: string) =>
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-slate-200 transition-all duration-300 z-40
-        ${collapsed ? 'w-[68px]' : 'w-60'}`}>
+      <aside
+        className={`sidebar-root hidden lg:flex flex-col fixed left-0 top-0 h-full transition-all duration-300 z-40
+          ${collapsed ? 'w-[64px]' : 'w-[220px]'}`}
+      >
         <SidebarContent />
         {/* Collapse toggle */}
-        <button onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition">
-          {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-[72px] w-6 h-6 rounded-full flex items-center justify-center text-white border shadow-lg transition-all hover:scale-110"
+          style={{ background: 'var(--sidebar-active-bg)', borderColor: 'var(--sidebar-border)' }}
+        >
+          {collapsed
+            ? <ChevronRight style={{ width: '12px', height: '12px' }} />
+            : <ChevronLeft style={{ width: '12px', height: '12px' }} />}
         </button>
       </aside>
 
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-slate-50" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-64 bg-white h-full shadow-2xl z-50">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="sidebar-root relative w-[220px] h-full shadow-2xl z-50">
             <SidebarContent />
           </aside>
         </div>
       )}
 
-      {/* Mobile menu button (inside topbar — exported via context, or just repeat) */}
-      <button className="lg:hidden fixed top-3.5 left-4 z-40 p-2 rounded-lg bg-white border border-slate-200 text-slate-600"
-        onClick={() => setMobileOpen(true)}>
-        <Menu className="w-5 h-5" />
+      {/* Mobile menu button */}
+      <button
+        className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-xl text-white shadow-lg"
+        style={{ background: 'var(--sidebar-active-bg)' }}
+        onClick={() => setMobileOpen(true)}
+      >
+        <Menu style={{ width: '18px', height: '18px' }} />
       </button>
     </>
   );
 }
-

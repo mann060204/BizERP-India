@@ -3,9 +3,17 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../../../components/layout/Topbar';
 import { businessApi, dataApi, financialYearApi } from '../../../lib/erp-api';
-import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X, Download, Upload, Trash2, AlertTriangle, CalendarDays } from 'lucide-react';
+import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X, Download, Upload, Trash2, AlertTriangle, CalendarDays, Palette, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DocumentSequencesTab from './components/DocumentSequencesTab';
+import { applyTheme, getStoredTheme, THEMES, type Theme } from '../../../components/ThemeProvider';
+
+const THEME_CONFIG = [
+  { key: 'indigo', label: 'Midnight Indigo', desc: 'Deep indigo sidebar · Cyan accent', sidebar: '#1e1b4b', active: '#4f46e5', accent: '#06b6d4' },
+  { key: 'emerald', label: 'Forest Emerald', desc: 'Forest green sidebar · Teal accent', sidebar: '#064e3b', active: '#059669', accent: '#0d9488' },
+  { key: 'slate',   label: 'Charcoal Slate', desc: 'Charcoal sidebar · Royal blue accent', sidebar: '#0f172a', active: '#2563eb', accent: '#0ea5e9' },
+  { key: 'rose',    label: 'Crimson Rose', desc: 'Deep rose sidebar · Pink accent', sidebar: '#4c0519', active: '#e11d48', accent: '#f43f5e' },
+] as const;
 
 
 
@@ -14,12 +22,18 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'business' | 'sequences' | 'application'>('business');
+  const [currentTheme, setCurrentTheme] = useState<Theme>('indigo');
   
   const [exporting, setExporting] = useState(false);
   const [erasing, setErasing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [startingNewYear, setStartingNewYear] = useState(false);
   const [customYearLabel, setCustomYearLabel] = useState('');
+
+  useEffect(() => {
+    setCurrentTheme(getStoredTheme());
+  }, []);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -384,36 +398,68 @@ export default function SettingsPage() {
           <DocumentSequencesTab initialSequences={form.documentSequences} onUpdate={() => {}} />
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4">
-               <h3 className="font-semibold text-slate-900 border-b border-slate-200 pb-3">Application Preferences</h3>
-               <div className="space-y-4 max-w-lg">
-                 <div>
-                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Theme</label>
-                   <select disabled className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-sm cursor-not-allowed">
-                     <option>System Default (Coming Soon)</option>
-                     <option>Light</option>
-                     <option>Dark</option>
-                   </select>
-                   <p className="text-[10px] text-slate-500 mt-1">Theme customization is currently locked to System Default.</p>
-                 </div>
-                 <div>
-                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Language</label>
-                   <select disabled className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-sm cursor-not-allowed">
-                     <option>English (Default)</option>
-                   </select>
-                   <p className="text-[10px] text-slate-500 mt-1">More languages will be supported in future updates.</p>
-                 </div>
-                 <div>
-                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Date Format</label>
-                   <select disabled className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-sm cursor-not-allowed">
-                     <option>DD/MM/YYYY</option>
-                     <option>MM/DD/YYYY</option>
-                     <option>YYYY-MM-DD</option>
-                   </select>
-                   <p className="text-[10px] text-slate-500 mt-1">Date formatting is currently standard across the app.</p>
-                 </div>
+            {/* Theme Picker */}
+            <div className="glass rounded-2xl p-6 border border-slate-200 space-y-5">
+               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                 <Palette className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                 <h3 className="font-semibold text-slate-900">Theme & Appearance</h3>
+                 <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full font-bold text-white" style={{ background: 'var(--primary)' }}>LIVE</span>
+               </div>
+               <p className="text-xs text-slate-500">Click any theme to apply it instantly across the entire application. Your choice is saved automatically.</p>
+               <div className="grid grid-cols-2 gap-4">
+                 {THEME_CONFIG.map(theme => (
+                   <button
+                     key={theme.key}
+                     onClick={() => {
+                       applyTheme(theme.key as Theme);
+                       setCurrentTheme(theme.key as Theme);
+                       toast.success(`${theme.label} theme applied!`);
+                     }}
+                     className="relative rounded-xl overflow-hidden border-2 transition-all hover:scale-[1.02] hover:shadow-xl text-left group"
+                     style={{
+                       borderColor: currentTheme === theme.key ? theme.active : '#e2e8f0',
+                       boxShadow: currentTheme === theme.key ? `0 0 0 3px ${theme.active}33` : undefined
+                     }}
+                   >
+                     {/* Preview */}
+                     <div className="flex h-20">
+                       {/* Sidebar preview */}
+                       <div className="w-12 flex flex-col p-1.5 gap-1" style={{ background: theme.sidebar }}>
+                         <div className="w-full h-3 rounded" style={{ background: theme.active, opacity: 0.9 }} />
+                         {[1,2,3].map(i => (
+                           <div key={i} className="w-full h-2 rounded" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                         ))}
+                       </div>
+                       {/* Content preview */}
+                       <div className="flex-1 p-2 bg-slate-50">
+                         <div className="w-full h-2 rounded mb-1.5" style={{ background: theme.active, opacity: 0.8 }} />
+                         <div className="w-3/4 h-1.5 rounded mb-1 bg-slate-200" />
+                         <div className="w-1/2 h-1.5 rounded bg-slate-200" />
+                         <div className="flex gap-1 mt-2">
+                           <div className="h-5 flex-1 rounded" style={{ background: theme.active + '20', border: `1px solid ${theme.active}40` }}>
+                             <div className="h-1.5 w-3/4 rounded m-1" style={{ background: theme.active }} />
+                           </div>
+                           <div className="h-5 flex-1 rounded bg-slate-100 border border-slate-200" />
+                         </div>
+                       </div>
+                     </div>
+                     {/* Label */}
+                     <div className="px-3 py-2 border-t border-slate-100 flex items-center justify-between" style={{ background: '#fff' }}>
+                       <div>
+                         <p className="text-xs font-bold text-slate-800">{theme.label}</p>
+                         <p className="text-[10px] text-slate-400">{theme.desc}</p>
+                       </div>
+                       {currentTheme === theme.key && (
+                         <div className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: theme.active }}>
+                           <Check style={{ width: '10px', height: '10px' }} />
+                         </div>
+                       )}
+                     </div>
+                   </button>
+                 ))}
                </div>
             </div>
+
 
             <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4 shadow-sm border-red-100">
                <div className="flex items-center gap-2 border-b border-slate-200 pb-3">

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Bell, Search, LogOut } from 'lucide-react';
+import { LogOut, Sparkles } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
 import { logout } from '../../store/slices/authSlice';
 import { businessApi } from '../../lib/erp-api';
@@ -25,38 +25,54 @@ export default function Topbar({ title }: { title?: string }) {
     }).catch(() => {});
   }, []);
 
+  const timeStr = currentTime
+    ? currentTime.toLocaleString('en-IN', {
+        weekday: 'long', year: 'numeric', month: 'short',
+        day: 'numeric', hour: '2-digit', minute: '2-digit',
+        second: '2-digit', hour12: true
+      })
+    : 'Loading...';
+
   return (
-    <header className="h-16 flex items-center justify-between px-6 bg-white backdrop-blur border-b border-slate-200 sticky top-0 z-30">
+    <header className="topbar-root h-14 flex items-center justify-between px-5 sticky top-0 z-30">
+      {/* Left */}
       <div className="flex items-center gap-4">
-        {/* Title pushed right of mobile menu btn */}
-        <h1 className="text-slate-900 font-semibold text-lg ml-10 lg:ml-0">{title || 'Dashboard'}</h1>
-        <div className="hidden sm:flex flex-col items-start justify-center">
-          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[11px] font-bold rounded-lg border border-indigo-100 min-w-[200px] text-center">
-            {currentTime ? currentTime.toLocaleString('en-IN', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: true
-            }) : 'Loading...'}
+        <h1 className="text-slate-900 font-bold text-base ml-10 lg:ml-0 tracking-tight">{title || 'Dashboard'}</h1>
+        <div className="hidden sm:flex flex-col items-start">
+          <span className="topbar-clock px-3 py-1 text-[11px] font-bold rounded-lg min-w-[220px] text-center leading-5">
+            {timeStr}
           </span>
-          <span className="text-[10px] text-slate-500 font-semibold mt-0.5 ml-1">v 1.0.0</span>
+          <span className="text-[9px] font-bold mt-0.5 ml-1 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+            <Sparkles style={{ width: '9px', height: '9px' }} />
+            v 2.0.0
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      {/* Right */}
+      <div className="flex items-center gap-3">
         <FinancialYearDropdown />
 
-        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-          <div className="hidden md:block text-right">
-            <p className="text-sm font-semibold text-slate-900 truncate max-w-[150px]">{businessName}</p>
-            <p className="text-xs text-slate-500 capitalize">{user?.role || 'Admin'}</p>
+        <div className="flex items-center gap-2 pl-3 border-l" style={{ borderColor: 'var(--border)' }}>
+          <div className="hidden md:flex flex-col items-end">
+            <p className="text-[13px] font-bold text-slate-900 truncate max-w-[160px]">{businessName}</p>
+            <p className="text-[11px] capitalize" style={{ color: 'var(--text-muted)' }}>{user?.role || 'Admin'}</p>
           </div>
-          <button onClick={() => dispatch(logout())} className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Logout">
-            <LogOut className="w-5 h-5" />
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md"
+            style={{ background: 'var(--primary)' }}
+          >
+            {businessName.charAt(0).toUpperCase()}
+          </div>
+          <button
+            onClick={() => dispatch(logout())}
+            className="p-2 rounded-xl transition-all hover:scale-110"
+            style={{ color: 'var(--text-muted)' }}
+            title="Logout"
+            onMouseEnter={e => (e.currentTarget.style.color = '#f43f5e')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
+          >
+            <LogOut style={{ width: '16px', height: '16px' }} />
           </button>
         </div>
       </div>
