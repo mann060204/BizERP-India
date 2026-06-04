@@ -469,7 +469,7 @@ export default function NewQuotationPage() {
                  {selectedCustomer && (() => {
                     const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
                     return (
-                      <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                      <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-red-50 text-red-700 border-red-200' : bal < 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
                           A/C Bal: {formatAccountingBalance(bal, 'customer').text}
                       </div>
                     );
