@@ -32,12 +32,16 @@ export default function SettingsPage() {
   const [startingNewYear, setStartingNewYear] = useState(false);
   const [customYearLabel, setCustomYearLabel] = useState('');
   const [showFyModal, setShowFyModal] = useState(false);
+  const [fyType, setFyType] = useState<'FUTURE' | 'HISTORICAL'>('FUTURE');
   const [fyConfig, setFyConfig] = useState({
     carryForwardStock: true,
     carryForwardCustomerBalances: true,
     carryForwardSupplierBalances: true,
     carryForwardBankBalances: true,
-    lockPreviousFY: true
+    lockPreviousFY: true,
+    copyCustomers: true,
+    copySuppliers: true,
+    copyProducts: true
   });
 
   useEffect(() => {
@@ -174,10 +178,19 @@ export default function SettingsPage() {
   };
 
   const handleStartNewYear = async () => {
+    if (fyType === 'HISTORICAL' && !customYearLabel.trim()) {
+      toast.error('Custom Year Label is required when adding a Past Financial Year.');
+      return;
+    }
     setStartingNewYear(true);
     try {
-      const res = await financialYearApi.startNewYear({ customYearLabel, ...fyConfig });
-      toast.success(res.message || 'New financial year started successfully!');
+      const payload = {
+        customYearLabel,
+        ...fyConfig,
+        isHistorical: fyType === 'HISTORICAL'
+      };
+      const res = await financialYearApi.startNewYear(payload);
+      toast.success(res.message || 'Financial year created successfully!');
       if (res.token) {
         localStorage.setItem('erp_token', res.token);
       }
@@ -600,8 +613,8 @@ export default function SettingsPage() {
                   <CalendarDays className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Financial Year Closing</h3>
-                  <p className="text-xs text-slate-500">Configure your new financial year</p>
+                  <h3 className="font-bold text-slate-900 text-lg">Financial Year Setup</h3>
+                  <p className="text-xs text-slate-500">Configure your financial year</p>
                 </div>
               </div>
               <button onClick={() => setShowFyModal(false)} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition">
@@ -611,58 +624,104 @@ export default function SettingsPage() {
             
             <div className="p-6 overflow-y-auto">
               <div className="space-y-5">
+                {/* Type Selection */}
+                <div className="flex p-1 bg-slate-100 rounded-xl">
+                  <button 
+                    onClick={() => setFyType('FUTURE')}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${fyType === 'FUTURE' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    New FY (Forward)
+                  </button>
+                  <button 
+                    onClick={() => setFyType('HISTORICAL')}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${fyType === 'HISTORICAL' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Past FY (Historical)
+                  </button>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Custom Year Label (Optional)</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    Custom Year Label {fyType === 'HISTORICAL' ? <span className="text-red-500">*</span> : <span className="font-normal text-slate-400">(Optional)</span>}
+                  </label>
                   <input 
                     value={customYearLabel} 
                     onChange={(e) => setCustomYearLabel(e.target.value)} 
-                    placeholder={`e.g. FY ${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(2)}`}
+                    placeholder={fyType === 'HISTORICAL' ? "e.g. FY 2022-23" : `e.g. FY ${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(2)}`}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-sm transition" 
                   />
+                  {fyType === 'HISTORICAL' && (
+                    <p className="text-xs text-slate-500 mt-1.5">You must specify the label for a historical year.</p>
+                  )}
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Carry Forward Options</h4>
-                  
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
-                    <span className="text-sm font-semibold text-slate-700">Carry Forward Stock</span>
-                    <input type="checkbox" checked={fyConfig.carryForwardStock} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardStock: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
-                  </label>
-                  
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
-                    <span className="text-sm font-semibold text-slate-700">Carry Forward Customer Balances</span>
-                    <input type="checkbox" checked={fyConfig.carryForwardCustomerBalances} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardCustomerBalances: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
-                  </label>
+                {fyType === 'FUTURE' && (
+                  <>
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Carry Forward Options</h4>
+                      
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                        <span className="text-sm font-semibold text-slate-700">Carry Forward Stock</span>
+                        <input type="checkbox" checked={fyConfig.carryForwardStock} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardStock: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                      </label>
+                      
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                        <span className="text-sm font-semibold text-slate-700">Carry Forward Customer Balances</span>
+                        <input type="checkbox" checked={fyConfig.carryForwardCustomerBalances} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardCustomerBalances: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                      </label>
 
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
-                    <span className="text-sm font-semibold text-slate-700">Carry Forward Supplier Balances</span>
-                    <input type="checkbox" checked={fyConfig.carryForwardSupplierBalances} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardSupplierBalances: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
-                  </label>
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                        <span className="text-sm font-semibold text-slate-700">Carry Forward Supplier Balances</span>
+                        <input type="checkbox" checked={fyConfig.carryForwardSupplierBalances} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardSupplierBalances: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                      </label>
 
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
-                    <span className="text-sm font-semibold text-slate-700">Carry Forward Cash & Bank Balances</span>
-                    <input type="checkbox" checked={fyConfig.carryForwardBankBalances} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardBankBalances: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
-                  </label>
-                </div>
-
-                <div className="space-y-3 pt-2 border-t border-slate-100">
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Security</h4>
-                  
-                  <label className="flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50 cursor-pointer transition">
-                    <div>
-                      <span className="text-sm font-semibold text-amber-900 block">Lock Previous Financial Year</span>
-                      <span className="text-xs text-amber-700">Prevents edits to old transactions</span>
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                        <span className="text-sm font-semibold text-slate-700">Carry Forward Cash & Bank Balances</span>
+                        <input type="checkbox" checked={fyConfig.carryForwardBankBalances} onChange={e => setFyConfig(prev => ({ ...prev, carryForwardBankBalances: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                      </label>
                     </div>
-                    <input type="checkbox" checked={fyConfig.lockPreviousFY} onChange={e => setFyConfig(prev => ({ ...prev, lockPreviousFY: e.target.checked }))} className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500" />
-                  </label>
-                </div>
+
+                    <div className="space-y-3 pt-2 border-t border-slate-100">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Security</h4>
+                      
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50 cursor-pointer transition">
+                        <div>
+                          <span className="text-sm font-semibold text-amber-900 block">Lock Previous Financial Year</span>
+                          <span className="text-xs text-amber-700">Prevents edits to old transactions</span>
+                        </div>
+                        <input type="checkbox" checked={fyConfig.lockPreviousFY} onChange={e => setFyConfig(prev => ({ ...prev, lockPreviousFY: e.target.checked }))} className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500" />
+                      </label>
+                    </div>
+                  </>
+                )}
+
+                {fyType === 'HISTORICAL' && (
+                  <div className="space-y-3 pt-2">
+                    <div className="p-3 mb-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-sm">
+                      When adding a past financial year, stock and balances are <strong>not</strong> carried backward from your current data. You will start with zero balances for the past year.
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Copy Master Data (Without Balances)</h4>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                      <span className="text-sm font-semibold text-slate-700">Copy Customers</span>
+                      <input type="checkbox" checked={fyConfig.copyCustomers} onChange={e => setFyConfig(prev => ({ ...prev, copyCustomers: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                    </label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                      <span className="text-sm font-semibold text-slate-700">Copy Suppliers</span>
+                      <input type="checkbox" checked={fyConfig.copySuppliers} onChange={e => setFyConfig(prev => ({ ...prev, copySuppliers: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                    </label>
+                    <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                      <span className="text-sm font-semibold text-slate-700">Copy Products</span>
+                      <input type="checkbox" checked={fyConfig.copyProducts} onChange={e => setFyConfig(prev => ({ ...prev, copyProducts: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded" />
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="p-5 border-t border-slate-100 bg-slate-50 flex gap-3">
               <button onClick={() => setShowFyModal(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-white transition">Cancel</button>
               <button onClick={handleStartNewYear} disabled={startingNewYear} className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-sm hover:bg-purple-700 transition flex items-center justify-center gap-2 shadow-lg shadow-purple-200">
-                {startingNewYear ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Create New Year
+                {startingNewYear ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Create Year
               </button>
             </div>
           </div>

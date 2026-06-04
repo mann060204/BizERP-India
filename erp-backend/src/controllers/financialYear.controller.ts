@@ -12,14 +12,26 @@ import Product from '../models/Product.model';
 
 export const startNewYear = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { 
+    let { 
       customYearLabel, 
       carryForwardStock = true, 
       carryForwardCustomerBalances = true, 
       carryForwardSupplierBalances = true, 
       carryForwardBankBalances = true, 
-      lockPreviousFY = true 
+      lockPreviousFY = true,
+      isHistorical = false,
+      copyCustomers = true,
+      copySuppliers = true,
+      copyProducts = true
     } = req.body || {};
+
+    if (isHistorical) {
+      carryForwardStock = false;
+      carryForwardCustomerBalances = false;
+      carryForwardSupplierBalances = false;
+      carryForwardBankBalances = false;
+      lockPreviousFY = false;
+    }
     const oldBusinessId = req.user!.businessId;
     const oldBusiness = await Business.findById(oldBusinessId);
     if (!oldBusiness) {
@@ -40,7 +52,10 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
 
     // Determine new financial year label
     const newYearNumber = parseInt(oldBusiness.financialYearLabel?.match(/\d{4}/)?.[0] || new Date().getFullYear().toString()) + 1;
-    const newFinancialYearLabel = customYearLabel?.trim() || `FY ${newYearNumber}-${(newYearNumber + 1).toString().slice(2)}`;
+    let newFinancialYearLabel = customYearLabel?.trim();
+    if (!newFinancialYearLabel) {
+      newFinancialYearLabel = isHistorical ? `FY ${newYearNumber - 2}-${(newYearNumber - 1).toString().slice(2)}` : `FY ${newYearNumber}-${(newYearNumber + 1).toString().slice(2)}`;
+    }
 
     // Create the new business document
     const newBusiness = await Business.create({
@@ -92,69 +107,73 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
     const newBusinessId = newBusiness._id;
 
     // Clone Customers
-    const customers = await Customer.find({ businessId: oldBusinessId });
-    if (customers.length > 0) {
-      const newCustomers = customers.map(c => ({
-        businessId: newBusinessId,
-        name: c.name,
-        mobile: c.mobile,
-        email: c.email,
-        gstin: c.gstin,
-        billingAddress: c.billingAddress,
-        panNo: c.panNo,
-        gstType: c.gstType,
-        tradeName: c.tradeName,
-        phoneNo: c.phoneNo,
-        documentType: c.documentType,
-        documentNo: c.documentNo,
-        dob: c.dob,
-        anniversary: c.anniversary,
-        creditAllowed: c.creditAllowed,
-        priceCategory: c.priceCategory,
-        remark: c.remark,
-        creditLimit: c.creditLimit,
-        openingBalance: carryForwardCustomerBalances ? c.currentBalance : 0,
-        balanceType: carryForwardCustomerBalances ? (c.currentBalance >= 0 ? 'Debit' : 'Credit') : 'Debit',
-        currentBalance: carryForwardCustomerBalances ? c.currentBalance : 0,
-        tags: c.tags,
-        photo: c.photo,
-        isActive: c.isActive
-      }));
-      await Customer.insertMany(newCustomers);
+    if (copyCustomers) {
+      const customers = await Customer.find({ businessId: oldBusinessId });
+      if (customers.length > 0) {
+        const newCustomers = customers.map(c => ({
+          businessId: newBusinessId,
+          name: c.name,
+          mobile: c.mobile,
+          email: c.email,
+          gstin: c.gstin,
+          billingAddress: c.billingAddress,
+          panNo: c.panNo,
+          gstType: c.gstType,
+          tradeName: c.tradeName,
+          phoneNo: c.phoneNo,
+          documentType: c.documentType,
+          documentNo: c.documentNo,
+          dob: c.dob,
+          anniversary: c.anniversary,
+          creditAllowed: c.creditAllowed,
+          priceCategory: c.priceCategory,
+          remark: c.remark,
+          creditLimit: c.creditLimit,
+          openingBalance: carryForwardCustomerBalances ? c.currentBalance : 0,
+          balanceType: carryForwardCustomerBalances ? (c.currentBalance >= 0 ? 'Debit' : 'Credit') : 'Debit',
+          currentBalance: carryForwardCustomerBalances ? c.currentBalance : 0,
+          tags: c.tags,
+          photo: c.photo,
+          isActive: c.isActive
+        }));
+        await Customer.insertMany(newCustomers);
+      }
     }
 
     // Clone Suppliers
-    const suppliers = await Supplier.find({ businessId: oldBusinessId });
-    if (suppliers.length > 0) {
-      const newSuppliers = suppliers.map(s => ({
-        businessId: newBusinessId,
-        name: s.name,
-        mobile: s.mobile,
-        email: s.email,
-        gstin: s.gstin,
-        pan: s.pan,
-        address: s.address,
-        contactPerson: s.contactPerson,
-        note: s.note,
-        bankDetails: s.bankDetails,
-        creditLimit: s.creditLimit,
-        creditAllowed: s.creditAllowed,
-        priceCategory: s.priceCategory,
-        gstType: s.gstType,
-        tradeName: s.tradeName,
-        phoneNo: s.phoneNo,
-        documentType: s.documentType,
-        documentNo: s.documentNo,
-        dob: s.dob,
-        anniversary: s.anniversary,
-        photo: s.photo,
-        tags: s.tags,
-        openingBalance: carryForwardSupplierBalances ? s.currentBalance : 0,
-        currentBalance: carryForwardSupplierBalances ? s.currentBalance : 0,
-        balanceType: carryForwardSupplierBalances ? (s.currentBalance >= 0 ? 'Credit' : 'Debit') : 'Credit',
-        isActive: s.isActive
-      }));
-      await Supplier.insertMany(newSuppliers);
+    if (copySuppliers) {
+      const suppliers = await Supplier.find({ businessId: oldBusinessId });
+      if (suppliers.length > 0) {
+        const newSuppliers = suppliers.map(s => ({
+          businessId: newBusinessId,
+          name: s.name,
+          mobile: s.mobile,
+          email: s.email,
+          gstin: s.gstin,
+          pan: s.pan,
+          address: s.address,
+          contactPerson: s.contactPerson,
+          note: s.note,
+          bankDetails: s.bankDetails,
+          creditLimit: s.creditLimit,
+          creditAllowed: s.creditAllowed,
+          priceCategory: s.priceCategory,
+          gstType: s.gstType,
+          tradeName: s.tradeName,
+          phoneNo: s.phoneNo,
+          documentType: s.documentType,
+          documentNo: s.documentNo,
+          dob: s.dob,
+          anniversary: s.anniversary,
+          photo: s.photo,
+          tags: s.tags,
+          openingBalance: carryForwardSupplierBalances ? s.currentBalance : 0,
+          currentBalance: carryForwardSupplierBalances ? s.currentBalance : 0,
+          balanceType: carryForwardSupplierBalances ? (s.currentBalance >= 0 ? 'Credit' : 'Debit') : 'Credit',
+          isActive: s.isActive
+        }));
+        await Supplier.insertMany(newSuppliers);
+      }
     }
 
     // Clone Accounts
@@ -195,52 +214,54 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     // Clone Products
-    const products = await Product.find({ businessId: oldBusinessId });
-    if (products.length > 0) {
-      const newProducts = products.map(p => ({
-        businessId: newBusinessId,
-        name: p.name,
-        printName: p.printName,
-        group: p.group,
-        brand: p.brand,
-        sku: p.sku,
-        hsnCode: p.hsnCode,
-        sacCode: p.sacCode,
-        category: p.category,
-        type: p.type,
-        unit: p.unit,
-        secondaryUnit: p.secondaryUnit,
-        purchasePrice: p.purchasePrice,
-        sellingPrice: p.sellingPrice,
-        sellingPrice2: p.sellingPrice2,
-        sellingPrice3: p.sellingPrice3,
-        minSalePrice: p.minSalePrice,
-        mrp: p.mrp,
-        conversionRate: p.conversionRate,
-        gstRate: p.gstRate,
-        cessRate: p.cessRate,
-        igstRate: p.igstRate,
-        saleDiscount: p.saleDiscount,
-        saleDiscountType: p.saleDiscountType,
-        barcode: p.barcode,
-        location: p.location,
-        batchNo: p.batchNo,
-        description: p.description,
-        productType: p.productType,
-        printDescription: p.printDescription,
-        printBatchNo: p.printBatchNo,
-        oneClickSale: p.oneClickSale,
-        enableTracking: p.enableTracking,
-        printExpiryDate: p.printExpiryDate,
-        notForSale: p.notForSale,
-        reorderLevel: p.reorderLevel,
-        lowLevelLimit: p.lowLevelLimit,
-        openingStock: carryForwardStock ? p.currentStock : 0,
-        openingStockValue: carryForwardStock ? ((p.currentStock * p.purchasePrice) || 0) : 0,
-        currentStock: carryForwardStock ? p.currentStock : 0,
-        isActive: p.isActive
-      }));
-      await Product.insertMany(newProducts);
+    if (copyProducts) {
+      const products = await Product.find({ businessId: oldBusinessId });
+      if (products.length > 0) {
+        const newProducts = products.map(p => ({
+          businessId: newBusinessId,
+          name: p.name,
+          printName: p.printName,
+          group: p.group,
+          brand: p.brand,
+          sku: p.sku,
+          hsnCode: p.hsnCode,
+          sacCode: p.sacCode,
+          category: p.category,
+          type: p.type,
+          unit: p.unit,
+          secondaryUnit: p.secondaryUnit,
+          purchasePrice: p.purchasePrice,
+          sellingPrice: p.sellingPrice,
+          sellingPrice2: p.sellingPrice2,
+          sellingPrice3: p.sellingPrice3,
+          minSalePrice: p.minSalePrice,
+          mrp: p.mrp,
+          conversionRate: p.conversionRate,
+          gstRate: p.gstRate,
+          cessRate: p.cessRate,
+          igstRate: p.igstRate,
+          saleDiscount: p.saleDiscount,
+          saleDiscountType: p.saleDiscountType,
+          barcode: p.barcode,
+          location: p.location,
+          batchNo: p.batchNo,
+          description: p.description,
+          productType: p.productType,
+          printDescription: p.printDescription,
+          printBatchNo: p.printBatchNo,
+          oneClickSale: p.oneClickSale,
+          enableTracking: p.enableTracking,
+          printExpiryDate: p.printExpiryDate,
+          notForSale: p.notForSale,
+          reorderLevel: p.reorderLevel,
+          lowLevelLimit: p.lowLevelLimit,
+          openingStock: carryForwardStock ? p.currentStock : 0,
+          openingStockValue: carryForwardStock ? ((p.currentStock * p.purchasePrice) || 0) : 0,
+          currentStock: carryForwardStock ? p.currentStock : 0,
+          isActive: p.isActive
+        }));
+        await Product.insertMany(newProducts);
+      }
     }
 
     // Update User
