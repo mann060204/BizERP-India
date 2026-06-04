@@ -83,7 +83,7 @@ export default function SuppliersPage() {
                 { header: 'Balance', render: (s) => formatAccountingBalance(s.currentBalance || 0, 'supplier').text }
               ]}
             />
-            <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
+            <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-white font-semibold text-sm transition shadow-lg shadow-blue-600/20">
               + Add Supplier
             </button>
           </div>
@@ -102,7 +102,7 @@ export default function SuppliersPage() {
             <Truck className="w-14 h-14 text-action-500/50 mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No suppliers yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Add your first supplier to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-action-500 text-slate-900 text-sm font-semibold hover:bg-action-500 transition">Add Supplier</button>
+            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-action-500 text-white text-sm font-semibold hover:bg-action-500 transition">Add Supplier</button>
           </div>
         ) : (
           <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">

@@ -435,7 +435,7 @@ export default function MastersPage() {
               <button onClick={() => setShowModal(false)} className="px-5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
-              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-xl bg-action-500 text-slate-900 hover:bg-action-500 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
+              <button onClick={handleSave} disabled={saving} className="px-8 py-2 rounded-xl bg-action-500 text-white hover:bg-action-500 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editing ? 'Update Item' : 'Create Item'}
               </button>
             </div>
@@ -531,7 +531,7 @@ export default function MastersPage() {
               <button onClick={() => setShowUnitModal(false)} className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">
                 Cancel
               </button>
-              <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-2 px-6 py-2.5 bg-action-500 hover:bg-action-500 text-slate-900 rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/20">
+              <button onClick={() => setShowUnitModal(false)} className="flex items-center gap-2 px-6 py-2.5 bg-action-500 hover:bg-action-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-blue-600/20">
                 <Plus className="w-4 h-4" /> Save Settings
               </button>
             </div>

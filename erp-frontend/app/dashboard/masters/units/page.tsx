@@ -121,7 +121,7 @@ export default function UnitMasterPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 bg-action-500 text-slate-900 font-medium rounded-xl hover:bg-action-600 transition flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 bg-action-500 text-white font-medium rounded-xl hover:bg-action-600 transition flex items-center gap-2 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save Changes

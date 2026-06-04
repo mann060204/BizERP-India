@@ -185,7 +185,7 @@ export default function SalesPage() {
                               <Printer className="w-4 h-4" />
                             </Link>
                             {inv.status !== 'cancelled' && (
-                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-action-500 transition tooltip" title="Edit Invoice">
+                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-white hover:bg-action-500 transition tooltip" title="Edit Invoice">
                                 <Edit3 className="w-4 h-4" />
                               </Link>
                             )}

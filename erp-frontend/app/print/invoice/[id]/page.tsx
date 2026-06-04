@@ -165,7 +165,7 @@ export default function PrintableInvoicePage() {
 
           {/* Non-print controls */}
           <div className="print:hidden mt-8 flex flex-col gap-2 border-t pt-4">
-            <button onClick={() => window.print()} className="py-2 bg-action-500 text-slate-900 rounded font-bold">Print</button>
+            <button onClick={() => window.print()} className="py-2 bg-action-500 text-white rounded font-bold">Print</button>
             <button onClick={() => window.close()} className="py-2 bg-gray-200 text-black rounded font-bold">Close</button>
           </div>
         </div>
@@ -429,7 +429,7 @@ export default function PrintableInvoicePage() {
 
       {/* Non-print controls floating */}
       <div className="print:hidden fixed bottom-8 right-8 flex flex-col gap-2">
-        <button onClick={() => window.print()} className="px-6 py-3 bg-action-500 text-slate-900 rounded-full font-bold shadow-2xl hover:bg-action-600">Print Invoice</button>
+        <button onClick={() => window.print()} className="px-6 py-3 bg-action-500 text-white rounded-full font-bold shadow-2xl hover:bg-action-600">Print Invoice</button>
         <button onClick={() => window.close()} className="px-6 py-3 bg-action-500 text-white border rounded-full font-bold shadow-2xl hover:bg-gray-100">Close Window</button>
       </div>
     </div>

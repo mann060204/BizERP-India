@@ -96,7 +96,7 @@ export default function GSTR1Page() {
             <button key={s.key} onClick={() => setSection(s.key as Section)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${section === s.key ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
               {s.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${section === s.key ? 'bg-indigo-500' : 'bg-slate-100'}`}>{s.count}</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${section === s.key ? 'bg-indigo-500 text-white' : 'bg-slate-100'}`}>{s.count}</span>
             </button>
           ))}
         </div>

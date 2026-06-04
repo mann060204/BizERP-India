@@ -174,7 +174,7 @@ export default function CategoryMasterPage() {
           <div className="flex gap-2 max-w-md">
             <input value={newGroup} onChange={e => setNewGroup(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGroup(); } }} 
               className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new group (e.g. T-Shirts)..." />
-            <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-action-500 hover:bg-action-500 text-slate-900 rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-blue-600/20"><Plus className="w-5 h-5" /></button>
+            <button type="button" onClick={addGroup} className="px-4 py-2.5 bg-action-500 hover:bg-action-500 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-blue-600/20"><Plus className="w-5 h-5" /></button>
           </div>
 
           <div className="space-y-4 pt-4">
