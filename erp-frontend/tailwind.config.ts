@@ -49,6 +49,18 @@ const config: Config = {
           800: '#112034',
           900: '#0c1827',
         },
+        slate: {
+          50: 'var(--bg)',
+          100: 'var(--bg-elevated)',
+          200: 'var(--border)',
+          300: 'var(--border-focus)',
+          400: 'var(--text-subtle)',
+          500: 'var(--text-muted)',
+          600: 'var(--text-muted)',
+          700: 'var(--text)',
+          800: 'var(--text)',
+          900: 'var(--text)',
+        },
         sidebar: {
           DEFAULT: 'var(--sidebar-bg)',
           active: 'var(--sidebar-active-bg)',
