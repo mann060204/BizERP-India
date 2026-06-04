@@ -269,13 +269,15 @@ export default function EditCustomerPage() {
               {showCamera ? (
                 <div className="flex justify-center gap-3 px-2 mt-2">
                   {!cameraError && (
-                    <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-action-600 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+                    <>
+<button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-action-600 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                       <Camera className="w-4 h-4" /> Capture
                     </button>
                       <button onClick={() => startCamera(facingMode === 'user' ? 'environment' : 'user')} className="px-3 flex items-center justify-center text-slate-600 bg-white hover:bg-slate-50 py-1.5 rounded border border-slate-200 transition" title="Flip Camera">
                         <RefreshCw className="w-4 h-4" />
                       </button>
-                  )}
+                  </>
+)}
                   <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-red-50 py-1.5 rounded border border-slate-200 transition">
                     <X className="w-4 h-4" /> Cancel
                   </button>

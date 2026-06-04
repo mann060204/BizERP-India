@@ -3,8 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Download, FileText, FileSpreadsheet, FileIcon, FileType } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import toast from 'react-hot-toast';
 
 interface Column {
   header: string;
@@ -49,85 +50,113 @@ export default function ExportDropdown({ data, columns, filename }: ExportDropdo
   };
 
   const exportExcel = () => {
-    const exportData = getExportData();
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    XLSX.writeFile(workbook, `${filename}.xlsx`);
-    setOpen(false);
+    try {
+      const exportData = getExportData();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      setOpen(false);
+      toast.success('Exported to Excel successfully!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Failed to export to Excel: ' + error.message);
+    }
   };
 
   const exportCSV = () => {
-    const exportData = getExportData();
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const csv = XLSX.utils.sheet_to_csv(worksheet);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${filename}.csv`;
-    link.click();
-    setOpen(false);
+    try {
+      const exportData = getExportData();
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const csv = XLSX.utils.sheet_to_csv(worksheet);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${filename}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setOpen(false);
+      toast.success('Exported to CSV successfully!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Failed to export to CSV: ' + error.message);
+    }
   };
 
   const exportPDF = () => {
-    const doc = new jsPDF();
-    const tableData = data.map(row => {
-      return columns.map(col => {
-        if (col.render) return col.render(row);
-        if (col.key) return row[col.key] || '';
-        return '';
+    try {
+      const doc = new jsPDF();
+      const tableData = data.map(row => {
+        return columns.map(col => {
+          if (col.render) return col.render(row);
+          if (col.key) return row[col.key] || '';
+          return '';
+        });
       });
-    });
 
-    autoTable(doc, {
-      head: [columns.map(c => c.header)],
-      body: tableData,
-      theme: 'grid',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [30, 58, 138] }, // action-800 color
-    });
+      autoTable(doc, {
+        head: [columns.map(c => c.header)],
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [30, 58, 138] }, // action-800 color
+      });
 
-    doc.save(`${filename}.pdf`);
-    setOpen(false);
+      doc.save(`${filename}.pdf`);
+      setOpen(false);
+      toast.success('Exported to PDF successfully!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Failed to export to PDF: ' + error.message);
+    }
   };
 
   const exportWord = () => {
-    const tableHeaders = columns.map(c => `<th>${c.header}</th>`).join('');
-    const tableRows = data.map(row => {
-      const tds = columns.map(col => {
-        let val = '';
-        if (col.render) val = String(col.render(row));
-        else if (col.key) val = String(row[col.key] || '');
-        return `<td>${val}</td>`;
+    try {
+      const tableHeaders = columns.map(c => `<th>${c.header}</th>`).join('');
+      const tableRows = data.map(row => {
+        const tds = columns.map(col => {
+          let val = '';
+          if (col.render) val = String(col.render(row));
+          else if (col.key) val = String(row[col.key] || '');
+          return `<td>${val}</td>`;
+        }).join('');
+        return `<tr>${tds}</tr>`;
       }).join('');
-      return `<tr>${tds}</tr>`;
-    }).join('');
 
-    const html = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><meta charset='utf-8'><title>${filename}</title>
-      <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid black; padding: 5px; text-align: left; }
-        th { background-color: #f2f2f2; }
-      </style>
-      </head>
-      <body>
-        <h2>${filename}</h2>
-        <table>
-          <thead><tr>${tableHeaders}</tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </body>
-      </html>
-    `;
+      const html = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>${filename}</title>
+        <style>
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid black; padding: 5px; text-align: left; }
+          th { background-color: #f2f2f2; }
+        </style>
+        </head>
+        <body>
+          <h2>${filename}</h2>
+          <table>
+            <thead><tr>${tableHeaders}</tr></thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </body>
+        </html>
+      `;
 
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${filename}.doc`;
-    link.click();
-    setOpen(false);
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${filename}.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setOpen(false);
+      toast.success('Exported to Word successfully!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error('Failed to export to Word: ' + error.message);
+    }
   };
 
   return (
