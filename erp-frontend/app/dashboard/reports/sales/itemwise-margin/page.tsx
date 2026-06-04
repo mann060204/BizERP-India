@@ -16,13 +16,13 @@ export default function Page() {
   const columns: any[] = [
     { key: 'productName', label: 'Item Name' },
     { key: 'totalQtySold', label: 'Qty Sold', align: 'right' },
-    { key: 'avgSaleRate', label: 'Avg Sale Rate', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalTaxable', label: 'Sale Taxable', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'estimatedCost', label: 'Est. Cost', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'avgSaleRate', label: 'Avg Sale Rate', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalTaxable', label: 'Sale Taxable', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'estimatedCost', label: 'Est. Cost', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'grossProfit', label: 'Gross Profit', align: 'right', format: (v: any) => {
       const n = Number(v||0);
-      return <span className={n >= 0 ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold'}>₹{n.toFixed(2)}</span>;
+      return <span className={n >= 0 ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold'}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n)}</span>;
     }},
   ];
 

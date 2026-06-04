@@ -8,8 +8,8 @@ export default function Page() {
     { key: 'accountType', label: 'Type' },    // Backend transforms 'type' → 'accountType'
     { key: 'group', label: 'Group / Bank' },  // Backend maps bankName → group
     { key: 'balanceType', label: 'Dr/Cr' },
-    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
-    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
   ];
 
   const fetchData = async () => {

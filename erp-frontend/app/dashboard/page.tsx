@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../components/layout/Topbar';
 import { useAppSelector } from '../../hooks/useRedux';
+import QuickPaymentModal from './components/QuickPaymentModal';
 import { invoicesApi, purchasesApi, inventoryApi, dashboardApi, businessApi, expensesApi } from '../../lib/erp-api';
 import {
   TrendingUp, TrendingDown, CreditCard, Wallet, AlertTriangle,
@@ -17,6 +18,8 @@ import {
 } from 'recharts';
 
 const QUICK_ACTIONS = [
+  { label: 'Payment In',       action: 'PAY_IN',                  icon: IndianRupee,    color: 'text-emerald-600', bg: 'bg-emerald-50', desc: 'Receive from Customer' },
+  { label: 'Payment Out',      action: 'PAY_OUT',                 icon: CreditCard,     color: 'text-rose-600',    bg: 'bg-rose-50',    desc: 'Pay to Supplier' },
   { label: 'New Invoice',      href: '/dashboard/sales/new',      icon: FilePlus,       color: 'text-indigo-600',  bg: 'bg-indigo-50',  desc: 'Create GST invoice' },
   { label: 'Add Purchase',     href: '/dashboard/purchases/new',  icon: PackagePlus,    color: 'text-blue-600',    bg: 'bg-blue-50',    desc: 'Record a purchase bill' },
   { label: 'Add Customer',     href: '/dashboard/customers/new',  icon: UserPlus,       color: 'text-emerald-600', bg: 'bg-emerald-50', desc: 'Add new customer' },
@@ -28,12 +31,14 @@ const DONUT_COLORS = ['#6366f1', '#f97316'];
 const TOP_COLORS   = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
 const BOT_COLORS   = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#94a3b8'];
 
-const fmt = (n: number) =>
-  n >= 100000
-    ? `₹${(n / 100000).toFixed(1)}L`
-    : n >= 1000
-    ? `₹${(n / 1000).toFixed(1)}k`
-    : `₹${(n || 0).toFixed(0)}`;
+const fmt = (n: number) => {
+  if (!n) return '₹0';
+  const abs = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L`;
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(1)}k`;
+  return `${sign}₹${abs.toFixed(0)}`;
+};
 
 const fmtFull = (n: number) =>
   `₹${(n || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
@@ -105,7 +110,7 @@ const CustomTip = ({ active, payload, label }: any) => {
       <p className="font-semibold text-slate-600 mb-1">{label}</p>
       {payload.map((e: any, i: number) => (
         <p key={i} style={{ color: e.color }} className="font-medium">
-          {e.name}: {typeof e.value === 'number' && e.value > 999 ? fmtFull(e.value) : e.value}
+          {e.name}: {['Sales', 'Purchases', 'Expenses', 'Revenue'].includes(e.name) || e.name?.includes('Revenue') ? fmtFull(e.value) : (typeof e.value === 'number' ? e.value.toLocaleString('en-IN') : e.value)}
         </p>
       ))}
     </div>
@@ -124,6 +129,7 @@ export default function DashboardPage() {
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
   const [actions, setActions] = useState(QUICK_ACTIONS);
+  const [paymentModalMode, setPaymentModalMode] = useState<'IN' | 'OUT' | null>(null);
 
   const dragKpiItem = useRef<number | null>(null);
   const dragOverKpiItem = useRef<number | null>(null);
@@ -503,7 +509,11 @@ export default function DashboardPage() {
                 onDragEnd={handleSort}
                 onDragOver={(e) => e.preventDefault()}
                 className="w-full">
-                <button onClick={() => router.push(href)}
+                <button onClick={() => {
+                    if ((actions[index] as any).action === 'PAY_IN') setPaymentModalMode('IN');
+                    else if ((actions[index] as any).action === 'PAY_OUT') setPaymentModalMode('OUT');
+                    else router.push(href as string);
+                  }}
                   className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing">
                   <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                     <Icon className={`w-4 h-4 ${color}`} />
@@ -534,6 +544,7 @@ export default function DashboardPage() {
         </div>
       </main>
       {selectedKpi && <KpiModal kpi={selectedKpi} onClose={() => setSelectedKpi(null)} />}
+      {paymentModalMode && <QuickPaymentModal mode={paymentModalMode} onClose={() => setPaymentModalMode(null)} />}
     </div>
   );
 }
@@ -589,7 +600,7 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
       return (
         <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
           <div><p className="font-semibold text-slate-800">{item.category}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
-          <div className="text-right"><p className="font-bold text-slate-900">₹{(item.totalWithTax || 0).toLocaleString('en-IN')}</p></div>
+          <div className="text-right"><p className="font-bold text-slate-900">{fmtFull(item.totalWithTax)}</p></div>
         </div>
       );
     } else {
@@ -600,7 +611,7 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
             <p className="text-xs text-slate-500">{item.customerId?.name || item.supplierId?.name || 'Walk-in'} • {new Date(item.invoiceDate || item.billDate).toLocaleDateString()}</p>
           </div>
           <div className="text-right">
-            <p className="font-bold text-slate-900">₹{(item.grandTotal || 0).toLocaleString('en-IN')}</p>
+            <p className="font-bold text-slate-900">{fmtFull(item.grandTotal)}</p>
             <p className={`text-[10px] font-bold uppercase tracking-wider ${item.status === 'paid' ? 'text-emerald-600' : item.status === 'partial' ? 'text-blue-600' : 'text-orange-600'}`}>{item.status}</p>
           </div>
         </div>

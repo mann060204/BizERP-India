@@ -70,9 +70,9 @@ export default function PurchaseAgingPage() {
                       <td className="px-4 py-3 text-xs text-slate-600">{new Date(row.billDate).toLocaleDateString('en-IN')}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-IN') : '—'}</td>
                       <td className="px-4 py-3 font-medium">{row.supplier || row.supplierSnapshot?.name || '—'}</td>
-                      <td className="px-4 py-3 text-right">₹{Number(row.grandTotal||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-green-600">₹{Number(row.amountPaid||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-bold text-red-600">₹{Number(row.balance||0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.grandTotal||0))}</td>
+                      <td className="px-4 py-3 text-right text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.amountPaid||0))}</td>
+                      <td className="px-4 py-3 text-right font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.balance||0))}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${(row.daysOverdue||0) > 60 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                           {row.daysOverdue || 0}d

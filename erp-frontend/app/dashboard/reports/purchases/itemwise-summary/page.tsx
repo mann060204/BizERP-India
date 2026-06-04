@@ -12,12 +12,12 @@ export default function Page() {
     { key: 'productName', label: 'Item Name' },
     { key: 'hsnCode', label: 'HSN' },
     { key: 'totalQty', label: 'Qty', align: 'right' },
-    { key: 'totalTaxable', label: 'Taxable', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalCGST', label: 'CGST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalSGST', label: 'SGST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalIGST', label: 'IGST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'totalTaxable', label: 'Taxable', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalCGST', label: 'CGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalSGST', label: 'SGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalIGST', label: 'IGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
   ];
   const fetchData = useCallback(async () => { const res = await reportsApi.getPurchasesItemwiseSummary({ from, to }); return res.data?.data || []; }, [from, to]);
   return <ReportLayout title="Itemwise Purchase Summary" subtitle={`GST summary per item across all purchases • ${from} to ${to}`} category="Purchases" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}`} extraHeader={<DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />} />;

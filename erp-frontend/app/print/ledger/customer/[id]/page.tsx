@@ -61,6 +61,7 @@ export default function PrintableCustomerLedger() {
   const priorCr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.credit || 0), 0);
   
   let currentBal = initialOpening + priorDr - priorCr;
+  let startBal = currentBal;
   let periodDr = 0;
   let periodCr = 0;
 
@@ -193,8 +194,8 @@ export default function PrintableCustomerLedger() {
                 <td></td>
                 <td></td>
                 <td></td>
-                <td className="py-1 text-right">{(periodDr + (currentBal < 0 ? Math.abs(currentBal) : 0)).toFixed(2)}</td>
-                <td className="py-1 text-right">{(periodCr + (currentBal >= 0 ? currentBal : 0)).toFixed(2)}</td>
+                <td className="py-1 text-right">{(periodDr + (startBal > 0 ? startBal : 0) + (currentBal < 0 ? Math.abs(currentBal) : 0)).toFixed(2)}</td>
+                <td className="py-1 text-right">{(periodCr + (startBal < 0 ? Math.abs(startBal) : 0) + (currentBal >= 0 ? currentBal : 0)).toFixed(2)}</td>
                 <td></td>
               </tr>
 

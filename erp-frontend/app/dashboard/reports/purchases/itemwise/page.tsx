@@ -12,10 +12,10 @@ export default function Page() {
     { key: 'productName', label: 'Item Name' },
     { key: 'hsnCode', label: 'HSN' },
     { key: 'totalQty', label: 'Total Qty', align: 'right' },
-    { key: 'avgRate', label: 'Avg Rate', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalTaxable', label: 'Taxable', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'avgRate', label: 'Avg Rate', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalTaxable', label: 'Taxable', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'billCount', label: 'Bills', align: 'center' },
   ];
   const fetchData = useCallback(async () => { const res = await reportsApi.getPurchasesItemwise({ from, to }); return res.data?.data || []; }, [from, to]);

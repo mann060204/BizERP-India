@@ -9,9 +9,9 @@ export default function Page() {
     { key: 'category', label: 'Category' },
     { key: 'unit', label: 'Unit' },
     { key: 'currentStock', label: 'Stock', align: 'right' },
-    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
-    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },  // Backend maps sellingPrice → salePrice
-    { key: 'mrp', label: 'MRP', align: 'right', format: (v: any) => v ? `₹${Number(v).toFixed(2)}` : '—' },
+    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },  // Backend maps sellingPrice → salePrice
+    { key: 'mrp', label: 'MRP', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
     { key: 'gstRate', label: 'GST %', align: 'center', format: (v: any) => `${v || 0}%` },
   ];
 

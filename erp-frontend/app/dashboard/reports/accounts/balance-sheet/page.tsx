@@ -66,7 +66,7 @@ export default function BalanceSheetPage() {
           <tfoot className="border-t-2 border-slate-300 bg-slate-50">
             <tr>
               <td colSpan={2} className={`px-4 py-3 font-bold text-${color}-700 text-sm`}>Total {title}</td>
-              <td className={`px-4 py-3 text-right font-bold text-${color}-700`}>₹{total.toFixed(2)}</td>
+              <td className={`px-4 py-3 text-right font-bold text-${color}-700`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total)}</td>
             </tr>
           </tfoot>
         </table>
@@ -99,15 +99,15 @@ export default function BalanceSheetPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="glass rounded-2xl p-5 border border-blue-200 bg-blue-50/40">
             <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Total Assets</p>
-            <p className="text-2xl font-bold text-blue-700">₹{totalAssets.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-blue-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAssets)}</p>
           </div>
           <div className="glass rounded-2xl p-5 border border-red-200 bg-red-50/40">
             <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">Total Liabilities</p>
-            <p className="text-2xl font-bold text-red-700">₹{totalLiabilities.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-red-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalLiabilities)}</p>
           </div>
           <div className="glass rounded-2xl p-5 border border-emerald-200 bg-emerald-50/40">
             <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">Total Equity / Capital</p>
-            <p className="text-2xl font-bold text-emerald-700">₹{totalEquity.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-emerald-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalEquity)}</p>
           </div>
         </div>
 
@@ -120,12 +120,12 @@ export default function BalanceSheetPage() {
               <span className="text-sm text-slate-500">Assets = Liabilities + Equity</span>
             </div>
             <div className="flex items-center gap-6 text-sm font-semibold">
-              <span className="text-blue-600">Assets: ₹{totalAssets.toFixed(2)}</span>
+              <span className="text-blue-600">Assets: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAssets)}</span>
               <span className="text-slate-400">=</span>
-              <span className="text-slate-700">Liabilities + Equity: ₹{totalLiabilitiesEquity.toFixed(2)}</span>
+              <span className="text-slate-700">Liabilities + Equity: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalLiabilitiesEquity)}</span>
               {Math.abs(totalAssets - totalLiabilitiesEquity) < 0.01
                 ? <span className="text-emerald-600 text-xs bg-emerald-100 px-2 py-0.5 rounded-full">✓ Balanced</span>
-                : <span className="text-orange-600 text-xs bg-orange-100 px-2 py-0.5 rounded-full">⚠ Difference: ₹{Math.abs(totalAssets - totalLiabilitiesEquity).toFixed(2)}</span>
+                : <span className="text-orange-600 text-xs bg-orange-100 px-2 py-0.5 rounded-full">⚠ Difference: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Math.abs(totalAssets - totalLiabilitiesEquity))}</span>
               }
             </div>
           </div>

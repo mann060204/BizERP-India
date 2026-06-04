@@ -6,7 +6,7 @@ export default function Page() {
   const columns: any[] = [
     { key: 'productName', label: 'Item Name' },
     { key: 'totalSold', label: 'Qty Sold (Last 30 Days)', align: 'right' },
-    { key: 'totalRevenue', label: 'Revenue Generated', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'totalRevenue', label: 'Revenue Generated', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
   ];
 
   const fetchData = async () => {

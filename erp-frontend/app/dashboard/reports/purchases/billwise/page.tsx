@@ -20,9 +20,9 @@ export default function Page() {
     { key: 'supplierSnapshot', label: 'Supplier', format: (v: any) => v?.name || '—' },
     { key: 'purchaseType', label: 'Type', align: 'center' },
     { key: 'paymentMode', label: 'Mode', align: 'center' },
-    { key: 'grandTotal', label: 'Total', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'amountPaid', label: 'Paid', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'grandTotal', label: 'Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'amountPaid', label: 'Paid', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'status', label: 'Status', align: 'center' },
   ];
 

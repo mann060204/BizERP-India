@@ -49,7 +49,7 @@ export default function Page() {
         <div className="glass rounded-2xl p-6 border border-rose-100 bg-gradient-to-r from-rose-50 to-white flex items-center justify-between">
           <div>
             <p className="text-sm text-rose-600 font-semibold uppercase tracking-wider mb-1">Total Indirect Expenses</p>
-            <p className="text-3xl font-bold text-rose-700">₹{Number(grandTotal).toFixed(2)}</p>
+            <p className="text-3xl font-bold text-rose-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(grandTotal))}</p>
           </div>
           <div className="text-rose-200">
             <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -79,9 +79,9 @@ export default function Page() {
                       <tr key={i} className="hover:bg-slate-50 transition">
                         <td className="px-4 py-3 font-medium text-slate-900">{row._id || 'Uncategorized'}</td>
                         <td className="px-4 py-3 text-center text-slate-600">{row.count}</td>
-                        <td className="px-4 py-3 text-right">₹{Number(row.totalAmount||0).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-orange-600">₹{Number(row.totalGST||0).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-slate-900">₹{Number(row.totalWithTax||0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalAmount||0))}</td>
+                        <td className="px-4 py-3 text-right text-orange-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalGST||0))}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalWithTax||0))}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="flex-1 bg-slate-100 rounded-full h-1.5">
@@ -101,7 +101,7 @@ export default function Page() {
                     <td className="px-4 py-3 text-center font-bold">{summary.reduce((s: number, r: any) => s + (r.count || 0), 0)}</td>
                     <td className="px-4 py-3 text-right font-bold">₹{summary.reduce((s: number, r: any) => s + (r.totalAmount || 0), 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-right font-bold text-orange-600">₹{summary.reduce((s: number, r: any) => s + (r.totalGST || 0), 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-900">₹{grandTotal.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(grandTotal)}</td>
                     <td className="px-4 py-3 text-center font-bold">100%</td>
                   </tr>
                 </tfoot>

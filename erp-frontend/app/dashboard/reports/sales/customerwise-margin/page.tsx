@@ -16,13 +16,13 @@ export default function Page() {
   const columns: any[] = [
     { key: 'customerName', label: 'Customer' },
     { key: 'invoiceCount', label: 'Invoices', align: 'center' },
-    { key: 'totalRevenue', label: 'Total Revenue', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalTaxable', label: 'Taxable Amount', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalReceived', label: 'Amount Received', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'totalRevenue', label: 'Total Revenue', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalTaxable', label: 'Taxable Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalReceived', label: 'Amount Received', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'totalBalance', label: 'Balance Due', align: 'right', format: (v: any) => {
       const n = Number(v||0);
-      return <span className={n > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>{n > 0 ? `₹${n.toFixed(2)}` : '—'}</span>;
+      return <span className={n > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>{n > 0 ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n) : '—'}</span>;
     }},
   ];
 

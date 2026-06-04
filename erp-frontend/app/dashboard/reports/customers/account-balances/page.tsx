@@ -8,10 +8,10 @@ export default function Page() {
     { key: 'name', label: 'Customer Name' },
     { key: 'mobile', label: 'Mobile' },
     { key: 'gstin', label: 'GSTIN' },
-    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'balanceType', label: 'Dr/Cr', align: 'center' },
-    { key: 'creditLimit', label: 'Credit Limit', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'creditLimit', label: 'Credit Limit', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'priceCategory', label: 'Category', align: 'center' },
   ];
 

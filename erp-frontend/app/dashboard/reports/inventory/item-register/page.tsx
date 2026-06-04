@@ -9,8 +9,8 @@ export default function Page() {
     { key: 'category', label: 'Category' },
     { key: 'unit', label: 'Unit' },
     { key: 'currentStock', label: 'Current Stock', align: 'right' },
-    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
-    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'gstRate', label: 'GST %', align: 'right', format: (v: any) => `${v || 0}%` },
   ];
 

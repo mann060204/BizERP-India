@@ -13,10 +13,10 @@ export default function Page() {
     { key: 'supplier', label: 'Supplier' },
     { key: 'billNumber', label: 'Bill #' },
     { key: 'billDate', label: 'Bill Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'billTotal', label: 'Bill Total', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'amountPaid', label: 'Amount Paid', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'billTotal', label: 'Bill Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'amountPaid', label: 'Amount Paid', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'mode', label: 'Mode', align: 'center' },
-    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'status', label: 'Status', align: 'center' },
   ];
   const fetchData = useCallback(async () => { const res = await reportsApi.getSupplierPaymentHistory({ from, to }); return res.data?.data || []; }, [from, to]);

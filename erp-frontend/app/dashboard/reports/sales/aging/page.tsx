@@ -88,9 +88,9 @@ export default function SalesAgingPage() {
                     <td className="px-4 py-3 text-slate-600 text-xs">{new Date(row.invoiceDate).toLocaleDateString('en-IN')}</td>
                     <td className="px-4 py-3 text-slate-600 text-xs">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-IN') : '—'}</td>
                     <td className="px-4 py-3 font-medium text-slate-900">{row.customer || row.customerSnapshot?.name || '—'}</td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-900">₹{Number(row.grandTotal || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right text-green-600">₹{Number(row.amountReceived || 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-red-600">₹{Number(row.balance || 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-medium text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.grandTotal || 0))}</td>
+                    <td className="px-4 py-3 text-right text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.amountReceived || 0))}</td>
+                    <td className="px-4 py-3 text-right font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.balance || 0))}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${(row.daysOverdue || 0) > 60 ? 'bg-red-100 text-red-700' : (row.daysOverdue || 0) > 30 ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
                         {row.daysOverdue || 0} days

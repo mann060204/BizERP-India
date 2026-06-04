@@ -8,8 +8,8 @@ export default function Page() {
     { key: 'productId', label: 'Product', format: (v: any) => v?.name || '—' }, // populated object
     { key: 'expiryDate', label: 'Expiry Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : 'N/A' },
     { key: 'currentStock', label: 'Available Qty', align: 'right' },
-    { key: 'mrp', label: 'MRP', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
-    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => `₹${(v || 0).toFixed(2)}` },
+    { key: 'mrp', label: 'MRP', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'qualityStatus', label: 'Quality' },
   ];
 

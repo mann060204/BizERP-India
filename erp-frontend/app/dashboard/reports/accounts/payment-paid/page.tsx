@@ -8,7 +8,7 @@ export default function Page() {
     { key: 'accountId', label: 'Paid From Account', format: (v: any) => v?.name || '—' }, // populated
     { key: 'particulars', label: 'Paid To / Details' },  // Backend maps description → particulars
     { key: 'voucherNo', label: 'Reference No.' },        // Backend maps referenceId → voucherNo
-    { key: 'credit', label: 'Amount Paid', align: 'right', format: (v: any) => `₹${Number(v || 0).toFixed(2)}` },
+    { key: 'credit', label: 'Amount Paid', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v || 0)) },
   ];
 
   const fetchData = async () => {

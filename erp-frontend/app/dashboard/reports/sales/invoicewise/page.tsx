@@ -38,9 +38,9 @@ export default function Page() {
     { key: 'customerSnapshot', label: 'Customer', format: (v: any) => v?.name || 'Cash' },
     { key: 'invoiceType', label: 'Type', align: 'center' },
     { key: 'paymentMode', label: 'Mode', align: 'center' },
-    { key: 'grandTotal', label: 'Total', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'amountReceived', label: 'Received', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'grandTotal', label: 'Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'amountReceived', label: 'Received', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'status', label: 'Status', align: 'center', format: (v: any) => (
       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[v] || 'bg-slate-100 text-slate-600'}`}>{v}</span>
     )},

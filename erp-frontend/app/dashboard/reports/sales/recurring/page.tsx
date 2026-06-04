@@ -45,7 +45,7 @@ export default function Page() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
             <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Total Outstanding</p>
-            <p className="text-2xl font-bold text-red-600">₹{totalBalance.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalBalance)}</p>
           </div>
           <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
             <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Invoices Pending</p>
@@ -78,9 +78,9 @@ export default function Page() {
                       <td className="px-4 py-3 text-xs text-slate-600">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-IN') : '—'}</td>
                       <td className="px-4 py-3 font-medium">{row.customerSnapshot?.name || 'Cash'}</td>
                       <td className="px-4 py-3 text-xs text-slate-500">{row.paymentMode || 'Cash'}</td>
-                      <td className="px-4 py-3 text-right">₹{Number(row.grandTotal||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-green-600">₹{Number(row.amountReceived||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-bold text-red-600">₹{Number(row.balance||0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.grandTotal||0))}</td>
+                      <td className="px-4 py-3 text-right text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.amountReceived||0))}</td>
+                      <td className="px-4 py-3 text-right font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.balance||0))}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${(row.daysOverdue||0) > 30 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                           {row.daysOverdue || 0}d

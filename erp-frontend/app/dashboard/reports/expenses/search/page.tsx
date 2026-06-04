@@ -14,10 +14,10 @@ export default function Page() {
     { key: 'date', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
     { key: 'category', label: 'Category' },
     { key: 'vendorName', label: 'Vendor' },
-    { key: 'amount', label: 'Amount', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'amount', label: 'Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'gstRate', label: 'GST %', align: 'center', format: (v: any) => `${v||0}%` },
-    { key: 'gstTotal', label: 'GST Amount', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'totalWithTax', label: 'Total (incl. GST)', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'gstTotal', label: 'GST Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'totalWithTax', label: 'Total (incl. GST)', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'paymentMode', label: 'Mode', align: 'center' },
     { key: 'notes', label: 'Notes' },
   ];

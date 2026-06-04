@@ -67,18 +67,18 @@ export default function GSTR1Page() {
           ].map(k => (
             <div key={k.label} className="glass rounded-2xl p-5 border border-slate-200 bg-white">
               <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">{k.label}</p>
-              <p className="text-xl font-bold text-slate-900">₹{Number(k.value||0).toFixed(2)}</p>
+              <p className="text-xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(k.value||0))}</p>
             </div>
           ))}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
             <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Total GST</p>
-            <p className="text-xl font-bold text-indigo-700">₹{Number(totals.totalGST||0).toFixed(2)}</p>
+            <p className="text-xl font-bold text-indigo-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totals.totalGST||0))}</p>
           </div>
           <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
             <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Grand Total</p>
-            <p className="text-xl font-bold text-slate-900">₹{Number(totals.grandTotal||0).toFixed(2)}</p>
+            <p className="text-xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totals.grandTotal||0))}</p>
           </div>
           <div className="glass rounded-2xl p-5 border border-blue-100 bg-blue-50/40">
             <p className="text-xs text-blue-600 font-semibold uppercase mb-1">B2B (With GSTIN)</p>
@@ -120,12 +120,12 @@ export default function GSTR1Page() {
                         <td className="px-3 py-3 font-medium">{inv.customerSnapshot?.name || 'Cash'}</td>
                         <td className="px-3 py-3 text-xs text-slate-500 font-mono">{inv.customerSnapshot?.gstin || '—'}</td>
                         <td className="px-3 py-3 text-xs">{inv.placeOfSupply || '—'}</td>
-                        <td className="px-3 py-3 text-right">₹{Number(inv.totalTaxableAmount||0).toFixed(2)}</td>
-                        <td className="px-3 py-3 text-right">₹{Number(inv.totalCGST||0).toFixed(2)}</td>
-                        <td className="px-3 py-3 text-right">₹{Number(inv.totalSGST||0).toFixed(2)}</td>
-                        <td className="px-3 py-3 text-right">₹{Number(inv.totalIGST||0).toFixed(2)}</td>
-                        <td className="px-3 py-3 text-right font-medium text-indigo-700">₹{Number(inv.totalGST||0).toFixed(2)}</td>
-                        <td className="px-3 py-3 text-right font-bold">₹{Number(inv.grandTotal||0).toFixed(2)}</td>
+                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalTaxableAmount||0))}</td>
+                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalCGST||0))}</td>
+                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalSGST||0))}</td>
+                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalIGST||0))}</td>
+                        <td className="px-3 py-3 text-right font-medium text-indigo-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalGST||0))}</td>
+                        <td className="px-3 py-3 text-right font-bold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.grandTotal||0))}</td>
                       </tr>
                     ))}
                 </tbody>
@@ -144,10 +144,10 @@ export default function GSTR1Page() {
                       <td className="px-4 py-3 text-slate-700">{row.description || '—'}</td>
                       <td className="px-4 py-3 text-center">{row.gstRate || 0}%</td>
                       <td className="px-4 py-3 text-right">{row.totalQty}</td>
-                      <td className="px-4 py-3 text-right">₹{Number(row.totalTaxable||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right">₹{Number(row.totalCGST||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right">₹{Number(row.totalSGST||0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right">₹{Number(row.totalIGST||0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalTaxable||0))}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalCGST||0))}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalSGST||0))}</td>
+                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalIGST||0))}</td>
                     </tr>
                   ))}
                 </tbody>

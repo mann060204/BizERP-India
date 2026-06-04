@@ -81,21 +81,21 @@ export default function PnlReportPage() {
                   <div className="p-1.5 rounded-lg bg-green-400/10 text-green-500"><ArrowUpRight className="w-4 h-4" /></div>
                   <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Sales</p>
                 </div>
-                <p className="text-2xl font-bold text-slate-900">₹{totalSales.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalSales)}</p>
               </div>
               <div className="glass rounded-2xl p-5 border border-red-200 bg-red-50/40">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="p-1.5 rounded-lg bg-red-400/10 text-red-500"><ArrowDownRight className="w-4 h-4" /></div>
                   <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Purchases</p>
                 </div>
-                <p className="text-2xl font-bold text-slate-900">₹{totalPurchases.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPurchases)}</p>
               </div>
               <div className="glass rounded-2xl p-5 border border-orange-200 bg-orange-50/40">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="p-1.5 rounded-lg bg-orange-400/10 text-orange-500"><ArrowDownRight className="w-4 h-4" /></div>
                   <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Expenses</p>
                 </div>
-                <p className="text-2xl font-bold text-slate-900">₹{totalExpenses.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalExpenses)}</p>
               </div>
               <div className={`glass rounded-2xl p-5 border ${netProfit >= 0 ? 'border-emerald-300 bg-emerald-50/40' : 'border-red-300 bg-red-50/40'}`}>
                 <div className="flex items-center gap-2 mb-2">
@@ -105,7 +105,7 @@ export default function PnlReportPage() {
                   <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Net Profit</p>
                 </div>
                 <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {netProfit >= 0 ? '' : '-'}₹{Math.abs(netProfit).toFixed(2)}
+                  {netProfit >= 0 ? '' : '-'}{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Math.abs(netProfit))}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
                   {profitMargin.toFixed(1)}% margin
@@ -126,11 +126,11 @@ export default function PnlReportPage() {
                   </tr>
                   <tr className="hover:bg-slate-50/50 transition">
                     <td className="px-5 py-3.5 text-slate-800 pl-8">Operating Revenue (Sales)</td>
-                    <td className="px-5 py-3.5 text-right font-medium text-slate-900">₹{totalSales.toFixed(2)}</td>
+                    <td className="px-5 py-3.5 text-right font-medium text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalSales)}</td>
                   </tr>
                   <tr className="bg-emerald-50/50">
                     <td className="px-5 py-3 text-emerald-700 font-bold pl-8">Total Income (A)</td>
-                    <td className="px-5 py-3 text-right font-bold text-emerald-700">₹{totalSales.toFixed(2)}</td>
+                    <td className="px-5 py-3 text-right font-bold text-emerald-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalSales)}</td>
                   </tr>
 
                   {/* Expenses Section */}
@@ -139,21 +139,21 @@ export default function PnlReportPage() {
                   </tr>
                   <tr className="hover:bg-slate-50/50 transition">
                     <td className="px-5 py-3.5 text-slate-800 pl-8">Cost of Goods Sold (Purchases)</td>
-                    <td className="px-5 py-3.5 text-right font-medium text-slate-900">₹{totalPurchases.toFixed(2)}</td>
+                    <td className="px-5 py-3.5 text-right font-medium text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPurchases)}</td>
                   </tr>
                   <tr className="hover:bg-slate-50/50 transition">
                     <td className="px-5 py-3.5 text-slate-800 pl-8">Gross Profit (Sales − Purchases)</td>
                     <td className={`px-5 py-3.5 text-right font-medium ${grossProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                      ₹{grossProfit.toFixed(2)}
+                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(grossProfit)}
                     </td>
                   </tr>
                   <tr className="hover:bg-slate-50/50 transition">
                     <td className="px-5 py-3.5 text-slate-800 pl-8">Indirect Expenses</td>
-                    <td className="px-5 py-3.5 text-right font-medium text-slate-900">₹{totalExpenses.toFixed(2)}</td>
+                    <td className="px-5 py-3.5 text-right font-medium text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalExpenses)}</td>
                   </tr>
                   <tr className="bg-red-50/50">
                     <td className="px-5 py-3 text-red-700 font-bold pl-8">Total Expenses (B = Purchases + Expenses)</td>
-                    <td className="px-5 py-3 text-right font-bold text-red-700">₹{totalCosts.toFixed(2)}</td>
+                    <td className="px-5 py-3 text-right font-bold text-red-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalCosts)}</td>
                   </tr>
 
                   {/* Net Profit */}
@@ -162,7 +162,7 @@ export default function PnlReportPage() {
                       Net {netProfit >= 0 ? 'Profit' : 'Loss'} (A − B)
                     </td>
                     <td className={`px-5 py-5 text-right font-bold text-2xl ${netProfit >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                      {netProfit < 0 ? '(' : ''}₹{Math.abs(netProfit).toFixed(2)}{netProfit < 0 ? ')' : ''}
+                      {netProfit < 0 ? '(' : ''}{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Math.abs(netProfit))}{netProfit < 0 ? ')' : ''}
                     </td>
                   </tr>
                 </tbody>

@@ -8,8 +8,8 @@ export default function Page() {
     { key: 'accountId', label: 'Account', format: (v: any) => v?.name || '—' }, // populated object
     { key: 'particulars', label: 'Particulars' },    // Backend maps description → particulars
     { key: 'voucherType', label: 'Type' },           // Backend maps referenceType → voucherType
-    { key: 'debit', label: 'Debit', align: 'right', format: (v: any) => v ? `₹${Number(v).toFixed(2)}` : '—' },
-    { key: 'credit', label: 'Credit', align: 'right', format: (v: any) => v ? `₹${Number(v).toFixed(2)}` : '—' },
+    { key: 'debit', label: 'Debit', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
+    { key: 'credit', label: 'Credit', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
   ];
 
   const fetchData = async () => {

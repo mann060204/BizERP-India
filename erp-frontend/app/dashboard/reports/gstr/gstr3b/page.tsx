@@ -13,7 +13,7 @@ function GSTRow({ label, value, className = '' }: { label: string; value: number
   return (
     <div className={`flex justify-between items-center py-3 px-4 ${className}`}>
       <span className="text-sm text-slate-700">{label}</span>
-      <span className="font-semibold text-slate-900">₹{Number(value || 0).toFixed(2)}</span>
+      <span className="font-semibold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(value || 0))}</span>
     </div>
   );
 }
@@ -61,8 +61,8 @@ export default function GSTR3BPage() {
         <div className={`glass rounded-2xl p-6 border ${totalNetPayable > 0 ? 'border-red-200 bg-gradient-to-r from-red-50 to-white' : 'border-green-200 bg-gradient-to-r from-green-50 to-white'} flex items-center justify-between`}>
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider mb-1 text-slate-600">Net GST Payable to Government</p>
-            <p className={`text-4xl font-bold ${totalNetPayable > 0 ? 'text-red-700' : 'text-green-700'}`}>₹{Number(totalNetPayable).toFixed(2)}</p>
-            <p className="text-xs text-slate-500 mt-1">CGST ₹{Number(netPayable.cgst||0).toFixed(2)} + SGST ₹{Number(netPayable.sgst||0).toFixed(2)} + IGST ₹{Number(netPayable.igst||0).toFixed(2)}</p>
+            <p className={`text-4xl font-bold ${totalNetPayable > 0 ? 'text-red-700' : 'text-green-700'}`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totalNetPayable))}</p>
+            <p className="text-xs text-slate-500 mt-1">CGST {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(netPayable.cgst||0))} + SGST {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(netPayable.sgst||0))} + IGST {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(netPayable.igst||0))}</p>
           </div>
           <div className={totalNetPayable > 0 ? 'text-red-300' : 'text-green-300'}>
             {totalNetPayable > 0 ? <TrendingUp className="w-16 h-16" /> : <TrendingDown className="w-16 h-16" />}
@@ -120,7 +120,7 @@ export default function GSTR3BPage() {
               <GSTRow label="Net IGST Payable" value={netPayable.igst || 0} className="font-bold bg-orange-50" />
               <div className={`flex justify-between items-center py-4 px-4 ${totalNetPayable > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
                 <span className="text-sm font-bold">Total Net Payable</span>
-                <span className={`text-lg font-bold ${totalNetPayable > 0 ? 'text-red-700' : 'text-green-700'}`}>₹{Number(totalNetPayable).toFixed(2)}</span>
+                <span className={`text-lg font-bold ${totalNetPayable > 0 ? 'text-red-700' : 'text-green-700'}`}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totalNetPayable))}</span>
               </div>
             </div>
           </div>

@@ -42,7 +42,7 @@ export default function GstReportPage() {
   const Row = ({ label, value, bold = false }: { label: string; value: number; bold?: boolean }) => (
     <div className={`flex justify-between text-sm ${bold ? 'border-t border-slate-200 pt-2 mt-1' : ''}`}>
       <span className={bold ? 'font-bold text-slate-900' : 'text-slate-600'}>{label}</span>
-      <span className={bold ? 'font-bold text-slate-900' : 'text-slate-800'}>₹{value.toFixed(2)}</span>
+      <span className={bold ? 'font-bold text-slate-900' : 'text-slate-800'}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value)}</span>
     </div>
   );
 
@@ -85,17 +85,17 @@ export default function GstReportPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="glass rounded-2xl p-5 border border-blue-200 bg-blue-50/40">
                 <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Output Tax (Sales)</p>
-                <p className="text-2xl font-bold text-blue-700">₹{n(outward.totalTax).toFixed(2)}</p>
-                <p className="text-xs text-slate-500 mt-1">On ₹{n(outward.taxableValue).toFixed(2)} taxable value</p>
+                <p className="text-2xl font-bold text-blue-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(outward.totalTax))}</p>
+                <p className="text-xs text-slate-500 mt-1">On {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(outward.taxableValue))} taxable value</p>
               </div>
               <div className="glass rounded-2xl p-5 border border-emerald-200 bg-emerald-50/40">
                 <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-2">ITC Available (Purchases)</p>
-                <p className="text-2xl font-bold text-emerald-700">₹{n(inward.totalTax).toFixed(2)}</p>
-                <p className="text-xs text-slate-500 mt-1">On ₹{n(inward.taxableValue).toFixed(2)} taxable value</p>
+                <p className="text-2xl font-bold text-emerald-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(inward.totalTax))}</p>
+                <p className="text-xs text-slate-500 mt-1">On {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(inward.taxableValue))} taxable value</p>
               </div>
               <div className="glass rounded-2xl p-5 border border-orange-200 bg-orange-50/40">
                 <p className="text-xs font-semibold text-orange-600 uppercase tracking-wider mb-2">Net GST Payable</p>
-                <p className="text-2xl font-bold text-orange-700">₹{totalNetPayable.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-orange-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalNetPayable)}</p>
                 <p className="text-xs text-slate-500 mt-1">Output Tax − ITC (cash payment)</p>
               </div>
             </div>
@@ -143,28 +143,28 @@ export default function GstReportPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">CGST</p>
-                    <p className="text-slate-900 font-bold text-lg">₹{n(netGstPayable.cgst).toFixed(2)}</p>
+                    <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.cgst))}</p>
                     <p className="text-xs text-slate-400 mt-1">
                       {n(outward.cgst).toFixed(2)} − {n(inward.cgst).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">SGST</p>
-                    <p className="text-slate-900 font-bold text-lg">₹{n(netGstPayable.sgst).toFixed(2)}</p>
+                    <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.sgst))}</p>
                     <p className="text-xs text-slate-400 mt-1">
                       {n(outward.sgst).toFixed(2)} − {n(inward.sgst).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">IGST</p>
-                    <p className="text-slate-900 font-bold text-lg">₹{n(netGstPayable.igst).toFixed(2)}</p>
+                    <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.igst))}</p>
                     <p className="text-xs text-slate-400 mt-1">
                       {n(outward.igst).toFixed(2)} − {n(inward.igst).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-orange-500 rounded-xl p-4 text-white">
                     <p className="text-orange-100 text-xs font-bold uppercase tracking-wider mb-1">Total Payable</p>
-                    <p className="font-bold text-2xl">₹{totalNetPayable.toFixed(2)}</p>
+                    <p className="font-bold text-2xl">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalNetPayable)}</p>
                     <p className="text-orange-200 text-xs mt-1">Pay via Cash Ledger</p>
                   </div>
                 </div>

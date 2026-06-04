@@ -17,9 +17,9 @@ export default function Page() {
     { key: 'invoiceNumber', label: 'Invoice #' },
     { key: 'invoiceDate', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
     { key: 'customer', label: 'Customer' },
-    { key: 'taxableValue', label: 'Taxable Value', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'gstAmount', label: 'GST Amount', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
-    { key: 'grandTotal', label: 'Invoice Total', align: 'right', format: (v: any) => `₹${Number(v||0).toFixed(2)}` },
+    { key: 'taxableValue', label: 'Taxable Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'gstAmount', label: 'GST Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'grandTotal', label: 'Invoice Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'itemCount', label: 'Items', align: 'center' },
   ];
 

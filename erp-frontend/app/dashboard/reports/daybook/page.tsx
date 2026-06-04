@@ -80,7 +80,7 @@ export default function DaybookPage() {
                   <ArrowDownRight className="w-4 h-4 text-green-500" />
                   <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Receipts (Inflow)</p>
                 </div>
-                <p className="text-2xl font-bold text-green-600">₹{Number(totalInflow).toFixed(2)}</p>
+                <p className="text-2xl font-bold text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totalInflow))}</p>
                 <p className="text-xs text-slate-500 mt-1">{transactions.filter((t: any) => t.type === 'Sale').length} sale(s)</p>
               </div>
               <div className="glass rounded-2xl p-5 border border-red-200 bg-red-50/40">
@@ -88,7 +88,7 @@ export default function DaybookPage() {
                   <ArrowUpRight className="w-4 h-4 text-red-500" />
                   <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider">Total Payments (Outflow)</p>
                 </div>
-                <p className="text-2xl font-bold text-red-600">₹{Number(totalOutflow).toFixed(2)}</p>
+                <p className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totalOutflow))}</p>
                 <p className="text-xs text-slate-500 mt-1">
                   {transactions.filter((t: any) => t.type === 'Purchase').length} purchase(s),&nbsp;
                   {transactions.filter((t: any) => t.type === 'Expense').length} expense(s)
@@ -97,7 +97,7 @@ export default function DaybookPage() {
               <div className={`glass rounded-2xl p-5 border ${netCashFlow >= 0 ? 'border-blue-200 bg-blue-50/40' : 'border-red-200 bg-red-50/40'}`}>
                 <p className="text-slate-600 text-xs font-semibold uppercase tracking-wider mb-2">Net Cash Flow</p>
                 <p className={`text-2xl font-bold ${netCashFlow >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                  {netCashFlow >= 0 ? '+' : ''}₹{Number(netCashFlow).toFixed(2)}
+                  {netCashFlow >= 0 ? '+' : ''}{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(netCashFlow))}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">{transactions.length} total transaction(s)</p>
               </div>
@@ -138,10 +138,10 @@ export default function DaybookPage() {
                             <td className="px-5 py-4 text-slate-900 font-medium">{t.party || '—'}</td>
                             <td className="px-5 py-4 text-slate-500 text-xs">{t.mode || 'Cash'}</td>
                             <td className="px-5 py-4 font-semibold text-green-600">
-                              {isInflow ? `₹${Number(t.received || 0).toFixed(2)}` : '—'}
+                              {isInflow ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(t.received || 0)) : '—'}
                             </td>
                             <td className="px-5 py-4 font-semibold text-red-600">
-                              {!isInflow ? `₹${Number(t.paid || 0).toFixed(2)}` : '—'}
+                              {!isInflow ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(t.paid || 0)) : '—'}
                             </td>
                           </tr>
                         );
@@ -153,10 +153,10 @@ export default function DaybookPage() {
                           Total ({transactions.length} transactions)
                         </td>
                         <td className="px-5 py-3 font-bold text-green-600 text-sm">
-                          ₹{Number(totalInflow).toFixed(2)}
+                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totalInflow))}
                         </td>
                         <td className="px-5 py-3 font-bold text-red-600 text-sm">
-                          ₹{Number(totalOutflow).toFixed(2)}
+                          {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totalOutflow))}
                         </td>
                       </tr>
                     </tfoot>
