@@ -24,7 +24,7 @@ export default function Topbar({ title }: { title?: string }) {
         {/* Title pushed right of mobile menu btn */}
         <h1 className="text-slate-900 font-semibold text-lg ml-10 lg:ml-0">{title || 'Dashboard'}</h1>
         <span className="hidden sm:inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-100">
-          v1.0.2
+          v1.0.3
         </span>
       </div>
 
