@@ -18,38 +18,61 @@ const sendError = (res: Response, message: string, status = 500) => res.status(s
 
 // --- ACCOUNTS REPORTS ---
 
+
 export const getCashBook = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    // Find all Cash type accounts for this business
-    const cashAccounts = await Account.find({ businessId, type: 'Bank' });
-    const cashAccount = await Account.findOne({ businessId, type: { $in: ['Bank', 'Cash'] } });
-    if (!cashAccount) {
-      // Return empty if no cash/bank account
-      return sendSuccess(res, []);
-    }
     
-    const cashAccountIds = cashAccounts.map(a => a._id);
-    // Include Cash accounts too
-    const allCashAccounts = await Account.find({ businessId, type: { $in: ['Bank', 'Cash'] } });
-    const allIds = allCashAccounts.map(a => a._id);
+    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment' }).lean();
     
-    const ledgers = await AccountLedger.find({ businessId, accountId: { $in: allIds } })
-      .populate('accountId', 'name type')
-      .sort({ date: -1, createdAt: -1 });
+    const bankAccounts = await Account.find({ businessId, type: 'Bank' });
+    const bankIds = bankAccounts.map(a => a._id);
+    const bankLedgers = await AccountLedger.find({ businessId, accountId: { $in: bankIds } }).lean();
     
-    // Transform to expected frontend format
-    const transformed = ledgers.map((l: any) => ({
-      date: l.date,
-      particulars: l.description,
-      voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-      debit: l.debit || 0,
-      credit: l.credit || 0,
-      balance: l.closingBalance || (l.debit - l.credit),
-      referenceType: l.referenceType,
-    }));
+    const expenses = await Expense.find({ businessId }).lean();
     
-    sendSuccess(res, transformed);
+    const transactions: any[] = [];
+    
+    paymentLedgers.forEach((l: any) => {
+      let debit = 0, credit = 0;
+      if (l.customerId && l.credit > 0) debit = l.credit;
+      else if (l.supplierId && l.debit > 0) credit = l.debit;
+      else return;
+      
+      transactions.push({
+        date: l.date,
+        particulars: l.description,
+        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+        debit, credit,
+        referenceType: l.referenceType
+      });
+    });
+    
+    bankLedgers.forEach((l: any) => {
+      transactions.push({
+        date: l.date,
+        particulars: l.description,
+        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+        debit: l.debit || 0,
+        credit: l.credit || 0,
+        referenceType: l.referenceType || 'Journal'
+      });
+    });
+    
+    expenses.forEach((e: any) => {
+      transactions.push({
+        date: e.date,
+        particulars: e.category + (e.vendorName ? ` - ${e.vendorName}` : ''),
+        voucherNo: e._id.toString().slice(-6).toUpperCase(),
+        debit: 0,
+        credit: e.totalWithTax || e.amount || 0,
+        referenceType: 'Expense'
+      });
+    });
+    
+    transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    sendSuccess(res, transactions);
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -60,20 +83,37 @@ export const getBusinessBook = async (req: AuthRequest, res: Response) => {
     const businessId = req.user!.businessId;
     const ledgers = await AccountLedger.find({ businessId })
       .populate('accountId', 'name type')
+      .populate('customerId', 'name')
+      .populate('supplierId', 'name')
       .sort({ date: -1 })
-      .limit(1000);
+      .limit(1000)
+      .lean();
+      
+    const expenses = await Expense.find({ businessId }).sort({ date: -1 }).limit(1000).lean();
     
-    // Transform to expected frontend format
     const transformed = ledgers.map((l: any) => ({
       date: l.date,
-      accountId: l.accountId, // populated: { name, type }
+      accountId: l.accountId || l.customerId || l.supplierId || { name: 'Cash / Bank' },
       particulars: l.description,
       voucherType: l.referenceType || 'Journal',
       debit: l.debit || 0,
       credit: l.credit || 0,
     }));
     
-    sendSuccess(res, transformed);
+    expenses.forEach((e: any) => {
+      transformed.push({
+        date: e.date,
+        accountId: { name: 'Expense Account' },
+        particulars: e.category + (e.vendorName ? ` - ${e.vendorName}` : ''),
+        voucherType: 'Expense',
+        debit: e.totalWithTax || e.amount || 0,
+        credit: 0,
+      });
+    });
+    
+    transformed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    sendSuccess(res, transformed.slice(0, 1000));
   } catch (error: any) {
     sendError(res, error.message);
   }
@@ -82,22 +122,47 @@ export const getBusinessBook = async (req: AuthRequest, res: Response) => {
 export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    // Find ledgers where bank/cash is credited (money going out)
-    const bankCashAccounts = await Account.find({ businessId, type: { $in: ['Bank', 'Cash'] } });
-    const accountIds = bankCashAccounts.map(a => a._id);
-    const ledgers = await AccountLedger.find({ businessId, accountId: { $in: accountIds }, credit: { $gt: 0 } })
-      .populate('accountId', 'name type')
-      .sort({ date: -1 });
+    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', debit: { $gt: 0 }, supplierId: { $exists: true } }).populate('supplierId', 'name').sort({ date: -1 }).lean();
     
-    // Transform to expected frontend format
-    const transformed = ledgers.map((l: any) => ({
-      date: l.date,
-      accountId: l.accountId, // populated: { name }
-      particulars: l.description,
-      voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-      credit: l.credit || 0,
-    }));
+    const bankAccounts = await Account.find({ businessId, type: 'Bank' });
+    const bankIds = bankAccounts.map(a => a._id);
+    const bankLedgers = await AccountLedger.find({ businessId, accountId: { $in: bankIds }, credit: { $gt: 0 } }).populate('accountId', 'name').sort({ date: -1 }).lean();
     
+    const expenses = await Expense.find({ businessId }).sort({ date: -1 }).lean();
+    
+    const transformed: any[] = [];
+    
+    paymentLedgers.forEach((l: any) => {
+      transformed.push({
+        date: l.date,
+        accountId: l.supplierId,
+        particulars: l.description,
+        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+        credit: l.debit || 0,
+      });
+    });
+    
+    bankLedgers.forEach((l: any) => {
+      transformed.push({
+        date: l.date,
+        accountId: l.accountId,
+        particulars: l.description,
+        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+        credit: l.credit || 0,
+      });
+    });
+    
+    expenses.forEach((e: any) => {
+      transformed.push({
+        date: e.date,
+        accountId: { name: 'Expense' },
+        particulars: e.category + (e.vendorName ? ` - ${e.vendorName}` : ''),
+        voucherNo: e._id.toString().slice(-6).toUpperCase(),
+        credit: e.totalWithTax || e.amount || 0,
+      });
+    });
+    
+    transformed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
@@ -107,22 +172,35 @@ export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
 export const getPaymentReceived = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
-    // Find ledgers where bank/cash is debited (money coming in)
-    const bankCashAccounts = await Account.find({ businessId, type: { $in: ['Bank', 'Cash'] } });
-    const accountIds = bankCashAccounts.map(a => a._id);
-    const ledgers = await AccountLedger.find({ businessId, accountId: { $in: accountIds }, debit: { $gt: 0 } })
-      .populate('accountId', 'name type')
-      .sort({ date: -1 });
+    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', credit: { $gt: 0 }, customerId: { $exists: true } }).populate('customerId', 'name').sort({ date: -1 }).lean();
     
-    // Transform to expected frontend format
-    const transformed = ledgers.map((l: any) => ({
-      date: l.date,
-      accountId: l.accountId, // populated: { name }
-      particulars: l.description,
-      voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-      debit: l.debit || 0,
-    }));
+    const bankAccounts = await Account.find({ businessId, type: 'Bank' });
+    const bankIds = bankAccounts.map(a => a._id);
+    const bankLedgers = await AccountLedger.find({ businessId, accountId: { $in: bankIds }, debit: { $gt: 0 } }).populate('accountId', 'name').sort({ date: -1 }).lean();
     
+    const transformed: any[] = [];
+    
+    paymentLedgers.forEach((l: any) => {
+      transformed.push({
+        date: l.date,
+        accountId: l.customerId,
+        particulars: l.description,
+        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+        debit: l.credit || 0,
+      });
+    });
+    
+    bankLedgers.forEach((l: any) => {
+      transformed.push({
+        date: l.date,
+        accountId: l.accountId,
+        particulars: l.description,
+        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
+        debit: l.debit || 0,
+      });
+    });
+    
+    transformed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     sendSuccess(res, transformed);
   } catch (error: any) {
     sendError(res, error.message);
