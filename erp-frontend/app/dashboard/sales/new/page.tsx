@@ -88,11 +88,18 @@ export default function NewInvoicePage() {
   const [deliveryRemarks, setDeliveryRemarks] = useState('');
   const [remarks, setRemarks] = useState('');
   const [paymentMode1, setPaymentMode1] = useState('Cash');
+  const [bankId1, setBankId1] = useState('');
+  const [banks, setBanks] = useState<any[]>([]);
+
+  useEffect(() => {
+    banksApi.list().then(res => setBanks(res.data || []));
+  }, []);
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');
   const [paymentDate1, setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
 
   const [paymentMode2, setPaymentMode2] = useState('');
+  const [bankId2, setBankId2] = useState('');
   const [amountReceived2, setAmountReceived2] = useState(0);
   const [txnId2, setTxnId2] = useState('');
   const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
@@ -472,8 +479,8 @@ export default function NewInvoicePage() {
         lineItems,
         paymentMode: combinedPaymentMode,
         paymentHistory: [
-          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
-          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
+          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, bankId: bankId1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
+          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, bankId: bankId2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
         ],
         amountReceived: totalAmountReceived,
         txnId: combinedTxnId,
@@ -958,9 +965,15 @@ export default function NewInvoicePage() {
               <div className="grid grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
-                  <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                  <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
+                  {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode1) && (
+                    <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                      <option value="">-- Select Bank --</option>
+                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName}</option>)}
+                    </select>
+                  )}
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                     <input type="number" value={amountReceived1 === 0 ? '' : amountReceived1} onChange={e => setAmountReceived1(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 1" />
@@ -973,10 +986,16 @@ export default function NewInvoicePage() {
                 
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 2 (Opt)</div>
-                  <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                  <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                     <option value="">None</option>
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
+                  {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode2) && (
+                    <select value={bankId2} onChange={e => setBankId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                      <option value="">-- Select Bank --</option>
+                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName}</option>)}
+                    </select>
+                  )}
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                     <input type="number" value={amountReceived2 === 0 ? '' : amountReceived2} onChange={e => setAmountReceived2(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 2" />

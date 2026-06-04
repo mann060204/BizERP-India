@@ -4,7 +4,7 @@ import {
   X, Search, User, Briefcase, FileText, 
   CreditCard, Calendar, FileType, CheckCircle2, Loader2, AlertCircle 
 } from 'lucide-react';
-import { customersApi, suppliersApi, invoicesApi, purchasesApi } from '../../../lib/erp-api';
+import { customersApi, suppliersApi, invoicesApi, purchasesApi, banksApi } from '../../../lib/erp-api';
 import toast from 'react-hot-toast';
 
 type ModalMode = 'IN' | 'OUT';
@@ -26,8 +26,12 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
   const [paymentView, setPaymentView] = useState<'LIST' | 'FORM'>('LIST');
   const [selectedBill, setSelectedBill] = useState<any>(null);
   
+  const [banks, setBanks] = useState<any[]>([]);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+  
   const [amount, setAmount] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
+  const [bankId, setBankId] = useState('');
   const [referenceNo, setReferenceNo] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
@@ -38,6 +42,21 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
   const isCustomer = mode === 'IN';
   const api = isCustomer ? customersApi : suppliersApi;
   const billApi = isCustomer ? invoicesApi : purchasesApi;
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      setLoadingBanks(true);
+      try {
+        const res = await banksApi.list();
+        setBanks(res.data || []);
+      } catch (err) {
+        toast.error('Failed to load banks');
+      } finally {
+        setLoadingBanks(false);
+      }
+    };
+    fetchBanks();
+  }, []);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -102,7 +121,10 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
         const existingAmount = isCustomer ? selectedBill.amountReceived : selectedBill.amountPaid;
         const newTotal = Number(existingAmount || 0) + Number(amount);
         
-        const payload = isCustomer ? { amountReceived: newTotal } : { amountPaid: newTotal };
+        const payload = isCustomer 
+          ? { amountReceived: newTotal, paymentMode, paymentBankId: bankId, paymentAmount: Number(amount), paymentDate } 
+          : { amountPaid: newTotal, paymentMode, paymentBankId: bankId, paymentAmount: Number(amount), paymentDate };
+          
         await billApi.updateStatus(selectedBill._id, payload);
         toast.success(`Payment mapped to ${isCustomer ? 'Invoice' : 'Bill'} successfully!`);
       } else {
@@ -110,6 +132,7 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
         await api.recordPayment(selectedEntity._id, {
           amount: Number(amount),
           paymentMode,
+          bankId,
           date: paymentDate,
           referenceNo,
           notes
@@ -327,6 +350,24 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
                         <option value="Credit Card">Credit Card</option>
                       </select>
                     </div>
+
+                    {['Bank Transfer', 'UPI', 'Cheque'].includes(paymentMode) && (
+                      <div className="space-y-1.5 col-span-2">
+                        <label className="text-sm font-bold text-slate-700">Select Bank Account *</label>
+                        <select
+                          required
+                          value={bankId}
+                          onChange={e => setBankId(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none font-medium bg-white"
+                        >
+                          <option value="">-- Select Bank --</option>
+                          {banks.map(b => (
+                            <option key={b._id} value={b._id}>{b.bankName} - {b.accountNumber}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div className="space-y-1.5">
                       <label className="text-sm font-bold text-slate-700">Reference No (Optional)</label>
                       <input

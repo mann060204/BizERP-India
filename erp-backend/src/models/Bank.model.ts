@@ -8,6 +8,7 @@ export interface IBank extends Document {
   ifsc: string;
   branch: string;
   openingBalance: number;
+  currentBalance: number;
   isActive: boolean;
 }
 
@@ -20,6 +21,7 @@ const BankSchema = new Schema(
     ifsc: { type: String, default: '' },
     branch: { type: String, default: '' },
     openingBalance: { type: Number, default: 0 },
+    currentBalance: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true }
   },
   { timestamps: true }

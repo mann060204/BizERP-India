@@ -8,6 +8,7 @@ import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, 
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';
+import { banksApi } from '../../../../lib/erp-api';
 
 interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; currentBalance?: number; openingBalance?: number; }
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
@@ -99,6 +100,8 @@ export default function NewPurchasePage() {
   const [amountPaid, setAmountPaid] = useState(0);
   const [txnId, setTxnId] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [banks, setBanks] = useState<any[]>([]);
+  const [paymentBankId, setPaymentBankId] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,10 +109,12 @@ export default function NewPurchasePage() {
         const [sRes, pRes, bRes] = await Promise.all([
           suppliersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
-          businessApi.getProfile()
+          businessApi.getProfile(),
+          banksApi.list()
         ]);
         setSuppliers(sRes.data.suppliers);
         setProducts(pRes.data.products);
+        setBanks(bRes.data || []);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) {
           setUnits(bizUnits);
@@ -297,6 +302,7 @@ export default function NewPurchasePage() {
         additionalDiscount,
         amountPaid,
         paymentMode,
+        paymentBankId,
         paymentDate,
         txnId,
         notes: remarks,
@@ -663,9 +669,15 @@ export default function NewPurchasePage() {
                 <div className="grid grid-cols-2 gap-4 flex-1">
                   <div className="space-y-1">
                     <div className="text-[9px] text-slate-600 font-bold">PAYMENT DETAILS</div>
-                    <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                    <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                       {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                     </select>
+                    {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode) && (
+                      <select value={paymentBankId} onChange={e => setPaymentBankId(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                        <option value="">-- Select Bank --</option>
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName}</option>)}
+                      </select>
+                    )}
                     <div className="relative">
                       <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                       <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amount Paid" />

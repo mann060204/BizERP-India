@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import AccountLedger from '../models/AccountLedger.model';
 import Customer from '../models/Customer.model';
 import Supplier from '../models/Supplier.model';
+import Business from '../models/Business.model';
+import Bank from '../models/Bank.model';
 
 export class AccountingService {
   /**
@@ -62,6 +64,23 @@ export class AccountingService {
   }
 
   /**
+   * Helper to update Cash or specific Bank balance based on payment received or made
+   */
+  static async updateCashOrBankBalance(businessId: string, amount: number, paymentMode: string, bankId?: string, isReceiving: boolean = true) {
+    if (!amount) return;
+    const change = isReceiving ? amount : -amount;
+    
+    if (paymentMode.toLowerCase() === 'cash') {
+      await Business.findByIdAndUpdate(businessId, { $inc: { cashInHand: change } });
+    } else if (bankId && paymentMode.toLowerCase() !== 'cash') {
+      await Bank.findOneAndUpdate(
+        { _id: bankId, businessId },
+        { $inc: { currentBalance: change } }
+      );
+    }
+  }
+
+  /**
    * Records a Sales Invoice into the Customer's Ledger
    */
   static async recordSalesInvoice(invoice: any) {
@@ -91,6 +110,7 @@ export class AccountingService {
         referenceType: 'Payment',
         referenceId: invoice._id.toString()
       });
+      await this.updateCashOrBankBalance(invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, true);
     }
 
     await this.updateCustomerBalance(invoice.customerId, invoice.businessId.toString());
@@ -106,6 +126,12 @@ export class AccountingService {
       referenceId: invoice._id.toString(),
       referenceType: { $in: ['Invoice', 'Payment'] }
     });
+    
+    // Reverse Cash/Bank
+    if (invoice.amountReceived > 0) {
+      await this.updateCashOrBankBalance(invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, false);
+    }
+    
     await this.updateCustomerBalance(invoice.customerId, invoice.businessId.toString());
   }
 
@@ -139,6 +165,7 @@ export class AccountingService {
         referenceType: 'Payment',
         referenceId: bill._id.toString()
       });
+      await this.updateCashOrBankBalance(bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, false);
     }
 
     await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
@@ -154,13 +181,19 @@ export class AccountingService {
       referenceId: bill._id.toString(),
       referenceType: { $in: ['Purchase', 'Payment'] }
     });
+    
+    // Reverse Cash/Bank (For purchase, we originally paid, so to reverse we add the cash back)
+    if (bill.amountPaid > 0) {
+      await this.updateCashOrBankBalance(bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, true);
+    }
+    
     await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
   }
 
   /**
    * Records a generic Payment Received from a Customer
    */
-  static async recordCustomerPayment(businessId: string, customerId: string, amount: number, paymentMode: string, date: Date, referenceNo: string, notes: string) {
+  static async recordCustomerPayment(businessId: string, customerId: string, amount: number, paymentMode: string, date: Date, referenceNo: string, notes: string, bankId?: string) {
     await AccountLedger.create({
       businessId,
       customerId,
@@ -171,13 +204,14 @@ export class AccountingService {
       referenceType: 'Payment',
       referenceId: referenceNo
     });
+    await this.updateCashOrBankBalance(businessId, amount, paymentMode || 'Cash', bankId, true);
     return await this.updateCustomerBalance(customerId, businessId);
   }
 
   /**
    * Records a generic Payment Made to a Supplier
    */
-  static async recordSupplierPayment(businessId: string, supplierId: string, amount: number, paymentMode: string, date: Date, referenceNo: string, notes: string) {
+  static async recordSupplierPayment(businessId: string, supplierId: string, amount: number, paymentMode: string, date: Date, referenceNo: string, notes: string, bankId?: string) {
     await AccountLedger.create({
       businessId,
       supplierId,
@@ -188,6 +222,7 @@ export class AccountingService {
       referenceType: 'Payment',
       referenceId: referenceNo
     });
+    await this.updateCashOrBankBalance(businessId, amount, paymentMode || 'Cash', bankId, false);
     return await this.updateSupplierBalance(supplierId, businessId);
   }
 

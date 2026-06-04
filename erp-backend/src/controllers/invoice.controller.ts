@@ -342,24 +342,46 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
 // PUT /api/v1/invoices/:id/status
 export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, amountReceived } = req.body;
+    const { status, amountReceived, paymentMode, paymentBankId, paymentDate, paymentAmount } = req.body;
     const invoice = await Invoice.findOne({ _id: req.params['id'], businessId: req.user!.businessId });
     if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
 
-    const oldInvoiceCopy = { ...invoice.toObject() };
-
     if (status) invoice.status = status;
-    if (amountReceived !== undefined) {
+    
+    // Only process payment if an actual payment was made
+    if (paymentAmount !== undefined && Number(paymentAmount) > 0) {
+      const pAmt = Number(paymentAmount);
+      invoice.amountReceived = (invoice.amountReceived || 0) + pAmt;
+      invoice.balance = invoice.grandTotal - invoice.amountReceived;
+      if (paymentMode) invoice.paymentMode = paymentMode;
+      if (invoice.amountReceived >= invoice.grandTotal) invoice.status = 'paid';
+      else if (invoice.amountReceived > 0) invoice.status = 'partial';
+      
+      // Record the specific payment in the ledger
+      await AccountingService.recordCustomerPayment(
+        invoice.businessId.toString(),
+        invoice.customerId!.toString(),
+        pAmt,
+        paymentMode || 'Cash',
+        paymentDate ? new Date(paymentDate) : new Date(),
+        invoice.invoiceNumber,
+        `Payment against Invoice #${invoice.invoiceNumber}`,
+        paymentBankId
+      );
+    } else if (amountReceived !== undefined) {
+      // Fallback for simple status updates without specific payment details
       invoice.amountReceived = Number(amountReceived);
       invoice.balance = invoice.grandTotal - invoice.amountReceived;
+      if (paymentMode) invoice.paymentMode = paymentMode;
       if (invoice.amountReceived >= invoice.grandTotal) invoice.status = 'paid';
       else if (invoice.amountReceived > 0) invoice.status = 'partial';
     }
-    await invoice.save();
 
-    // Sync Ledger
-    await AccountingService.reverseInvoice(oldInvoiceCopy);
-    await AccountingService.recordSalesInvoice(invoice);
+    await invoice.save();
+    
+    // We do NOT reverse and recreate the whole invoice ledger here if it's just a payment
+    // But we need to ensure the customer balance is synced
+    await AccountingService.updateCustomerBalance(invoice.customerId!, invoice.businessId.toString());
 
     res.json({ message: 'Invoice updated', invoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }

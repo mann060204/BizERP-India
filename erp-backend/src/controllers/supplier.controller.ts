@@ -80,7 +80,7 @@ export const recordPayment = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const businessId = req.user!.businessId;
     const supplierId = req.params['id'] as string;
-    const { amount, paymentMode, date, referenceNo, notes } = req.body;
+    const { amount, paymentMode, date, referenceNo, notes, bankId } = req.body;
     
     if (!amount || amount <= 0) { res.status(400).json({ message: 'Valid amount is required' }); return; }
     
@@ -91,7 +91,8 @@ export const recordPayment = async (req: AuthRequest, res: Response): Promise<vo
       paymentMode || 'Cash', 
       date ? new Date(date) : new Date(), 
       referenceNo || '', 
-      notes || ''
+      notes || '',
+      bankId
     );
     
     res.json({ message: 'Payment recorded successfully', newBalance });

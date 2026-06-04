@@ -371,26 +371,48 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
 // PUT /api/v1/purchases/:id/status
 export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { status, amountPaid } = req.body;
+    const { status, amountPaid, paymentMode, paymentBankId, paymentDate, paymentAmount } = req.body;
     const purchase = await PurchaseBill.findOne({ _id: req.params['id'], businessId: req.user!.businessId });
-    if (!purchase) { res.status(404).json({ message: 'Purchase bill not found' }); return; }
-
-    const oldPurchaseCopy = { ...purchase.toObject() };
+    if (!purchase) { res.status(404).json({ message: 'Purchase not found' }); return; }
 
     if (status) purchase.status = status;
-    if (amountPaid !== undefined) {
+    
+    // Only process payment if an actual payment was made
+    if (paymentAmount !== undefined && Number(paymentAmount) > 0) {
+      const pAmt = Number(paymentAmount);
+      purchase.amountPaid = (purchase.amountPaid || 0) + pAmt;
+      purchase.balance = purchase.grandTotal - purchase.amountPaid;
+      if (paymentMode) purchase.paymentMode = paymentMode;
+      if (purchase.amountPaid >= purchase.grandTotal) purchase.status = 'paid';
+      else if (purchase.amountPaid > 0) purchase.status = 'partial';
+      
+      // Record the specific payment in the ledger
+      await AccountingService.recordSupplierPayment(
+        purchase.businessId.toString(),
+        purchase.supplierId!.toString(),
+        pAmt,
+        paymentMode || 'Cash',
+        paymentDate ? new Date(paymentDate) : new Date(),
+        purchase.billNumber,
+        `Payment against Bill #${purchase.billNumber}`,
+        paymentBankId
+      );
+    } else if (amountPaid !== undefined) {
+      // Fallback for simple status updates without specific payment details
       purchase.amountPaid = Number(amountPaid);
       purchase.balance = purchase.grandTotal - purchase.amountPaid;
+      if (paymentMode) purchase.paymentMode = paymentMode;
       if (purchase.amountPaid >= purchase.grandTotal) purchase.status = 'paid';
       else if (purchase.amountPaid > 0) purchase.status = 'partial';
     }
+
     await purchase.save();
+    
+    // We do NOT reverse and recreate the whole purchase ledger here if it's just a payment
+    // But we need to ensure the supplier balance is synced
+    await AccountingService.updateSupplierBalance(purchase.supplierId!, purchase.businessId.toString());
 
-    // Sync Ledger
-    await AccountingService.reversePurchaseBill(oldPurchaseCopy);
-    await AccountingService.recordPurchaseBill(purchase);
-
-    res.json({ message: 'Purchase bill updated', purchase });
+    res.json({ message: 'Purchase updated', purchase });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 

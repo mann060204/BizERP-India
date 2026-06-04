@@ -68,6 +68,7 @@ export interface IBusiness extends Document {
     resetMonthly: boolean;
   }>;
   enableManufacturing: boolean;
+  cashInHand: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -172,7 +173,8 @@ const BusinessSchema = new Schema<IBusiness>(
       }, { _id: false }),
       default: {}
     },
-    enableManufacturing: { type: Boolean, default: false }
+    enableManufacturing: { type: Boolean, default: false },
+    cashInHand: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

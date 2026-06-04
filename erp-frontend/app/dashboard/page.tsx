@@ -10,8 +10,9 @@ import {
   TrendingUp, TrendingDown, CreditCard, Wallet, AlertTriangle,
   ArrowUpRight, ShoppingCart, Loader2, FilePlus, PackagePlus,
   UserPlus, SlidersHorizontal, BarChart2, Package, Users,
-  AlertCircle, Receipt, FileText, Wrench, ChevronRight, IndianRupee
+  AlertCircle, Receipt, FileText, Wrench, ChevronRight, IndianRupee, Eye, EyeOff
 } from 'lucide-react';
+import { banksApi } from '../../lib/erp-api';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
   CartesianGrid, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, Legend
@@ -123,6 +124,10 @@ export default function DashboardPage() {
   const greeting = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
   const [businessName, setBusinessName] = useState('My Business');
   const [chartHeight, setChartHeight] = useState('h-64');
+  const [privacyMode, setPrivacyMode] = useState(false);
+
+  const [banks, setBanks] = useState<any[]>([]);
+  const [cashInHand, setCashInHand] = useState(0);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -196,7 +201,10 @@ export default function DashboardPage() {
     businessApi.getProfile().then(res => {
       if (res.data.business?.name) setBusinessName(res.data.business.name);
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
+      if (res.data.business?.cashInHand) setCashInHand(res.data.business.cashInHand);
     }).catch(() => {});
+
+    banksApi.list().then(res => setBanks(res.data || [])).catch(() => {});
 
     dashboardApi.customerPending()
       .then(d => setPendingCustomers(d.data || []))
@@ -239,13 +247,18 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchAll({ period: 'month' }); }, []);
 
+  const renderAmount = (amount: any, formatter = fmtFull) => {
+    if (privacyMode) return '****';
+    return typeof amount === 'number' ? formatter(amount) : amount;
+  };
+
   const ALL_KPI_CARDS = [
-    { label: 'Sales', type: 'sales', value: fmtFull(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Purchases', type: 'purchases', value: fmtFull(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Expenses', type: 'expenses', value: fmtFull(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Received', type: 'received', value: fmtFull(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Outstanding', type: 'outstanding', value: fmtFull(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Paid Out', type: 'paid', value: fmtFull(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+    { label: 'Sales', type: 'sales', value: renderAmount(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Purchases', type: 'purchases', value: renderAmount(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Expenses', type: 'expenses', value: renderAmount(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
+    { label: 'Received', type: 'received', value: renderAmount(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Outstanding', type: 'outstanding', value: renderAmount(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Paid Out', type: 'paid', value: renderAmount(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
     { label: 'Low Stock', type: 'lowStock', value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
   ];
 
@@ -283,6 +296,14 @@ export default function DashboardPage() {
               <option value="h-96">Large</option>
             </select>
           </div>
+          <button 
+            onClick={() => setPrivacyMode(!privacyMode)}
+            className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+            title={privacyMode ? "Show Figures" : "Hide Figures"}
+          >
+            {privacyMode ? <EyeOff className="w-5 h-5 text-indigo-500" /> : <Eye className="w-5 h-5 text-slate-500" />}
+            <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Privacy</span>
+          </button>
         </div>
 
         {/* ── Two-column layout ────────────────────────────────────────────── */}
@@ -323,6 +344,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-4">
 
               {/* Business Trend — full width */}
+              {!privacyMode && (
               <ChartCard span={2} title="Business Trend — Sales vs Purchases vs Expenses" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
                 filter={<MiniFilter onChange={p => { setTrendLoading(true); dashboardApi.businessTrend(p).then(d => setTrendData(d.data || [])).finally(() => setTrendLoading(false)); }} />}
                 loading={trendLoading}>
@@ -341,6 +363,7 @@ export default function DashboardPage() {
                   </ResponsiveContainer>
                 </div>
               </ChartCard>
+              )}
 
               {/* High Volume Inventory */}
               <ChartCard title="High Volume Inventory" icon={<Package className="w-5 h-5 text-emerald-500" />}
@@ -373,6 +396,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Top 5 by Revenue */}
+              {!privacyMode && (
               <ChartCard title="Top 5 Items by Revenue" icon={<ArrowUpRight className="w-5 h-5 text-purple-500" />}
                 filter={<MiniFilter onChange={p => { setTopProfitLoading(true); dashboardApi.topItemsProfit(p).then(d => setTopProfit(d.data || [])).finally(() => setTopProfitLoading(false)); }} />}
                 loading={topProfitLoading}>
@@ -389,8 +413,10 @@ export default function DashboardPage() {
                   </ResponsiveContainer>
                 </div>
               </ChartCard>
+              )}
 
               {/* Bottom 5 by Revenue */}
+              {!privacyMode && (
               <ChartCard title="Bottom 5 Items by Revenue" icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
                 filter={<MiniFilter onChange={p => { setBottomProfitLoading(true); dashboardApi.bottomItemsProfit(p).then(d => setBottomProfit(d.data || [])).finally(() => setBottomProfitLoading(false)); }} />}
                 loading={bottomProfitLoading}>
@@ -407,6 +433,7 @@ export default function DashboardPage() {
                   </ResponsiveContainer>
                 </div>
               </ChartCard>
+              )}
 
               {/* Dead vs Fast Moving */}
               <ChartCard title="Dead vs Fast Moving Stock" icon={<SlidersHorizontal className="w-5 h-5 text-blue-500" />}
@@ -439,6 +466,7 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Top 5 Customers */}
+              {!privacyMode && (
               <ChartCard title="Top 5 Customers by Revenue" icon={<Users className="w-5 h-5 text-amber-500" />}
                 filter={<MiniFilter onChange={p => { setTopCustLoading(true); dashboardApi.topCustomers(p).then(d => setTopCustomers(d.data || [])).finally(() => setTopCustLoading(false)); }} />}
                 loading={topCustLoading}>
@@ -455,6 +483,7 @@ export default function DashboardPage() {
                   </ResponsiveContainer>
                 </div>
               </ChartCard>
+              )}
 
               {/* Customer Pending — full width */}
               <ChartCard span={2} title="Customer Pending Payments" icon={<AlertCircle className="w-5 h-5 text-rose-500" />} filter={null} loading={pendingLoading}>
@@ -477,7 +506,7 @@ export default function DashboardPage() {
                               <td className="py-1.5 px-2 text-slate-400">{i + 1}</td>
                               <td className="py-1.5 px-2 font-semibold text-slate-700">{c.name}</td>
                               <td className="py-1.5 px-2 text-slate-400">{c.mobile || '—'}</td>
-                              <td className="py-1.5 px-2 text-right font-bold text-orange-600">{fmtFull(c.currentBalance)}</td>
+                              <td className="py-1.5 px-2 text-right font-bold text-orange-600">{renderAmount(c.currentBalance)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -485,7 +514,7 @@ export default function DashboardPage() {
                           <tr className="border-t-2 border-slate-200">
                             <td colSpan={3} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
                             <td className="py-2 px-2 text-right font-bold text-red-600">
-                              {fmtFull(pendingCustomers.reduce((s, c) => s + c.currentBalance, 0))}
+                              {renderAmount(pendingCustomers.reduce((s, c) => s + c.currentBalance, 0))}
                             </td>
                           </tr>
                         </tfoot>
@@ -533,7 +562,7 @@ export default function DashboardPage() {
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Today's Snapshot</h3>
               <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white shadow-sm mb-3">
                 <p className="text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Today's Sales</p>
-                <p className="text-white font-black text-2xl">{fmtFull(stats.todaySales)}</p>
+                <p className="text-white font-black text-2xl">{renderAmount(stats.todaySales)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -555,6 +584,36 @@ export default function DashboardPage() {
                     <span className="block text-[9px] font-bold text-rose-600/70 uppercase">Supplier</span>
                   </div>
                 </button>
+              </div>
+            </div>
+
+            {/* Bank & Cash Balances Widget */}
+            <div className="mt-2 pt-3 border-t border-slate-200">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Fund Balances</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600">
+                      <IndianRupee className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700">Cash in Hand</span>
+                  </div>
+                  <span className="text-sm font-black text-emerald-600">{renderAmount(cashInHand)}</span>
+                </div>
+                {banks.map(bank => (
+                  <div key={bank._id} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600">
+                        <Wallet className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-slate-700 truncate max-w-[100px]">{bank.bankName}</span>
+                        <span className="text-[9px] text-slate-500 truncate max-w-[100px]">A/C: {bank.accountNumber}</span>
+                      </div>
+                    </div>
+                    <span className={`text-sm font-black ${bank.currentBalance < 0 ? 'text-red-500' : 'text-blue-600'}`}>{renderAmount(bank.currentBalance)}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
