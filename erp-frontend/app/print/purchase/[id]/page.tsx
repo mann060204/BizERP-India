@@ -88,8 +88,7 @@ export default function PrintablePurchasePage() {
               </div>
             </div>
             <div className="text-right flex flex-col items-end">
-              <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 bpurchase-b-2 bpurchase-gray-800 pb-1 mb-2">Purchase Bill / ESTIMATE</h2>
-              <p className="text-[10px] font-semibold">Not a Tax Invoice</p>
+              <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 bpurchase-b-2 bpurchase-gray-800 pb-1 mb-2">Purchase Bill</h2>
               {!isNonGst && <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin}</p>}
               {business.pan && <p className="text-[11px] font-bold text-gray-700">PAN: {business.pan}</p>}
             </div>
