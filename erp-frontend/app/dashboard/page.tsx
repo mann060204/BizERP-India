@@ -196,6 +196,7 @@ export default function DashboardPage() {
   const [topCustomers, setTopCustomers] = useState<any[]>([]);
   const [topCustLoading, setTopCustLoading] = useState(true);
   const [pendingCustomers, setPendingCustomers] = useState<any[]>([]);
+  const [pendingSuppliers, setPendingSuppliers] = useState<any[]>([]);
   const [pendingLoading, setPendingLoading] = useState(true);
 
   useEffect(() => {
@@ -207,10 +208,13 @@ export default function DashboardPage() {
 
     banksApi.list().then(res => setBanks(res.data || [])).catch(() => {});
 
-    dashboardApi.customerPending()
-      .then(d => setPendingCustomers(d.data || []))
-      .catch(() => {})
-      .finally(() => setPendingLoading(false));
+    Promise.all([
+      dashboardApi.customerPending().catch(() => ({ data: [] })),
+      dashboardApi.supplierPending().catch(() => ({ data: [] }))
+    ]).then(([cust, supp]) => {
+      setPendingCustomers(cust.data || []);
+      setPendingSuppliers(supp.data || []);
+    }).finally(() => setPendingLoading(false));
   }, []);
 
   useEffect(() => {
@@ -486,8 +490,8 @@ export default function DashboardPage() {
               </ChartCard>
               )}
 
-              {/* Customer Pending — full width */}
-              <ChartCard span={2} title="Customer Pending Payments" icon={<AlertCircle className="w-5 h-5 text-rose-500" />} filter={null} loading={pendingLoading}>
+              {/* Customer Pending */}
+              <ChartCard span={1} title="Customer Pending Payments" icon={<AlertCircle className="w-5 h-5 text-rose-500" />} filter={null} loading={pendingLoading}>
                 {pendingCustomers.length === 0
                   ? <p className="text-xs text-emerald-600 font-medium py-2">All customers are settled — no pending dues! 🎉</p>
                   : (
@@ -497,7 +501,6 @@ export default function DashboardPage() {
                           <tr className="border-b border-slate-100">
                             <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">#</th>
                             <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Customer</th>
-                            <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Mobile</th>
                             <th className="text-right py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Pending</th>
                           </tr>
                         </thead>
@@ -506,16 +509,51 @@ export default function DashboardPage() {
                             <tr key={c._id} className="border-b border-slate-50 hover:bg-slate-50 transition">
                               <td className="py-1.5 px-2 text-slate-400">{i + 1}</td>
                               <td className="py-1.5 px-2 font-semibold text-slate-700">{c.name}</td>
-                              <td className="py-1.5 px-2 text-slate-400">{c.mobile || '—'}</td>
                               <td className={`py-1.5 px-2 text-right font-bold ${formatAccountingBalance(c.currentBalance, 'customer').colorClass}`}>{formatAccountingBalance(c.currentBalance, 'customer').text}</td>
                             </tr>
                           ))}
                         </tbody>
                         <tfoot className="sticky bottom-0 bg-white">
                           <tr className="border-t-2 border-slate-200">
-                            <td colSpan={3} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
+                            <td colSpan={2} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
                             <td className="py-2 px-2 text-right font-bold text-red-600">
                               {formatAccountingBalance(pendingCustomers.reduce((s, c) => s + c.currentBalance, 0), 'customer').text}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
+              </ChartCard>
+
+              {/* Supplier Pending */}
+              <ChartCard span={1} title="Supplier Pending Payments" icon={<AlertCircle className="w-5 h-5 text-orange-500" />} filter={null} loading={pendingLoading}>
+                {pendingSuppliers.length === 0
+                  ? <p className="text-xs text-emerald-600 font-medium py-2">All suppliers are settled — no pending dues! 🎉</p>
+                  : (
+                    <div className="overflow-x-auto max-h-64">
+                      <table className="w-full text-xs">
+                        <thead className="sticky top-0 bg-white">
+                          <tr className="border-b border-slate-100">
+                            <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">#</th>
+                            <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Supplier</th>
+                            <th className="text-right py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Pending</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {pendingSuppliers.map((s, i) => (
+                            <tr key={s._id} className="border-b border-slate-50 hover:bg-slate-50 transition">
+                              <td className="py-1.5 px-2 text-slate-400">{i + 1}</td>
+                              <td className="py-1.5 px-2 font-semibold text-slate-700">{s.name}</td>
+                              <td className={`py-1.5 px-2 text-right font-bold ${formatAccountingBalance(s.currentBalance, 'supplier').colorClass}`}>{formatAccountingBalance(s.currentBalance, 'supplier').text}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="sticky bottom-0 bg-white">
+                          <tr className="border-t-2 border-slate-200">
+                            <td colSpan={2} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
+                            <td className="py-2 px-2 text-right font-bold text-orange-600">
+                              {formatAccountingBalance(pendingSuppliers.reduce((sum, s) => sum + s.currentBalance, 0), 'supplier').text}
                             </td>
                           </tr>
                         </tfoot>

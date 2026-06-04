@@ -262,5 +262,6 @@ export const dashboardApi = {
   stockMovement: (params?: any) => api.get('/reports/dashboard/stock-movement', { params }).then(res => res.data),
   topCustomers: (params?: any) => api.get('/reports/dashboard/top-customers', { params }).then(res => res.data),
   customerPending: () => api.get('/reports/dashboard/customer-pending').then(res => res.data),
+  supplierPending: () => api.get('/reports/dashboard/supplier-pending').then(res => res.data),
 };
 
