@@ -9,7 +9,7 @@ import autoTable from 'jspdf-autotable';
 interface Column {
   key: string;
   label: string;
-  format?: (val: any) => any;
+  format?: (val: any, row?: any) => any;
   align?: 'left' | 'center' | 'right';
 }
 
@@ -47,7 +47,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
     const headers = columns.map(c => c.label).join(',');
     const rows = filteredData.map(row =>
       columns.map(col => {
-        const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
+        const val = col.format ? col.format(row[col.key], row) : (row[col.key] ?? '');
         return `"${String(val).replace(/"/g, '""')}"`;
       }).join(',')
     );
@@ -65,7 +65,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
     if (!filteredData.length) return;
     const headers = columns.map(c => c.label);
     const rows = filteredData.map(row => 
-      columns.map(col => col.format ? col.format(row[col.key]) : (row[col.key] ?? ''))
+      columns.map(col => col.format ? col.format(row[col.key], row) : (row[col.key] ?? ''))
     );
     const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     const workbook = XLSX.utils.book_new();
@@ -80,7 +80,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
     const headers = columns.map(c => c.label);
     const rows = filteredData.map(row => 
       columns.map(col => {
-        const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
+        const val = col.format ? col.format(row[col.key], row) : (row[col.key] ?? '');
         // Strip out HTML or custom components if any, though usually simple strings here
         // Handle Rs symbol which sometimes breaks PDF default fonts by replacing with INR or keeping
         return String(val).replace(/₹/g, 'Rs ');
@@ -101,7 +101,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
     const headers = columns.map(c => `<th>${c.label}</th>`).join('');
     const rows = filteredData.map(row => {
       const cells = columns.map(col => {
-        const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
+        const val = col.format ? col.format(row[col.key], row) : (row[col.key] ?? '');
         return `<td>${val}</td>`;
       }).join('');
       return `<tr>${cells}</tr>`;
@@ -158,7 +158,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
       if (val && typeof val === 'number' && val.toString().includes(searchLower)) return true;
       if (col.format) {
         try {
-          const formatted = col.format(val);
+          const formatted = col.format(val, item);
           if (formatted && typeof formatted === 'string' && formatted.toLowerCase().includes(searchLower)) return true;
         } catch { /* ignore */ }
       }
@@ -277,7 +277,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
                     <tr key={i} className="hover:bg-slate-50/50 transition">
                       {columns.map((col, j) => (
                         <td key={j} className={`px-4 py-3 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}>
-                          {col.format ? col.format(row[col.key]) : (row[col.key] ?? '—')}
+                          {col.format ? col.format(row[col.key], row) : (row[col.key] ?? '—')}
                         </td>
                       ))}
                     </tr>
@@ -296,7 +296,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
                         }, 0);
                         return (
                           <td key={i} className="px-4 py-2.5 text-right font-semibold text-slate-700 text-xs">
-                            {sum > 0 ? (col.format ? col.format(sum) : sum.toFixed(2)) : ''}
+                            {sum > 0 ? (col.format ? col.format(sum, {}) : sum.toFixed(2)) : ''}
                           </td>
                         );
                       }
