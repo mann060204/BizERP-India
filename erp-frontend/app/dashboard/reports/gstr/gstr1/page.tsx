@@ -118,7 +118,14 @@ export default function GSTR1Page() {
                         <td className="px-3 py-3 font-mono text-xs">{inv.invoiceNumber}</td>
                         <td className="px-3 py-3 text-xs">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN') : '—'}</td>
                         <td className="px-3 py-3 font-medium">{inv.customerSnapshot?.name || 'Cash'}</td>
-                        <td className="px-3 py-3 text-xs text-slate-500 font-mono">{inv.customerSnapshot?.gstin || '—'}</td>
+                        <td className="px-3 py-3 text-xs text-slate-500 font-mono">
+                          {inv.customerSnapshot?.gstin ? (
+                            <>
+                              {inv.customerSnapshot.gstin}
+                              <span className="block text-[10px] text-slate-400 mt-0.5">(SC: {inv.customerSnapshot.gstin.substring(0, 2)})</span>
+                            </>
+                          ) : '—'}
+                        </td>
                         <td className="px-3 py-3 text-xs">{inv.placeOfSupply || '—'}</td>
                         <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalTaxableAmount||0))}</td>
                         <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalCGST||0))}</td>

@@ -90,7 +90,7 @@ export default function PrintableQuotationPage() {
             <div className="text-right flex flex-col items-end">
               <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 border-b-2 border-gray-800 pb-1 mb-2">QUOTATION / ESTIMATE</h2>
               <p className="text-[10px] font-semibold">Not a Tax Invoice</p>
-              {!isNonGst && <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin}</p>}
+              {!isNonGst && <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin} {business.gstin?.length >= 2 && `(State Code: ${business.gstin.substring(0, 2)})`}</p>}
               {business.pan && <p className="text-[11px] font-bold text-gray-700">PAN: {business.pan}</p>}
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function PrintableQuotationPage() {
                 <span>Name</span><span>: {quotation.customerSnapshot?.name?.toUpperCase()}</span>
                 <span>Address</span><span className="whitespace-pre-wrap leading-tight">: {quotation.customerSnapshot?.address?.toUpperCase() || 'N/A'}</span>
                 <span>Contact</span><span>: {quotation.customerSnapshot?.mobile || quotation.contactNo || 'N/A'}</span>
-                {!isNonGst && <><span>GSTIN</span><span>: {quotation.customerSnapshot?.gstin || 'N/A'}</span></>}
+                {!isNonGst && <><span>GSTIN</span><span>: {quotation.customerSnapshot?.gstin || 'N/A'} {quotation.customerSnapshot?.gstin && quotation.customerSnapshot.gstin.length >= 2 ? `(State Code: ${quotation.customerSnapshot.gstin.substring(0, 2)})` : ''}</span></>}
                 <span>State</span><span>: {quotation.placeOfSupply?.toUpperCase() || 'N/A'}</span>
               </div>
             </div>

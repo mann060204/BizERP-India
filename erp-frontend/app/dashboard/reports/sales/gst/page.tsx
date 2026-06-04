@@ -19,7 +19,7 @@ export default function Page() {
     { key: 'invoiceNumber', label: 'Invoice #' },
     { key: 'invoiceDate', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
     { key: 'invoiceType', label: 'Type', align: 'center' },
-    { key: 'customerSnapshot', label: 'Customer', format: (v: any) => v?.name || 'Cash' },
+    { key: 'customerSnapshot', label: 'Customer', format: (v: any) => v?.name ? `${v.name}${v.gstin ? ` (GSTIN: ${v.gstin}, SC: ${v.gstin.substring(0, 2)})` : ''}` : 'Cash' },
     { key: 'placeOfSupply', label: 'Place of Supply' },
     { key: 'totalTaxableAmount', label: 'Taxable', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'totalCGST', label: 'CGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },

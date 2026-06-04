@@ -4,7 +4,7 @@ import { Download, Search, FileText, ArrowLeft, Loader2, RefreshCw } from 'lucid
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface Column {
   key: string;
@@ -86,7 +86,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
         return String(val).replace(/₹/g, 'Rs ');
       })
     );
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [headers],
       body: rows,
       startY: 20,

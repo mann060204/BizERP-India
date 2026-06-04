@@ -10,7 +10,7 @@ export default function Page() {
   const [from, setFrom] = useState(firstDay); const [to, setTo] = useState(lastDay); const [key, setKey] = useState(0);
   const formatCurrency = (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v || 0));
   const columns: any[] = [
-    { key: 'gstin', label: 'GSTIN / UIN' },
+    { key: 'gstin', label: 'GSTIN / UIN', format: (v: any) => v && v.length >= 2 ? `${v} (SC: ${v.substring(0, 2)})` : v || '—' },
     { key: 'supplierName', label: 'Supplier\'s Name' },
     { key: 'billNumber', label: 'Purchase Bill' },
     { key: 'billDate', label: 'Invoice Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
