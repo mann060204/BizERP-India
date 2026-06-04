@@ -27,7 +27,7 @@ export default function PrintableSupplierLedger() {
         ]);
 
         setBusiness(bizRes.data.business);
-        setSupplier(custRes.data);
+        setSupplier(custRes.data.supplier || custRes.data);
         setLedger(ledgerRes.data.ledger || []);
         
         // Auto print after rendering

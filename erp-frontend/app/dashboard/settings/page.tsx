@@ -7,6 +7,7 @@ import { Loader2, Save, Building2, ShieldCheck, FileText, Package, X, Download, 
 import toast from 'react-hot-toast';
 import DocumentSequencesTab from './components/DocumentSequencesTab';
 import { applyTheme, getStoredTheme, THEMES, type Theme } from '../../../components/ThemeProvider';
+import { applyDateFormat, getStoredDateFormat, DATE_FORMATS, type DateFormat } from '../../../lib/utils';
 
 const THEME_CONFIG = [
   { key: 'indigo', label: 'Midnight Indigo', desc: 'Deep indigo sidebar · Cyan accent', sidebar: '#1e1b4b', active: '#4f46e5', accent: '#06b6d4' },
@@ -23,6 +24,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'business' | 'sequences' | 'application'>('business');
   const [currentTheme, setCurrentTheme] = useState<Theme>('indigo');
+  const [currentDateFormat, setCurrentDateFormat] = useState<DateFormat>('DD/MM/YYYY');
   
   const [exporting, setExporting] = useState(false);
   const [erasing, setErasing] = useState(false);
@@ -32,6 +34,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setCurrentTheme(getStoredTheme());
+    setCurrentDateFormat(getStoredDateFormat());
   }, []);
 
 
@@ -457,6 +460,32 @@ export default function SettingsPage() {
                      </div>
                    </button>
                  ))}
+               </div>
+            </div>
+
+
+            <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4 shadow-sm">
+               <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                 <CalendarDays className="w-5 h-5 text-slate-500" />
+                 <h3 className="font-semibold text-slate-900">Regional Settings</h3>
+               </div>
+               <div className="max-w-md">
+                 <label className="block text-xs font-medium text-slate-600 mb-1.5">Date Format</label>
+                 <select 
+                   value={currentDateFormat} 
+                   onChange={(e) => {
+                     const fmt = e.target.value as DateFormat;
+                     setCurrentDateFormat(fmt);
+                     applyDateFormat(fmt);
+                     toast.success('Date format updated');
+                   }}
+                   className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm transition focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+                 >
+                   {DATE_FORMATS.map(fmt => (
+                     <option key={fmt} value={fmt}>{fmt}</option>
+                   ))}
+                 </select>
+                 <p className="text-[10px] text-slate-500 mt-1">Changes are applied instantly to tables and documents across the application.</p>
                </div>
             </div>
 

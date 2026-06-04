@@ -32,3 +32,37 @@ export function formatAccountingBalance(value: number, type: 'customer' | 'suppl
     isCredit
   };
 }
+
+export const DATE_FORMATS = ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'] as const;
+export type DateFormat = typeof DATE_FORMATS[number];
+
+export function getStoredDateFormat(): DateFormat {
+  if (typeof window === 'undefined') return 'DD/MM/YYYY';
+  const stored = localStorage.getItem('erp_date_format') as DateFormat;
+  return DATE_FORMATS.includes(stored) ? stored : 'DD/MM/YYYY';
+}
+
+export function applyDateFormat(format: DateFormat) {
+  localStorage.setItem('erp_date_format', format);
+  // Dispatch custom event so components can update if needed
+  window.dispatchEvent(new Event('erp_date_format_changed'));
+}
+
+export function formatDateGlobal(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return '';
+
+  const format = getStoredDateFormat();
+  const d = date.getDate().toString().padStart(2, '0');
+  const m = (date.getMonth() + 1).toString().padStart(2, '0');
+  const y = date.getFullYear();
+
+  switch (format) {
+    case 'MM/DD/YYYY': return `${m}/${d}/${y}`;
+    case 'YYYY-MM-DD': return `${y}-${m}-${d}`;
+    case 'DD/MM/YYYY':
+    default: return `${d}/${m}/${y}`;
+  }
+}
+

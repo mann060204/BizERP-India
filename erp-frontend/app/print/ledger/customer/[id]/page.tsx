@@ -27,7 +27,7 @@ export default function PrintableCustomerLedger() {
         ]);
 
         setBusiness(bizRes.data.business);
-        setCustomer(custRes.data);
+        setCustomer(custRes.data.customer || custRes.data);
         setLedger(ledgerRes.data.ledger || []);
         
         // Auto print after rendering
