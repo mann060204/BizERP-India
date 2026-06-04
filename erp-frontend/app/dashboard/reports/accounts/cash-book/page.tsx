@@ -1,20 +1,31 @@
 'use client';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { formatDateGlobal } from '../../../../../lib/utils';
 
 export default function Page() {
   const columns: any[] = [
-    { key: 'date', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'particulars', label: 'Particulars' },   // Backend maps description → particulars
-    { key: 'voucherNo', label: 'Voucher No.' },     // Backend maps referenceId → voucherNo
+    { key: 'date', label: 'Date', format: (v: any) => v ? formatDateGlobal(v) : '—' },
+    { key: 'particulars', label: 'Particulars' },
+    { key: 'voucherNo', label: 'Voucher No.' },
     { key: 'referenceType', label: 'Type' },
     { key: 'debit', label: 'Debit (In)', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
     { key: 'credit', label: 'Credit (Out)', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
+    { key: 'balance', label: 'Balance', align: 'right', disableTotal: true, format: (v: any) => (v !== undefined && v !== null) ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
   ];
 
   const fetchData = async () => {
     const res = await reportsApi.getCashBook();
-    return res.data?.data || [];
+    const records = res.data?.data || [];
+    
+    // Sort chronologically ascending for running balance
+    const sorted = [...records].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    let runningBalance = 0;
+    return sorted.map((row: any) => {
+      runningBalance += (Number(row.debit) || 0) - (Number(row.credit) || 0);
+      return { ...row, balance: runningBalance };
+    });
   };
 
   return (

@@ -11,6 +11,7 @@ interface Column {
   label: string;
   format?: (val: any, row?: any) => any;
   align?: 'left' | 'center' | 'right';
+  disableTotal?: boolean;
 }
 
 type ReportCategory = 'Accounts' | 'Inventory' | 'Sales' | 'Customers' | 'Purchases' | 'Suppliers' | 'Expenses' | 'GSTR';
@@ -289,18 +290,18 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
                   <tr>
                     {columns.map((col, i) => {
                       // Sum numeric right-aligned columns
-                      if (col.align === 'right') {
+                      if (col.align === 'right' && !col.disableTotal) {
                         const sum = filteredData.reduce((acc, row) => {
                           const val = row[col.key];
                           return acc + (typeof val === 'number' ? val : 0);
                         }, 0);
                         return (
                           <td key={i} className="px-4 py-2.5 text-right font-semibold text-slate-700 text-xs">
-                            {sum > 0 ? (col.format ? col.format(sum, {}) : sum.toFixed(2)) : ''}
+                            {sum !== 0 ? (col.format ? col.format(sum, {}) : sum.toFixed(2)) : ''}
                           </td>
                         );
                       }
-                      return <td key={i} className="px-4 py-2.5 text-xs text-slate-500 font-medium">
+                      return <td key={i} className={`px-4 py-2.5 text-xs text-slate-500 font-medium ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''}`}>
                         {i === 0 ? `Total (${filteredData.length})` : ''}
                       </td>;
                     })}
