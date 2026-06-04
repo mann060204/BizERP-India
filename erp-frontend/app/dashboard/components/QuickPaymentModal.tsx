@@ -4,7 +4,7 @@ import {
   X, Search, User, Briefcase, FileText, 
   CreditCard, Calendar, FileType, CheckCircle2, Loader2, AlertCircle 
 } from 'lucide-react';
-import { customersApi, suppliersApi, invoicesApi, purchasesApi } from '../../../../lib/erp-api';
+import { customersApi, suppliersApi, invoicesApi, purchasesApi } from '../../../lib/erp-api';
 import toast from 'react-hot-toast';
 
 type ModalMode = 'IN' | 'OUT';
