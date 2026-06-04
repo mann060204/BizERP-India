@@ -34,7 +34,7 @@ export interface IProduct extends Document {
   location?: string;
   batchNo?: string;
   description?: string;
-  productType?: 'Raw Material' | 'Finished Good' | 'WIP Component' | 'General';
+  productType?: 'Raw Material' | 'Finished Good' | 'WIP Component' | 'General' | 'Consumable';
   printDescription?: boolean;
   printBatchNo?: boolean;
   oneClickSale?: boolean;
@@ -81,7 +81,7 @@ const ProductSchema = new Schema<IProduct>(
     location: { type: String, trim: true },
     batchNo: { type: String, trim: true },
     description: { type: String, trim: true },
-    productType: { type: String, enum: ['Raw Material', 'Finished Good', 'WIP Component', 'General'], default: 'General' },
+    productType: { type: String, enum: ['Raw Material', 'Finished Good', 'WIP Component', 'General', 'Consumable'], default: 'General' },
     printDescription: { type: Boolean, default: false },
     printBatchNo: { type: Boolean, default: false },
     oneClickSale: { type: Boolean, default: false },
