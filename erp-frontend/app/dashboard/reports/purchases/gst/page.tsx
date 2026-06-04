@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
 import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { getGSTStateName } from '../../../../../lib/utils';
 
 const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]; const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
@@ -14,7 +15,7 @@ export default function Page() {
     { key: 'supplierName', label: 'Supplier\'s Name' },
     { key: 'billNumber', label: 'Purchase Bill' },
     { key: 'billDate', label: 'Invoice Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'placeOfSupply', label: 'PoS (State)', format: (v: any, row: any) => v ? v : (row?.gstin && row.gstin.length >= 2 ? row.gstin.substring(0, 2) : '—') },
+    { key: 'placeOfSupply', label: 'PoS (State)', format: (v: any, row: any) => getGSTStateName(v || row?.gstin) },
     { key: 'grandTotal', label: 'Total Invoice Value', align: 'right', format: formatCurrency },
     { key: 'rate', label: 'Rate', align: 'right', format: (v: any) => `${v}%` },
     { key: 'taxableValue', label: 'Taxable Value', align: 'right', format: formatCurrency },
