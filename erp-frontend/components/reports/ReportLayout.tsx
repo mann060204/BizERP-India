@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Download, Search, FileText, ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface Column {
   key: string;
@@ -37,6 +40,92 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const exportCSV = () => {
+    if (!filteredData.length) return;
+    const headers = columns.map(c => c.label).join(',');
+    const rows = filteredData.map(row =>
+      columns.map(col => {
+        const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
+        return `"${String(val).replace(/"/g, '""')}"`;
+      }).join(',')
+    );
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '_')}_report.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportExcel = () => {
+    if (!filteredData.length) return;
+    const headers = columns.map(c => c.label);
+    const rows = filteredData.map(row => 
+      columns.map(col => col.format ? col.format(row[col.key]) : (row[col.key] ?? ''))
+    );
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    XLSX.writeFile(workbook, `${title.replace(/\s+/g, '_')}_report.xlsx`);
+  };
+
+  const exportPDF = () => {
+    if (!filteredData.length) return;
+    const doc = new jsPDF('landscape');
+    doc.text(`${title} - ${subtitle}`, 14, 15);
+    const headers = columns.map(c => c.label);
+    const rows = filteredData.map(row => 
+      columns.map(col => {
+        const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
+        // Strip out HTML or custom components if any, though usually simple strings here
+        // Handle Rs symbol which sometimes breaks PDF default fonts by replacing with INR or keeping
+        return String(val).replace(/₹/g, 'Rs ');
+      })
+    );
+    (doc as any).autoTable({
+      head: [headers],
+      body: rows,
+      startY: 20,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [99, 102, 241] }
+    });
+    doc.save(`${title.replace(/\s+/g, '_')}_report.pdf`);
+  };
+
+  const exportDoc = () => {
+    if (!filteredData.length) return;
+    const headers = columns.map(c => `<th>${c.label}</th>`).join('');
+    const rows = filteredData.map(row => {
+      const cells = columns.map(col => {
+        const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
+        return `<td>${val}</td>`;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="utf-8"><title>${title}</title></head>
+    <body>
+      <h2>${title}</h2>
+      <p>${subtitle}</p>
+      <table border="1" style="border-collapse: collapse; width: 100%;">
+        <thead><tr>${headers}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </body></html>`;
+
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title.replace(/\s+/g, '_')}_report.doc`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   // Use ref to avoid stale closure / infinite re-render with fetchData
   const fetchRef = useRef(fetchData);
   fetchRef.current = fetchData;
@@ -99,30 +188,24 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
-            <button
-              className="erp-button-outline"
-              onClick={() => {
-                if (!filteredData.length) return;
-                const headers = columns.map(c => c.label).join(',');
-                const rows = filteredData.map(row =>
-                  columns.map(col => {
-                    const val = col.format ? col.format(row[col.key]) : (row[col.key] ?? '');
-                    return `"${String(val).replace(/"/g, '""')}"`;
-                  }).join(',')
-                );
-                const csv = [headers, ...rows].join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${title.replace(/\s+/g, '_')}_report.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </button>
+            <div className="relative">
+              <button 
+                className="erp-button-outline" 
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                onBlur={() => setTimeout(() => setShowExportMenu(false), 200)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </button>
+              {showExportMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 shadow-xl rounded-xl p-2 z-50 flex flex-col gap-1">
+                  <button onClick={exportCSV} className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition">CSV File (.csv)</button>
+                  <button onClick={exportExcel} className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-green-600 rounded-lg transition">Excel File (.xlsx)</button>
+                  <button onClick={exportPDF} className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-red-600 rounded-lg transition">PDF Document (.pdf)</button>
+                  <button onClick={exportDoc} className="w-full text-left px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 rounded-lg transition">Word Document (.doc)</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
