@@ -195,39 +195,6 @@
   --topbar-time-bg: #ffe4e6;
   --topbar-time-text: #be123c;
   --topbar-time-border: #fda4af;
-}ent(135deg,#e11d48,#9f1239);
-
-  --primary: #e11d48;
-  --primary-hover: #be123c;
-  --primary-light: #fff1f2;
-  --primary-ring: rgba(225,29,72,0.25);
-
-  --accent: #f43f5e;
-  --accent-hover: #e11d48;
-  --accent-light: #fff1f2;
-
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --danger: #f43f5e;
-  --danger-light: #ffe4e6;
-  --warning: #f59e0b;
-  --warning-light: #fef3c7;
-
-  --bg: #fff1f2;
-  --bg-card: #ffffff;
-  --bg-elevated: #ffe4e6;
-  --border: #fecdd3;
-  --border-focus: #fda4af;
-
-  --text: #4c0519;
-  --text-muted: #e11d48;
-  --text-subtle: #fb7185;
-
-  --topbar-bg: rgba(255,255,255,0.95);
-  --topbar-border: #fecdd3;
-  --topbar-time-bg: #ffe4e6;
-  --topbar-time-text: #be123c;
-  --topbar-time-border: #fda4af;
 }
 
 /* ─────────────────────────────────────────────
