@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { formatAccountingBalance } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { customersApi, businessApi } from '../../../../../lib/erp-api';
 
@@ -66,7 +67,7 @@ export default function PrintableCustomerLedger() {
   let periodCr = 0;
 
   const formatBal = (b: number) => {
-    return b >= 0 ? `${b.toFixed(2)} Dr` : `${Math.abs(b).toFixed(2)} Cr`;
+    return formatAccountingBalance(b, 'customer').text;
   };
 
   const formatDate = (dateStr: string) => {

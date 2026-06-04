@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../components/layout/Topbar';
 import { suppliersApi } from '../../../lib/erp-api';
+import { formatAccountingBalance } from '@/lib/utils';
 import { Search, Loader2, Save, X, Truck, Edit2, Trash2, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
@@ -79,7 +80,7 @@ export default function SuppliersPage() {
                 { header: 'PAN', key: 'pan' },
                 { header: 'City', render: (s) => s.address?.city || '' },
                 { header: 'State', render: (s) => s.address?.state || '' },
-                { header: 'Balance', render: (s) => Math.abs(s.currentBalance || 0).toFixed(2) + ((s.currentBalance || 0) >= 0 ? ' Cr' : ' Dr') }
+                { header: 'Balance', render: (s) => formatAccountingBalance(s.currentBalance || 0, 'supplier').text }
               ]}
             />
             <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
@@ -128,8 +129,8 @@ export default function SuppliersPage() {
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">{s.gstin || '—'}</td>
                       <td className="px-5 py-4 text-slate-600">{[s.address?.city, s.address?.state].filter(Boolean).join(', ') || '—'}</td>
                       <td className="px-5 py-4">
-                        <span className={(s.currentBalance || 0) > 0 ? 'text-red-500 font-medium' : (s.currentBalance || 0) < 0 ? 'text-green-500 font-medium' : 'text-slate-600'}>
-                          ₹{Math.abs(s.currentBalance || 0).toFixed(2)} {(s.currentBalance || 0) >= 0 ? 'Cr' : 'Dr'}
+                        <span className={`${formatAccountingBalance(s.currentBalance || 0, 'supplier').colorClass} font-medium`}>
+                          {formatAccountingBalance(s.currentBalance || 0, 'supplier').text}
                         </span>
                       </td>
                       <td className="px-5 py-4">

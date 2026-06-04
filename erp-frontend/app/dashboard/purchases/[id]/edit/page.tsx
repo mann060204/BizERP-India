@@ -293,7 +293,7 @@ export default function EditPurchasePage() {
   const grandTotal = round2(subtotal - additionalDiscount + shippingCharge + roundOff);
   const balance = round2(grandTotal - amountPaid);
 
-  const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
+  const handleSave = async (saveStatus: 'draft' | 'received' | 'paid', printAfterSave: boolean = false) => {
     if (!billNumber.trim()) { toast.error('Purchase Bill No. is required'); return; }
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     
@@ -349,6 +349,9 @@ export default function EditPurchasePage() {
       };
       await purchasesApi.update(id, payload);
       toast.success(`Purchase Bill ${billNumber} Updated!`);
+      if (printAfterSave) {
+        window.open(`/print/purchase/${id}`, '_blank');
+      }
       router.push('/dashboard/purchases');
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save purchase bill');
@@ -898,7 +901,7 @@ export default function EditPurchasePage() {
              <Barcode className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received', true)} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
             <button onClick={() => handleSave('received')} disabled={saving} className="bg-action-700 hover:bg-action-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">

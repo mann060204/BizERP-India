@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../lib/erp-api';
+import { suppliersApi, productsApi, purchasesApi, businessApi, inventoryApi } from '../../../../lib/erp-api';
+import { formatAccountingBalance } from '@/lib/utils';
 import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
@@ -252,7 +253,7 @@ export default function NewPurchasePage() {
   const grandTotal = round2(subtotal - additionalDiscount + shippingCharge + roundOff);
   const balance = round2(grandTotal - amountPaid);
 
-  const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
+  const handleSave = async (saveStatus: 'draft' | 'received' | 'paid', printAfterSave: boolean = false) => {
     if (!billNumber.trim()) { toast.error('Purchase Bill No. is required'); return; }
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     
@@ -312,8 +313,11 @@ export default function NewPurchasePage() {
         notes: remarks,
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
       };
-      await purchasesApi.create(payload);
+      const res = await purchasesApi.create(payload);
       toast.success(`Purchase Bill ${billNumber} Recorded!`);
+      if (printAfterSave && res.data?.purchase?._id) {
+        window.open(`/print/purchase/${res.data.purchase._id}`, '_blank');
+      }
       router.push('/dashboard/purchases');
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save purchase bill');
@@ -362,7 +366,7 @@ export default function NewPurchasePage() {
                        const bal = supplierSnapshot.currentBalance !== undefined ? supplierSnapshot.currentBalance : (supplierSnapshot.openingBalance || 0);
                        return (
                          <div className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-red-50 text-red-700 border-red-200' : bal < 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                           A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                           A/C Bal: {formatAccountingBalance(bal, 'supplier').text}
                          </div>
                        );
                      })()
@@ -902,7 +906,7 @@ export default function NewPurchasePage() {
              <Barcode className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => handleSave('received')} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
+            <button onClick={() => handleSave('received', true)} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
             </button>
             <button onClick={() => handleSave('received')} disabled={saving} className="bg-action-700 hover:bg-action-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">

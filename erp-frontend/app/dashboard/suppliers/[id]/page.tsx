@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { suppliersApi } from '../../../../lib/erp-api';
+import { formatAccountingBalance } from '@/lib/utils';
 import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, Loader2, VideoOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { purchasesApi } from '../../../../lib/erp-api';
@@ -292,7 +293,7 @@ export default function EditSupplierPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Account Balance</span>
-                  <span className={`font-bold ${currentBalance < 0 ? 'text-green-500' : currentBalance > 0 ? 'text-red-500' : 'text-slate-900'}`}>₹{Math.abs(currentBalance).toFixed(2)} {currentBalance >= 0 ? 'Cr' : 'Dr'}</span>
+                  <span className={`font-bold ${formatAccountingBalance(currentBalance, 'supplier').colorClass}`}>{formatAccountingBalance(currentBalance, 'supplier').text}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Account Status</span>
@@ -523,7 +524,7 @@ export default function EditSupplierPage() {
                     <div className="grid grid-cols-3 gap-4 mb-6">
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Current Balance</div>
-                         <div className="text-xl font-bold mt-1 text-slate-900">₹{Math.abs(currentBalance).toFixed(2)} <span className="text-sm font-semibold">{currentBalance >= 0 ? 'Cr' : 'Dr'}</span></div>
+                         <div className={`text-xl font-bold mt-1 ${formatAccountingBalance(currentBalance, 'supplier').colorClass}`}>{formatAccountingBalance(currentBalance, 'supplier').text}</div>
                       </div>
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Total Billed</div>

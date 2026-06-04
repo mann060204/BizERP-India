@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
 import { customersApi, productsApi, salesReturnApi, invoicesApi, businessApi } from '../../../../../lib/erp-api';
+import { formatAccountingBalance } from '@/lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -13,11 +14,11 @@ import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddCustomerModal from '../../../../../components/modals/QuickAddCustomerModal';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; currentBalance?: number; }
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; batches?: any[]; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
-  quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
+  quantity: number; unit: string; rate: number; mrp: number; discount: number; discountAmount?: number; discountType?: string; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
   primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
   selectedBaseRate?: number;
@@ -162,10 +163,6 @@ export default function NewSalesReturnPage() {
 
   const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
-
-  const uniqueGroups = Array.from(new Set(products.map(p => p.group).filter(Boolean))) as string[];
-  const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))) as string[];
-  const uniqueLocations = Array.from(new Set(products.map(p => p.location).filter(Boolean))) as string[];
 
   const advFilteredProducts = products.filter(p => {
     if (advGroup && p.group !== advGroup) return false;
@@ -463,7 +460,7 @@ export default function NewSalesReturnPage() {
                      const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
                      return (
                        <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                         A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                         A/C Bal: {formatAccountingBalance(bal, 'customer').text}
                        </div>
                      );
                    })()

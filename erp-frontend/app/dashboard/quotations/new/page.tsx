@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { customersApi, productsApi, quotationsApi, invoicesApi, businessApi } from '../../../../lib/erp-api';
+import { formatAccountingBalance } from '@/lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -13,11 +14,11 @@ import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
 import QuickAddCustomerModal from '../../../../components/modals/QuickAddCustomerModal';
 
-interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; }
+interface Customer { _id: string; name: string; mobile?: string; gstin?: string; billingAddress?: string; priceCategory?: string; openingBalance?: number; currentBalance?: number; }
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
-  quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
+  quantity: number; unit: string; rate: number; mrp: number; discount: number; discountAmount?: number; discountType?: string; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
   primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
   selectedBaseRate?: number;
@@ -230,7 +231,7 @@ export default function NewQuotationPage() {
 
   const calculateItem = (item: LineItem, invType = quotationType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
-    const discountAmt = (gross * item.discount) / 100;
+    const discountAmt = (gross * (item.discount || 0)) / 100;
     const taxableAmount = round2(gross - discountAmt);
     const cgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
     const sgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
@@ -283,7 +284,7 @@ export default function NewQuotationPage() {
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
-  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
+  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * (i.discount || 0)) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
 
   let shipCGST = 0;
@@ -419,7 +420,7 @@ export default function NewQuotationPage() {
                      const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
                      return (
                        <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                         A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                         A/C Bal: {formatAccountingBalance(bal, 'customer').text}
                        </div>
                      );
                    })()

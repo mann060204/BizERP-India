@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from "next/navigation";
 import Topbar from '../../../../../components/layout/Topbar';
-import { customersApi, productsApi, quotationsApi, invoicesApi, businessApi } from '../../../../../lib/erp-api';
+import { customersApi, productsApi, quotationsApi, businessApi } from '../../../../../lib/erp-api';
+import { formatAccountingBalance } from '../../../../../lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
@@ -469,7 +470,7 @@ export default function NewQuotationPage() {
                     const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
                     return (
                       <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                        A/C Bal: {bal > 0 ? '₹' + bal.toFixed(2) + ' Dr' : bal < 0 ? '₹' + Math.abs(bal).toFixed(2) + ' Cr' : '₹0.00'}
+                          A/C Bal: {formatAccountingBalance(bal, 'customer').text}
                       </div>
                     );
                   })()}

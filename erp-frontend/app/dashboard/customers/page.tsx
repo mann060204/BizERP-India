@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Topbar from '../../../components/layout/Topbar';
 import { customersApi } from '../../../lib/erp-api';
 import { Plus, Search, Users, Phone, Edit2, Trash2, Loader2, User as UserIcon, Info } from 'lucide-react';
+import { formatAccountingBalance } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
 
@@ -61,7 +62,7 @@ export default function CustomersPage() {
                 { header: 'GSTIN', key: 'gstin' },
                 { header: 'City', render: (c) => c.billingAddress?.city || '' },
                 { header: 'State', render: (c) => c.billingAddress?.state || '' },
-                { header: 'Balance', render: (c) => Math.abs(c.currentBalance || 0).toFixed(2) + ((c.currentBalance || 0) >= 0 ? ' Dr' : ' Cr') }
+                { header: 'Balance', render: (c) => formatAccountingBalance(c.currentBalance || 0, 'customer').text }
               ]}
             />
             <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
@@ -116,8 +117,8 @@ export default function CustomersPage() {
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">{c.gstin || '—'}</td>
                       <td className="px-5 py-4 text-slate-600">{[c.billingAddress?.city, c.billingAddress?.state].filter(Boolean).join(', ') || '—'}</td>
                       <td className="px-5 py-4">
-                        <span className={(c.currentBalance || 0) > 0 ? 'text-green-500 font-medium' : (c.currentBalance || 0) < 0 ? 'text-red-500 font-medium' : 'text-slate-600'}>
-                          ₹{Math.abs(c.currentBalance || 0).toFixed(2)} {(c.currentBalance || 0) >= 0 ? 'Dr' : 'Cr'}
+                        <span className={`${formatAccountingBalance(c.currentBalance || 0, 'customer').colorClass} font-medium`}>
+                          {formatAccountingBalance(c.currentBalance || 0, 'customer').text}
                         </span>
                       </td>
                       <td className="px-5 py-4">

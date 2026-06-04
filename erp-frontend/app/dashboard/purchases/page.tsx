@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
 import { purchasesApi } from '../../../lib/erp-api';
-import { Plus, Search, FileText, Loader2, CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
+import { Plus, Search, FileText, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
 
@@ -140,7 +140,10 @@ export default function PurchasesPage() {
                           </span>
                         </td>
                         <td className="px-5 py-4">
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <Link href={`/print/purchase/${pur._id}`} target="_blank" className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#D4D4D4] transition" title="Print Purchase Bill">
+                              <Printer className="w-4 h-4" />
+                            </Link>
                             <Link href={`/dashboard/purchases/${pur._id}/edit`} className="px-2 py-1 rounded-lg text-xs text-blue-500 hover:bg-blue-100 transition">Edit</Link>
                             {pur.status !== 'cancelled' && (
                               <button onClick={() => handleCancel(pur._id, pur.billNumber)} className="px-2 py-1 rounded-lg text-xs text-red-500 hover:bg-red-100 transition">Cancel</button>
