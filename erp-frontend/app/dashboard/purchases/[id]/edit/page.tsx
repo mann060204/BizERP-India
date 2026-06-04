@@ -324,7 +324,12 @@ export default function EditPurchasePage() {
         paymentTerms,
         ewayBillNo,
         supplierId: supplierId || undefined,
-        supplierSnapshot: supplierSnapshot || { name: supplierSearch || 'Cash Supplier' },
+        supplierSnapshot: supplierSnapshot ? {
+          name: supplierSnapshot.name,
+          mobile: contactNo,
+          gstin: supplierGstin,
+          address: supplierAddress
+        } : { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
         batches: batches.length > 0 ? batches : lineItems.filter(i => i.batchNo).map(i => ({ productId: i.productId, batchNo: i.batchNo, mrp: i.mrp, quantity: i.quantity })),

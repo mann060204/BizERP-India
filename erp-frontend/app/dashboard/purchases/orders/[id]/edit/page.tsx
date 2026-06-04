@@ -299,7 +299,12 @@ export default function EditPurchaseOrderPage() {
         paymentTerms,
         ewayBillNo,
         supplierId: supplierId || undefined,
-        supplierSnapshot: supplierSnapshot || { name: supplierSearch || 'Cash Supplier' },
+        supplierSnapshot: supplierSnapshot ? {
+          name: supplierSnapshot.name,
+          mobile: contactNo,
+          gstin: supplierGstin,
+          address: supplierAddress
+        } : { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
         batches,

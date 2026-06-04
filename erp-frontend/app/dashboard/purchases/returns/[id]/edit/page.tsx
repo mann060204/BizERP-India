@@ -305,7 +305,12 @@ export default function EditpurchaseReturnPage() {
         paymentTerms,
         ewayBillNo,
         supplierId: supplierId || undefined,
-        supplierSnapshot: supplierSnapshot || { name: supplierSearch || 'Cash Supplier' },
+        supplierSnapshot: supplierSnapshot ? {
+          name: supplierSnapshot.name,
+          mobile: contactNo,
+          gstin: supplierGstin,
+          address: supplierAddress
+        } : { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
         batches: lineItems.filter(i => i.batchNo).map(i => ({ productId: i.productId, batchNo: i.batchNo, mrp: i.mrp })),
