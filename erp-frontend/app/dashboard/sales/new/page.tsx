@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi } from '../../../../lib/erp-api';
+import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi } from '../../../../lib/erp-api';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 

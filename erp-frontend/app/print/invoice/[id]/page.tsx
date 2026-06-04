@@ -98,8 +98,8 @@ export default function PrintableInvoicePage() {
             {business.logo && <img src={business.logo} alt="Logo" className="w-16 h-16 mx-auto mb-2 object-contain grayscale" />}
             <h1 className="text-xl font-bold uppercase">{business.businessName || business.name}</h1>
             <p>{business.address?.street}</p>
-            <p>{business.address?.city}, {business.address?.state}</p>
-            {business.gstin && <p>GSTIN: {business.gstin} {business.gstin.length >= 2 && `(State Code: ${business.gstin.substring(0, 2)})`}</p>}
+            <p>{business.address?.city}, {business.address?.state} {business.gstin?.length >= 2 && `(${business.gstin.substring(0, 2)})`}</p>
+            {business.gstin && <p>GSTIN: {business.gstin}</p>}
             <p>Ph: {business.mobile || business.phone}</p>
           </div>
           
@@ -201,14 +201,14 @@ export default function PrintableInvoicePage() {
               <div>
                 <h1 className="text-3xl font-black text-blue-900 uppercase tracking-tight">{business.businessName || business.name}</h1>
                 <p className="text-gray-700">{business.address?.street?.toUpperCase()}</p>
-                <p className="text-gray-700">{business.address?.city?.toUpperCase()}, {business.address?.state?.toUpperCase()} {business.address?.pinCode}</p>
+                <p className="text-gray-700">{business.address?.city?.toUpperCase()}, {business.address?.state?.toUpperCase()} {business.gstin?.length >= 2 && `(${business.gstin.substring(0, 2)})`} {business.address?.pinCode}</p>
                 <p className="text-gray-700 font-semibold mt-1">Ph: {business.mobile || business.phone}</p>
               </div>
             </div>
             <div className="text-right flex flex-col items-end">
               <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 border-b-2 border-gray-800 pb-1 mb-2">{isNonGst ? 'RETAIL INVOICE' : 'TAX INVOICE'}</h2>
               <p className="text-[10px] font-semibold">Original for Recipient</p>
-              <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin} {business.gstin?.length >= 2 && `(State Code: ${business.gstin.substring(0, 2)})`}</p>
+              <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin}</p>
               {business.pan && <p className="text-[11px] font-bold text-gray-700">PAN: {business.pan}</p>}
             </div>
           </div>
@@ -229,10 +229,10 @@ export default function PrintableInvoicePage() {
                 <span>Contact</span><span>: {invoice.customerSnapshot.mobile || invoice.contactNo || 'N/A'}</span>
                 {isNonGst ? null : (
                   <>
-                    <span>GSTIN</span><span>: {invoice.customerSnapshot.gstin || 'N/A'} {invoice.customerSnapshot.gstin && invoice.customerSnapshot.gstin.length >= 2 ? `(State Code: ${invoice.customerSnapshot.gstin.substring(0, 2)})` : ''}</span>
+                    <span>GSTIN</span><span>: {invoice.customerSnapshot.gstin || 'N/A'}</span>
                   </>
                 )}
-                <span>State</span><span>: {invoice.placeOfSupply?.toUpperCase() || 'N/A'}</span>
+                <span>State</span><span>: {invoice.placeOfSupply?.toUpperCase() || 'N/A'} {invoice.customerSnapshot.gstin && invoice.customerSnapshot.gstin.length >= 2 ? `(${invoice.customerSnapshot.gstin.substring(0, 2)})` : ''}</span>
               </div>
             </div>
             {/* Invoice Meta */}
