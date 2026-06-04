@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const dispatch = useAppDispatch();
   const { token } = useAppSelector((s) => s.auth);
   const [checking, setChecking] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('erp_token');
@@ -30,8 +31,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--bg)' }}>
-      <Sidebar />
-      <div className="flex-1 lg:pl-[220px] transition-all duration-300 min-w-0">
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <div className={`flex-1 transition-all duration-300 min-w-0 ${collapsed ? 'lg:pl-[64px]' : 'lg:pl-[220px]'}`}>
         {children}
       </div>
     </div>

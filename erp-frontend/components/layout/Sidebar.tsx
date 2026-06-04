@@ -48,10 +48,14 @@ const NAV_ITEMS = [
   { label: 'Settings',    href: '/dashboard/settings',  icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boolean, setCollapsed?: (val: boolean) => void }) {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const [collapsed, setCollapsed] = useState(false);
+  // internal fallback in case used without props
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const isCollapsed = collapsed !== undefined ? collapsed : internalCollapsed;
+  const toggleCollapsed = () => setCollapsed ? setCollapsed(!isCollapsed) : setInternalCollapsed(!isCollapsed);
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
@@ -69,18 +73,18 @@ export default function Sidebar() {
 
   const toggleSubmenu = (label: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (collapsed) setCollapsed(false);
+    if (isCollapsed) toggleCollapsed();
     setExpandedMenus(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo Area */}
-      <div className={`sidebar-logo-area flex items-center gap-3 px-4 py-4 ${collapsed ? 'justify-center' : ''}`}>
+      <div className={`sidebar-logo-area flex items-center gap-3 px-4 py-4 ${isCollapsed ? 'justify-center' : ''}`}>
         <div className="sidebar-logo-badge w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
           <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" onError={(e: any) => { e.target.style.display='none'; }} />
         </div>
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="flex flex-col">
             <span className="text-white font-bold text-base tracking-tight leading-tight">BizERP</span>
             <span className="text-[10px] font-semibold" style={{ color: 'var(--sidebar-text)' }}>India</span>
@@ -109,11 +113,11 @@ export default function Sidebar() {
               >
                 <div className="flex items-center gap-3">
                   <Icon className="w-4.5 h-4.5 flex-shrink-0" style={{ width: '18px', height: '18px', opacity: (active && !subItems) || isParentActive ? 1 : 0.7 }} />
-                  {!collapsed && (
+                  {!isCollapsed && (
                     <span className="text-[13px] font-medium">{label}</span>
                   )}
                 </div>
-                {!collapsed && subItems && (
+                {!isCollapsed && subItems && (
                   <ChevronDown
                     style={{ width: '14px', height: '14px', opacity: 0.6 }}
                     className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
@@ -122,7 +126,7 @@ export default function Sidebar() {
               </Link>
 
               {/* Sub-menu */}
-              {!collapsed && subItems && expanded && (
+              {!isCollapsed && subItems && expanded && (
                 <div className="mt-0.5 ml-3 pl-4 border-l space-y-0.5 py-1" style={{ borderColor: 'var(--sidebar-border)' }}>
                   {subItems.map(sub => (
                     <Link
@@ -144,7 +148,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t" style={{ borderColor: 'var(--sidebar-border)' }}>
-        {!collapsed ? (
+        {!isCollapsed ? (
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-1.5">
@@ -174,16 +178,16 @@ export default function Sidebar() {
       {/* Desktop Sidebar */}
       <aside
         className={`sidebar-root hidden lg:flex flex-col fixed left-0 top-0 h-full transition-all duration-300 z-40
-          ${collapsed ? 'w-[64px]' : 'w-[220px]'}`}
+          ${isCollapsed ? 'w-[64px]' : 'w-[220px]'}`}
       >
         <SidebarContent />
         {/* Collapse toggle */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleCollapsed}
           className="absolute -right-3 top-[72px] w-6 h-6 rounded-full flex items-center justify-center text-white border shadow-lg transition-all hover:scale-110"
           style={{ background: 'var(--sidebar-active-bg)', borderColor: 'var(--sidebar-border)' }}
         >
-          {collapsed
+          {isCollapsed
             ? <ChevronRight style={{ width: '12px', height: '12px' }} />
             : <ChevronLeft style={{ width: '12px', height: '12px' }} />}
         </button>
