@@ -121,12 +121,12 @@ const isActive = (href: string) =>
       <div className="p-4 border-t border-slate-200 text-center">
         {!collapsed ? (
           <>
-            <p className="text-sm font-bold text-slate-800 bg-slate-100/80 rounded-lg py-1.5 mb-2 inline-block px-4 border border-slate-200">v1.0.0</p>
+            <p className="text-sm font-bold text-slate-800 bg-slate-100/80 rounded-lg py-1.5 mb-2 inline-block px-4 border border-slate-200">v1.0.3</p>
             <p className="text-xs text-slate-700 font-semibold">© {new Date().getFullYear()} Ozen Studio.</p>
             <p className="text-xs text-slate-700 mt-1 font-medium">Build and Design by Mann Monapra</p>
           </>
         ) : (
-          <p className="text-xs font-bold text-slate-800 bg-slate-100/80 rounded-lg py-2 w-full text-center border border-slate-200">v1.0</p>
+          <p className="text-[10px] font-bold text-slate-800 bg-slate-100/80 rounded-lg py-2 w-full text-center border border-slate-200 truncate">v1.0.3</p>
         )}
       </div>
     </div>

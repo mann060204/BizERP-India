@@ -10,6 +10,12 @@ export default function Topbar({ title }: { title?: string }) {
   const { user } = useAppSelector((s) => s.auth);
   const dispatch = useAppDispatch();
   const [businessName, setBusinessName] = useState('My Business');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     businessApi.getProfile().then(res => {
@@ -23,8 +29,17 @@ export default function Topbar({ title }: { title?: string }) {
       <div className="flex items-center gap-4">
         {/* Title pushed right of mobile menu btn */}
         <h1 className="text-slate-900 font-semibold text-lg ml-10 lg:ml-0">{title || 'Dashboard'}</h1>
-        <span className="hidden sm:inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-100">
-          v1.0.3
+        <span className="hidden sm:inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-[11px] font-bold rounded-lg border border-indigo-100">
+          {currentTime.toLocaleString('en-IN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          })}
         </span>
       </div>
 
