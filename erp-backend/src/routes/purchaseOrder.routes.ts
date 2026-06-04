@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 import {
   createPurchaseOrder,
   getPurchaseOrders,
@@ -14,6 +14,7 @@ import {
 const router = Router();
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.get('/next-number', getNextPurchaseOrderNumber);
 router.get('/analytics/summary', getPurchaseOrderSummary);

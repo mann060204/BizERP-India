@@ -12,7 +12,14 @@ import Product from '../models/Product.model';
 
 export const startNewYear = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { customYearLabel } = req.body || {};
+    const { 
+      customYearLabel, 
+      carryForwardStock = true, 
+      carryForwardCustomerBalances = true, 
+      carryForwardSupplierBalances = true, 
+      carryForwardBankBalances = true, 
+      lockPreviousFY = true 
+    } = req.body || {};
     const oldBusinessId = req.user!.businessId;
     const oldBusiness = await Business.findById(oldBusinessId);
     if (!oldBusiness) {
@@ -20,12 +27,16 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
+    if (lockPreviousFY) {
+      oldBusiness.isLocked = true;
+    }
+
     // Ensure businessGroupId exists
     if (!oldBusiness.businessGroupId) {
       oldBusiness.businessGroupId = (oldBusiness._id as any).toString();
       oldBusiness.financialYearLabel = 'FY Legacy'; // Or calculate based on creation date
-      await oldBusiness.save();
     }
+    await oldBusiness.save();
 
     // Determine new financial year label
     const newYearNumber = parseInt(oldBusiness.financialYearLabel?.match(/\d{4}/)?.[0] || new Date().getFullYear().toString()) + 1;
@@ -64,6 +75,7 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
       inventorySequencing: oldBusiness.inventorySequencing,
       documentSequences: oldBusiness.documentSequences,
       enableManufacturing: oldBusiness.enableManufacturing,
+      cashInHand: carryForwardBankBalances ? oldBusiness.cashInHand : 0,
       
       // Keep everything above, but RESET counters and set group details
       businessGroupId: oldBusiness.businessGroupId,
@@ -101,9 +113,9 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
         priceCategory: c.priceCategory,
         remark: c.remark,
         creditLimit: c.creditLimit,
-        openingBalance: c.currentBalance,
-        balanceType: c.currentBalance >= 0 ? 'Debit' : 'Credit',
-        currentBalance: c.currentBalance,
+        openingBalance: carryForwardCustomerBalances ? c.currentBalance : 0,
+        balanceType: carryForwardCustomerBalances ? (c.currentBalance >= 0 ? 'Debit' : 'Credit') : 'Debit',
+        currentBalance: carryForwardCustomerBalances ? c.currentBalance : 0,
         tags: c.tags,
         photo: c.photo,
         isActive: c.isActive
@@ -137,9 +149,9 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
         anniversary: s.anniversary,
         photo: s.photo,
         tags: s.tags,
-        openingBalance: s.currentBalance,
-        currentBalance: s.currentBalance,
-        balanceType: s.currentBalance >= 0 ? 'Credit' : 'Debit',
+        openingBalance: carryForwardSupplierBalances ? s.currentBalance : 0,
+        currentBalance: carryForwardSupplierBalances ? s.currentBalance : 0,
+        balanceType: carryForwardSupplierBalances ? (s.currentBalance >= 0 ? 'Credit' : 'Debit') : 'Credit',
         isActive: s.isActive
       }));
       await Supplier.insertMany(newSuppliers);
@@ -154,9 +166,9 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
         type: a.type,
         bankName: a.bankName,
         accountNumber: a.accountNumber,
-        openingBalance: a.currentBalance,
-        balanceType: a.currentBalance >= 0 ? a.balanceType : (a.balanceType === 'Dr' ? 'Cr' : 'Dr'),
-        currentBalance: Math.abs(a.currentBalance),
+        openingBalance: carryForwardBankBalances ? a.currentBalance : 0,
+        balanceType: carryForwardBankBalances ? (a.currentBalance >= 0 ? a.balanceType : (a.balanceType === 'Dr' ? 'Cr' : 'Dr')) : 'Dr',
+        currentBalance: carryForwardBankBalances ? Math.abs(a.currentBalance) : 0,
         isActive: a.isActive
       }));
       await Account.insertMany(newAccounts);
@@ -176,7 +188,7 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
         // A bank's true balance is recorded in its Account Ledger. 
         // But for simplicity, if Account copied correctly, it's fine. We'll set openingBalance to 0 unless we calculate it. 
         // Let's just find the corresponding Account's currentBalance.
-        openingBalance: accounts.find(a => a.accountNumber === b.accountNumber)?.currentBalance || b.openingBalance,
+        openingBalance: carryForwardBankBalances ? (accounts.find(a => a.accountNumber === b.accountNumber)?.currentBalance || b.openingBalance) : 0,
         isActive: b.isActive
       }));
       await Bank.insertMany(newBanks);
@@ -223,9 +235,9 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
         notForSale: p.notForSale,
         reorderLevel: p.reorderLevel,
         lowLevelLimit: p.lowLevelLimit,
-        openingStock: p.currentStock,
-        openingStockValue: (p.currentStock * p.purchasePrice) || 0,
-        currentStock: p.currentStock,
+        openingStock: carryForwardStock ? p.currentStock : 0,
+        openingStockValue: carryForwardStock ? ((p.currentStock * p.purchasePrice) || 0) : 0,
+        currentStock: carryForwardStock ? p.currentStock : 0,
         isActive: p.isActive
       }));
       await Product.insertMany(newProducts);

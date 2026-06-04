@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 import { createMO, createDirectManufacturing, createReverseManufacturing, getMOs, updateMOStatus, deleteMO, getProductionPlan } from '../controllers/manufacturing.controller';
 
 const router = Router();
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.post('/', createMO);
 router.post('/direct', createDirectManufacturing);

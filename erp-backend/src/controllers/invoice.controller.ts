@@ -117,7 +117,8 @@ export const getInvoice = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const invoice = await Invoice.findOne({ _id: req.params['id'], businessId: req.user!.businessId })
       .populate('customerId', 'name mobile email gstin billingAddress')
-      .populate('createdBy', 'name');
+      .populate('createdBy', 'name')
+      .populate('paymentHistory.bankId', 'bankName accountNumber');
     if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
     res.json({ invoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
@@ -128,7 +129,8 @@ export const getPublicInvoice = async (req: Request, res: Response): Promise<voi
   try {
     const invoice = await Invoice.findById(req.params['id'])
       .populate('customerId', 'name mobile email gstin billingAddress')
-      .populate('createdBy', 'name');
+      .populate('createdBy', 'name')
+      .populate('paymentHistory.bankId', 'bankName accountNumber');
     if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
     res.json({ invoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }

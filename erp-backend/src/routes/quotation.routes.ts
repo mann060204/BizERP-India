@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 import {
   getQuotations, getQuotation, createQuotation, updateQuotation, deleteQuotation, getNextQuotationNumber, convertToInvoice, getQuotationSummary
 } from '../controllers/quotation.controller';
@@ -7,6 +7,7 @@ import {
 const router = Router();
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.get('/summary', getQuotationSummary);
 router.get('/next-number', getNextQuotationNumber);

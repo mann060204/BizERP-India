@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { getProducts, getProduct, createProduct, updateProduct, deleteProduct, createBulkProducts } from '../controllers/product.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 router.use(protect);
+router.use(checkLockedFY);
 
 router.post('/bulk', createBulkProducts);
 router.get('/', getProducts);

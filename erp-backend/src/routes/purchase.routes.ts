@@ -3,10 +3,11 @@ import {
   getPurchases, getPurchase, createPurchase, updatePurchase,
   updatePurchaseStatus, cancelPurchase, getPurchaseSummary, getLastPurchasePrices
 } from '../controllers/purchase.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 router.use(protect);
+router.use(checkLockedFY);
 
 router.get('/analytics/summary', getPurchaseSummary);
 router.get('/last-prices', getLastPurchasePrices);

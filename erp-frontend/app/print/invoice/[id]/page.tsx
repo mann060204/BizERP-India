@@ -113,7 +113,7 @@ export default function PrintableInvoicePage() {
               <div className="mt-1 border-t border-dashed border-gray-300 pt-1">
                 <strong>Payment Hist:</strong>
                 {invoice.paymentHistory.map((p: any, i: number) => (
-                   <p key={i} className="pl-2">- {new Date(p.date).toLocaleDateString('en-GB')}: {p.mode} ₹{p.amount}</p>
+                   <p key={i} className="pl-2">- {new Date(p.date).toLocaleDateString('en-GB')}: {p.mode}{p.bankId && p.bankId.bankName ? ` (${p.bankId.bankName})` : ''} ₹{p.amount}</p>
                 ))}
               </div>
             )}
@@ -252,7 +252,7 @@ export default function PrintableInvoicePage() {
                   <>
                     <span className="self-start pt-1">Payment Hist.</span>
                     <span className="whitespace-pre-wrap leading-tight pt-1 border-t border-gray-100 mt-1">
-                      : {invoice.paymentHistory.map((p: any) => `${new Date(p.date).toLocaleDateString('en-GB')} - ${p.mode} - ₹${p.amount}`).join('\n  ')}
+                      : {invoice.paymentHistory.map((p: any) => `${new Date(p.date).toLocaleDateString('en-GB')} - ${p.mode}${p.bankId && p.bankId.bankName ? ` (${p.bankId.bankName})` : ''} - ₹${p.amount}`).join('\n  ')}
                     </span>
                   </>
                 )}

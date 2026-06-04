@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 import { createBOM, getBOMs, getBOMById, updateBOM, deleteBOM } from '../controllers/bom.controller';
 
 const router = Router();
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.post('/', createBOM);
 router.get('/', getBOMs);

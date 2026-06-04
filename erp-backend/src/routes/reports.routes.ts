@@ -1,9 +1,10 @@
 import express from 'express';
 import * as reportsController from '../controllers/reports.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 router.use(protect);
+router.use(checkLockedFY);
 
 // --- CORE REPORTS ---
 router.get('/dashboard-charts', reportsController.getDashboardCharts as any);

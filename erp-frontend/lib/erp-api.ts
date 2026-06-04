@@ -248,7 +248,7 @@ export const dataApi = {
 
 // ─── Financial Year Management ──────────────────────────────────────────────
 export const financialYearApi = {
-  startNewYear: (customYearLabel?: string) => api.post('/business/financial-year/start', { customYearLabel }).then(res => res.data),
+  startNewYear: (data: { customYearLabel?: string, carryForwardStock?: boolean, carryForwardCustomerBalances?: boolean, carryForwardSupplierBalances?: boolean, carryForwardBankBalances?: boolean, lockPreviousFY?: boolean }) => api.post('/business/financial-year/start', data).then(res => res.data),
   getAvailableYears: () => api.get('/business/financial-year/available').then(res => res.data),
   switchYear: (targetBusinessId: string) => api.post('/business/financial-year/switch', { targetBusinessId }).then(res => res.data),
 };

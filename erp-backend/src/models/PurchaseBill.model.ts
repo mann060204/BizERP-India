@@ -63,6 +63,7 @@ export interface IPurchaseBill extends Document {
   purchasedBy?: string;
   txnId?: string;
   paymentDate?: Date;
+  bankId?: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -118,6 +119,7 @@ const PurchaseBillSchema = new Schema<IPurchaseBill>(
     purchasedBy: String,
     txnId: String,
     paymentDate: Date,
+    bankId: { type: Schema.Types.ObjectId, ref: 'Bank' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }

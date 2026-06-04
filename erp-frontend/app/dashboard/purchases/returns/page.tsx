@@ -10,10 +10,10 @@ interface purchaseReturn { _id: string; billNumber: string; billDate: string; su
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  received:  { label: 'Received', color: 'text-blue-400 bg-blue-400/10',    icon: Clock },
-  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
-  partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
-  overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
+  received:  { label: 'Received', color: 'text-blue-700 bg-blue-50 border border-blue-200',    icon: Clock },
+  paid:      { label: 'Paid',     color: 'text-emerald-700 bg-emerald-50 border border-emerald-200',  icon: CheckCircle },
+  partial:   { label: 'Partial',  color: 'text-yellow-700 bg-yellow-50 border border-yellow-200',icon: AlertCircle },
+  overdue:   { label: 'Overdue',  color: 'text-red-700 bg-red-50 border border-red-200',      icon: AlertCircle },
   cancelled: { label: 'Cancelled',color: 'text-slate-600 bg-[#475569]/10', icon: XCircle },
 };
 

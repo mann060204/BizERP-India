@@ -10,9 +10,9 @@ interface salesReturn { _id: string; salesReturnNumber: string; salesReturnDate:
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  partial:   { label: 'Partial',  color: 'text-yellow-400 bg-yellow-400/10',icon: AlertCircle },
-  paid:      { label: 'Paid',     color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
-  overdue:   { label: 'Overdue',  color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
+  partial:   { label: 'Partial',  color: 'text-yellow-700 bg-yellow-50 border border-yellow-200',icon: AlertCircle },
+  paid:      { label: 'Paid',     color: 'text-emerald-700 bg-emerald-50 border border-emerald-200',  icon: CheckCircle },
+  overdue:   { label: 'Overdue',  color: 'text-red-700 bg-red-50 border border-red-200',      icon: AlertCircle },
   cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
 };
 

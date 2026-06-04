@@ -114,7 +114,7 @@ export default function PrintablePurchasePage() {
                 <span>Purchase Bill No.</span><span>: {purchase.billNumber}</span>
                 <span>Purchase Bill Date</span><span>: {new Date(purchase.billDate).toLocaleDateString('en-GB')}</span>
                 {purchase.dueDate && <><span>Valid Till</span><span>: {new Date(purchase.dueDate).toLocaleDateString('en-GB')}</span></>}
-                <span>Payment Mode</span><span>: {purchase.paymentMode || 'N/A'}</span>
+                <span>Payment Mode</span><span>: {purchase.paymentMode || 'N/A'}{purchase.bankId && purchase.bankId.bankName ? ` (${purchase.bankId.bankName})` : ''}</span>
                 {purchase.deliveryTerms && <><span>Transport</span><span className="whitespace-pre-wrap leading-tight">: {purchase.deliveryTerms}</span></>}
               </div>
             </div>

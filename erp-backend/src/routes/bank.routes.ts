@@ -1,10 +1,11 @@
 import express from 'express';
 import { getBanks, getBankById, createBank, updateBank, deleteBank } from '../controllers/bank.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.route('/')
   .get(getBanks)

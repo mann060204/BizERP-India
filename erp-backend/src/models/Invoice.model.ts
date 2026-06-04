@@ -64,6 +64,7 @@ export interface IInvoice extends Document {
     mode: string;
     date: Date;
     txnId?: string;
+    bankId?: mongoose.Types.ObjectId;
   }[];
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -143,7 +144,8 @@ const InvoiceSchema = new Schema<IInvoice>(
       amount: { type: Number, required: true },
       mode: { type: String, enum: ['Cash', 'Bank', 'UPI', 'Cheque', 'Credit'], required: true },
       date: { type: Date, required: true, default: Date.now },
-      txnId: { type: String }
+      txnId: { type: String },
+      bankId: { type: Schema.Types.ObjectId, ref: 'Bank' }
     }],
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },

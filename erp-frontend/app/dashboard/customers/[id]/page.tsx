@@ -24,16 +24,21 @@ export default function EditCustomerPage() {
   const [photo, setPhoto] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode: 'user' | 'environment' = 'user') => {
     setCameraError('');
     setShowCamera(true);
+    setFacingMode(mode);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+    }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: false });
       streamRef.current = stream;
       if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play(); }
     } catch (err: any) {
@@ -267,6 +272,9 @@ export default function EditCustomerPage() {
                     <button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-action-600 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                       <Camera className="w-4 h-4" /> Capture
                     </button>
+                      <button onClick={() => startCamera(facingMode === 'user' ? 'environment' : 'user')} className="px-3 flex items-center justify-center text-slate-600 bg-white hover:bg-slate-50 py-1.5 rounded border border-slate-200 transition" title="Flip Camera">
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
                   )}
                   <button onClick={stopCamera} className="flex-1 flex items-center justify-center gap-1 text-xs text-red-400 bg-white hover:bg-red-50 py-1.5 rounded border border-slate-200 transition">
                     <X className="w-4 h-4" /> Cancel
@@ -374,7 +382,7 @@ export default function EditCustomerPage() {
                          </div>
                          <label className="text-slate-600">Opening Balance</label>
                          <div className="flex">
-                            <span className="bg-[#1e3a8a] text-slate-900 px-2.5 py-1 border border-slate-200 border-r-0 flex items-center">₹</span>
+                            <span className="bg-[#1e3a8a] text-white px-2.5 py-1 border border-slate-200 border-r-0 flex items-center">₹</span>
                             <input type="number" className="erp-input w-full rounded-l-none bg-[#F1F5F9]" value={form.openingBalance === 0 ? '' : form.openingBalance} onChange={e=>setForm({...form, openingBalance: parseFloat(e.target.value) || 0})} />
                          </div>
                        </div>
@@ -418,7 +426,7 @@ export default function EditCustomerPage() {
                          </div>
                          <label className="text-slate-600">Credit Limit</label>
                          <div className="flex">
-                            <span className="bg-[#1e3a8a] text-slate-900 px-2.5 py-1 border border-slate-200 border-r-0 flex items-center" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
+                            <span className="bg-[#1e3a8a] text-white px-2.5 py-1 border border-slate-200 border-r-0 flex items-center" style={{ opacity: form.creditAllowed ? 1 : 0.4 }}>₹</span>
                             <input type="number" className="erp-input w-full rounded-l-none disabled:opacity-40 bg-[#F1F5F9]" disabled={!form.creditAllowed} value={form.creditLimit === 0 ? '' : form.creditLimit} onChange={e=>setForm({...form, creditLimit: parseFloat(e.target.value) || 0})} />
                          </div>
                          <label className="text-slate-600">Price Category</label>
@@ -435,7 +443,7 @@ export default function EditCustomerPage() {
                          {isReadOnly ? 'Back' : 'Cancel'}
                        </button>
                        {!isReadOnly && (
-                         <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-600 text-slate-900 px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50 pointer-events-auto">
+                         <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-600 text-white px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50 pointer-events-auto">
                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
                          </button>
                        )}

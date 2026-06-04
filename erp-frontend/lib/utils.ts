@@ -27,7 +27,7 @@ export function formatAccountingBalance(value: number, type: 'customer' | 'suppl
 
   return {
     text: `${formattedAmount} ${isDebit ? 'Dr' : 'Cr'}`,
-    colorClass: isDebit ? 'text-red-500' : 'text-emerald-500',
+    colorClass: isDebit ? 'text-emerald-600' : 'text-red-600',
     isDebit,
     isCredit
   };

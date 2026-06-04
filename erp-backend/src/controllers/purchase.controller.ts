@@ -40,7 +40,8 @@ export const getPurchase = async (req: AuthRequest, res: Response): Promise<void
   try {
     const purchase = await PurchaseBill.findOne({ _id: req.params['id'], businessId: req.user!.businessId })
       .populate('supplierId', 'name mobile email gstin address')
-      .populate('createdBy', 'name');
+      .populate('createdBy', 'name')
+      .populate('bankId', 'bankName accountNumber');
     if (!purchase) { res.status(404).json({ message: 'Purchase Bill not found' }); return; }
     res.json({ purchase });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
@@ -52,7 +53,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
       additionalDiscount, shippingCharge, shippingGstRate, roundOff,
-      lineItems, amountPaid, batches, paymentMode, status, notes
+      lineItems, amountPaid, batches, paymentMode, status, notes, paymentBankId
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -167,6 +168,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       amountPaid: paid,
       balance,
       paymentMode: paymentMode || 'Cash',
+      bankId: paymentBankId || undefined,
       paymentDate: req.body.paymentDate ? new Date(req.body.paymentDate) : undefined,
       status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
       notes,
@@ -185,7 +187,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
   try {
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
-      lineItems, batches, paymentMode, amountPaid, notes, status,
+      lineItems, batches, paymentMode, amountPaid, notes, status, paymentBankId,
       shippingCharge, shippingGstRate, additionalDiscount, roundOff, paymentDate
     } = req.body;
 
@@ -354,6 +356,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
         amountPaid: paid,
         balance,
         paymentMode: paymentMode || 'Cash',
+        bankId: paymentBankId !== undefined ? paymentBankId : existingPurchase.bankId,
         paymentDate: paymentDate ? new Date(paymentDate) : undefined,
         status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
         notes,

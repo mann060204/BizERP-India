@@ -10,9 +10,9 @@ interface PurchaseOrder { _id: string; orderNumber: string; orderDate: string; s
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   Draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  Sent:      { label: 'Sent',     color: 'text-blue-400 bg-blue-400/10',    icon: Clock },
-  Accepted:  { label: 'Accepted', color: 'text-green-400 bg-green-400/10',  icon: CheckCircle },
-  Rejected:  { label: 'Rejected', color: 'text-red-400 bg-red-400/10',      icon: AlertCircle },
+  Sent:      { label: 'Sent',     color: 'text-blue-700 bg-blue-50 border border-blue-200',    icon: Clock },
+  Accepted:  { label: 'Accepted', color: 'text-emerald-700 bg-emerald-50 border border-emerald-200',  icon: CheckCircle },
+  Rejected:  { label: 'Rejected', color: 'text-red-700 bg-red-50 border border-red-200',      icon: AlertCircle },
   Billed:    { label: 'Billed',   color: 'text-emerald-400 bg-emerald-400/10', icon: CheckCircle },
   Cancelled: { label: 'Cancelled',color: 'text-slate-600 bg-[#475569]/10', icon: XCircle },
 };

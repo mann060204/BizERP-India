@@ -11,9 +11,9 @@ interface Quotation { _id: string; quotationNumber: string; quotationDate: strin
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   Draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  Sent:      { label: 'Sent',     color: 'text-blue-400 bg-blue-400/10',   icon: Clock },
-  Accepted:  { label: 'Accepted', color: 'text-green-400 bg-green-400/10', icon: CheckCircle },
-  Rejected:  { label: 'Rejected', color: 'text-red-400 bg-red-400/10',     icon: XCircle },
+  Sent:      { label: 'Sent',     color: 'text-blue-700 bg-blue-50 border border-blue-200',   icon: Clock },
+  Accepted:  { label: 'Accepted', color: 'text-emerald-700 bg-emerald-50 border border-emerald-200', icon: CheckCircle },
+  Rejected:  { label: 'Rejected', color: 'text-red-700 bg-red-50 border border-red-200',     icon: XCircle },
   Invoiced:  { label: 'Invoiced', color: 'text-violet-400 bg-violet-400/10',icon: TrendingUp },
   Cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
 };

@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 import {
   getPurchaseReturns,
   getPurchaseReturn,
@@ -14,6 +14,7 @@ import {
 const router = express.Router();
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.get('/analytics/summary', getPurchaseReturnSummary);
 router.get('/next-number/:type', getPredictedPurchaseReturnNumber);

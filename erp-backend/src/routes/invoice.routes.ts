@@ -4,13 +4,14 @@ import {
   updateInvoiceStatus, cancelInvoice, getSalesSummary,
   getCustomerLastPrice, getPredictedInvoiceNumber, getPublicInvoice
 } from '../controllers/invoice.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.get('/public/:id', getPublicInvoice);
 
 router.use(protect);
+router.use(checkLockedFY);
 
 router.get('/analytics/summary', getSalesSummary);
 router.get('/next-number', getPredictedInvoiceNumber);

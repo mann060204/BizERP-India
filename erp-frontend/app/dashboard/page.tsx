@@ -495,9 +495,9 @@ export default function DashboardPage() {
                 {pendingCustomers.length === 0
                   ? <p className="text-xs text-emerald-600 font-medium py-2">All customers are settled — no pending dues! 🎉</p>
                   : (
-                    <div className="overflow-x-auto max-h-64">
+                    <div className="overflow-x-auto overflow-y-auto max-h-96">
                       <table className="w-full text-xs">
-                        <thead className="sticky top-0 bg-white">
+                        <thead className="sticky top-0 bg-white shadow-sm z-10">
                           <tr className="border-b border-slate-100">
                             <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">#</th>
                             <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Customer</th>
@@ -531,9 +531,9 @@ export default function DashboardPage() {
                 {pendingSuppliers.length === 0
                   ? <p className="text-xs text-emerald-600 font-medium py-2">All suppliers are settled — no pending dues! 🎉</p>
                   : (
-                    <div className="overflow-x-auto max-h-64">
+                    <div className="overflow-x-auto overflow-y-auto max-h-96">
                       <table className="w-full text-xs">
-                        <thead className="sticky top-0 bg-white">
+                        <thead className="sticky top-0 bg-white shadow-sm z-10">
                           <tr className="border-b border-slate-100">
                             <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">#</th>
                             <th className="text-left py-2 px-2 text-[11px] text-slate-500 font-bold uppercase tracking-wider">Supplier</th>

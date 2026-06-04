@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { getInventoryLevels, adjustInventory, getAdjustments, autoSequenceBatches, getBatchAlerts, getBatchLogs } from '../controllers/inventory.controller';
-import { protect } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 router.use(protect);
+router.use(checkLockedFY);
 
 router.get('/', getInventoryLevels);
 router.post('/adjust', adjustInventory);

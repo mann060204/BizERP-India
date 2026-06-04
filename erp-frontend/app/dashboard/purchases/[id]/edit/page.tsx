@@ -517,7 +517,7 @@ export default function EditPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -560,7 +560,7 @@ export default function EditPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
@@ -661,7 +661,7 @@ export default function EditPurchasePage() {
               </label>
               {showAdditionalDiscount && (
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
@@ -710,7 +710,7 @@ export default function EditPurchasePage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Amount</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
                   </div>
@@ -721,7 +721,7 @@ export default function EditPurchasePage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Balance</span>
                     <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
                        <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
@@ -788,7 +788,7 @@ export default function EditPurchasePage() {
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Sale Price</label>
                  <div className="flex">
-                    <span className="bg-[#1e3a8a] text-slate-900 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                     <input type="number" value={batchInput.salePrice || ''} onChange={e => setBatchInput({...batchInput, salePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
