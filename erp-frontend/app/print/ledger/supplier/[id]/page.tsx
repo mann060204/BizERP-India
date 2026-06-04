@@ -98,13 +98,13 @@ export default function PrintableSupplierLedger() {
           <div className="text-center mb-6">
             <h1 className="text-lg font-bold uppercase">{business.businessName || business.name}</h1>
             <p>{business.address?.street}</p>
-            <p>{business.address?.city}, {business.address?.state}</p>
+            <p>{business.address?.city}, {business.address?.state} {business.gstin?.length >= 2 ? `(${business.gstin.substring(0, 2)})` : ''}</p>
             {business.email && <p>E-Mail : {business.email}</p>}
             
             <h2 className="text-base font-bold mt-4">{supplier.name}</h2>
             <h3 className="text-sm font-semibold">Ledger Account</h3>
             <p>{supplier.billingAddress?.street}</p>
-            <p>{supplier.billingAddress?.city}, {supplier.billingAddress?.state}, {supplier.billingAddress?.pinCode}</p>
+            <p>{supplier.billingAddress?.city}, {supplier.billingAddress?.state} {supplier.gstin?.length >= 2 ? `(${supplier.gstin.substring(0, 2)})` : ''}, {supplier.billingAddress?.pinCode}</p>
 
             <p className="mt-4 text-sm">{dateRangeStr}</p>
           </div>

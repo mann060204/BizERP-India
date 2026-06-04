@@ -135,7 +135,7 @@ export default function ReverseManufacturingJournal() {
                   <select className="erp-input w-full" value={selectedBatchNo} onChange={e => setSelectedBatchNo(e.target.value)}>
                     <option value="">Any Batch</option>
                     {selectedProduct.batches?.map((b: any) => (
-                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {b.currentStock})</option>
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {parseFloat((b.currentStock || 0).toFixed(3))})</option>
                     ))}
                   </select>
                 </div>

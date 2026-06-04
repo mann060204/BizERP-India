@@ -292,7 +292,7 @@ export default function EditCustomerPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Account Balance</span>
-                  <span className={`font-bold ${currentBalance > 0 ? 'text-green-500' : 'text-slate-900'}`}>₹{currentBalance.toFixed(2)}</span>
+                  <span className={`font-bold ${currentBalance > 0 ? 'text-green-500' : currentBalance < 0 ? 'text-red-500' : 'text-slate-900'}`}>₹{Math.abs(currentBalance).toFixed(2)} {currentBalance >= 0 ? 'Dr' : 'Cr'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">Account Status</span>
@@ -523,7 +523,7 @@ export default function EditCustomerPage() {
                     <div className="grid grid-cols-3 gap-4 mb-6">
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Current Balance</div>
-                         <div className="text-xl font-bold mt-1 text-slate-900">₹{currentBalance.toFixed(2)}</div>
+                         <div className="text-xl font-bold mt-1 text-slate-900">₹{Math.abs(currentBalance).toFixed(2)} <span className="text-sm font-semibold">{currentBalance >= 0 ? 'Dr' : 'Cr'}</span></div>
                       </div>
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Total Billed</div>
@@ -583,16 +583,18 @@ export default function EditCustomerPage() {
                                 return true;
                               });
 
-                              let initialOpening = form.balanceType === 'Credit' ? -Math.abs(form.openingBalance) : Math.abs(form.openingBalance);
-                              const priorDr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.debit || 0), 0);
-                              const priorCr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.credit || 0), 0);
+                              const initialOpening = form.balanceType === 'Credit' ? -Math.abs(form.openingBalance) : Math.abs(form.openingBalance);
+                              const priorTxns = txnsBeforeFromDate.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                               
-                              let currentBal = initialOpening + priorDr - priorCr;
+                              let currentBal = priorTxns.length > 0 && priorTxns[priorTxns.length - 1].closingBalance !== undefined 
+                                ? priorTxns[priorTxns.length - 1].closingBalance 
+                                : initialOpening + txnsBeforeFromDate.reduce((acc, t) => acc + (t.debit || 0) - (t.credit || 0), 0);
                               
                               let periodDr = 0;
                               let periodCr = 0;
 
-                              const formatBal = (b: number) => {
+                              const formatBal = (b: number | undefined) => {
+                                if (b === undefined) return '';
                                 return b >= 0 ? `${b.toFixed(2)} Dr` : `${Math.abs(b).toFixed(2)} Cr`;
                               };
 
@@ -604,12 +606,15 @@ export default function EditCustomerPage() {
                                     <td className="px-4 py-3 text-right text-slate-900">{formatBal(currentBal)}</td>
                                   </tr>
                                   {displayTxns.map((txn, idx) => {
-                                    currentBal = currentBal + (txn.debit || 0) - (txn.credit || 0);
+                                    if (txn.closingBalance !== undefined) {
+                                      currentBal = txn.closingBalance;
+                                    } else {
+                                      currentBal = currentBal + (txn.debit || 0) - (txn.credit || 0);
+                                    }
+                                    
                                     periodDr += (txn.debit || 0);
                                     periodCr += (txn.credit || 0);
                                     
-                                    // Make 'Cr' vs 'Dr' explicit in particulars if needed, but we have Debit/Credit columns
-                                    // Tally often prefixes particulars with By/To or Dr/Cr.
                                     let vchType = txn.referenceType || 'Journal';
                                     if (txn.referenceType === 'Invoice') vchType = 'Sales';
                                     else if (txn.referenceType === 'Payment') vchType = 'Receipt';

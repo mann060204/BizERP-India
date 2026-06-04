@@ -6,6 +6,7 @@ import Product from '../models/Product.model';
 import Batch from '../models/Batch.model';
 import BatchLog from '../models/BatchLog.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
+import Supplier from '../models/Supplier.model';
 
 // GET /api/v1/purchases
 export const getPurchases = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -450,9 +451,9 @@ export const getPurchaseSummary = async (req: AuthRequest, res: Response): Promi
         { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), billDate: { $gte: startDate }, status: { $ne: 'cancelled' } } },
         { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
       ]),
-      PurchaseBill.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $in: ['received', 'partial', 'overdue'] } } },
-        { $group: { _id: null, total: { $sum: '$balance' } } },
+      Supplier.aggregate([
+        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), currentBalance: { $lt: 0 } } },
+        { $group: { _id: null, total: { $sum: { $abs: '$currentBalance' } } } },
       ]),
       PurchaseBill.aggregate([
         { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $ne: 'cancelled' } } },

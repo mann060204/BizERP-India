@@ -545,7 +545,7 @@ export default function NewQuotationPage() {
                   </label>
                   {itemInput.productId && (
                     <span className="text-xs text-slate-600">
-                      Stock: <span className="text-emerald-600 font-bold text-sm">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                      Stock: <span className="text-emerald-600 font-bold text-sm">{parseFloat((products.find(p => p._id === itemInput.productId)?.currentStock || 0).toFixed(3))}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
@@ -557,7 +557,7 @@ export default function NewQuotationPage() {
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
                           <div className="flex flex-col">
                             <span className="text-slate-900 font-medium">{p.name}</span>
-                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{p.currentStock || 0}</span></span>
+                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{parseFloat((p.currentStock || 0).toFixed(3))}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
                              {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
@@ -971,7 +971,7 @@ export default function NewQuotationPage() {
                          <td className="p-2 text-slate-600">{p.group || '—'}</td>
                          <td className="p-2 text-slate-600">{p.brand || '—'}</td>
                          <td className="p-2 text-slate-600">{p.location || '—'}</td>
-                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
+                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{parseFloat((p.currentStock || 0).toFixed(3))}</td>
                          <td className="p-2 text-slate-600">₹{p.sellingPrice}</td>
                        </tr>
                      ))}

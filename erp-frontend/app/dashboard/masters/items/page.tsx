@@ -271,7 +271,7 @@ export default function MastersPage() {
                       <td className="px-5 py-4">
                         {p.type === 'product' ? (
                           <span className={p.currentStock <= p.reorderLevel ? 'text-red-400 font-medium' : 'text-emerald-400'}>
-                            {p.currentStock} {p.unit}
+                            {parseFloat((p.currentStock || 0).toFixed(3))} {p.unit}
                           </span>
                         ) : <span className="text-slate-600">N/A</span>}
                       </td>

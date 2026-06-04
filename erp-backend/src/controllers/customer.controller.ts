@@ -65,6 +65,7 @@ export const createCustomer = async (req: AuthRequest, res: Response): Promise<v
     }
 
     const customer = await Customer.create({ ...req.body, businessId: req.user!.businessId });
+    await AccountingService.updateCustomerBalance(customer._id, customer.businessId.toString());
     res.status(201).json({ message: 'Customer created', customer });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -78,6 +79,7 @@ export const updateCustomer = async (req: AuthRequest, res: Response): Promise<v
       { new: true, runValidators: true }
     );
     if (!customer) { res.status(404).json({ message: 'Customer not found' }); return; }
+    await AccountingService.updateCustomerBalance(customer._id, customer.businessId.toString());
     res.json({ message: 'Customer updated', customer });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

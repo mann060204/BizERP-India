@@ -7,7 +7,7 @@ export default function Page() {
     { key: 'batchNo', label: 'Batch / Serial No.' },
     { key: 'productId', label: 'Product', format: (v: any) => v?.name || '—' }, // populated object
     { key: 'expiryDate', label: 'Expiry Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : 'N/A' },
-    { key: 'currentStock', label: 'Available Qty', align: 'right' },
+    { key: 'currentStock', label: '', align: 'right', format: (v: any) => parseFloat((v || 0).toFixed(3)) },
     { key: 'mrp', label: 'MRP', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'qualityStatus', label: 'Quality' },

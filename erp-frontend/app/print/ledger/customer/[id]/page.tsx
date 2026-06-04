@@ -99,13 +99,13 @@ export default function PrintableCustomerLedger() {
           <div className="text-center mb-6">
             <h1 className="text-lg font-bold uppercase">{business.businessName || business.name}</h1>
             <p>{business.address?.street}</p>
-            <p>{business.address?.city}, {business.address?.state}</p>
+            <p>{business.address?.city}, {business.address?.state} {business.gstin?.length >= 2 ? `(${business.gstin.substring(0, 2)})` : ''}</p>
             {business.email && <p>E-Mail : {business.email}</p>}
             
             <h2 className="text-base font-bold mt-4">{customer.name}</h2>
             <h3 className="text-sm font-semibold">Ledger Account</h3>
             <p>{customer.billingAddress?.street}</p>
-            <p>{customer.billingAddress?.city}, {customer.billingAddress?.state}, {customer.billingAddress?.pinCode}</p>
+            <p>{customer.billingAddress?.city}, {customer.billingAddress?.state} {customer.gstin?.length >= 2 ? `(${customer.gstin.substring(0, 2)})` : ''}, {customer.billingAddress?.pinCode}</p>
 
             <p className="mt-4 text-sm">{dateRangeStr}</p>
           </div>

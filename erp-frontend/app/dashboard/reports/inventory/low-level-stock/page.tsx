@@ -7,7 +7,7 @@ export default function Page() {
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
     { key: 'unit', label: 'Unit' },
-    { key: 'currentStock', label: 'Current Stock', align: 'right' },
+    { key: 'currentStock', label: '', align: 'right', format: (v: any) => parseFloat((v || 0).toFixed(3)) },
     { key: 'lowStockAlert', label: 'Reorder Level', align: 'right' },  // Backend maps reorderLevel → lowStockAlert
     { key: 'supplierId', label: 'Supplier' },
   ];

@@ -50,7 +50,7 @@ export default function NewpurchaseReturnPage() {
 
   // Header State
   const [purchaseReturnType, setpurchaseReturnType] = useState('GST');
-  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+  const [billDate, setBillDate] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
   const [supplierSnapshot, setSupplierSnapshot] = useState<any>(null);
@@ -59,7 +59,7 @@ export default function NewpurchaseReturnPage() {
   const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState('');
-  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueDate, setDueDate] = useState('');
   
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billNumber, setBillNumber] = useState('');
@@ -115,6 +115,9 @@ export default function NewpurchaseReturnPage() {
           setUnits(bizUnits);
           setItemInput(prev => ({ ...prev, unit: bizUnits[0] }));
         }
+        const today = new Date().toISOString().split('T')[0];
+        setBillDate(today);
+        setDueDate(today);
       } catch (err) {
         toast.error('Failed to load data');
       } finally {

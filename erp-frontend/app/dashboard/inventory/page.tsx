@@ -91,7 +91,7 @@ export default function InventoryPage() {
               { header: 'Product Name', key: 'name' },
               { header: 'SKU', key: 'sku' },
               { header: 'Category', key: 'category' },
-              { header: 'Current Stock', render: (p) => `${p.currentStock} ${p.unit}` },
+              { header: 'Current Stock', render: (p) => `${parseFloat((p.currentStock || 0).toFixed(3))} ${p.unit}` },
               { header: 'Reorder Level', key: 'reorderLevel' },
               { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(2) },
               { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(2) }
@@ -127,7 +127,7 @@ export default function InventoryPage() {
                         <td className="px-5 py-4 text-slate-900 font-medium">{p.name}</td>
                         <td className="px-5 py-4 text-slate-600 font-mono text-xs">{p.sku || '—'}</td>
                         <td className="px-5 py-4 text-slate-600">{p.category || '—'}</td>
-                        <td className="px-5 py-4 font-bold text-slate-900">{p.currentStock} {p.unit}</td>
+                        <td className="px-5 py-4 font-bold text-slate-900">{parseFloat((p.currentStock || 0).toFixed(3))} {p.unit}</td>
                         <td className="px-5 py-4 text-emerald-400">₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
                         <td className="px-5 py-4">
                           {isLow ? (
@@ -163,7 +163,7 @@ export default function InventoryPage() {
               <div>
                 <p className="text-xs text-slate-600">Product</p>
                 <p className="text-slate-900 font-semibold">{adjusting.name}</p>
-                <p className="text-xs text-slate-600 mt-0.5">Current Stock: {adjusting.currentStock} {adjusting.unit}</p>
+                <p className="text-xs text-slate-600 mt-0.5">Current Stock: {parseFloat((adjusting.currentStock || 0).toFixed(3))} {adjusting.unit}</p>
               </div>
 
               <div>

@@ -79,7 +79,7 @@ export default function SuppliersPage() {
                 { header: 'PAN', key: 'pan' },
                 { header: 'City', render: (s) => s.address?.city || '' },
                 { header: 'State', render: (s) => s.address?.state || '' },
-                { header: 'Balance', render: (s) => (s.openingBalance || 0).toFixed(2) }
+                { header: 'Balance', render: (s) => Math.abs(s.currentBalance || 0).toFixed(2) + ((s.currentBalance || 0) >= 0 ? ' Cr' : ' Dr') }
               ]}
             />
             <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-slate-900 font-semibold text-sm transition shadow-lg shadow-blue-600/20">
@@ -128,8 +128,8 @@ export default function SuppliersPage() {
                       <td className="px-5 py-4 text-slate-600 font-mono text-xs">{s.gstin || '—'}</td>
                       <td className="px-5 py-4 text-slate-600">{[s.address?.city, s.address?.state].filter(Boolean).join(', ') || '—'}</td>
                       <td className="px-5 py-4">
-                        <span className={s.openingBalance > 0 ? 'text-green-500' : s.openingBalance < 0 ? 'text-red-500' : 'text-slate-600'}>
-                          ₹{s.openingBalance?.toFixed(2) || '0.00'}
+                        <span className={(s.currentBalance || 0) > 0 ? 'text-red-500 font-medium' : (s.currentBalance || 0) < 0 ? 'text-green-500 font-medium' : 'text-slate-600'}>
+                          ₹{Math.abs(s.currentBalance || 0).toFixed(2)} {(s.currentBalance || 0) >= 0 ? 'Cr' : 'Dr'}
                         </span>
                       </td>
                       <td className="px-5 py-4">

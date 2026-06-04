@@ -8,6 +8,7 @@ import BatchLog from '../models/BatchLog.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 import { generateSequenceNumber } from '../utils/sequenceGenerator';
+import Customer from '../models/Customer.model';
 
 // Helper: generate next invoice number
 const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' = 'GST'): Promise<string> => {
@@ -427,9 +428,9 @@ export const getSalesSummary = async (req: AuthRequest, res: Response): Promise<
         { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), invoiceDate: { $gte: startOfDay }, status: { $ne: 'cancelled' } } },
         { $group: { _id: null, total: { $sum: '$grandTotal' }, count: { $sum: 1 } } },
       ]),
-      Invoice.aggregate([
-        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $in: ['draft', 'partial', 'overdue'] } } },
-        { $group: { _id: null, total: { $sum: '$balance' } } },
+      Customer.aggregate([
+        { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), currentBalance: { $gt: 0 } } },
+        { $group: { _id: null, total: { $sum: '$currentBalance' } } },
       ]),
       Invoice.aggregate([
         { $match: { businessId: new (require('mongoose').Types.ObjectId)(businessId), status: { $ne: 'cancelled' } } },

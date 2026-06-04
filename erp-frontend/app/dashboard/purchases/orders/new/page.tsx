@@ -48,7 +48,7 @@ export default function NewPurchaseOrderPage() {
 
   // Header State
   const [purchaseType, setPurchaseType] = useState('GST');
-  const [orderDate, setorderDate] = useState(new Date().toISOString().split('T')[0]);
+  const [orderDate, setorderDate] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
   const [supplierSnapshot, setSupplierSnapshot] = useState<any>(null);
@@ -57,7 +57,7 @@ export default function NewPurchaseOrderPage() {
   const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState('');
-  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueDate, setDueDate] = useState('');
   
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [orderNumber, setorderNumber] = useState('');
@@ -108,6 +108,9 @@ export default function NewPurchaseOrderPage() {
           setUnits(bizUnits);
           setItemInput(prev => ({ ...prev, unit: bizUnits[0] }));
         }
+        const today = new Date().toISOString().split('T')[0];
+        setorderDate(today);
+        setDueDate(today);
       } catch (err) {
         toast.error('Failed to load data');
       } finally {

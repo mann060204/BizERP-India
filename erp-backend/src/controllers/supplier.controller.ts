@@ -34,6 +34,7 @@ export const getSupplier = async (req: AuthRequest, res: Response): Promise<void
 export const createSupplier = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const supplier = await Supplier.create({ ...req.body, businessId: req.user!.businessId });
+    await AccountingService.updateSupplierBalance(supplier._id, supplier.businessId.toString());
     res.status(201).json({ message: 'Supplier created', supplier });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -47,6 +48,7 @@ export const updateSupplier = async (req: AuthRequest, res: Response): Promise<v
       { new: true, runValidators: true }
     );
     if (!supplier) { res.status(404).json({ message: 'Supplier not found' }); return; }
+    await AccountingService.updateSupplierBalance(supplier._id, supplier.businessId.toString());
     res.json({ message: 'Supplier updated', supplier });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

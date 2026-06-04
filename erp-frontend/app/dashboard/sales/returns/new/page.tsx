@@ -41,8 +41,8 @@ export default function NewSalesReturnPage() {
   // Header State
   const [salesReturnType, setsalesReturnType] = useState('GST');
   const [salesReturnNumber, setsalesReturnNumber] = useState('GST-001');
-  const [salesReturnDate, setsalesReturnDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [salesReturnDate, setsalesReturnDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
   const [contactNo, setContactNo] = useState('');
@@ -89,12 +89,12 @@ export default function NewSalesReturnPage() {
   const [paymentMode1, setPaymentMode1] = useState('Cash');
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');
-  const [paymentDate1, setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate1, setPaymentDate1] = useState('');
 
   const [paymentMode2, setPaymentMode2] = useState('');
   const [amountReceived2, setAmountReceived2] = useState(0);
   const [txnId2, setTxnId2] = useState('');
-  const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate2, setPaymentDate2] = useState('');
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
@@ -120,6 +120,12 @@ export default function NewSalesReturnPage() {
         if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
         const bizDiscounts = bRes.data?.business?.discountSchemes || [];
         setDiscountSchemes(bizDiscounts.filter((d: any) => d.isActive));
+
+        const today = new Date().toISOString().split('T')[0];
+        setsalesReturnDate(today);
+        setDueDate(today);
+        setPaymentDate1(today);
+        setPaymentDate2(today);
       } catch (err) {
         toast.error('Failed to load data');
       } finally {
@@ -548,7 +554,7 @@ export default function NewSalesReturnPage() {
                   >
                     <option value="">Select Batch</option>
                     {products.find(p => p._id === itemInput.productId)?.batches?.map((b: any) => (
-                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {b.currentStock})</option>
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {parseFloat((b.currentStock || 0).toFixed(3))})</option>
                     ))}
                   </select>
                 ) : (
@@ -571,7 +577,7 @@ export default function NewSalesReturnPage() {
                   </label>
                   {itemInput.productId && (
                     <span className="text-xs text-slate-600">
-                      Stock: <span className="text-emerald-600 font-bold text-sm">{products.find(p => p._id === itemInput.productId)?.currentStock || 0}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                      Stock: <span className="text-emerald-600 font-bold text-sm">{parseFloat((products.find(p => p._id === itemInput.productId)?.currentStock || 0).toFixed(3))}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
@@ -588,7 +594,7 @@ export default function NewSalesReturnPage() {
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
                           <div className="flex flex-col">
                             <span className="text-slate-900 font-medium">{p.name}</span>
-                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{p.currentStock || 0}</span></span>
+                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{parseFloat((p.currentStock || 0).toFixed(3))}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
                              {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
@@ -994,7 +1000,7 @@ export default function NewSalesReturnPage() {
                          <td className="p-2 text-slate-600">{p.group || '—'}</td>
                          <td className="p-2 text-slate-600">{p.brand || '—'}</td>
                          <td className="p-2 text-slate-600">{p.location || '—'}</td>
-                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{p.currentStock || 0}</td>
+                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{parseFloat((p.currentStock || 0).toFixed(3))}</td>
                          <td className="p-2 text-slate-600">₹{p.sellingPrice}</td>
                        </tr>
                      ))}
@@ -1011,7 +1017,10 @@ export default function NewSalesReturnPage() {
         <QuickAddItemModal 
           onClose={() => setShowQuickAddModal(false)}
           onAdded={(newProduct) => {
-            setShowQuickAddModal(false);
+            setsalesReturnDate('');
+            setDueDate('');
+            setPaymentDate1('');
+            setPaymentDate2('');
             setProducts([...products, newProduct]);
             pickProduct(newProduct);
           }}
