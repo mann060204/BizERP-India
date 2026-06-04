@@ -461,7 +461,7 @@ export default function DashboardPage() {
                     {stockMovement.deadItems?.slice(0, 5).map((item: any, i: number) => (
                       <div key={i} className="flex items-center justify-between py-0.5 border-b border-slate-50">
                         <span className="text-[10px] text-slate-600 truncate max-w-[90px]">{item.name}</span>
-                        <span className="text-[10px] font-bold text-red-500 ml-1">{item.stock} u</span>
+                        <span className="text-[10px] font-bold text-red-500 ml-1">{parseFloat(Number(item.stock).toFixed(3))} u</span>
                       </div>
                     ))}
                     {(!stockMovement.deadItems || stockMovement.deadItems.length === 0) &&

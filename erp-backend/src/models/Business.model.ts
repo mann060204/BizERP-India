@@ -80,7 +80,7 @@ const BusinessSchema = new Schema<IBusiness>(
     financialYearLabel: { type: String, trim: true },
     businessName: { type: String, required: true, trim: true },
     ownerName: { type: String, required: true, trim: true },
-    gstin: { type: String, trim: true, sparse: true, unique: true },
+    gstin: { type: String, trim: true, sparse: true },
     pan: { type: String, trim: true },
     mobile: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true },
