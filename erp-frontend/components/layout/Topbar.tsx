@@ -10,9 +10,10 @@ export default function Topbar({ title }: { title?: string }) {
   const { user } = useAppSelector((s) => s.auth);
   const dispatch = useAppDispatch();
   const [businessName, setBusinessName] = useState('My Business');
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
+    setCurrentTime(new Date());
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -29,18 +30,21 @@ export default function Topbar({ title }: { title?: string }) {
       <div className="flex items-center gap-4">
         {/* Title pushed right of mobile menu btn */}
         <h1 className="text-slate-900 font-semibold text-lg ml-10 lg:ml-0">{title || 'Dashboard'}</h1>
-        <span className="hidden sm:inline-block px-3 py-1 bg-indigo-50 text-indigo-700 text-[11px] font-bold rounded-lg border border-indigo-100">
-          {currentTime.toLocaleString('en-IN', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true
-          })}
-        </span>
+        <div className="hidden sm:flex flex-col items-start justify-center">
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-[11px] font-bold rounded-lg border border-indigo-100 min-w-[200px] text-center">
+            {currentTime ? currentTime.toLocaleString('en-IN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: true
+            }) : 'Loading...'}
+          </span>
+          <span className="text-[10px] text-slate-500 font-semibold mt-0.5 ml-1">v 1.0.0</span>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
