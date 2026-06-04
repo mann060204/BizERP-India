@@ -1814,3 +1814,16 @@ export const getDashboardCustomerPending = async (req: AuthRequest, res: Respons
   } catch (e: any) { sendError(res, e.message); }
 };
 
+// GET /reports/dashboard/supplier-pending
+export const getDashboardSupplierPending = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = req.user!.businessId;
+    // For suppliers, currentBalance might also signify pending payments to them
+    const suppliers = await Supplier.find({ businessId, currentBalance: { $gt: 0 } })
+      .select('name mobile currentBalance')
+      .sort({ currentBalance: -1 })
+      .limit(50);
+    sendSuccess(res, suppliers);
+  } catch (e: any) { sendError(res, e.message); }
+};
+

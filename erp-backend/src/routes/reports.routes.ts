@@ -76,6 +76,7 @@ router.get('/dashboard/top-items-profit', reportsController.getDashboardTopItems
 router.get('/dashboard/stock-movement', reportsController.getDashboardStockMovement as any);
 router.get('/dashboard/top-customers', reportsController.getDashboardTopCustomers as any);
 router.get('/dashboard/customer-pending', reportsController.getDashboardCustomerPending as any);
+router.get('/dashboard/supplier-pending', reportsController.getDashboardSupplierPending as any);
 
 export default router;
 
