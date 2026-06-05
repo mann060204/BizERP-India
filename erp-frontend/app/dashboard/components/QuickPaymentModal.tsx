@@ -203,7 +203,7 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
                       <div className="text-right">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Balance</p>
                         <p className={`font-bold ${ent.currentBalance > 0 ? (isCustomer ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-600'}`}>
-                          ₹{Math.abs(ent.currentBalance).toLocaleString('en-IN')} {ent.currentBalance >= 0 ? (isCustomer ? 'Dr' : 'Dr') : 'Cr'}
+                          ₹{Math.abs(ent.currentBalance).toLocaleString('en-IN')} {ent.currentBalance >= 0 ? <span className="text-red-600 font-bold">Dr</span> : <span className="text-emerald-600 font-bold">Cr</span>}
                         </p>
                       </div>
                     </div>

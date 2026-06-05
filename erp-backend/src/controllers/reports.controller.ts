@@ -23,13 +23,11 @@ export const getCashBook = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = req.user!.businessId;
     
-    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment' }).lean();
+    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', description: { $regex: /Cash/i } }).lean();
     
-    const bankAccounts = await Account.find({ businessId, type: 'Bank' });
-    const bankIds = bankAccounts.map(a => a._id);
-    const bankLedgers = await AccountLedger.find({ businessId, accountId: { $in: bankIds } }).lean();
+    const bankLedgers: any[] = []; // Removed bank ledgers from cash book
     
-    const expenses = await Expense.find({ businessId }).lean();
+    const expenses = await Expense.find({ businessId, paymentMode: { $in: ['Cash', '', null] } }).lean();
     
     const transactions: any[] = [];
     

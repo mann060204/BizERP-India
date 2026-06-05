@@ -607,7 +607,7 @@ export default function EditSupplierPage() {
 
                               const formatBal = (b: number | undefined) => {
                                 if (b === undefined) return '';
-                                return b >= 0 ? `${b.toFixed(2)} Dr` : `${Math.abs(b).toFixed(2)} Cr`;
+                                return b >= 0 ? <span className="text-red-600 font-bold">{b.toFixed(2)} Dr</span> : <span className="text-emerald-600 font-bold">{Math.abs(b).toFixed(2)} Cr</span>;
                               };
 
                               return (
