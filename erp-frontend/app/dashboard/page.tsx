@@ -215,6 +215,13 @@ export default function DashboardPage() {
       setCashInHand(baseCash);
     });
 
+    accountsApi.list().then(res => {
+      const allAccounts = res.data?.accounts || [];
+      const cash = allAccounts.find((a: any) => a.name === 'Cash');
+      if (cash) setCashAccount(cash);
+      setBanks(allAccounts.filter((a: any) => a.name !== 'Cash' && a.bankName));
+    }).catch(console.error);
+
     Promise.all([
       dashboardApi.customerPending().catch(() => ({ data: [] })),
       dashboardApi.supplierPending().catch(() => ({ data: [] }))
