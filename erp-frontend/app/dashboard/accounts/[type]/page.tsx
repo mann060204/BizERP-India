@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { accountsApi } from '../../../../lib/erp-api';
+import { formatAccountingBalance } from '../../../../lib/utils';
 import { Plus, Search, Landmark, ArrowRightLeft, Loader2, X, Download, Filter, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -297,8 +298,8 @@ export default function AccountsPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
-                  <p className={`text-2xl font-bold ${selectedAccount.balanceType === 'Dr' ? 'text-emerald-600' : 'text-red-600'}`}>
-                    ₹{selectedAccount.currentBalance.toFixed(2)} {selectedAccount.balanceType}
+                  <p className={`text-2xl font-bold ${formatAccountingBalance(selectedAccount.balanceType === 'Dr' ? selectedAccount.currentBalance : -selectedAccount.currentBalance, type).colorClass}`}>
+                    {formatAccountingBalance(selectedAccount.balanceType === 'Dr' ? selectedAccount.currentBalance : -selectedAccount.currentBalance, type).text}
                   </p>
                 </div>
               </div>

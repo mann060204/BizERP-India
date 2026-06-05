@@ -5,24 +5,36 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatAccountingBalance(value: number, type: 'customer' | 'supplier') {
+export function formatAccountingBalance(value: number, type: 'customer' | 'supplier' | string = 'customer') {
   const numValue = value || 0;
   const absValue = Math.abs(numValue);
   const formattedAmount = `₹${absValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   
   if (numValue === 0) {
-    return { text: formattedAmount, colorClass: 'text-slate-900', isDebit: false, isCredit: false };
+    return { text: formattedAmount, colorClass: 'text-slate-500', isDebit: false, isCredit: false };
   }
 
-  let isDebit = false;
-  let isCredit = false;
+  let isDebit = numValue > 0;
+  let isCredit = numValue < 0;
 
-  if (numValue > 0) isDebit = true; // Asset/Expense (Dr)
-  else isCredit = true; // Liability/Income (Cr)
+  let colorClass = 'text-slate-900';
+  const t = type.toLowerCase();
+
+  if (['customer', 'cash', 'bank', 'asset'].includes(t)) {
+    colorClass = isDebit ? 'text-emerald-600' : 'text-red-600';
+  } else if (['supplier', 'loan', 'tax', 'liability', 'capital', 'equity'].includes(t)) {
+    colorClass = isDebit ? 'text-emerald-600' : 'text-red-600'; // Advance is green, payable is red
+  } else if (['income', 'sales'].includes(t)) {
+    colorClass = isCredit ? 'text-emerald-600' : 'text-red-600'; // Income earned (Cr) is green
+  } else if (['expense', 'purchases'].includes(t)) {
+    colorClass = isDebit ? 'text-red-600' : 'text-emerald-600'; // Expense spent (Dr) is red (neutral)
+  } else {
+    colorClass = isDebit ? 'text-emerald-600' : 'text-red-600';
+  }
 
   return {
     text: `${formattedAmount} ${isDebit ? 'Dr' : 'Cr'}`,
-    colorClass: isDebit ? 'text-emerald-600' : 'text-red-600',
+    colorClass,
     isDebit,
     isCredit
   };
