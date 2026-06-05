@@ -61,7 +61,10 @@ export default function Topbar({ title }: { title?: string }) {
             {businessName.charAt(0).toUpperCase()}
           </div>
           <button
-            onClick={() => dispatch(logout())}
+            onClick={() => {
+              dispatch(logout());
+              window.location.href = '/login';
+            }}
             className="p-2 rounded-xl transition-all hover:scale-110"
             style={{ color: 'var(--text-muted)' }}
             title="Logout"

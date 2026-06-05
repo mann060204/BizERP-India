@@ -347,3 +347,49 @@ export const switchYear = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ message: error.message });
   }
 };
+
+export const deleteYear = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const currentBusinessId = req.user!.businessId;
+    const targetBusinessId = req.params.id;
+
+    if (currentBusinessId === targetBusinessId) {
+      res.status(400).json({ message: 'Cannot delete the currently active financial year. Switch to another year first.' });
+      return;
+    }
+
+    const currentBusiness = await Business.findById(currentBusinessId);
+    const targetBusiness = await Business.findById(targetBusinessId);
+
+    if (!currentBusiness || !targetBusiness) {
+      res.status(404).json({ message: 'Business not found' });
+      return;
+    }
+
+    if (currentBusiness.businessGroupId !== targetBusiness.businessGroupId) {
+      res.status(403).json({ message: 'Unauthorized to delete this financial year' });
+      return;
+    }
+
+    // Delete all related data
+    const mongoose = require('mongoose');
+    const collectionsToDelete = [
+      'AccountLedger', 'Account', 'Bank', 'Customer', 'Supplier', 'Product', 'Batch',
+      'InventoryAdjustment', 'Invoice', 'PurchaseBill', 'Expense', 'Quotation', 'PurchaseOrder',
+      'SalesReturn', 'PurchaseReturn', 'Bom'
+    ];
+
+    for (const modelName of collectionsToDelete) {
+      const model = mongoose.models[modelName];
+      if (model) {
+        await model.deleteMany({ businessId: targetBusinessId });
+      }
+    }
+
+    await Business.findByIdAndDelete(targetBusinessId);
+
+    res.status(200).json({ success: true, message: 'Financial year deleted successfully' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

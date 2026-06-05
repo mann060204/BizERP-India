@@ -61,8 +61,16 @@ export default function QuotationsPage() {
   };
 
   const handleWhatsApp = (inv: Quotation) => {
-    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: ${window.location.origin}/print/quotation/${inv._id}\n\nThank you for your business!`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const docName = inv: Quotation.invoiceNumber ? 'invoice ' + inv: Quotation.invoiceNumber : (inv: Quotation.quotationNumber ? 'quotation ' + inv: Quotation.quotationNumber : 'document');
+    const targetPath = inv: Quotation.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
+    const text = `Hello ${inv: Quotation.customerSnapshot?.name || 'Customer'},
+
+Your ${docName} for ₹${(inv: Quotation.grandTotal || 0).toFixed(2)} is ready.
+Please review it here: ${window.location.origin}${targetPath}${inv: Quotation._id}
+
+Thank you for your business!`;
+    const phone = inv: Quotation.customerSnapshot?.mobile ? inv: Quotation.customerSnapshot.mobile.replace(/\D/g,'') : '';
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const filteredQuotations = quotations.filter(inv => {
@@ -199,6 +207,9 @@ export default function QuotationsPage() {
                             </button>
                             <button onClick={() => handleEmail(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#D4D4D4] transition" title="Share via Email">
                               <Mail className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleSMS(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#60a5fa] transition" title="Share via SMS">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                             </button>
                             {inv.status !== 'Cancelled' && (
                               <button onClick={() => handleCancel(inv._id, inv.quotationNumber)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-red-500 transition" title="Cancel Quotation">

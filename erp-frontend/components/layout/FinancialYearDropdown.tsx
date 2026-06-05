@@ -77,16 +77,37 @@ export default function FinancialYearDropdown() {
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Switch Financial Year</p>
             </div>
             {years.map((year) => (
-              <button
-                key={year._id}
-                onClick={() => handleSwitch(year._id)}
-                disabled={switchingTo !== null || year._id === activeBusinessId}
-                className={`w-full flex items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-slate-50 transition ${year._id === activeBusinessId ? 'bg-slate-50 text-action-600 font-medium' : 'text-slate-700'} disabled:opacity-50`}
-              >
-                <span>{year.financialYearLabel || year.businessName}</span>
-                {switchingTo === year._id && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
-                {year._id === activeBusinessId && switchingTo === null && <Check className="w-4 h-4 text-action-600" />}
-              </button>
+              <div key={year._id} className="relative flex items-center group">
+                <button
+                  onClick={() => handleSwitch(year._id)}
+                  disabled={switchingTo !== null || year._id === activeBusinessId}
+                  className={`w-full flex items-center justify-between px-4 py-2.5 text-sm text-left hover:bg-slate-50 transition ${year._id === activeBusinessId ? 'bg-slate-50 text-action-600 font-medium' : 'text-slate-700 pr-10'} disabled:opacity-50`}
+                >
+                  <span>{year.financialYearLabel || year.businessName}</span>
+                  {switchingTo === year._id && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+                  {year._id === activeBusinessId && switchingTo === null && <Check className="w-4 h-4 text-action-600" />}
+                </button>
+                {year._id !== activeBusinessId && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Are you sure you want to permanently delete the financial year "${year.financialYearLabel}" and ALL its data (invoices, products, ledger)? This cannot be undone.`)) {
+                        setSwitchingTo(year._id);
+                        financialYearApi.deleteYear(year._id).then(() => {
+                          toast.success('Financial year deleted successfully');
+                          setYears(years.filter(y => y._id !== year._id));
+                        }).catch((e: any) => {
+                          toast.error(e.response?.data?.message || 'Failed to delete year');
+                        }).finally(() => setSwitchingTo(null));
+                      }
+                    }}
+                    className="absolute right-2 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete Financial Year"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </>

@@ -10,12 +10,12 @@ import ExportDropdown from '../../../components/shared/ExportDropdown';
 interface Purchase { _id: string; billNumber: string; billDate: string; supplierSnapshot: { name: string }; grandTotal: number; amountPaid: number; balance: number; status: string; paymentMode: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
+  draft:     { label: 'Draft',    color: 'text-slate-800 bg-slate-200 font-bold border border-slate-300 shadow-sm', icon: FileText },
   received:  { label: 'Received', color: 'text-blue-700 bg-blue-50 border border-blue-200',    icon: Clock },
-  paid:      { label: 'Paid',     color: 'text-emerald-700 bg-emerald-50 border border-emerald-200',  icon: CheckCircle },
-  partial:   { label: 'Partial',  color: 'text-yellow-700 bg-yellow-50 border border-yellow-200',icon: AlertCircle },
-  overdue:   { label: 'Overdue',  color: 'text-red-700 bg-red-50 border border-red-200',      icon: AlertCircle },
-  cancelled: { label: 'Cancelled',color: 'text-slate-600 bg-[#475569]/10', icon: XCircle },
+  paid:      { label: 'Paid',     color: 'text-white bg-emerald-500 font-bold shadow-sm border border-emerald-600',  icon: CheckCircle },
+  partial:   { label: 'Partial',  color: 'text-white bg-orange-500 font-bold shadow-sm border border-orange-600',icon: AlertCircle },
+  overdue:   { label: 'Overdue',  color: 'text-white bg-red-500 font-bold shadow-sm border border-red-600',      icon: AlertCircle },
+  cancelled: { label: 'Cancelled',color: 'text-white bg-slate-500 font-bold shadow-sm border border-slate-600', icon: XCircle },
 };
 
 export default function PurchasesPage() {

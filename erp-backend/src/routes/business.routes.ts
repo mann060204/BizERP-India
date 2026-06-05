@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getBusinessProfile, updateBusinessProfile, updateSequences } from '../controllers/business.controller';
 import { exportData, eraseData, importData } from '../controllers/data.controller';
-import { startNewYear, getAvailableYears, switchYear } from '../controllers/financialYear.controller';
+import { startNewYear, getAvailableYears, switchYear, deleteYear } from '../controllers/financialYear.controller';
 import { protect, authorize } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -21,5 +21,6 @@ router.post('/data/import', authorize('admin'), importData);
 router.post('/financial-year/start', authorize('admin'), startNewYear);
 router.get('/financial-year/available', getAvailableYears);
 router.post('/financial-year/switch', switchYear);
+router.delete('/financial-year/:id', authorize('admin'), deleteYear);
 
 export default router;

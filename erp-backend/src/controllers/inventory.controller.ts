@@ -12,7 +12,14 @@ export const getInventoryLevels = async (req: AuthRequest, res: Response): Promi
     const { search, lowStock, page = '1', limit = '50' } = req.query as any;
     const businessId = req.user!.businessId;
     const query: any = { businessId, type: 'product', isActive: true };
-    if (search) query.name = { $regex: search, $options: 'i' };
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } }
+      ];
+    }
     if (lowStock === 'true') query.$expr = { $lte: ['$currentStock', '$reorderLevel'] };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);

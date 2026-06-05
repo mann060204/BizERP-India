@@ -251,6 +251,7 @@ export const financialYearApi = {
   startNewYear: (data: { customYearLabel?: string, carryForwardStock?: boolean, carryForwardCustomerBalances?: boolean, carryForwardSupplierBalances?: boolean, carryForwardBankBalances?: boolean, lockPreviousFY?: boolean, isHistorical?: boolean, copyCustomers?: boolean, copySuppliers?: boolean, copyProducts?: boolean }) => api.post('/business/financial-year/start', data).then(res => res.data),
   getAvailableYears: () => api.get('/business/financial-year/available').then(res => res.data),
   switchYear: (targetBusinessId: string) => api.post('/business/financial-year/switch', { targetBusinessId }).then(res => res.data),
+  deleteYear: (id: string) => api.delete('/business/financial-year/' + id).then(res => res.data),
 };
 
 // ─── Dashboard Analytics ─────────────────────────────────────────────────────

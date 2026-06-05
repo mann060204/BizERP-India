@@ -6,7 +6,7 @@ import { Search, Database, AlertCircle, TrendingDown, TrendingUp, Settings2, Loa
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
 
-interface Product { _id: string; name: string; sku?: string; category?: string; unit: string; currentStock: number; reorderLevel: number; purchasePrice: number; }
+interface Product { _id: string; name: string; sku?: string; category?: string; location?: string; unit: string; currentStock: number; reorderLevel: number; purchasePrice: number; }
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<Product[]>([]);
@@ -114,7 +114,7 @@ export default function InventoryPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    {['Product', 'SKU', 'Category', 'Current Stock', 'Stock Value', 'Status', 'Actions'].map(h => (
+                    {['Product', 'SKU', 'Category', 'Location', 'Current Stock', 'Stock Value', 'Status', 'Actions'].map(h => (
                       <th key={h} className="text-left px-5 py-3.5 text-slate-600 font-medium text-xs uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -127,6 +127,7 @@ export default function InventoryPage() {
                         <td className="px-5 py-4 text-slate-900 font-medium">{p.name}</td>
                         <td className="px-5 py-4 text-slate-600 font-mono text-xs">{p.sku || '—'}</td>
                         <td className="px-5 py-4 text-slate-600">{p.category || '—'}</td>
+                        <td className="px-5 py-4 text-slate-600">{p.location || '—'}</td>
                         <td className="px-5 py-4 font-bold text-slate-900">{parseFloat((p.currentStock || 0).toFixed(3))} {p.unit}</td>
                         <td className="px-5 py-4 text-emerald-400">₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
                         <td className="px-5 py-4">

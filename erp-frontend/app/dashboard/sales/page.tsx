@@ -10,11 +10,11 @@ import ExportDropdown from '../../../components/shared/ExportDropdown';
 interface Invoice { _id: string; invoiceNumber: string; invoiceDate: string; customerSnapshot: { name: string; mobile?: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  draft:     { label: 'Draft',    color: 'text-slate-600 bg-[#94a3b8]/10', icon: FileText },
-  partial:   { label: 'Partial',  color: 'text-yellow-700 bg-yellow-50 border border-yellow-200',icon: AlertCircle },
-  paid:      { label: 'Paid',     color: 'text-emerald-700 bg-emerald-50 border border-emerald-200',  icon: CheckCircle },
-  overdue:   { label: 'Overdue',  color: 'text-red-700 bg-red-50 border border-red-200',      icon: AlertCircle },
-  cancelled: { label: 'Cancelled',color: 'text-slate-500 bg-slate-500/10', icon: XCircle },
+  draft:     { label: 'Draft',    color: 'text-slate-800 bg-slate-200 font-bold border border-slate-300 shadow-sm', icon: FileText },
+  partial:   { label: 'Partial',  color: 'text-white bg-orange-500 font-bold shadow-sm border border-orange-600',icon: AlertCircle },
+  paid:      { label: 'Paid',     color: 'text-white bg-emerald-500 font-bold shadow-sm border border-emerald-600',  icon: CheckCircle },
+  overdue:   { label: 'Overdue',  color: 'text-white bg-red-500 font-bold shadow-sm border border-red-600',      icon: AlertCircle },
+  cancelled: { label: 'Cancelled',color: 'text-white bg-slate-500 font-bold shadow-sm border border-slate-600', icon: XCircle },
 };
 
 export default function SalesPage() {
@@ -47,8 +47,16 @@ export default function SalesPage() {
   };
 
   const handleWhatsApp = (inv: Invoice) => {
-    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: ${window.location.origin}/print/invoice/${inv._id}\n\nThank you for your business!`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const docName = inv: Invoice.invoiceNumber ? 'invoice ' + inv: Invoice.invoiceNumber : (inv: Invoice.quotationNumber ? 'quotation ' + inv: Invoice.quotationNumber : 'document');
+    const targetPath = inv: Invoice.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
+    const text = `Hello ${inv: Invoice.customerSnapshot?.name || 'Customer'},
+
+Your ${docName} for ₹${(inv: Invoice.grandTotal || 0).toFixed(2)} is ready.
+Please review it here: ${window.location.origin}${targetPath}${inv: Invoice._id}
+
+Thank you for your business!`;
+    const phone = inv: Invoice.customerSnapshot?.mobile ? inv: Invoice.customerSnapshot.mobile.replace(/\D/g,'') : '';
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const filteredInvoices = invoices.filter(inv => {
@@ -194,6 +202,9 @@ export default function SalesPage() {
                             </button>
                             <button onClick={() => handleEmail(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#D4D4D4] transition" title="Share via Email">
                               <Mail className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleSMS(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#60a5fa] transition" title="Share via SMS">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                             </button>
                             {inv.status !== 'cancelled' && (
                               <button onClick={() => handleCancel(inv._id, inv.invoiceNumber)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-red-500 transition" title="Cancel Invoice">

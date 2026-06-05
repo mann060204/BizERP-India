@@ -2,8 +2,10 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { formatAccountingBalance } from '@/lib/utils';
 import Topbar from '../../components/layout/Topbar';
+import ProductQuickSearch from '../../components/shared/ProductQuickSearch';
 import { useAppSelector } from '../../hooks/useRedux';
 import QuickPaymentModal from './components/QuickPaymentModal';
 import { invoicesApi, purchasesApi, inventoryApi, dashboardApi, businessApi, expensesApi } from '../../lib/erp-api';
@@ -279,6 +281,9 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Welcome back, {businessName || 'Admin'} 👋</h1>
             <p className="text-slate-500 font-medium tracking-wide mt-1">Here is what's happening with your business.</p>
+          </div>
+          <div className="flex items-center w-full md:w-auto md:flex-1 md:px-8 max-w-2xl">
+            <ProductQuickSearch />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Metrics:</span>
@@ -569,30 +574,44 @@ export default function DashboardPage() {
           <div className="w-full xl:w-52 flex-shrink-0 space-y-3 xl:sticky xl:top-5">
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Quick Actions</h3>
             {actions.map(({ label, href, icon: Icon, color, bg, desc }, index) => (
-              <div key={label} 
+              <div key={label}
                 draggable
                 onDragStart={(e) => (dragItem.current = index)}
                 onDragEnter={(e) => (dragOverItem.current = index)}
                 onDragEnd={handleSort}
                 onDragOver={(e) => e.preventDefault()}
                 className="w-full">
-                <button onClick={() => {
+                { (actions[index] as any).action ? (
+                  <button onClick={() => {
                     if ((actions[index] as any).action === 'PAY_IN') setPaymentModalMode('IN');
                     else if ((actions[index] as any).action === 'PAY_OUT') setPaymentModalMode('OUT');
-                    else router.push(href as string);
                   }}
                   className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing">
-                  <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                    <Icon className={`w-4 h-4 ${color}`} />
-                  </div>
-                  <div className="min-w-0 pointer-events-none">
-                    <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
-                    <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
-                  </div>
-                  <div className="ml-auto flex items-center text-slate-300 group-hover:text-indigo-400 transition">
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                </button>
+                    <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                      <Icon className={`w-4 h-4 ${color}`} />
+                    </div>
+                    <div className="min-w-0 pointer-events-none">
+                      <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
+                      <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
+                    </div>
+                    <div className="ml-auto flex items-center text-slate-300 group-hover:text-indigo-400 transition">
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </button>
+                ) : (
+                  <Link href={href as string} className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing">
+                    <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                      <Icon className={`w-4 h-4 ${color}`} />
+                    </div>
+                    <div className="min-w-0 pointer-events-none">
+                      <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
+                      <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
+                    </div>
+                    <div className="ml-auto flex items-center text-slate-300 group-hover:text-indigo-400 transition">
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </Link>
+                )}
               </div>
             ))}
 

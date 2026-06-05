@@ -1897,7 +1897,7 @@ export const getDashboardSupplierPending = async (req: AuthRequest, res: Respons
   try {
     const businessId = req.user!.businessId;
     // For suppliers, currentBalance might also signify pending payments to them
-    const suppliers = await Supplier.find({ businessId, currentBalance: { $gt: 0 } })
+    const suppliers = await Supplier.find({ businessId, currentBalance: { $lt: 0 } })
       .select('name mobile currentBalance')
       .sort({ currentBalance: -1 })
       .limit(50);

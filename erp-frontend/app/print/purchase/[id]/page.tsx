@@ -27,6 +27,8 @@ export default function PrintablePurchasePage() {
   const [purchase, setOrder] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [copyType, setCopyType] = useState('Original for Recipient');
+  const [printFormat, setPrintFormat] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {

@@ -45,6 +45,8 @@ export default function PrintableInvoicePage() {
   const [invoice, setInvoice] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [copyType, setCopyType] = useState('Original for Recipient');
+  const [printFormat, setPrintFormat] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,7 +82,7 @@ export default function PrintableInvoicePage() {
   if (invoice?.__error) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Error: {invoice.__error}</div>;
   if (!invoice || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Invoice not found</div>;
 
-  const template = business.invoiceTemplate || 'A4';
+  const template = printFormat || business.invoiceTemplate || 'A4';
   const isInterState = invoice.isInterState;
   const isNonGst = invoice.invoiceType === 'NON-GST';
   const tAndC = invoice.termsAndConditions || business.termsAndConditions || '1. Any complaint regarding goods should be made within 24 hrs from the Receipt.\n2. Interest will be charged @ 18% p.a. on invoice amount including GST amount.\n3. Goods once sold will not be taken back.';
@@ -90,7 +92,22 @@ export default function PrintableInvoicePage() {
       <>
       <div className="print:hidden fixed top-0 left-0 right-0 bg-slate-800 text-white p-3 flex justify-between items-center z-50 shadow-md">
         <span className="text-sm font-medium">Invoice {invoice.invoiceNumber}</span>
-        <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print / Download PDF</button>
+        
+        <div className="flex gap-2 items-center">
+          <select value={copyType} onChange={e => setCopyType(e.target.value)} className="text-xs bg-slate-700 border-none rounded px-2 py-1 text-white outline-none">
+            <option value="Original for Recipient">Original</option>
+            <option value="Duplicate for Transporter">Duplicate</option>
+            <option value="Triplicate for Supplier">Triplicate</option>
+            <option value="Extra Copy">Extra Copy</option>
+          </select>
+          <select value={printFormat || ''} onChange={e => setPrintFormat(e.target.value)} className="text-xs bg-slate-700 border-none rounded px-2 py-1 text-white outline-none">
+            <option value="">Default Format</option>
+            <option value="A4">A4</option>
+            <option value="POS">Thermal Receipt (POS)</option>
+          </select>
+          <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
+        </div>
+  
       </div>
       <div className="bg-white min-h-screen text-black print:p-0 p-8 pt-20 font-sans flex justify-center">
         <div className="w-[80mm] bg-white print:shadow-none shadow-lg print:p-0 p-4 text-[12px] leading-tight font-mono">
@@ -104,6 +121,7 @@ export default function PrintableInvoicePage() {
           </div>
           
           <div className="border-t border-dashed border-black py-2 mb-2">
+            <p className="text-center font-bold pb-1">{copyType}</p>
             <p><strong>Inv No:</strong> {invoice.invoiceNumber}</p>
             <p><strong>Date:</strong> {new Date(invoice.invoiceDate).toLocaleDateString('en-IN')}</p>
             <p><strong>Payment:</strong> {invoice.paymentMode}</p>
@@ -188,7 +206,22 @@ export default function PrintableInvoicePage() {
       `}} />
       <div className="print:hidden fixed top-0 left-0 right-0 bg-slate-800 text-white p-3 flex justify-between items-center z-50 shadow-md">
         <span className="text-sm font-medium">Invoice {invoice.invoiceNumber}</span>
-        <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print / Download PDF</button>
+        
+        <div className="flex gap-2 items-center">
+          <select value={copyType} onChange={e => setCopyType(e.target.value)} className="text-xs bg-slate-700 border-none rounded px-2 py-1 text-white outline-none">
+            <option value="Original for Recipient">Original</option>
+            <option value="Duplicate for Transporter">Duplicate</option>
+            <option value="Triplicate for Supplier">Triplicate</option>
+            <option value="Extra Copy">Extra Copy</option>
+          </select>
+          <select value={printFormat || ''} onChange={e => setPrintFormat(e.target.value)} className="text-xs bg-slate-700 border-none rounded px-2 py-1 text-white outline-none">
+            <option value="">Default Format</option>
+            <option value="A4">A4</option>
+            <option value="POS">Thermal Receipt (POS)</option>
+          </select>
+          <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
+        </div>
+  
       </div>
       <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 pt-20 font-sans flex justify-center text-[11px]">
         <div className="a4-page w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col overflow-hidden">
@@ -209,7 +242,7 @@ export default function PrintableInvoicePage() {
             </div>
             <div className="text-right flex flex-col items-end">
               <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 border-b-2 border-gray-800 pb-1 mb-2">{isNonGst ? 'RETAIL INVOICE' : 'TAX INVOICE'}</h2>
-              <p className="text-[10px] font-semibold">Original for Recipient</p>
+              <p className="text-[10px] font-semibold">{copyType}</p>
               <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin}</p>
               {business.pan && <p className="text-[11px] font-bold text-gray-700">PAN: {business.pan}</p>}
             </div>
