@@ -297,7 +297,7 @@ export default function AccountsPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
-                  <p className={`text-2xl font-bold ${selectedAccount.balanceType === 'Dr' ? 'text-emerald-600' : 'text-red-600'}`}>
+                  <p className={`text-2xl font-bold ${selectedAccount.balanceType === 'Dr' ? 'text-red-600' : 'text-emerald-600'}`}>
                     ₹{selectedAccount.currentBalance.toFixed(2)} {selectedAccount.balanceType}
                   </p>
                 </div>
