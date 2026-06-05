@@ -43,7 +43,6 @@ function numberToWords(num: number): string {
 export default function PrintableInvoicePage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const searchParams = useSearchParams();
   const [invoice, setInvoice] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -130,47 +129,6 @@ export default function PrintableInvoicePage() {
   };
 
   
-  const handleSharePdf = async () => {
-    try {
-      const element = document.getElementById('invoice-print-area');
-      if (!element) return;
-      
-      const html2pdf = (await import('html2pdf.js')).default;
-      const opt = {
-        margin: 0,
-        filename: `Invoice-${invoice.invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      
-      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
-      const file = new File([pdfBlob], `Invoice-${invoice.invoiceNumber}.pdf`, { type: 'application/pdf' });
-      
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: `Invoice ${invoice.invoiceNumber}`,
-          text: `Hello ${invoice.customerSnapshot?.name}, please find attached your invoice.`,
-          files: [file]
-        });
-      } else {
-        // Fallback to download if Web Share API not supported for files
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Invoice-${invoice.invoiceNumber}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast.success('PDF downloaded. Please attach it to your email/message manually.', { duration: 5000 });
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to share PDF');
-    }
-  };
-
   const template = printFormat || business.invoiceTemplate || 'A4';
   const isInterState = invoice.isInterState;
   const isNonGst = invoice.invoiceType === 'NON-GST';
