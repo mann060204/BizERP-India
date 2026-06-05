@@ -66,10 +66,7 @@ export default function PrintableInvoicePage() {
         setBusiness(data.business);
         
         // Auto print after a short delay for rendering
-        setTimeout(() => {
-          if (searchParams.get('action') === 'share') handleSharePdf();
-          else if (searchParams.get('action') === 'print' || !searchParams.get('action')) window.print();
-        }, 800);
+        setTimeout(() => window.print(), 800);
       } catch (e: any) {
         console.error('Fetch error:', e);
         toast.error(`Error: ${e.message}`);
@@ -153,7 +150,7 @@ export default function PrintableInvoicePage() {
             <option value="POS">Thermal Receipt (POS)</option>
           </select>
           <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
-     <button onClick={() => handleSharePdf()} className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-bold shadow transition">Share PDF</button>
+     
         </div>
   
       </div>
@@ -269,7 +266,7 @@ export default function PrintableInvoicePage() {
             <option value="POS">Thermal Receipt (POS)</option>
           </select>
           <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
-     <button onClick={() => handleSharePdf()} className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-bold shadow transition">Share PDF</button>
+     
         </div>
   
       </div>
