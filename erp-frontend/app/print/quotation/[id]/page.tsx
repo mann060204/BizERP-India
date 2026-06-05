@@ -27,7 +27,7 @@ export default function PrintableQuotationPage() {
   const [quotation, setQuotation] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [copyType, setCopyType] = useState('Original for Recipient');
+  const [copyType, setCopyType] = useState('Original Copy');
   const [printFormat, setPrintFormat] = useState('');
 
   useEffect(() => {
@@ -124,9 +124,8 @@ export default function PrintableQuotationPage() {
           </div>
 
           {/* Table */}
-          <div className="flex-1 flex flex-col min-h-[200px] overflow-hidden">
-            <div className="overflow-x-auto w-full">
-            <table className="w-full text-center border-collapse h-full text-[10px] table-fixed font-semibold text-gray-800">
+          <div className="flex-1 border-b-2 border-gray-800">
+            <table className="w-full h-full text-center border-collapse text-[10px] table-fixed font-semibold text-gray-800">
               <thead>
                 <tr className="border-b-2 border-gray-800 bg-action-50 text-blue-900">
                   <th className="border-r-2 border-gray-800 p-1 w-[4%]">Sr</th>
@@ -171,17 +170,8 @@ export default function PrintableQuotationPage() {
                     </tr>
                   );
                 })}
-                {/* Filler space */}
-                <tr className="flex-1 h-full">
-                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
-                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
-                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
-                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
-                  {!isNonGst && <td className="border-r-2 border-gray-800 p-0"><div className="flex h-full"><span className="w-1/2 border-r-2 border-gray-800"></span><span className="w-1/2"></span></div></td>}
-                  <td></td>
-                </tr>
                 {/* Total Row */}
-                <tr className="border-t-2 border-gray-800 bg-action-50 h-6 font-bold text-blue-900">
+                <tr className="border-t-2 border-b-2 border-gray-800 bg-action-50 h-6 font-bold text-blue-900">
                   <td className="border-r-2 border-gray-800"></td>
                   <td className="border-r-2 border-gray-800 text-right pr-2">Sub-Total:</td>
                   {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
@@ -198,9 +188,17 @@ export default function PrintableQuotationPage() {
                   )}
                   <td className="text-right pr-1">{isNonGst ? quotation.subtotal.toFixed(2) : (quotation.totalTaxableAmount + quotation.totalGST).toFixed(2)}</td>
                 </tr>
+                {/* Filler space */}
+                <tr className="h-full">
+                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
+                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
+                  {!isNonGst && <td className="border-r-2 border-gray-800 p-0"><div className="flex h-full"><span className="w-1/2 border-r-2 border-gray-800"></span><span className="w-1/2"></span></div></td>}
+                  <td></td>
+                </tr>
               </tbody>
             </table>
-            </div>
           </div>
 
           {/* Footer */}
@@ -270,10 +268,7 @@ export default function PrintableQuotationPage() {
       </div>
 
       {/* Non-print controls floating */}
-      <div className="print:hidden fixed bottom-8 right-8 flex flex-col gap-2">
-        <button onClick={() => window.print()} className="px-6 py-3 bg-action-500 text-white rounded-full font-bold shadow-2xl hover:bg-action-600">Print Quotation</button>
-        <button onClick={() => window.close()} className="px-6 py-3 bg-action-500 text-white border rounded-full font-bold shadow-2xl hover:bg-gray-100">Close Window</button>
-      </div>
+      
     </div>
     </>
   );

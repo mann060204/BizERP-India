@@ -27,7 +27,7 @@ export default function PrintablePurchasePage() {
   const [purchase, setOrder] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [copyType, setCopyType] = useState('Original for Recipient');
+  const [copyType, setCopyType] = useState('Original Copy');
   const [printFormat, setPrintFormat] = useState('');
 
   useEffect(() => {
@@ -74,12 +74,12 @@ export default function PrintablePurchasePage() {
         }
       `}} />
       <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 font-sans flex justify-center text-[11px]">
-        <div className="a4-page w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-bpurchase relative flex flex-col overflow-hidden">
+        <div className="a4-page w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col overflow-hidden">
         
-        <div className="bpurchase-2 bpurchase-gray-800 flex-1 flex flex-col">
+        <div className="border-2 border-gray-800 flex-1 flex flex-col">
           
           {/* Header */}
-          <div className="flex justify-between items-start bpurchase-b-2 bpurchase-gray-800 p-2">
+          <div className="flex justify-between items-start border-b-2 border-gray-800 p-2">
             <div className="flex items-center gap-4">
               {business.logo && <img src={business.logo} className="w-20 h-20 object-contain" alt="Logo" />}
               <div>
@@ -90,17 +90,17 @@ export default function PrintablePurchasePage() {
               </div>
             </div>
             <div className="text-right flex flex-col items-end">
-              <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 bpurchase-b-2 bpurchase-gray-800 pb-1 mb-2">Purchase Bill</h2>
+              <h2 className="text-2xl font-black uppercase tracking-widest text-gray-800 border-b-2 border-gray-800 pb-1 mb-2">Purchase Bill</h2>
               {!isNonGst && <p className="text-[11px] font-bold mt-1 text-gray-700">GSTIN: {business.gstin}</p>}
               {business.pan && <p className="text-[11px] font-bold text-gray-700">PAN: {business.pan}</p>}
             </div>
           </div>
 
           {/* Meta Info Grid */}
-          <div className="grid grid-cols-2 bpurchase-b-2 bpurchase-gray-800 text-[10px]">
+          <div className="grid grid-cols-2 border-b-2 border-gray-800 text-[10px]">
             {/* Bill To */}
-            <div className="bpurchase-r-2 bpurchase-gray-800 p-2 flex flex-col">
-              <div className="font-bold text-blue-900 mb-1 bpurchase-b bpurchase-gray-300 pb-1">Supplier Detail</div>
+            <div className="border-r-2 border-gray-800 p-2 flex flex-col">
+              <div className="font-bold text-blue-900 mb-1 border-b border-gray-300 pb-1">Supplier Detail</div>
               <div className="grid grid-cols-[60px_1fr] gap-x-1 font-semibold text-gray-800">
                 <span>Name</span><span>: {purchase.supplierSnapshot?.name?.toUpperCase()}</span>
                 <span>Address</span><span className="whitespace-pre-wrap leading-tight">: {purchase.supplierSnapshot?.address?.toUpperCase() || 'N/A'}</span>
@@ -111,7 +111,7 @@ export default function PrintablePurchasePage() {
             </div>
             {/* Purchase Bill Meta */}
             <div className="p-2 flex flex-col">
-              <div className="font-bold text-blue-900 mb-1 bpurchase-b bpurchase-gray-300 pb-1">Purchase Bill Details</div>
+              <div className="font-bold text-blue-900 mb-1 border-b border-gray-300 pb-1">Purchase Bill Details</div>
               <div className="grid grid-cols-[100px_1fr] gap-x-1 font-semibold text-gray-800">
                 <span>Purchase Bill No.</span><span>: {purchase.billNumber}</span>
                 <span>Purchase Bill Date</span><span>: {new Date(purchase.billDate).toLocaleDateString('en-GB')}</span>
@@ -123,21 +123,20 @@ export default function PrintablePurchasePage() {
           </div>
 
           {/* Table */}
-          <div className="flex-1 flex flex-col min-h-[200px] overflow-hidden">
-            <div className="overflow-x-auto w-full">
-            <table className="w-full text-center bpurchase-collapse h-full text-[10px] table-fixed font-semibold text-gray-800">
+          <div className="flex-1 border-b-2 border-gray-800">
+            <table className="w-full h-full text-center border-collapse text-[10px] table-fixed font-semibold text-gray-800">
               <thead>
-                <tr className="bpurchase-b-2 bpurchase-gray-800 bg-action-50 text-blue-900">
-                  <th className="bpurchase-r-2 bpurchase-gray-800 p-1 w-[4%]">Sr</th>
-                  <th className={`bpurchase-r-2 bpurchase-gray-800 p-1 text-left ${isNonGst ? 'w-[60%]' : 'w-[32%]'}`}>Product / Service Description</th>
-                  {!isNonGst && <th className="bpurchase-r-2 bpurchase-gray-800 p-1 w-[10%]">HSN/SAC</th>}
-                  <th className={`bpurchase-r-2 bpurchase-gray-800 p-1 ${isNonGst ? 'w-[12%]' : 'w-[8%]'}`}>Qty</th>
-                  <th className={`bpurchase-r-2 bpurchase-gray-800 p-1 ${isNonGst ? 'w-[12%]' : 'w-[10%]'}`}>Rate</th>
-                  {!isNonGst && <th className="bpurchase-r-2 bpurchase-gray-800 p-1 w-[12%]">Taxable</th>}
+                <tr className="border-b-2 border-gray-800 bg-action-50 text-blue-900">
+                  <th className="border-r-2 border-gray-800 p-1 w-[4%]">Sr</th>
+                  <th className={`border-r-2 border-gray-800 p-1 text-left ${isNonGst ? 'w-[60%]' : 'w-[32%]'}`}>Product / Service Description</th>
+                  {!isNonGst && <th className="border-r-2 border-gray-800 p-1 w-[10%]">HSN/SAC</th>}
+                  <th className={`border-r-2 border-gray-800 p-1 ${isNonGst ? 'w-[12%]' : 'w-[8%]'}`}>Qty</th>
+                  <th className={`border-r-2 border-gray-800 p-1 ${isNonGst ? 'w-[12%]' : 'w-[10%]'}`}>Rate</th>
+                  {!isNonGst && <th className="border-r-2 border-gray-800 p-1 w-[12%]">Taxable</th>}
                   {!isNonGst && (
-                    <th className="bpurchase-r-2 bpurchase-gray-800 p-0 w-[12%]">
-                      <div className="bpurchase-b-2 bpurchase-gray-800 pb-[1px]">GST</div>
-                      <div className="flex"><span className="w-1/2 bpurchase-r-2 bpurchase-gray-800">%</span><span className="w-1/2">Amt</span></div>
+                    <th className="border-r-2 border-gray-800 p-0 w-[12%]">
+                      <div className="border-b-2 border-gray-800 pb-[1px]">GST</div>
+                      <div className="flex"><span className="w-1/2 border-r-2 border-gray-800">%</span><span className="w-1/2">Amt</span></div>
                     </th>
                   )}
                   <th className="p-1 w-[12%]">Total</th>
@@ -148,20 +147,20 @@ export default function PrintablePurchasePage() {
                   const taxAmt = item.cgst + item.sgst + item.igst;
                   const totalAmt = item.taxableAmount + taxAmt;
                   return (
-                    <tr key={idx} className="align-top bpurchase-b bpurchase-gray-200">
-                      <td className="bpurchase-r-2 bpurchase-gray-800 px-1 py-1">{idx + 1}</td>
-                      <td className="bpurchase-r-2 bpurchase-gray-800 px-1 py-1 text-left">
+                    <tr key={idx} className="align-top border-b border-gray-200">
+                      <td className="border-r-2 border-gray-800 px-1 py-1">{idx + 1}</td>
+                      <td className="border-r-2 border-gray-800 px-1 py-1 text-left">
                         <span className="font-bold text-gray-900">{item.productName?.toUpperCase()}</span>
                         {item.description && <span className="block text-[8px] text-gray-500">{item.description.toUpperCase()}</span>}
                       </td>
-                      {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>}
-                      <td className="bpurchase-r-2 bpurchase-gray-800 px-1 py-1">{item.quantity} {item.unit}</td>
-                      <td className="bpurchase-r-2 bpurchase-gray-800 px-1 py-1 text-right">{item.rate.toFixed(2)}</td>
-                      {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>}
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>}
+                      <td className="border-r-2 border-gray-800 px-1 py-1">{item.quantity} {item.unit}</td>
+                      <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.rate.toFixed(2)}</td>
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>}
                       {!isNonGst && (
-                        <td className="bpurchase-r-2 bpurchase-gray-800 p-0">
+                        <td className="border-r-2 border-gray-800 p-0">
                            <div className="flex h-full min-h-[24px]">
-                             <span className="w-1/2 bpurchase-r-2 bpurchase-gray-800 pt-[2px]">{item.gstRate}%</span>
+                             <span className="w-1/2 border-r-2 border-gray-800 pt-[2px]">{item.gstRate}%</span>
                              <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(2)}</span>
                            </div>
                         </td>
@@ -170,43 +169,42 @@ export default function PrintablePurchasePage() {
                     </tr>
                   );
                 })}
-                {/* Filler space */}
-                <tr className="flex-1 h-full">
-                  <td className="bpurchase-r-2 bpurchase-gray-800"></td><td className="bpurchase-r-2 bpurchase-gray-800"></td>
-                  {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800"></td>}
-                  <td className="bpurchase-r-2 bpurchase-gray-800"></td><td className="bpurchase-r-2 bpurchase-gray-800"></td>
-                  {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800"></td>}
-                  {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800 p-0"><div className="flex h-full"><span className="w-1/2 bpurchase-r-2 bpurchase-gray-800"></span><span className="w-1/2"></span></div></td>}
-                  <td></td>
-                </tr>
                 {/* Total Row */}
-                <tr className="bpurchase-t-2 bpurchase-gray-800 bg-action-50 h-6 font-bold text-blue-900">
-                  <td className="bpurchase-r-2 bpurchase-gray-800"></td>
-                  <td className="bpurchase-r-2 bpurchase-gray-800 text-right pr-2">Sub-Total:</td>
-                  {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800"></td>}
-                  <td className="bpurchase-r-2 bpurchase-gray-800">{purchase.lineItems.reduce((s:any, i:any)=>s + i.quantity, 0)}</td>
-                  <td className="bpurchase-r-2 bpurchase-gray-800"></td>
-                  {!isNonGst && <td className="bpurchase-r-2 bpurchase-gray-800 text-right pr-1">{purchase.totalTaxableAmount.toFixed(2)}</td>}
+                <tr className="border-t-2 border-b-2 border-gray-800 bg-action-50 h-6 font-bold text-blue-900">
+                  <td className="border-r-2 border-gray-800"></td>
+                  <td className="border-r-2 border-gray-800 text-right pr-2">Sub-Total:</td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
+                  <td className="border-r-2 border-gray-800">{purchase.lineItems.reduce((s:any, i:any)=>s + i.quantity, 0)}</td>
+                  <td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{purchase.totalTaxableAmount.toFixed(2)}</td>}
                   {!isNonGst && (
-                    <td className="bpurchase-r-2 bpurchase-gray-800 p-0">
+                    <td className="border-r-2 border-gray-800 p-0">
                        <div className="flex h-full">
-                         <span className="w-1/2 bpurchase-r-2 bpurchase-gray-800"></span>
+                         <span className="w-1/2 border-r-2 border-gray-800"></span>
                          <span className="w-1/2 text-right pr-1 pt-[2px]">{purchase.totalGST.toFixed(2)}</span>
                        </div>
                     </td>
                   )}
                   <td className="text-right pr-1">{isNonGst ? purchase.subtotal.toFixed(2) : (purchase.totalTaxableAmount + purchase.totalGST).toFixed(2)}</td>
                 </tr>
+                {/* Filler space */}
+                <tr className="h-full">
+                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
+                  <td className="border-r-2 border-gray-800"></td><td className="border-r-2 border-gray-800"></td>
+                  {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
+                  {!isNonGst && <td className="border-r-2 border-gray-800 p-0"><div className="flex h-full"><span className="w-1/2 border-r-2 border-gray-800"></span><span className="w-1/2"></span></div></td>}
+                  <td></td>
+                </tr>
               </tbody>
             </table>
-            </div>
           </div>
 
           {/* Footer */}
-          <div className="flex bpurchase-t-2 bpurchase-gray-800 text-[10px] font-bold min-h-[14rem] bg-white">
+          <div className="flex border-t-2 border-gray-800 text-[10px] font-bold min-h-[14rem] bg-white">
             {/* Left Side */}
-            <div className="w-[65%] flex flex-col bpurchase-r-2 bpurchase-gray-800">
-               <div className="bpurchase-b-2 bpurchase-gray-800 px-2 py-1 flex justify-between bg-action-50 text-blue-900">
+            <div className="w-[65%] flex flex-col border-r-2 border-gray-800">
+               <div className="border-b-2 border-gray-800 px-2 py-1 flex justify-between bg-action-50 text-blue-900">
                  <span>Purchase Bill Total in Words:</span>
                  <span className="italic uppercase">Rupees {numberToWords(Math.round(purchase.grandTotal))} Only</span>
                </div>
@@ -217,39 +215,39 @@ export default function PrintablePurchasePage() {
             </div>
             {/* Right Side (Summary Totals) */}
             <div className="w-[35%] flex flex-col font-bold text-gray-800">
-               <div className="flex justify-between bpurchase-b-2 bpurchase-gray-800 px-2 py-1 bg-action-50 text-blue-900">
+               <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1 bg-action-50 text-blue-900">
                  <span>SUMMARY</span><span>AMOUNT</span>
                </div>
-               <div className="flex justify-between bpurchase-b bpurchase-gray-300 px-2 py-1">
+               <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                  <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? purchase.subtotal.toFixed(2) : purchase.totalTaxableAmount.toFixed(2)}</span>
                </div>
                {!isNonGst && (
                  <>
                    {isInterState ? (
-                     <div className="flex justify-between bpurchase-b bpurchase-gray-300 px-2 py-1">
+                     <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                        <span>IGST Amt :</span><span>{purchase.totalIGST.toFixed(2)}</span>
                      </div>
                    ) : (
                      <>
-                       <div className="flex justify-between bpurchase-b bpurchase-gray-300 px-2 py-1">
+                       <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                          <span>CGST Amt :</span><span>{purchase.totalCGST.toFixed(2)}</span>
                        </div>
-                       <div className="flex justify-between bpurchase-b bpurchase-gray-300 px-2 py-1">
+                       <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                          <span>SGST Amt :</span><span>{purchase.totalSGST.toFixed(2)}</span>
                        </div>
                      </>
                    )}
                  </>
                )}
-               <div className="flex justify-between bpurchase-b bpurchase-gray-300 px-2 py-1">
+               <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                  <span>Discount :</span><span className="text-red-600">-{purchase.totalDiscount.toFixed(2)}</span>
                </div>
                {purchase.shippingCharge > 0 && (
-                 <div className="flex justify-between bpurchase-b bpurchase-gray-300 px-2 py-1">
+                 <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                    <span>Shipping / Freight :</span><span>{purchase.shippingCharge.toFixed(2)}</span>
                  </div>
                )}
-               <div className="flex justify-between bpurchase-b-2 bpurchase-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
+               <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
                  <span>Total Amount :</span><span>{purchase.grandTotal.toFixed(2)}</span>
                </div>
                <div className="p-2 flex-1 flex flex-col justify-end items-center text-center">
@@ -269,10 +267,7 @@ export default function PrintablePurchasePage() {
       </div>
 
       {/* Non-print controls floating */}
-      <div className="print:hidden fixed bottom-8 right-8 flex flex-col gap-2">
-        <button onClick={() => window.print()} className="px-6 py-3 bg-action-500 text-white rounded-full font-bold shadow-2xl hover:bg-action-600">Print Purchase Bill</button>
-        <button onClick={() => window.close()} className="px-6 py-3 bg-action-500 text-white bpurchase rounded-full font-bold shadow-2xl hover:bg-gray-100">Close Window</button>
-      </div>
+      
     </div>
     </>
   );
