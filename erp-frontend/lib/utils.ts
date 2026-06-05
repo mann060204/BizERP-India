@@ -17,13 +17,8 @@ export function formatAccountingBalance(value: number, type: 'customer' | 'suppl
   let isDebit = false;
   let isCredit = false;
 
-  if (type === 'customer') {
-    if (numValue > 0) isDebit = true; // Customer owes us (Dr)
-    else isCredit = true; // We owe customer / Advance (Cr)
-  } else { // supplier
-    if (numValue > 0) isCredit = true; // We owe supplier (Cr)
-    else isDebit = true; // Supplier owes us / Advance (Dr)
-  }
+  if (numValue > 0) isDebit = true; // Asset/Expense (Dr)
+  else isCredit = true; // Liability/Income (Cr)
 
   return {
     text: `${formattedAmount} ${isDebit ? 'Dr' : 'Cr'}`,
