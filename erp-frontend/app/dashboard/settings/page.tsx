@@ -94,8 +94,7 @@ export default function SettingsPage() {
         productGroups: form.productGroups || [],
         productBrands: form.productBrands || [],
         inventorySequencing: form.inventorySequencing || 'FIFO',
-        enableManufacturing: form.enableManufacturing || false,
-        isLocked: form.isLocked || false
+        enableManufacturing: form.enableManufacturing || false
       });
       toast.success('Settings saved successfully');
         setTimeout(() => window.location.reload(), 1500);
@@ -198,20 +197,6 @@ export default function SettingsPage() {
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to start new year');
       setStartingNewYear(false);
-    }
-  };
-
-  const handleUnlockYear = async () => {
-    if (!confirm('Are you sure you want to unlock this financial year? Users will be able to add and edit transactions in this past year.')) return;
-    setSaving(true);
-    try {
-      await businessApi.updateProfile({ isLocked: false });
-      toast.success('Financial year unlocked successfully');
-      setForm({ ...form, isLocked: false });
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to unlock year');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -429,23 +414,7 @@ export default function SettingsPage() {
               </div>
             </div>
               
-              {form.isLocked && (
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col md:flex-row md:items-center gap-4 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
-                    <ShieldCheck className="w-16 h-16 text-amber-600" />
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div className="flex-1 relative z-10">
-                    <h4 className="text-sm font-bold text-amber-900">This Financial Year is Locked</h4>
-                    <p className="text-xs text-amber-700 mt-1 max-w-sm">Users cannot add, edit, or delete transactions in this year to prevent accidental changes to closed books.</p>
-                  </div>
-                  <button onClick={handleUnlockYear} disabled={saving} className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition shrink-0 relative z-10 shadow-sm disabled:opacity-50 flex items-center justify-center min-w-[120px]">
-                    {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Unlock Year'}
-                  </button>
-                </div>
-              )}
+
           </div>
         ) : activeTab === 'sequences' ? (
           <DocumentSequencesTab initialSequences={form.documentSequences} onUpdate={() => {}} />
