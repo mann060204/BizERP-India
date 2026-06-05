@@ -15,7 +15,7 @@ import {
   UserPlus, SlidersHorizontal, BarChart2, Package, Users,
   AlertCircle, Receipt, FileText, Wrench, ChevronRight, IndianRupee, Eye, EyeOff
 } from 'lucide-react';
-import { banksApi, accountsApi } from '../../lib/erp-api';
+import { banksApi, accountsApi, reportsApi } from '../../lib/erp-api';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
   CartesianGrid, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, Legend
