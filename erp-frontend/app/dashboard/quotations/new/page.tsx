@@ -108,6 +108,32 @@ export default function NewQuotationPage() {
           businessApi.getProfile()
         ]);
         setCustomers(cRes.data.customers);
+        const urlCustomerId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('customer') : null;
+        if (urlCustomerId) {
+          const cust = cRes.data.customers.find((c: any) => c._id === urlCustomerId);
+          if (cust) {
+            setSelectedCustomer(cust);
+            setCustomerSearch(cust.name);
+            setContactNo(cust.mobile || '');
+            let addrStr = '';
+            if (cust.billingAddress) {
+              if (typeof cust.billingAddress === 'string') {
+                addrStr = cust.billingAddress;
+              } else {
+                const parts = [
+                  (cust.billingAddress as any).street,
+                  (cust.billingAddress as any).city,
+                  (cust.billingAddress as any).state,
+                  (cust.billingAddress as any).pinCode,
+                  (cust.billingAddress as any).country
+                ].filter(Boolean);
+                addrStr = parts.join(', ');
+              }
+            }
+            setCustomerAddress(addrStr);
+            setCustomerGstin(cust.gstin || '');
+          }
+        }
         setProducts(pRes.data.products);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);

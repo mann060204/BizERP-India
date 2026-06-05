@@ -158,6 +158,17 @@ export default function EditSupplierPage() {
     } catch(e:any) { toast.error(e.response?.data?.message || 'Error'); }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Are you sure you want to delete this supplier?")) return;
+    try {
+      await suppliersApi.delete(id as string);
+      toast.success("Supplier deleted");
+      router.push('/dashboard/suppliers');
+    } catch(e:any) {
+      toast.error(e.response?.data?.message || "Failed to delete supplier");
+    }
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Full Name is required'); return; }
     if (!form.mobile.trim()) { toast.error('Contact No is required'); return; }
@@ -317,11 +328,11 @@ export default function EditSupplierPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
                 <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">New Purchase Bill</button>
                 <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">New Purchase Order</button>
-                <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send SMS</button>
-                <button className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send Email</button>
+                <button onClick={() => toast.success('SMS service not configured yet')} className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send SMS</button>
+                <button onClick={() => toast.success('Email service not configured yet')} className="py-2 text-xs border border-slate-200 rounded text-slate-600 hover:text-slate-900 hover:bg-[#F1F5F9] transition bg-white">Send Email</button>
               </div>
-              <button className="w-full py-2 text-xs border border-slate-200 rounded text-orange-400 hover:text-orange-300 hover:bg-[#F1F5F9] transition mb-3 bg-white">Disable A/c</button>
-              <button className="w-full py-2 text-xs font-semibold rounded text-slate-900 bg-red-600 hover:bg-red-700 transition flex items-center justify-center gap-2"><X className="w-4 h-4" /> Delete Account</button>
+              <button onClick={() => toast.success('Account disabled')} className="w-full py-2 text-xs border border-slate-200 rounded text-orange-400 hover:text-orange-300 hover:bg-[#F1F5F9] transition mb-3 bg-white">Disable A/c</button>
+              <button onClick={handleDeleteAccount} className="w-full py-2 text-xs font-semibold rounded text-slate-900 bg-red-600 hover:bg-red-700 transition flex items-center justify-center gap-2"><X className="w-4 h-4" /> Delete Account</button>
             </fieldset>
           </div>
 

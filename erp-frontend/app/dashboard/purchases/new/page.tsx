@@ -114,6 +114,32 @@ export default function NewPurchasePage() {
           banksApi.list()
         ]);
         setSuppliers(sRes.data.suppliers);
+        const urlSuppId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('supplier') : null;
+        if (urlSuppId) {
+          const supp = sRes.data.suppliers.find((s: any) => s._id === urlSuppId);
+          if (supp) {
+            setSelectedSupplier(supp);
+            setSupplierSearch(supp.name);
+            setContactNo(supp.mobile || '');
+            let addrStr = '';
+            if (supp.billingAddress) {
+              if (typeof supp.billingAddress === 'string') {
+                addrStr = supp.billingAddress;
+              } else {
+                const parts = [
+                  (supp.billingAddress as any).street,
+                  (supp.billingAddress as any).city,
+                  (supp.billingAddress as any).state,
+                  (supp.billingAddress as any).pinCode,
+                  (supp.billingAddress as any).country
+                ].filter(Boolean);
+                addrStr = parts.join(', ');
+              }
+            }
+            setSupplierAddress(addrStr);
+            setSupplierGstin(supp.gstin || '');
+          }
+        }
         setProducts(pRes.data.products);
         setBanks(bRes.data || []);
         const bizUnits = bRes.data?.business?.units;
