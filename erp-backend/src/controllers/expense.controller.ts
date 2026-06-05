@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import Expense from '../models/Expense.model';
+import { AccountingService } from '../services/accounting.service';
 
 // GET /api/v1/expenses
 export const getExpenses = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -66,6 +67,14 @@ export const createExpense = async (req: AuthRequest, res: Response): Promise<vo
       createdBy: req.user!.userId,
     });
 
+    await AccountingService.updateCashOrBankBalance(
+      req.user!.businessId.toString(),
+      totalWithTax,
+      paymentMode || 'Cash',
+      req.body.bankId,
+      false // Outflow
+    );
+
     res.status(201).json({ message: 'Expense recorded', expense });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -75,6 +84,16 @@ export const deleteExpense = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const expense = await Expense.findOneAndDelete({ _id: req.params['id'], businessId: req.user!.businessId });
     if (!expense) { res.status(404).json({ message: 'Expense not found' }); return; }
+    
+    // Reverse the cash/bank outflow
+    await AccountingService.updateCashOrBankBalance(
+      req.user!.businessId.toString(),
+      expense.totalWithTax,
+      expense.paymentMode || 'Cash',
+      (expense as any).bankId,
+      true // Reverse outflow = Inflow
+    );
+
     res.json({ message: 'Expense deleted' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

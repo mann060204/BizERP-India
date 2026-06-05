@@ -210,19 +210,7 @@ export default function DashboardPage() {
       if (res.data.business?.name) setBusinessName(res.data.business.name);
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
       if (res.data.business?.cashInHand) baseCash = res.data.business.cashInHand;
-      
-      return api.get('/reports/accounts/cash-book');
-    }).then((res: any) => {
-      if (res && res.data && res.data.data) {
-        let dynCash = baseCash;
-        res.data.data.forEach((t: any) => {
-          dynCash += (t.debit || 0);
-          dynCash -= (t.credit || 0);
-        });
-        setCashInHand(dynCash);
-      } else {
-        setCashInHand(baseCash);
-      }
+      setCashInHand(baseCash);
     }).catch(() => {
       setCashInHand(baseCash);
     });
