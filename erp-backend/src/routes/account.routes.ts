@@ -9,7 +9,7 @@ import {
   deleteTransaction,
   transferFunds
 } from '../controllers/account.controller';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 

@@ -4,7 +4,7 @@ import {
   updateInvoiceStatus, cancelInvoice, getSalesSummary,
   getCustomerLastPrice, getPredictedInvoiceNumber, getPublicInvoice
 } from '../controllers/invoice.controller';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 

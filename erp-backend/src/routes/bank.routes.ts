@@ -1,6 +1,6 @@
 import express from 'express';
 import { getBanks, getBankById, createBank, updateBank, deleteBank } from '../controllers/bank.controller';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 

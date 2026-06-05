@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 import {
   getPurchaseReturns,
   getPurchaseReturn,

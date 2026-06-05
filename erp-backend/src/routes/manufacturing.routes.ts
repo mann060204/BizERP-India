@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 import { createMO, createDirectManufacturing, createReverseManufacturing, getMOs, updateMOStatus, deleteMO, getProductionPlan } from '../controllers/manufacturing.controller';
 
 const router = Router();

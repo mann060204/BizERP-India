@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProducts, getProduct, createProduct, updateProduct, deleteProduct, createBulkProducts } from '../controllers/product.controller';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 router.use(protect);

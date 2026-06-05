@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 import {
   getQuotations, getQuotation, createQuotation, updateQuotation, deleteQuotation, getNextQuotationNumber, convertToInvoice, getQuotationSummary
 } from '../controllers/quotation.controller';

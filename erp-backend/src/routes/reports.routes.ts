@@ -1,6 +1,6 @@
 import express from 'express';
 import * as reportsController from '../controllers/reports.controller';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 router.use(protect);

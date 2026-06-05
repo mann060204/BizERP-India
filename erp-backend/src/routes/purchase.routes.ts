@@ -3,7 +3,7 @@ import {
   getPurchases, getPurchase, createPurchase, updatePurchase,
   updatePurchaseStatus, cancelPurchase, getPurchaseSummary, getLastPurchasePrices
 } from '../controllers/purchase.controller';
-import { protect, checkLockedFY, checkLockedFY } from '../middlewares/auth.middleware';
+import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
 router.use(protect);
