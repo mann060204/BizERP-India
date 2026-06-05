@@ -533,7 +533,7 @@ export default function DashboardPage() {
                         <tfoot className="sticky bottom-0 bg-white">
                           <tr className="border-t-2 border-slate-200">
                             <td colSpan={2} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
-                            <td className="py-2 px-2 text-right font-bold text-red-600">
+                            <td className={`py-2 px-2 text-right font-bold ${formatAccountingBalance(pendingCustomers.reduce((s, c) => s + c.currentBalance, 0), 'customer').colorClass}`}>
                               {formatAccountingBalance(pendingCustomers.reduce((s, c) => s + c.currentBalance, 0), 'customer').text}
                             </td>
                           </tr>
@@ -569,7 +569,7 @@ export default function DashboardPage() {
                         <tfoot className="sticky bottom-0 bg-white">
                           <tr className="border-t-2 border-slate-200">
                             <td colSpan={2} className="py-2 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-wider">Total Pending</td>
-                            <td className="py-2 px-2 text-right font-bold text-orange-600">
+                            <td className={`py-2 px-2 text-right font-bold ${formatAccountingBalance(pendingSuppliers.reduce((sum, s) => sum + s.currentBalance, 0), 'supplier').colorClass}`}>
                               {formatAccountingBalance(pendingSuppliers.reduce((sum, s) => sum + s.currentBalance, 0), 'supplier').text}
                             </td>
                           </tr>
