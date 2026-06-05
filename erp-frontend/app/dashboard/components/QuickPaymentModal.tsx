@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { customersApi, suppliersApi, invoicesApi, purchasesApi, banksApi } from '../../../lib/erp-api';
 import toast from 'react-hot-toast';
+import { formatAccountingBalance } from '@/lib/utils';
 
 type ModalMode = 'IN' | 'OUT';
 
@@ -202,8 +203,8 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Balance</p>
-                        <p className={`font-bold ${ent.currentBalance > 0 ? (isCustomer ? 'text-emerald-600' : 'text-rose-600') : 'text-slate-600'}`}>
-                          ₹{Math.abs(ent.currentBalance).toLocaleString('en-IN')} {ent.currentBalance >= 0 ? <span className="text-red-600 font-bold">Dr</span> : <span className="text-emerald-600 font-bold">Cr</span>}
+                        <p className={`font-bold ${formatAccountingBalance(ent.currentBalance, isCustomer ? 'customer' : 'supplier').colorClass}`}>
+                          {formatAccountingBalance(ent.currentBalance, isCustomer ? 'customer' : 'supplier').text}
                         </p>
                       </div>
                     </div>
