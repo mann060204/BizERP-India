@@ -10,6 +10,26 @@ import Account from '../models/Account.model';
 import Bank from '../models/Bank.model';
 import Product from '../models/Product.model';
 
+export const renameYear = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { newFinancialYearLabel } = req.body;
+    if (!newFinancialYearLabel || !newFinancialYearLabel.trim()) {
+      res.status(400).json({ message: 'New Financial Year name is required' });
+      return;
+    }
+    const business = await Business.findById(req.user!.businessId);
+    if (!business) {
+      res.status(404).json({ message: 'Business not found' });
+      return;
+    }
+    business.financialYearLabel = newFinancialYearLabel.trim();
+    await business.save();
+    res.status(200).json({ message: 'Financial Year renamed successfully', business });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const startNewYear = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     let { 

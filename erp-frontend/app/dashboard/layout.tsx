@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
 import { fetchMe } from '../../store/slices/authSlice';
 import Sidebar from '../../components/layout/Sidebar';
+import LegacyFYModal from '../../components/LegacyFYModal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--bg)' }}>
+      <LegacyFYModal />
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className={`flex-1 transition-all duration-300 min-w-0 ${collapsed ? 'lg:pl-[64px]' : 'lg:pl-[220px]'}`}>
         {children}

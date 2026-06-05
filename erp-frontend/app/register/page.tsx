@@ -15,6 +15,7 @@ const step1Schema = z.object({
   businessName: z.string().min(2, 'Business name is required'),
   ownerName: z.string().min(2, 'Owner name is required'),
   businessType: z.enum(['Retail', 'Wholesale', 'Service', 'Medical', 'Manufacturing', 'Other']),
+  financialYearLabel: z.string().min(2, 'Financial year name is required'),
 });
 
 const step2Schema = z.object({
@@ -77,6 +78,7 @@ export default function RegisterPage() {
         businessName: merged.businessName,
         ownerName: merged.ownerName,
         businessType: merged.businessType,
+        financialYearLabel: merged.financialYearLabel,
         gstin: merged.gstin || undefined,
         pan: merged.pan || undefined,
         isCompositionScheme: !!merged.isCompositionScheme,
@@ -155,6 +157,7 @@ export default function RegisterPage() {
               <>
                 <Field label="Business Name" name="businessName" placeholder="e.g. Sharma Enterprises" required />
                 <Field label="Owner Name" name="ownerName" placeholder="e.g. Rajesh Sharma" required />
+                <Field label="Financial Year Name" name="financialYearLabel" placeholder="e.g. FY 2024-25" required />
                 <div>
                   <label className="block text-sm font-medium text-slate-600 mb-2">Business Type <span className="text-red-400">*</span></label>
                   <select {...register('businessType')}

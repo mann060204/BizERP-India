@@ -10,7 +10,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       businessName, ownerName, gstin, pan, mobile, email, password,
-      businessType, address, financialYearStart, invoicePrefix, bankDetails, isCompositionScheme,
+      businessType, address, financialYearStart, financialYearLabel, invoicePrefix, bankDetails, isCompositionScheme,
     } = req.body;
 
     // Check if user already exists
@@ -42,7 +42,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const currentYear = new Date().getFullYear();
     business.businessGroupId = (business._id as any).toString();
-    business.financialYearLabel = `FY ${currentYear}-${(currentYear + 1).toString().slice(2)}`;
+    business.financialYearLabel = financialYearLabel && financialYearLabel.trim() !== '' ? financialYearLabel : `FY ${currentYear}-${(currentYear + 1).toString().slice(2)}`;
     await business.save();
 
     // Create Admin User
