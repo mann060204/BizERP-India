@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,7 @@ function numberToWords(num: number): string {
 
 export default function PrintableInvoicePage() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
   const [invoice, setInvoice] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +66,10 @@ export default function PrintableInvoicePage() {
         setBusiness(data.business);
         
         // Auto print after a short delay for rendering
-        setTimeout(() => window.print(), 800);
+        setTimeout(() => {
+          if (searchParams.get('action') === 'share') handleSharePdf();
+          else if (searchParams.get('action') === 'print' || !searchParams.get('action')) window.print();
+        }, 800);
       } catch (e: any) {
         console.error('Fetch error:', e);
         toast.error(`Error: ${e.message}`);
@@ -81,6 +85,48 @@ export default function PrintableInvoicePage() {
   if (loading) return <div className="flex justify-center items-center h-screen bg-white"><Loader2 className="w-12 h-12 animate-spin text-gray-400" /></div>;
   if (invoice?.__error) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Error: {invoice.__error}</div>;
   if (!invoice || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Invoice not found</div>;
+
+  
+  const handleSharePdf = async () => {
+    try {
+      const element = document.getElementById('invoice-print-area');
+      if (!element) return;
+      
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin: 0,
+        filename: `Invoice-${invoice.invoiceNumber}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+      const file = new File([pdfBlob], `Invoice-${invoice.invoiceNumber}.pdf`, { type: 'application/pdf' });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Invoice ${invoice.invoiceNumber}`,
+          text: `Hello ${invoice.customerSnapshot?.name}, please find attached your invoice.`,
+          files: [file]
+        });
+      } else {
+        // Fallback to download if Web Share API not supported for files
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('PDF downloaded. Please attach it to your email/message manually.', { duration: 5000 });
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to share PDF');
+    }
+  };
 
   const template = printFormat || business.invoiceTemplate || 'A4';
   const isInterState = invoice.isInterState;
@@ -107,11 +153,12 @@ export default function PrintableInvoicePage() {
             <option value="POS">Thermal Receipt (POS)</option>
           </select>
           <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
+     <button onClick={() => handleSharePdf()} className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-bold shadow transition">Share PDF</button>
         </div>
   
       </div>
       <div className="bg-white min-h-screen text-black print:p-0 p-8 pt-20 font-sans flex justify-center">
-        <div className="w-[80mm] bg-white print:shadow-none shadow-lg print:p-0 p-4 text-[12px] leading-tight font-mono">
+        <div id="invoice-print-area" className="w-[80mm] bg-white print:shadow-none shadow-lg print:p-0 p-4 text-[12px] leading-tight font-mono">
           <div className="text-center mb-4">
             {business.logo && <img src={business.logo} alt="Logo" className="w-16 h-16 mx-auto mb-2 object-contain grayscale" />}
             <h1 className="text-xl font-bold uppercase">{business.businessName || business.name}</h1>
@@ -222,11 +269,12 @@ export default function PrintableInvoicePage() {
             <option value="POS">Thermal Receipt (POS)</option>
           </select>
           <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
+     <button onClick={() => handleSharePdf()} className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-sm font-bold shadow transition">Share PDF</button>
         </div>
   
       </div>
       <div className="bg-[#525659] min-h-screen text-black print:bg-white print:p-0 p-8 pt-20 font-sans flex justify-center text-[11px]">
-        <div className="a4-page w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col overflow-hidden">
+        <div id="invoice-print-area" className="a4-page w-[210mm] h-[297mm] bg-white shadow-2xl print:shadow-none p-8 print:p-0 box-border relative flex flex-col overflow-hidden">
         
         {/* Container */}
         <div className="border-2 border-gray-800 flex-1 flex flex-col">

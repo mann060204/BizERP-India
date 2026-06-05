@@ -9,7 +9,17 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
     const { search, type, page = '1', limit = '50' } = req.query as any;
     const businessId = req.user!.businessId;
     const query: any = { businessId, isActive: true };
-    if (search) query.name = { $regex: search, $options: 'i' };
+    if (search) {
+      const regex = { $regex: search, $options: 'i' };
+      query.$or = [
+        { name: regex },
+        { sku: regex },
+        { barcode: regex },
+        { brand: regex },
+        { category: regex },
+        { batchNo: regex }
+      ];
+    }
     if (type) query.type = type;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
