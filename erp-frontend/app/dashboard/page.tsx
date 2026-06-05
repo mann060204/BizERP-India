@@ -713,15 +713,15 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
     let promise;
 
     if (['sales', 'received', 'outstanding'].includes(kpi.type)) {
-      promise = invoicesApi.list({ limit: 5 }).then(res => res.data?.invoices || []);
+      promise = invoicesApi.list({ limit: 500 }).then(res => res.data?.invoices || []);
     } else if (['purchases', 'paid'].includes(kpi.type)) {
-      promise = purchasesApi.list({ limit: 5 }).then(res => res.data?.purchases || []);
+      promise = purchasesApi.list({ limit: 500 }).then(res => res.data?.purchases || []);
     } else if (kpi.type === 'cash' || kpi.type === 'bank') {
-      promise = accountsApi.getLedger(kpi.accountId).then(res => (res.data?.ledger || []).slice(-5).reverse());
+      promise = accountsApi.getLedger(kpi.accountId).then(res => (res.data?.ledger || []).slice(-500).reverse());
     } else if (kpi.type === 'expenses') {
-      promise = expensesApi.list({ limit: 5 }).then(res => res.data?.expenses || []);
+      promise = expensesApi.list({ limit: 500 }).then(res => res.data?.expenses || []);
     } else if (kpi.type === 'lowStock') {
-      promise = inventoryApi.list({ lowStock: 'true', limit: 5 }).then(res => res.data?.inventory || []);
+      promise = inventoryApi.list({ lowStock: 'true', limit: 500 }).then(res => res.data?.inventory || []);
     } else {
       promise = Promise.resolve([]);
     }
