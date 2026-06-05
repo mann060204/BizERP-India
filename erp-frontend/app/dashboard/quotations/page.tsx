@@ -66,7 +66,6 @@ export default function QuotationsPage() {
     const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 
 Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
-Please review it here: ${window.location.origin}${targetPath}${inv._id}
 
 Thank you for your business!`;
     const phone = inv.customerSnapshot?.mobile ? inv.customerSnapshot.mobile.replace(/\D/g,'') : '';
@@ -85,7 +84,7 @@ Thank you for your business!`;
 
   const handleEmail = (inv: Quotation) => {
     const subject = `Quotation ${inv.quotationNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.\nPlease review it here: ${window.location.origin}/print/quotation/${inv._id}\n\nThank you for your business!`;
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
