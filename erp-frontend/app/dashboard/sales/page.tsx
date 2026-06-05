@@ -47,15 +47,15 @@ export default function SalesPage() {
   };
 
   const handleWhatsApp = (inv: Invoice) => {
-    const docName = inv: Invoice.invoiceNumber ? 'invoice ' + inv: Invoice.invoiceNumber : (inv: Invoice.quotationNumber ? 'quotation ' + inv: Invoice.quotationNumber : 'document');
-    const targetPath = inv: Invoice.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
-    const text = `Hello ${inv: Invoice.customerSnapshot?.name || 'Customer'},
+    const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : (inv.quotationNumber ? 'quotation ' + inv.quotationNumber : 'document');
+    const targetPath = inv.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
+    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 
-Your ${docName} for ₹${(inv: Invoice.grandTotal || 0).toFixed(2)} is ready.
-Please review it here: ${window.location.origin}${targetPath}${inv: Invoice._id}
+Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
+Please review it here: ${window.location.origin}${targetPath}${inv._id}
 
 Thank you for your business!`;
-    const phone = inv: Invoice.customerSnapshot?.mobile ? inv: Invoice.customerSnapshot.mobile.replace(/\D/g,'') : '';
+    const phone = inv.customerSnapshot?.mobile ? inv.customerSnapshot.mobile.replace(/\D/g,'') : '';
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 

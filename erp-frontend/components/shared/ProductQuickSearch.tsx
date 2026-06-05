@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Tag, IndianRupee, Info, X } from 'lucide-react';
-import { productApi } from '../../lib/erp-api';
+import { productsApi } from '../../lib/erp-api';
 
 export default function ProductQuickSearch() {
   const [query, setQuery] = useState('');
@@ -30,8 +30,8 @@ export default function ProductQuickSearch() {
       }
       setLoading(true);
       try {
-        const res = await productApi.getAll({ search: query, limit: 5 });
-        setResults(res.products || []);
+        const { data } = await productsApi.getAll({ search: query, limit: 5 });
+        setResults(data.products || []);
         setIsOpen(true);
       } catch (e) {
         console.error(e);

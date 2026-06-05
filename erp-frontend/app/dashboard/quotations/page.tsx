@@ -61,15 +61,15 @@ export default function QuotationsPage() {
   };
 
   const handleWhatsApp = (inv: Quotation) => {
-    const docName = inv: Quotation.invoiceNumber ? 'invoice ' + inv: Quotation.invoiceNumber : (inv: Quotation.quotationNumber ? 'quotation ' + inv: Quotation.quotationNumber : 'document');
-    const targetPath = inv: Quotation.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
-    const text = `Hello ${inv: Quotation.customerSnapshot?.name || 'Customer'},
+    const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : (inv.quotationNumber ? 'quotation ' + inv.quotationNumber : 'document');
+    const targetPath = inv.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
+    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 
-Your ${docName} for ₹${(inv: Quotation.grandTotal || 0).toFixed(2)} is ready.
-Please review it here: ${window.location.origin}${targetPath}${inv: Quotation._id}
+Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
+Please review it here: ${window.location.origin}${targetPath}${inv._id}
 
 Thank you for your business!`;
-    const phone = inv: Quotation.customerSnapshot?.mobile ? inv: Quotation.customerSnapshot.mobile.replace(/\D/g,'') : '';
+    const phone = inv.customerSnapshot?.mobile ? inv.customerSnapshot.mobile.replace(/\D/g,'') : '';
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
