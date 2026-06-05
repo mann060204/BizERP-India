@@ -211,12 +211,12 @@ export default function DashboardPage() {
 
     accountsApi.list().then(res => {
       const all = res.accounts || [];
-      const cash = all.find((a: any) => a.type === 'Cash' || a.name.toLowerCase() === 'cash');
+      const cash = all.find((a: any) => a.type === 'Cash' || a.name?.toLowerCase() === 'cash');
       if (cash) {
         setCashAccount(cash);
         setCashInHand(cash.currentBalance || 0);
       }
-      setBanks(all.filter((a: any) => a.type === 'Bank'));
+      setBanks([]); // user requested to hide bank cards
     }).catch(() => {});
 
     Promise.all([

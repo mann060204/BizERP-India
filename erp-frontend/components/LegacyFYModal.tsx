@@ -14,7 +14,7 @@ export default function LegacyFYModal() {
     const checkFY = async () => {
       try {
         const { data } = await api.get('/business');
-        if (data && data.financialYearLabel === 'FY Legacy') {
+        if (data && data.business?.financialYearLabel === 'FY Legacy') {
           setIsOpen(true);
         }
       } catch (e) {
