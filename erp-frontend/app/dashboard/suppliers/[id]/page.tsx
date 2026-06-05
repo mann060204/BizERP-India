@@ -198,7 +198,7 @@ export default function EditSupplierPage() {
   useEffect(() => {
     if (id) {
       purchasesApi.list().then(res => {
-         const supplierPurchaseBills = res.data.purchaseBills.filter((inv: any) => inv.supplierId === id || inv.supplierId?._id === id);
+         const supplierPurchaseBills = res.data.purchases.filter((inv: any) => inv.supplierId === id || inv.supplierId?._id === id);
          setPurchaseBills(supplierPurchaseBills);
       }).catch(() => {});
       
@@ -496,7 +496,7 @@ export default function EditSupplierPage() {
                {activeTab === 'Payment History' && (
                  <div className="flex flex-col h-full">
                     <h3 className="font-semibold text-slate-900 mb-4">Payment History</h3>
-                    {ledger.filter((txn: any) => txn.referenceType === 'Payment' && txn.credit > 0).length > 0 ? (
+                    {ledger.filter((txn: any) => txn.referenceType === 'Payment' && txn.debit > 0).length > 0 ? (
                       <div className="overflow-x-auto border border-slate-200 rounded-xl flex-1">
                         <table className="w-full text-sm text-left">
                           <thead className="bg-[#F1F5F9] text-slate-600 text-xs uppercase">
@@ -508,12 +508,12 @@ export default function EditSupplierPage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#1A1A1A]">
-                            {ledger.filter((txn: any) => txn.referenceType === 'Payment' && txn.credit > 0).map((txn: any) => (
+                            {ledger.filter((txn: any) => txn.referenceType === 'Payment' && txn.debit > 0).map((txn: any) => (
                                <tr key={txn._id} className="hover:bg-[#F1F5F9]">
                                  <td className="px-4 py-3">{new Date(txn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
                                  <td className="px-4 py-3 text-slate-800">{txn.description}</td>
                                  <td className="px-4 py-3 text-blue-500 font-mono">{txn.referenceId || '—'}</td>
-                                 <td className="px-4 py-3 text-right font-bold text-emerald-500">+ ₹{txn.credit?.toFixed(2)}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-emerald-500">+ ₹{txn.debit?.toFixed(2)}</td>
                                </tr>
                             ))}
                           </tbody>
