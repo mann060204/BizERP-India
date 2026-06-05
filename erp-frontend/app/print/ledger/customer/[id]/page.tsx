@@ -183,7 +183,7 @@ export default function PrintableCustomerLedger() {
               {/* Closing Balance / Totals */}
               <tr className="font-bold border-b border-black">
                 <td className="py-1 pl-2"></td>
-                <td className="py-1 text-right pr-4 font-bold">{currentBal >= 0 ? <span className="text-red-600">Dr</span> : <span className="text-emerald-600">Cr</span>}</td>
+                <td className="py-1 text-right pr-4 font-bold">{currentBal >= 0 ? <span className="text-emerald-600">Dr</span> : <span className="text-red-600">Cr</span>}</td>
                 <td className="py-1" colSpan={2}>Closing Balance</td>
                 <td className="py-1 text-right">{currentBal < 0 ? Math.abs(currentBal).toFixed(2) : ''}</td>
                 <td className="py-1 text-right">{currentBal >= 0 ? currentBal.toFixed(2) : ''}</td>
