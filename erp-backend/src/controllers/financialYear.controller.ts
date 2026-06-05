@@ -39,9 +39,6 @@ export const startNewYear = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (lockPreviousFY) {
-      oldBusiness.isLocked = true;
-    }
 
     // Ensure businessGroupId exists
     if (!oldBusiness.businessGroupId) {

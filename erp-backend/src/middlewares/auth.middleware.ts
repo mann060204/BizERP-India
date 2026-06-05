@@ -38,24 +38,7 @@ export const authorize = (...roles: string[]) => {
 import Business from '../models/Business.model';
 
 export const checkLockedFY = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  // Allow GET requests as they only read data
-  if (req.method === 'GET') {
-    return next();
-  }
-  
-  if (!req.user || !req.user.businessId) {
-    return next();
-  }
-
-  try {
-    const business = await Business.findById(req.user.businessId);
-    if (business && business.isLocked) {
-      res.status(403).json({ message: 'This Financial Year is locked. Edits are not allowed. Please contact an administrator to unlock it if needed.' });
-      return;
-    }
-    next();
-  } catch (error) {
-    res.status(500).json({ message: 'Error checking financial year status' });
-  }
+  // Always allow - feature removed
+  return next();
 };
 
