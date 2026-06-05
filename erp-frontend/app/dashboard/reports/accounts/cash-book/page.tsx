@@ -1,7 +1,7 @@
 'use client';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { formatDateGlobal } from '../../../../../lib/utils';
+import { formatDateGlobal, formatAccountingBalance } from '../../../../../lib/utils';
 
 export default function Page() {
   const columns: any[] = [
@@ -11,7 +11,7 @@ export default function Page() {
     { key: 'referenceType', label: 'Type' },
     { key: 'debit', label: 'Debit (In)', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
     { key: 'credit', label: 'Credit (Out)', align: 'right', format: (v: any) => v ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
-    { key: 'balance', label: 'Balance', align: 'right', disableTotal: true, format: (v: any) => (v !== undefined && v !== null) ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v)) : '—' },
+    { key: 'balance', label: 'Balance', align: 'right', disableTotal: true, format: (v: any) => { const bal = formatAccountingBalance(Number(v || 0), 'cash'); return <span className={bal.colorClass}>{bal.text}</span>; } },
   ];
 
   const fetchData = async () => {

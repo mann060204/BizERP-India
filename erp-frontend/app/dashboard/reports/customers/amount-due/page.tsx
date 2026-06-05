@@ -9,11 +9,12 @@ export default function Page() {
     { key: 'name', label: 'Customer Name' },
     { key: 'mobile', label: 'Mobile' },
     { key: 'gstin', label: 'GSTIN' },
-    { key: 'currentBalance', label: 'Account Balance', align: 'right', format: (v: any) => formatAccountingBalance(Number(v || 0), 'customer').text },
+    { key: 'currentBalance', label: 'Account Balance', align: 'right', format: (v: any) => { const bal = formatAccountingBalance(Number(v || 0), 'customer'); return <span className={bal.colorClass}>{bal.text}</span>; } },
     { key: 'outstandingInvoices', label: 'Open Invoices', align: 'center' },
     { key: 'outstandingBalance', label: 'Outstanding', align: 'right', format: (v: any) => {
       const n = Number(v||0);
-      return <span className={n > 0 ? 'text-red-600 font-bold' : 'text-slate-500'}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n)}</span>;
+      const bal = formatAccountingBalance(n, 'customer');
+      return <span className={bal.colorClass + ' font-bold'}>{bal.text}</span>;
     }},
     { key: 'creditLimit', label: 'Credit Limit', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
     { key: 'oldestDue', label: 'Oldest Due Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },

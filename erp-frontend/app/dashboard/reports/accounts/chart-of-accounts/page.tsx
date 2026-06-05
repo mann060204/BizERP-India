@@ -1,6 +1,7 @@
 'use client';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { formatAccountingBalance } from '../../../../../lib/utils';
 
 export default function Page() {
   const columns: any[] = [
@@ -8,8 +9,8 @@ export default function Page() {
     { key: 'accountType', label: 'Type' },    // Backend transforms 'type' → 'accountType'
     { key: 'group', label: 'Group / Bank' },  // Backend maps bankName → group
     { key: 'balanceType', label: 'Dr/Cr' },
-    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
-    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any, row: any) => { const bal = formatAccountingBalance(Number(v || 0), row?.type || 'asset'); return <span className={bal.colorClass}>{bal.text}</span>; } },
+    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any, row: any) => { const bal = formatAccountingBalance(Number(v || 0), row?.type || 'asset'); return <span className={bal.colorClass}>{bal.text}</span>; } },
   ];
 
   const fetchData = async () => {

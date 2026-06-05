@@ -9,8 +9,8 @@ export default function Page() {
     { key: 'name', label: 'Supplier Name' },
     { key: 'mobile', label: 'Mobile' },
     { key: 'gstin', label: 'GSTIN' },
-    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => formatAccountingBalance(Number(v || 0), 'supplier').text },
-    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => formatAccountingBalance(Number(v || 0), 'supplier').text },
+    { key: 'openingBalance', label: 'Opening Balance', align: 'right', format: (v: any) => { const bal = formatAccountingBalance(Number(v || 0), 'supplier'); return <span className={bal.colorClass}>{bal.text}</span>; } },
+    { key: 'currentBalance', label: 'Current Balance', align: 'right', format: (v: any) => { const bal = formatAccountingBalance(Number(v || 0), 'supplier'); return <span className={bal.colorClass}>{bal.text}</span>; } },
     { key: 'creditLimit', label: 'Credit Limit', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
   ];
   const fetchData = useCallback(async () => { const res = await reportsApi.getSupplierAccountBalances(); return res.data?.data || []; }, []);
