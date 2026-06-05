@@ -76,8 +76,8 @@ export default function ProductQuickSearch() {
               <div>
                 <p className="text-sm font-bold text-slate-900">{p.name}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Stock: {p.stock || 0}</span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-green-50 text-green-700 rounded border border-green-100">₹{p.salesPrice}</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Stock: {p.currentStock || 0}</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-green-50 text-green-700 rounded border border-green-100">₹{p.sellingPrice}</span>
                 </div>
               </div>
             </button>
@@ -99,7 +99,7 @@ export default function ProductQuickSearch() {
                 <Tag className="w-8 h-8 text-indigo-500" />
               </div>
               <h3 className="font-bold text-lg text-slate-900">{selectedProduct.name}</h3>
-              <p className="text-xs text-slate-500 font-mono mt-1">{selectedProduct.itemCode || 'No Code'}</p>
+              <p className="text-xs text-slate-500 font-mono mt-1">{selectedProduct.sku || 'No Code'}</p>
             </div>
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
@@ -107,7 +107,7 @@ export default function ProductQuickSearch() {
                   <span className="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Selling Price</span>
                   <div className="text-sm font-bold text-emerald-700 flex items-center gap-1">
                     <IndianRupee className="w-3.5 h-3.5" />
-                    {selectedProduct.salesPrice}
+                    {selectedProduct.sellingPrice}
                   </div>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
@@ -120,7 +120,7 @@ export default function ProductQuickSearch() {
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
                   <span className="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Current Stock</span>
                   <div className="text-sm font-bold text-slate-900">
-                    {selectedProduct.stock || 0} {selectedProduct.primaryUnit || 'Units'}
+                    {selectedProduct.currentStock || 0} {selectedProduct.unit || 'Units'}
                   </div>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
