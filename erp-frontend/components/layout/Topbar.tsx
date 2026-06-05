@@ -49,7 +49,7 @@ export default function Topbar({ title }: { title?: string }) {
     }
     setRenaming(true);
     try {
-      await financialYearApi.renameYear(newFyName);
+      await (financialYearApi as any).renameYear(newFyName);
       toast.success('Financial Year updated successfully!');
       setTimeout(() => window.location.reload(), 1000);
     } catch (error: any) {

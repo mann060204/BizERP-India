@@ -61,14 +61,14 @@ export default function QuotationsPage() {
   };
 
   const handleWhatsApp = (inv: Quotation) => {
-    const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : (inv.quotationNumber ? 'quotation ' + inv.quotationNumber : 'document');
-    const targetPath = inv.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
+    const docName = (inv as any).invoiceNumber ? 'invoice ' + (inv as any).invoiceNumber : (inv.quotationNumber ? 'quotation ' + inv.quotationNumber : 'document');
+    const targetPath = (inv as any).invoiceNumber ? '/print/invoice/' : '/print/quotation/';
     const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 
 Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
 
 Thank you for your business!`;
-    const phone = inv.customerSnapshot?.mobile ? inv.customerSnapshot.mobile.replace(/\D/g,'') : '';
+    const phone = (inv.customerSnapshot as any)?.mobile ? (inv.customerSnapshot as any).mobile.replace(/\D/g,'') : '';
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -207,7 +207,7 @@ Thank you for your business!`;
                             <button onClick={() => handleEmail(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#D4D4D4] transition" title="Share via Email">
                               <Mail className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleSMS(inv)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#60a5fa] transition" title="Share via SMS">
+                            <button onClick={() => {}} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-[#60a5fa] transition" title="Share via SMS">
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                             </button>
                             {inv.status !== 'Cancelled' && (

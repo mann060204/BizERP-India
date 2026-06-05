@@ -215,7 +215,7 @@ export default function NewCustomerPage() {
                        <Upload className="w-5 h-5" />
                      </button>
                      <button
-                       onClick={startCamera}
+                       onClick={() => startCamera()}
                        className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition"
                        title="Take Photo with Camera"
                      >

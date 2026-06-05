@@ -47,7 +47,7 @@ export default function SalesPage() {
   };
 
   const handleWhatsApp = (inv: Invoice) => {
-    const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : (inv.quotationNumber ? 'quotation ' + inv.quotationNumber : 'document');
+    const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : ((inv as any).quotationNumber ? 'quotation ' + (inv as any).quotationNumber : 'document');
     const targetPath = inv.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
     const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 

@@ -296,7 +296,7 @@ export default function EditCustomerPage() {
               ) : (
                 <div className="flex justify-between px-2 items-center mt-2">
                   <button onClick={() => fileInputRef.current?.click()} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition" title="Upload from File"><Upload className="w-5 h-5" /></button>
-                  <button onClick={startCamera} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition" title="Take Photo"><Camera className="w-5 h-5" /></button>
+                  <button onClick={() => startCamera()} className="text-green-500 hover:text-green-400 bg-white p-1.5 rounded border border-slate-200 transition" title="Take Photo"><Camera className="w-5 h-5" /></button>
                   <button onClick={() => setPhoto(null)} disabled={!photo} className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-slate-200 transition disabled:opacity-40" title="Reset"><RefreshCw className="w-5 h-5" /></button>
                   <button onClick={() => setPhoto(null)} disabled={!photo} className="text-red-500 hover:text-red-400 bg-white p-1.5 rounded border border-slate-200 transition disabled:opacity-40" title="Delete"><X className="w-5 h-5" /></button>
                 </div>
