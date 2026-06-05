@@ -84,7 +84,7 @@ Thank you for your business!`;
 
   const handleEmail = (inv: Quotation) => {
     const subject = `Quotation ${inv.quotationNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour quotation ${inv.quotationNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 

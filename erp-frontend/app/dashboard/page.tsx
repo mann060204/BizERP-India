@@ -710,16 +710,7 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
     } else if (['purchases', 'paid'].includes(kpi.type)) {
       promise = purchasesApi.list({ limit: 5 }).then(res => res.data?.purchases || []);
     } else if (kpi.type === 'cash' || kpi.type === 'bank') {
-      return (
-        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
-          <div><p className="font-semibold text-slate-800">{item.particulars || item.description}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
-          <div className="text-right">
-            <p className={`font-bold ${item.credit > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-              {item.credit > 0 ? '-' : '+'}{fmtFull(item.credit > 0 ? item.credit : item.debit)}
-            </p>
-          </div>
-        </div>
-      );
+      promise = accountsApi.getLedger(kpi.accountId).then(res => (res.data?.ledger || []).slice(-5).reverse());
     } else if (kpi.type === 'expenses') {
       promise = expensesApi.list({ limit: 5 }).then(res => res.data?.expenses || []);
     } else if (kpi.type === 'lowStock') {
@@ -759,6 +750,17 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
         <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
           <div><p className="font-semibold text-slate-800">{item.category}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
           <div className="text-right"><p className="font-bold text-slate-900">{fmtFull(item.totalWithTax)}</p></div>
+        </div>
+      );
+    } else if (kpi.type === 'cash' || kpi.type === 'bank') {
+      return (
+        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
+          <div><p className="font-semibold text-slate-800">{item.description || item.particulars || 'Transaction'}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
+          <div className="text-right">
+            <p className={`font-bold ${item.credit > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+              {item.credit > 0 ? '-' : '+'}{fmtFull(item.credit > 0 ? item.credit : item.debit)}
+            </p>
+          </div>
         </div>
       );
     } else {

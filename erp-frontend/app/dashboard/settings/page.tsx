@@ -111,7 +111,8 @@ export default function SettingsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bizerp_backup_${new Date().toISOString().split('T')[0]}.erp`;
+      const safeFyLabel = form?.financialYearLabel ? form.financialYearLabel.replace(/[^a-zA-Z0-9_-]/g, '_') : 'FY';
+      a.download = `bizerp_backup_${safeFyLabel}_${new Date().toISOString().split('T')[0]}.erp`;
       a.click();
       window.URL.revokeObjectURL(url);
       toast.success('Encrypted backup downloaded as .erp file!');
@@ -520,13 +521,13 @@ export default function SettingsPage() {
                  </p>
                  
                  <div className="flex flex-col gap-3 mt-4">
-                   <button onClick={handleExportData} disabled={exporting || erasing || importing} className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-slate-700 disabled:opacity-50">
-                     <span className="flex items-center gap-2">
-                       {exporting ? <Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> : <Download className="w-4 h-4 text-blue-500" />} 
-                       Download Full Backup
-                     </span>
-                     <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">.ERP Encrypted File</span>
-                   </button>
+                     <button onClick={handleExportData} disabled={exporting || erasing || importing} className="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-slate-700 disabled:opacity-50">
+                       <span className="flex items-center gap-2">
+                         {exporting ? <Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> : <Download className="w-4 h-4 text-blue-500" />} 
+                         Download Full Backup ({form?.financialYearLabel || 'Current FY'})
+                       </span>
+                       <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">.ERP Encrypted File</span>
+                     </button>
                    
                    <label className={`w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition text-sm font-medium text-slate-700 ${importing || erasing || exporting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                      <span className="flex items-center gap-2">

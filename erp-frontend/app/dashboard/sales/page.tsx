@@ -71,7 +71,7 @@ Thank you for your business!`;
 
   const handleEmail = (inv: Invoice) => {
     const subject = `Invoice ${inv.invoiceNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 

@@ -46,7 +46,7 @@ export default function SalesPage() {
   };
 
   const handleWhatsApp = (inv: salesReturn) => {
-    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
+    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -63,7 +63,7 @@ export default function SalesPage() {
 
   const handleEmail = (inv: salesReturn) => {
     const subject = `salesReturn ${inv.salesReturnNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
