@@ -10,6 +10,7 @@ const TOOLS = [
   { name: 'Bulk Tax Update', desc: 'Change HSN code or tax rate for multiple products', icon: RefreshCcw, href: '#', status: 'soon' },
   { name: 'Reminder System', desc: 'Schedule SMS/WhatsApp for overdue invoices', icon: Bell, href: '#', status: 'soon' },
   { name: 'Manufacturing Module', desc: 'Manage Bill of Materials, production orders, and WIP', icon: Factory, href: '#', status: 'soon' },
+  { name: 'Direct WhatsApp/Email Sender', desc: 'Automatically send PDFs to customers without downloading. (WhatsApp Business API integration)', icon: Bell, href: '#', status: 'soon' },
 ];
 
 export default function ToolsPage() {
