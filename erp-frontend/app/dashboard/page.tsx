@@ -15,7 +15,7 @@ import {
   UserPlus, SlidersHorizontal, BarChart2, Package, Users,
   AlertCircle, Receipt, FileText, Wrench, ChevronRight, IndianRupee, Eye, EyeOff
 } from 'lucide-react';
-import { banksApi } from '../../lib/erp-api';
+import { banksApi, accountsApi } from '../../lib/erp-api';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip,
   CartesianGrid, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, Legend
@@ -131,6 +131,7 @@ export default function DashboardPage() {
 
   const [banks, setBanks] = useState<any[]>([]);
   const [cashInHand, setCashInHand] = useState(0);
+  const [cashAccount, setCashAccount] = useState<any>(null);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -205,10 +206,18 @@ export default function DashboardPage() {
     businessApi.getProfile().then(res => {
       if (res.data.business?.name) setBusinessName(res.data.business.name);
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
-      if (res.data.business?.cashInHand) setCashInHand(res.data.business.cashInHand);
+      // if (res.data.business?.cashInHand) setCashInHand(res.data.business.cashInHand);
     }).catch(() => {});
 
-    banksApi.list().then(res => setBanks(res.data || [])).catch(() => {});
+    accountsApi.list().then(res => {
+      const all = res.accounts || [];
+      const cash = all.find((a: any) => a.type === 'Cash' || a.name.toLowerCase() === 'cash');
+      if (cash) {
+        setCashAccount(cash);
+        setCashInHand(cash.currentBalance || 0);
+      }
+      setBanks(all.filter((a: any) => a.type === 'Bank'));
+    }).catch(() => {});
 
     Promise.all([
       dashboardApi.customerPending().catch(() => ({ data: [] })),
@@ -649,9 +658,13 @@ export default function DashboardPage() {
             <div className="mt-2 pt-3 border-t border-slate-200">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Fund Balances</h3>
               <div className="space-y-2">
-                <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600">
+                <div 
+                    onClick={() => {
+                      if (cashAccount) setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-600', icon: IndianRupee, accountId: cashAccount._id });
+                    }}
+                    className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm cursor-pointer hover:border-emerald-300 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600">
                       <IndianRupee className="w-4 h-4" />
                     </div>
                     <span className="text-xs font-bold text-slate-700">Cash in Hand</span>
@@ -659,7 +672,9 @@ export default function DashboardPage() {
                   <span className="text-sm font-black text-emerald-600">{renderAmount(cashInHand)}</span>
                 </div>
                 {banks.map(bank => (
-                  <div key={bank._id} className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm">
+                  <div key={bank._id} 
+                    onClick={() => setSelectedKpi({ type: 'bank', label: bank.name || bank.bankName, bg: 'bg-blue-100', color: 'text-blue-600', icon: Wallet, accountId: bank._id })}
+                    className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm cursor-pointer hover:border-blue-300 transition-colors">
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600">
                         <Wallet className="w-4 h-4" />
@@ -698,6 +713,18 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
       promise = invoicesApi.list({ limit: 5 }).then(res => res.data?.invoices || []);
     } else if (['purchases', 'paid'].includes(kpi.type)) {
       promise = purchasesApi.list({ limit: 5 }).then(res => res.data?.purchases || []);
+    } else if (kpi.type === 'cash' || kpi.type === 'bank') {
+      return (
+        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
+          <div><p className="font-semibold text-slate-800">{item.description}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
+          <div className="text-right">
+            <p className={`font-bold ${item.credit > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+              {item.credit > 0 ? '-' : '+'}{fmtFull(item.credit > 0 ? item.credit : item.debit)}
+            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bal: {fmtFull(item.closingBalance)}</p>
+          </div>
+        </div>
+      );
     } else if (kpi.type === 'expenses') {
       promise = expensesApi.list({ limit: 5 }).then(res => res.data?.expenses || []);
     } else if (kpi.type === 'lowStock') {
@@ -721,6 +748,7 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
     else if (['purchases', 'paid'].includes(kpi.type)) router.push('/dashboard/purchases');
     else if (kpi.type === 'expenses') router.push('/dashboard/expenses');
     else if (kpi.type === 'lowStock') router.push('/dashboard/inventory');
+    else if (kpi.type === 'cash' || kpi.type === 'bank') router.push('/dashboard/reports/accounts/cash-book');
   };
 
   const renderRow = (item: any, i: number) => {

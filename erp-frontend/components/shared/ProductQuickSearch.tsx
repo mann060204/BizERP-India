@@ -30,7 +30,7 @@ export default function ProductQuickSearch() {
       }
       setLoading(true);
       try {
-        const { data } = await productsApi.getAll({ search: query, limit: 5 });
+        const { data } = await productsApi.list({ search: query, limit: 5 });
         setResults(data.products || []);
         setIsOpen(true);
       } catch (e) {
