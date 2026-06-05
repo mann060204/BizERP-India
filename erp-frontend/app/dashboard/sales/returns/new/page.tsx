@@ -1040,15 +1040,7 @@ export default function NewSalesReturnPage() {
 
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-50">
-        <div className="flex gap-4">
-           <Bell className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-           <Calculator className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-           <Truck className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-           <Wallet className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-           <Hand className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-           <Search className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-           <RotateCcw className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-        </div>
+        <div className="flex gap-4"></div>
         
         <div className="text-xs font-mono text-slate-600">
           Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(2)}</span>

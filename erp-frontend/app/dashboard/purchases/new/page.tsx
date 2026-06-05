@@ -927,12 +927,7 @@ export default function NewPurchasePage() {
 
       {/* Bottom Toolbar */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-50">
-          <div className="flex gap-4">
-             <Bell className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-             <Calculator className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-             <Truck className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-             <Barcode className="w-5 h-5 text-slate-600 hover:text-slate-900 cursor-pointer" />
-          </div>
+          <div className="flex gap-4"></div>
           <div className="flex items-center gap-4">
             <button onClick={() => handleSave('received', true)} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-700 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
               <Printer className="w-4 h-4" /> Save and Print
