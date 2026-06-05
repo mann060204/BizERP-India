@@ -203,21 +203,29 @@ export default function DashboardPage() {
   const [pendingLoading, setPendingLoading] = useState(true);
 
   useEffect(() => {
+    
+
+    let baseCash = 0;
     businessApi.getProfile().then(res => {
       if (res.data.business?.name) setBusinessName(res.data.business.name);
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
-      // if (res.data.business?.cashInHand) setCashInHand(res.data.business.cashInHand);
-    }).catch(() => {});
-
-    accountsApi.list().then(res => {
-      const all = res.accounts || [];
-      const cash = all.find((a: any) => a.type === 'Cash' || a.name?.toLowerCase() === 'cash');
-      if (cash) {
-        setCashAccount(cash);
-        setCashInHand(cash.currentBalance || 0);
+      if (res.data.business?.cashInHand) baseCash = res.data.business.cashInHand;
+      
+      return api.get('/reports/accounts/cash-book');
+    }).then((res: any) => {
+      if (res && res.data && res.data.data) {
+        let dynCash = baseCash;
+        res.data.data.forEach((t: any) => {
+          dynCash += (t.debit || 0);
+          dynCash -= (t.credit || 0);
+        });
+        setCashInHand(dynCash);
+      } else {
+        setCashInHand(baseCash);
       }
-      setBanks([]); // user requested to hide bank cards
-    }).catch(() => {});
+    }).catch(() => {
+      setCashInHand(baseCash);
+    });
 
     Promise.all([
       dashboardApi.customerPending().catch(() => ({ data: [] })),
@@ -716,12 +724,11 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
     } else if (kpi.type === 'cash' || kpi.type === 'bank') {
       return (
         <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
-          <div><p className="font-semibold text-slate-800">{item.description}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
+          <div><p className="font-semibold text-slate-800">{item.particulars || item.description}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
           <div className="text-right">
             <p className={`font-bold ${item.credit > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
               {item.credit > 0 ? '-' : '+'}{fmtFull(item.credit > 0 ? item.credit : item.debit)}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bal: {fmtFull(item.closingBalance)}</p>
           </div>
         </div>
       );
