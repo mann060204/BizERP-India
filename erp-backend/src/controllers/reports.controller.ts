@@ -1885,7 +1885,7 @@ export const getDashboardCustomerPending = async (req: AuthRequest, res: Respons
     const customers = await Customer.find({ businessId, currentBalance: { $gt: 0 } })
       .select('name mobile currentBalance')
       .sort({ currentBalance: -1 })
-      .limit(50);
+      .limit(1000);
     sendSuccess(res, customers);
   } catch (e: any) { sendError(res, e.message); }
 };
@@ -1898,7 +1898,7 @@ export const getDashboardSupplierPending = async (req: AuthRequest, res: Respons
     const suppliers = await Supplier.find({ businessId, currentBalance: { $lt: 0 } })
       .select('name mobile currentBalance')
       .sort({ currentBalance: -1 })
-      .limit(50);
+      .limit(1000);
     sendSuccess(res, suppliers);
   } catch (e: any) { sendError(res, e.message); }
 };
