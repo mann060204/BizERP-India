@@ -17,7 +17,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   cancelled: { label: 'Cancelled',color: 'text-slate-600 bg-[#475569]/10', icon: XCircle },
 };
 
-export default function purchaseReturnsPage() {
+export default function PurchaseReturnsPage() {
   const [purchaseReturns, setpurchaseReturns] = useState<purchaseReturn[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
