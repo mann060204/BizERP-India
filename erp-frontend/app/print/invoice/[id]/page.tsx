@@ -228,11 +228,7 @@ export default function PrintableInvoicePage() {
             <p>Visit Again</p>
           </div>
 
-          {/* Non-print controls */}
-          <div className="print:hidden mt-8 flex flex-col gap-2 border-t pt-4">
-            <button onClick={() => window.print()} className="py-2 bg-action-500 text-white rounded font-bold">Print</button>
-            <button onClick={() => window.close()} className="py-2 bg-gray-200 text-black rounded font-bold">Close</button>
-          </div>
+
         </div>
       </div>
       </>
