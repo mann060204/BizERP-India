@@ -2,17 +2,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { formatAccountingBalance } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { customersApi, businessApi } from '../../../../../lib/erp-api';
 
-export default function PrintableCustomerLedger() {
+export default function PrintableLedger() {
   const { id } = useParams();
   const searchParams = useSearchParams();
   const fromDate = searchParams.get('from');
   const toDate = searchParams.get('to');
 
-  const [customer, setCustomer] = useState<any>(null);
+  const [account, setAccount] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,22 +19,18 @@ export default function PrintableCustomerLedger() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [bizRes, custRes, ledgerRes] = await Promise.all([
+        const [bizRes, accRes, ledgerRes] = await Promise.all([
           businessApi.getProfile(),
           customersApi.get(id as string),
           customersApi.getLedger(id as string)
         ]);
-
         setBusiness(bizRes.data.business);
-        setCustomer(custRes.data.customer || custRes.data);
+        setAccount(accRes.data.customer || accRes.data);
         setLedger(ledgerRes.data.ledger || []);
-        
-        // Auto print after rendering
         setTimeout(() => window.print(), 800);
       } catch (e: any) {
-        console.error('Fetch error:', e);
         toast.error(`Error: ${e.message}`);
-        setCustomer({ __error: e.message });
+        setAccount({ __error: e.message });
       } finally {
         setLoading(false);
       }
@@ -44,12 +39,10 @@ export default function PrintableCustomerLedger() {
   }, [id]);
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-white"><Loader2 className="w-12 h-12 animate-spin text-gray-400" /></div>;
-  if (customer?.__error) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Error: {customer.__error}</div>;
-  if (!customer || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Data not found</div>;
+  if (account?.__error) return <div className="p-10 text-center text-black font-bold bg-white min-h-screen">Error: {account.__error}</div>;
+  if (!account || !business) return <div className="p-10 text-center text-black font-bold bg-white min-h-screen">Data not found</div>;
 
-  // Process Ledger Data
   const sortedLedger = [...ledger].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
   const txnsBeforeFromDate = fromDate ? sortedLedger.filter(t => new Date(t.date) < new Date(fromDate)) : [];
   const displayTxns = sortedLedger.filter(t => {
     if (fromDate && new Date(t.date) < new Date(fromDate)) return false;
@@ -57,7 +50,13 @@ export default function PrintableCustomerLedger() {
     return true;
   });
 
-  let initialOpening = customer.balanceType === 'Credit' ? -Math.abs(customer.openingBalance) : Math.abs(customer.openingBalance);
+  // Calculate opening balance properly
+  // For supplier, typically credit is positive representation in some places, but in our backend balance = Dr - Cr.
+  // So opening balance is:
+  let initialOpening = account.balanceType === 'Credit' 
+    ? -Math.abs(account.openingBalance) 
+    : Math.abs(account.openingBalance);
+
   const priorDr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.debit || 0), 0);
   const priorCr = txnsBeforeFromDate.reduce((acc, t) => acc + (t.credit || 0), 0);
   
@@ -66,82 +65,92 @@ export default function PrintableCustomerLedger() {
   let periodDr = 0;
   let periodCr = 0;
 
-  const formatBal = (b: number) => {
-    return formatAccountingBalance(b, 'customer').text;
-  };
-
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${d.getDate()}-${months[d.getMonth()]}-${d.getFullYear().toString().slice(-2)}`;
   };
 
-  const dateRangeStr = `${fromDate ? formatDate(fromDate) : 'Start'} to ${toDate ? formatDate(toDate) : formatDate(new Date().toISOString())}`;
+  const formatAmount = (num: number) => {
+    if (!num || num === 0) return '';
+    return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+  };
+
+  const formatBal = (b: number) => {
+    if (b === 0) return '';
+    return `${formatAmount(Math.abs(b))} ${b > 0 ? 'Dr' : 'Cr'}`;
+  };
+
+  const dateRangeStr = `${fromDate ? formatDate(fromDate) : '1-Apr-' + (new Date().getFullYear()-1).toString().slice(-2)} to ${toDate ? formatDate(toDate) : formatDate(new Date().toISOString())}`;
 
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { size: A4; margin: 15mm; }
+          @page { size: A4; margin: 10mm; }
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white; }
-          .print-container { box-shadow: none !important; border: none !important; }
+          .print-container { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important;}
         }
+        .tally-font { font-family: 'Arial', sans-serif; font-size: 12px; color: #000; }
+        .tally-table th { border-bottom: 1px solid #000; border-top: 1px solid #000; font-weight: normal; padding: 4px 2px; }
+        .tally-table td { padding: 3px 2px; }
+        .tally-border-top { border-top: 1px solid #000; }
+        .tally-border-bottom { border-bottom: 1px solid #000; }
+        .tally-border-double { border-bottom: 3px double #000; }
       `}} />
       
       <div className="print:hidden fixed top-0 left-0 right-0 bg-slate-800 text-white p-3 flex justify-between items-center z-50 shadow-md">
-        <span className="text-sm font-medium">{customer.name} - Ledger Account</span>
-        <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print / Download PDF</button>
+        <span className="text-sm font-medium">{account.name} - Ledger</span>
+        <button onClick={() => window.print()} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-bold shadow transition">Print</button>
       </div>
 
-      <div className="bg-gray-100 min-h-screen text-black print:bg-white p-8 pt-20 font-sans flex justify-center text-[12px] leading-tight">
-        <div className="print-container w-[210mm] bg-white shadow-xl p-8 print:p-0 box-border text-black font-sans">
+      <div className="bg-gray-100 min-h-screen text-black print:bg-white p-8 pt-20 flex justify-center tally-font">
+        <div className="print-container w-[210mm] bg-white shadow-xl p-8 box-border">
           
-          {/* Header */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             <h1 className="text-lg font-bold uppercase">{business.businessName || business.name}</h1>
-            <p>{business.address?.street}</p>
-            <p>{business.address?.city}, {business.address?.state} {business.gstin?.length >= 2 ? `(${business.gstin.substring(0, 2)})` : ''}</p>
-            {business.email && <p>E-Mail : {business.email}</p>}
+            <div>{business.address?.street}</div>
+            <div>{business.address?.city}, {business.address?.state} {business.gstin?.length >= 2 ? `(${business.gstin.substring(0, 2)})` : ''}</div>
+            {business.email && <div>E-Mail : {business.email}</div>}
             
-            <h2 className="text-base font-bold mt-4">{customer.name}</h2>
-            <h3 className="text-sm font-semibold">Ledger Account</h3>
-            <p>{customer.billingAddress?.street}</p>
-            <p>{customer.billingAddress?.city}, {customer.billingAddress?.state} {customer.gstin?.length >= 2 ? `(${customer.gstin.substring(0, 2)})` : ''}, {customer.billingAddress?.pinCode}</p>
+            <h2 className="text-[15px] font-bold mt-4">{account.name}</h2>
+            <div className="text-xs">Ledger Account</div>
+            <div>{account.billingAddress?.street}</div>
+            <div>{account.billingAddress?.city}, {account.billingAddress?.state} {account.gstin?.length >= 2 ? `(${account.gstin.substring(0, 2)})` : ''}, {account.billingAddress?.pinCode}</div>
 
-            <p className="mt-4 text-sm">{dateRangeStr}</p>
+            <div className="mt-2 text-[11px]">{dateRangeStr}</div>
           </div>
 
-          <div className="text-right mb-1">
-            <span className="italic">Page 1</span>
+          <div className="flex justify-end mb-1 text-[10px]">
+            <span>Page 1</span>
           </div>
 
-          {/* Ledger Table */}
-          <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse tally-table">
             <thead>
-              <tr className="border-y-2 border-black font-bold">
-                <th className="py-2 pl-2 w-[12%]">Date</th>
-                <th className="py-2 w-[35%]">Particulars</th>
-                <th className="py-2 w-[15%]">Vch Type</th>
-                <th className="py-2 w-[10%]">Vch No.</th>
-                <th className="py-2 text-right w-[10%]">Debit</th>
-                <th className="py-2 text-right w-[10%]">Credit</th>
-                <th className="py-2 text-right pr-2 w-[15%]">Balance</th>
+              <tr>
+                <th className="w-[12%] pl-1">Date</th>
+                <th className="w-[33%]">Particulars</th>
+                <th className="w-[15%]">Vch Type</th>
+                <th className="w-[10%]">Vch No.</th>
+                <th className="w-[10%] text-right">Debit</th>
+                <th className="w-[10%] text-right">Credit</th>
+                <th className="w-[10%] text-right pr-1">Balance</th>
               </tr>
             </thead>
             <tbody>
               {/* Opening Balance */}
-              <tr className="font-bold">
-                <td className="py-1 pl-2">{fromDate ? formatDate(fromDate) : ''}</td>
-                <td className="py-1">Opening Balance</td>
-                <td className="py-1"></td>
-                <td className="py-1"></td>
-                <td className="py-1 text-right">{currentBal > 0 ? currentBal.toFixed(2) : ''}</td>
-                <td className="py-1 text-right">{currentBal < 0 ? Math.abs(currentBal).toFixed(2) : ''}</td>
-                <td className="py-1 text-right pr-2"></td>
+              <tr>
+                <td className="pl-1">{fromDate ? formatDate(fromDate) : '1-Apr-' + (new Date().getFullYear()-1).toString().slice(-2)}</td>
+                <td className="font-bold">
+                  <span className="font-normal inline-block w-6">{startBal >= 0 ? 'Dr' : 'Cr'}</span> Opening Balance
+                </td>
+                <td></td>
+                <td></td>
+                <td className="text-right font-bold">{startBal > 0 ? formatAmount(startBal) : ''}</td>
+                <td className="text-right font-bold">{startBal < 0 ? formatAmount(Math.abs(startBal)) : ''}</td>
+                <td className="text-right pr-1">{formatBal(startBal)}</td>
               </tr>
 
-              {/* Transactions */}
               {displayTxns.map((txn, idx) => {
                 currentBal = currentBal + (txn.debit || 0) - (txn.credit || 0);
                 periodDr += (txn.debit || 0);
@@ -150,60 +159,68 @@ export default function PrintableCustomerLedger() {
                 let vchType = txn.referenceType || 'Journal';
                 if (txn.referenceType === 'Invoice') vchType = 'Sales';
                 else if (txn.referenceType === 'Payment') vchType = 'Receipt';
+                else if (txn.referenceType === 'PurchaseBill') vchType = 'Purchase';
+
+                const isDebitTxn = (txn.debit || 0) > 0;
+                const prefix = isDebitTxn ? 'Cr' : 'Dr';
 
                 return (
                   <tr key={txn._id || idx} className="align-top">
-                    <td className="py-1 pl-2">{formatDate(txn.date)}</td>
-                    <td className="py-1 pr-2">{txn.description}</td>
-                    <td className="py-1">{vchType}</td>
-                    <td className="py-1">{txn.referenceId || ''}</td>
-                    <td className="py-1 text-right">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
-                    <td className="py-1 text-right">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
-                    <td className="py-1 text-right pr-2">{formatBal(currentBal)}</td>
+                    <td className="pl-1">{formatDate(txn.date)}</td>
+                    <td>
+                      <span className="inline-block w-6">{prefix}</span> {txn.description || (isDebitTxn ? 'Sale' : 'Bank A/c')}
+                    </td>
+                    <td>{vchType}</td>
+                    <td>{txn.referenceId?.substring(0, 8) || ''}</td>
+                    <td className="text-right">{txn.debit > 0 ? formatAmount(txn.debit) : ''}</td>
+                    <td className="text-right">{txn.credit > 0 ? formatAmount(txn.credit) : ''}</td>
+                    <td className="text-right pr-1">{formatBal(currentBal)}</td>
                   </tr>
                 );
               })}
               
-              {/* Totals Underline */}
               <tr>
-                <td colSpan={7} className="border-t border-black pt-1"></td>
+                <td colSpan={4} className="tally-border-top"></td>
+                <td className="tally-border-top text-right">{formatAmount(periodDr)}</td>
+                <td className="tally-border-top text-right">{formatAmount(periodCr)}</td>
+                <td className="tally-border-top text-right pr-1"></td>
               </tr>
 
-              {/* Subtotal */}
-              <tr className="font-bold">
+              {/* Subtotal Row */}
+              <tr>
+                <td className="pl-1"></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td className="py-1 text-right">{periodDr.toFixed(2)}</td>
-                <td className="py-1 text-right">{periodCr.toFixed(2)}</td>
-                <td></td>
+                <td className="text-right font-bold">{formatAmount(periodDr + (startBal > 0 ? startBal : 0))}</td>
+                <td className="text-right font-bold">{formatAmount(periodCr + (startBal < 0 ? Math.abs(startBal) : 0))}</td>
+                <td className="text-right pr-1"></td>
               </tr>
 
-              {/* Closing Balance / Totals */}
-              <tr className="font-bold border-b border-black">
-                <td className="py-1 pl-2"></td>
-                <td className="py-1 text-right pr-4 font-bold">{<span className={formatAccountingBalance(currentBal, 'customer').colorClass}>{formatAccountingBalance(currentBal, 'customer').isDebit ? 'Dr' : 'Cr'}</span>}</td>
-                <td className="py-1" colSpan={2}>Closing Balance</td>
-                <td className="py-1 text-right">{currentBal < 0 ? Math.abs(currentBal).toFixed(2) : ''}</td>
-                <td className="py-1 text-right">{currentBal >= 0 ? currentBal.toFixed(2) : ''}</td>
-                <td className="py-1"></td>
+              {/* Closing Balance row */}
+              <tr className="tally-border-bottom">
+                <td className="pl-1 font-bold">{currentBal > 0 ? 'Dr' : (currentBal < 0 ? 'Cr' : '')}</td>
+                <td className="font-bold">Closing Balance</td>
+                <td></td>
+                <td></td>
+                <td className="text-right font-bold">{currentBal < 0 ? formatAmount(Math.abs(currentBal)) : ''}</td>
+                <td className="text-right font-bold">{currentBal > 0 ? formatAmount(currentBal) : ''}</td>
+                <td className="text-right pr-1"></td>
               </tr>
-              
-              {/* Grand Total */}
-              <tr className="font-bold border-b-2 border-black">
+
+              {/* Final Totals */}
+              <tr className="tally-border-double font-bold">
                 <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td className="py-1 text-right">{(periodDr + (startBal > 0 ? startBal : 0) + (currentBal < 0 ? Math.abs(currentBal) : 0)).toFixed(2)}</td>
-                <td className="py-1 text-right">{(periodCr + (startBal < 0 ? Math.abs(startBal) : 0) + (currentBal >= 0 ? currentBal : 0)).toFixed(2)}</td>
-                <td></td>
+                <td className="text-right">{formatAmount(periodDr + (startBal > 0 ? startBal : 0) + (currentBal < 0 ? Math.abs(currentBal) : 0))}</td>
+                <td className="text-right">{formatAmount(periodCr + (startBal < 0 ? Math.abs(startBal) : 0) + (currentBal > 0 ? currentBal : 0))}</td>
+                <td className="text-right pr-1"></td>
               </tr>
 
             </tbody>
           </table>
-          </div>
         </div>
       </div>
     </>
