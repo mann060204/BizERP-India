@@ -33,6 +33,25 @@ export const getSupplier = async (req: AuthRequest, res: Response): Promise<void
 // POST /api/v1/suppliers
 export const createSupplier = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { name, mobile } = req.body;
+    
+    const orConditions: any[] = [];
+    if (name) orConditions.push({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    if (mobile && mobile.trim() !== '') orConditions.push({ mobile: mobile.trim() });
+    
+    if (orConditions.length > 0) {
+      const existing = await Supplier.findOne({
+        businessId: req.user!.businessId,
+        isActive: true,
+        $or: orConditions
+      });
+      
+      if (existing) {
+        res.status(400).json({ message: 'A supplier with this Name or Mobile No. already exists.' });
+        return;
+      }
+    }
+
     const supplier = await Supplier.create({ ...req.body, businessId: req.user!.businessId });
     await AccountingService.updateSupplierBalance(supplier._id, supplier.businessId.toString());
     res.status(201).json({ message: 'Supplier created', supplier });
@@ -42,6 +61,26 @@ export const createSupplier = async (req: AuthRequest, res: Response): Promise<v
 // PUT /api/v1/suppliers/:id
 export const updateSupplier = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { name, mobile } = req.body;
+    
+    const orConditions: any[] = [];
+    if (name) orConditions.push({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+    if (mobile && mobile.trim() !== '') orConditions.push({ mobile: mobile.trim() });
+    
+    if (orConditions.length > 0) {
+      const existing = await Supplier.findOne({
+        _id: { $ne: req.params['id'] },
+        businessId: req.user!.businessId,
+        isActive: true,
+        $or: orConditions
+      });
+      
+      if (existing) {
+        res.status(400).json({ message: 'Another supplier with this Name or Mobile No. already exists.' });
+        return;
+      }
+    }
+
     const supplier = await Supplier.findOneAndUpdate(
       { _id: req.params['id'], businessId: req.user!.businessId },
       req.body,
