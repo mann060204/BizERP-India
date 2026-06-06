@@ -268,6 +268,12 @@ export default function EditPurchasePage() {
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
 
+  const editItem = (idx: number) => {
+    setItemInput(lineItems[idx]);
+    setItemSearch(lineItems[idx].productName);
+    setLineItems(lineItems.filter((_, i) => i !== idx));
+  };
+
   const totalTaxableAmount = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
 
   let shipCGST = 0;
@@ -642,7 +648,10 @@ export default function EditPurchasePage() {
                     <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} border-r border-slate-100 px-2 py-1.5 text-right font-medium flex items-center justify-end`}>
                       ₹{item.totalAmount.toFixed(2)}
                     </div>
-                    <div className="col-span-1 px-2 py-1.5 flex items-center justify-center">
+                    <div className="col-span-1 px-2 py-1.5 flex items-center justify-center gap-1">
+                      <button onClick={() => editItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-blue-400 hover:text-blue-500 transition">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
