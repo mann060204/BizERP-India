@@ -33,7 +33,7 @@ export default function BankMasterPage() {
     setLoading(true);
     try {
       const res = await banksApi.list();
-      setBanks(res.data || []);
+      setBanks(res.data?.data || res.data || []);
     } catch (error) {
       toast.error('Failed to load banks');
     } finally {

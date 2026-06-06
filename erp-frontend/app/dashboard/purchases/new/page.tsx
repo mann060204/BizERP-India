@@ -143,7 +143,7 @@ export default function NewPurchasePage() {
           }
         }
         setProducts(pRes.data.products);
-        setBanks(banksRes.data || []);
+        setBanks(banksRes.data?.data || banksRes.data || []);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) {
           setUnits(bizUnits);

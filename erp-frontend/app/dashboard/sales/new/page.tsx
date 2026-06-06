@@ -95,7 +95,7 @@ export default function NewInvoicePage() {
   const [banks, setBanks] = useState<any[]>([]);
 
   useEffect(() => {
-    banksApi.list().then(res => setBanks(res.data || []));
+    banksApi.list().then(res => setBanks(res.data?.data || res.data || []));
   }, []);
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');

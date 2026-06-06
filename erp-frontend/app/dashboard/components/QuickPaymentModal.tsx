@@ -49,7 +49,7 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
       setLoadingBanks(true);
       try {
         const res = await banksApi.list();
-        setBanks(res.data || []);
+        setBanks(res.data?.data || res.data || []);
       } catch (err) {
         toast.error('Failed to load banks');
       } finally {
