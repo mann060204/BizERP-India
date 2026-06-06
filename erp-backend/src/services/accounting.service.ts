@@ -99,7 +99,21 @@ export class AccountingService {
     });
 
     // 2. If payment was received instantly, Credit Customer
-    if (invoice.amountReceived > 0) {
+    if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {
+      for (const payment of invoice.paymentHistory) {
+        await AccountLedger.create({
+          businessId: invoice.businessId,
+          customerId: invoice.customerId,
+          date: payment.date || invoice.invoiceDate || new Date(),
+          description: `Payment Received (Inv #${invoice.invoiceNumber}) - ${payment.mode} ${payment.txnId ? '(Txn: ' + payment.txnId + ')' : ''}`,
+          debit: 0,
+          credit: payment.amount,
+          referenceType: 'Payment',
+          referenceId: invoice._id.toString()
+        });
+        await this.updateCashOrBankBalance(invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, true);
+      }
+    } else if (invoice.amountReceived > 0) {
       await AccountLedger.create({
         businessId: invoice.businessId,
         customerId: invoice.customerId,
@@ -128,7 +142,11 @@ export class AccountingService {
     });
     
     // Reverse Cash/Bank
-    if (invoice.amountReceived > 0) {
+    if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {
+      for (const payment of invoice.paymentHistory) {
+        await this.updateCashOrBankBalance(invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, false);
+      }
+    } else if (invoice.amountReceived > 0) {
       await this.updateCashOrBankBalance(invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, false);
     }
     

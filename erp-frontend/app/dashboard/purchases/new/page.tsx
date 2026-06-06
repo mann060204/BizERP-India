@@ -107,7 +107,7 @@ export default function NewPurchasePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sRes, pRes, bRes] = await Promise.all([
+        const [sRes, pRes, bRes, banksRes] = await Promise.all([
           suppliersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
           businessApi.getProfile(),
@@ -141,7 +141,7 @@ export default function NewPurchasePage() {
           }
         }
         setProducts(pRes.data.products);
-        setBanks(bRes.data || []);
+        setBanks(banksRes.data || []);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) {
           setUnits(bizUnits);
@@ -709,7 +709,7 @@ export default function NewPurchasePage() {
                     {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode) && (
                       <select value={paymentBankId} onChange={e => setPaymentBankId(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                         <option value="">-- Select Bank --</option>
-                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName}</option>)}
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
                       </select>
                     )}
                     <div className="relative">

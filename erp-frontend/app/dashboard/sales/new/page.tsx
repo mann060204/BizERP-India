@@ -1000,7 +1000,7 @@ export default function NewInvoicePage() {
                   {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode1) && (
                     <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                       <option value="">-- Select Bank --</option>
-                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName}</option>)}
+                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
                     </select>
                   )}
                   <div className="relative">
@@ -1022,7 +1022,7 @@ export default function NewInvoicePage() {
                   {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode2) && (
                     <select value={bankId2} onChange={e => setBankId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                       <option value="">-- Select Bank --</option>
-                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName}</option>)}
+                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
                     </select>
                   )}
                   <div className="relative">
