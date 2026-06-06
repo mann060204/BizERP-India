@@ -7,7 +7,7 @@ import { formatAccountingBalance } from '../../../../lib/utils';
 import { Plus, Search, Landmark, ArrowRightLeft, Loader2, X, Download, Filter, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; isDefaultUpi?: boolean; isDefaultNeft?: boolean; }
+interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; }
 interface LedgerEntry { _id: string; date: string; description: string; debit: number; credit: number; referenceType: string; closingBalance?: number; }
 
 export default function AccountsPage() {
@@ -92,13 +92,10 @@ export default function AccountsPage() {
   const [accNo, setAccNo] = useState('');
   const [openingBal, setOpeningBal] = useState('');
   const [balType, setBalType] = useState('Dr');
-  const [isDefaultUpi, setIsDefaultUpi] = useState(false);
-  const [isDefaultNeft, setIsDefaultNeft] = useState(false);
 
   const handleOpenAddAccount = () => {
     setEditAccountId(null);
     setAccName(''); setBankName(''); setAccNo(''); setOpeningBal(''); setBalType('Dr');
-    setIsDefaultUpi(false); setIsDefaultNeft(false);
     setShowAddAccount(true);
   };
 
@@ -110,8 +107,6 @@ export default function AccountsPage() {
     setAccNo(selectedAccount.accountNumber || '');
     setOpeningBal(selectedAccount.openingBalance?.toString() || '');
     setBalType(selectedAccount.balanceType || 'Dr');
-    setIsDefaultUpi(selectedAccount.isDefaultUpi || false);
-    setIsDefaultNeft(selectedAccount.isDefaultNeft || false);
     setShowAddAccount(true);
   };
 
@@ -143,9 +138,7 @@ export default function AccountsPage() {
         type: type,
         accountNumber: accNo,
         openingBalance: openingBal || 0,
-        balanceType: balType,
-        isDefaultUpi,
-        isDefaultNeft
+        balanceType: balType
       };
 
       if (editAccountId) {
@@ -276,11 +269,7 @@ export default function AccountsPage() {
                       onClick={() => { setSelectedAccount(acc); setFromDate(''); setToDate(''); }}
                       className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition ${selectedAccount?._id === acc._id ? 'bg-blue-50/50 border-l-4 border-action-500' : 'border-l-4 border-transparent'}`}
                     >
-                      <div className="font-semibold text-slate-900 text-sm truncate flex items-center gap-2">
-                        {acc.name}
-                        {acc.isDefaultUpi && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 uppercase">UPI</span>}
-                        {acc.isDefaultNeft && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-700 uppercase">NEFT</span>}
-                      </div>
+                      <div className="font-semibold text-slate-900 text-sm truncate">{acc.name}</div>
                       {acc.accountNumber && <div className="text-xs text-slate-500 mt-0.5">A/c No: {acc.accountNumber}</div>}
                     </button>
                   ))}
@@ -457,20 +446,6 @@ export default function AccountsPage() {
                   </select>
                 </div>
               </div>
-              
-              {type === 'Bank' && (
-                <div className="flex gap-4 pt-2 border-t border-slate-100">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={isDefaultUpi} onChange={e => setIsDefaultUpi(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
-                    <span className="text-sm font-semibold text-slate-700">Default for UPI</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={isDefaultNeft} onChange={e => setIsDefaultNeft(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
-                    <span className="text-sm font-semibold text-slate-700">Default for NEFT/Bank Transfer</span>
-                  </label>
-                </div>
-              )}
-              
               <div className="pt-2">
                 <button type="submit" className="w-full py-2.5 bg-action-500 hover:bg-action-600 text-white font-semibold rounded-xl transition shadow-lg shadow-action-500/30">Save Account</button>
               </div>
