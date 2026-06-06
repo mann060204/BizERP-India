@@ -188,6 +188,20 @@ export default function NewInvoicePage() {
     fetchData();
   }, []);
 
+  // Auto-calculate Due Date based on Payment Terms
+  useEffect(() => {
+    if (!invoiceDate || !paymentTerms) return;
+    const match = paymentTerms.match(/\d+/);
+    if (match) {
+      const days = parseInt(match[0], 10);
+      const d = new Date(invoiceDate);
+      d.setDate(d.getDate() + days);
+      setDueDate(d.toISOString().split('T')[0]);
+    } else if (paymentTerms.toLowerCase() === 'due on receipt' || paymentTerms.toLowerCase().includes('cash')) {
+      setDueDate(invoiceDate);
+    }
+  }, [paymentTerms, invoiceDate]);
+
   const applyDiscountScheme = (schemeId: string) => {
     setSelectedSchemeId(schemeId);
     if (!schemeId) {

@@ -162,6 +162,20 @@ export default function NewPurchasePage() {
     fetchData();
   }, []);
 
+  // Auto-calculate Due Date based on Payment Terms
+  useEffect(() => {
+    if (!billDate || !paymentTerms) return;
+    const match = paymentTerms.match(/\d+/);
+    if (match) {
+      const days = parseInt(match[0], 10);
+      const d = new Date(billDate);
+      d.setDate(d.getDate() + days);
+      setDueDate(d.toISOString().split('T')[0]);
+    } else if (paymentTerms.toLowerCase() === 'due on receipt' || paymentTerms.toLowerCase().includes('cash')) {
+      setDueDate(billDate);
+    }
+  }, [paymentTerms, billDate]);
+
   const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
 
@@ -707,9 +721,16 @@ export default function NewPurchasePage() {
                   </div>
                 )}
                 <div className="mt-2">
-                  <label className="erp-label block mb-1">Shipping Charge</label>
+                  <label className="erp-label block mb-1">Shipping Charge & GST</label>
                   <div className="flex gap-1">
-                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="Amount" />
+                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
+                    <select value={shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value))} className="erp-input w-1/3">
+                      <option value="0">0%</option>
+                      <option value="5">5%</option>
+                      <option value="12">12%</option>
+                      <option value="18">18%</option>
+                      <option value="28">28%</option>
+                    </select>
                   </div>
                 </div>
              </div>
