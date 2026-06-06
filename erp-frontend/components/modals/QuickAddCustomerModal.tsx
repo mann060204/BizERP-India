@@ -4,11 +4,11 @@ import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, VideoOff } from '
 import toast from 'react-hot-toast';
 const INDIAN_STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
-export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: () => void; onAdded: (customer: any) => void; }) {
+export default function QuickAddCustomerModal({ onClose, onAdded, initialData }: { onClose: () => void; onAdded: (customer: any) => void; initialData?: any; }) {
   const [saving, setSaving] = useState(false);
 
   // --- Photo State ---
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<string | null>(initialData?.photo || null);
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
@@ -86,16 +86,35 @@ const COUNTRY_CODES: Record<string, string> = {
 };
 
   const [form, setForm] = useState({
-    name: '', billingAddress: '', city: '', state: '', pinCode: '', country: 'India',
-    email: '', phoneNo: '', mobile: '', mobileCode: '+91',
-    contactPersonName: '', contactPersonNumber: '', contactPersonCode: '+91',
-    panNo: '', gstin: '', gstType: 'Unregistered', tradeName: '',
-    balanceType: 'Debit', openingBalance: 0,
-    documentType: '', documentNo: '',
-    dobApplicable: false, dob: '',
-    anniversaryApplicable: false, anniversary: '',
-    creditAllowed: false, creditLimit: 0,
-    priceCategory: 'Retail', remark: ''
+    name: initialData?.name || '', 
+    billingAddress: initialData?.billingAddress?.street || (typeof initialData?.billingAddress === 'string' ? initialData.billingAddress : ''), 
+    city: initialData?.billingAddress?.city || '', 
+    state: initialData?.billingAddress?.state || '', 
+    pinCode: initialData?.billingAddress?.pinCode || '', 
+    country: initialData?.billingAddress?.country || 'India',
+    email: initialData?.email || '', 
+    phoneNo: initialData?.phoneNo || '', 
+    mobile: initialData?.mobile || '', 
+    mobileCode: initialData?.mobileCode || '+91',
+    contactPersonName: initialData?.contactPerson || '', 
+    contactPersonNumber: initialData?.contactPersonNumber || '', 
+    contactPersonCode: initialData?.contactPersonCode || '+91',
+    panNo: initialData?.panNo || '', 
+    gstin: initialData?.gstin || '', 
+    gstType: initialData?.gstType || 'Unregistered', 
+    tradeName: initialData?.tradeName || '',
+    balanceType: initialData ? (initialData.openingBalance >= 0 ? 'Debit' : 'Credit') : 'Debit', 
+    openingBalance: initialData ? Math.abs(initialData.openingBalance || 0) : 0,
+    documentType: initialData?.documentType || '', 
+    documentNo: initialData?.documentNo || '',
+    dobApplicable: !!initialData?.dob, 
+    dob: initialData?.dob || '',
+    anniversaryApplicable: !!initialData?.anniversary, 
+    anniversary: initialData?.anniversary || '',
+    creditAllowed: initialData?.creditAllowed || false, 
+    creditLimit: initialData?.creditLimit || 0,
+    priceCategory: initialData?.priceCategory || 'Retail', 
+    remark: initialData?.remark || ''
   });
 
   const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -140,9 +159,18 @@ const COUNTRY_CODES: Record<string, string> = {
         remark: form.remark,
         photo: photo || undefined,
       };
-      const { data } = await customersApi.create(payload);
-      toast.success('Customer Information Saved!');
-      onAdded(data.customer);
+      
+      let resData;
+      if (initialData?._id) {
+        const { data } = await customersApi.update(initialData._id, payload);
+        resData = data;
+        toast.success('Customer Information Updated!');
+      } else {
+        const { data } = await customersApi.create(payload);
+        resData = data;
+        toast.success('Customer Information Saved!');
+      }
+      onAdded(resData.customer);
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save customer');
     } finally {
@@ -155,7 +183,7 @@ const COUNTRY_CODES: Record<string, string> = {
       <div className="bg-[#F1F5F9] border border-slate-200 rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0 bg-white rounded-t-2xl">
           <div>
-            <h3 className="text-slate-900 font-bold text-lg">Add New Customer</h3>
+            <h3 className="text-slate-900 font-bold text-lg">{initialData ? 'Edit Customer' : 'Add New Customer'}</h3>
             <p className="text-xs text-slate-600 mt-0.5">Fill in the customer details below</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-[#F1F5F9] text-slate-600 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>

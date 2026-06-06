@@ -56,6 +56,7 @@ export default function NewInvoicePage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
+  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
   const [isInterState, setIsInterState] = useState(false);
   const [useShippingAddress, setUseShippingAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
@@ -523,9 +524,14 @@ export default function NewInvoicePage() {
               <div className="flex justify-between items-center mb-1">
                  <label className="erp-label !mb-0 flex items-center gap-1.5">
                    Customer <span className="text-red-500">*</span>
-                   <button onClick={() => setShowQuickAddCustomerModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-0.5 rounded transition" title="Add Customer">
+                   <button onClick={() => { setCustomerToEdit(null); setShowQuickAddCustomerModal(true); }} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-0.5 rounded transition" title="Add Customer">
                      <UserPlus className="w-3.5 h-3.5" />
                    </button>
+                   {selectedCustomer && (
+                     <button onClick={() => { setCustomerToEdit(selectedCustomer); setShowQuickAddCustomerModal(true); }} className="text-blue-500 hover:text-blue-400 bg-blue-500/10 p-0.5 rounded transition" title="Edit Customer">
+                       <Pencil className="w-3.5 h-3.5" />
+                     </button>
+                   )}
                  </label>
                  {selectedCustomer && (() => {
                     const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
@@ -562,14 +568,6 @@ export default function NewInvoicePage() {
             <div>
               <label className="erp-label">Contact No.</label>
               <input value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
-            </div>
-            <div>
-              <label className="erp-label">Contact Person</label>
-              <input value={contactPersonName} onChange={e => setContactPersonName(e.target.value)} className="erp-input w-full" />
-            </div>
-            <div>
-              <label className="erp-label">Person No.</label>
-              <input value={contactPersonNumber} onChange={e => setContactPersonNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div className="col-span-2">
               <label className="erp-label">Address</label>
@@ -1130,10 +1128,15 @@ export default function NewInvoicePage() {
       {/* Quick Add Customer Modal */}
       {showQuickAddCustomerModal && (
         <QuickAddCustomerModal 
+          initialData={customerToEdit}
           onClose={() => setShowQuickAddCustomerModal(false)}
           onAdded={(newCustomer) => {
             setShowQuickAddCustomerModal(false);
-            setCustomers([...customers, newCustomer]);
+            if (customerToEdit) {
+              setCustomers(customers.map(c => c._id === newCustomer._id ? newCustomer : c));
+            } else {
+              setCustomers([...customers, newCustomer]);
+            }
             pickCustomer(newCustomer);
           }}
         />
