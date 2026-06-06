@@ -393,8 +393,8 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
     // Only process payment if an actual payment was made
     if (paymentAmount !== undefined && Number(paymentAmount) > 0) {
       const pAmt = Number(paymentAmount);
-      purchase.amountPaid = (purchase.amountPaid || 0) + pAmt;
-      purchase.balance = purchase.grandTotal - purchase.amountPaid;
+      purchase.amountPaid = Math.round(((purchase.amountPaid || 0) + pAmt) * 100) / 100;
+      purchase.balance = Math.round((purchase.grandTotal - purchase.amountPaid) * 100) / 100;
       if (paymentMode) purchase.paymentMode = paymentMode;
       if (purchase.amountPaid >= purchase.grandTotal) purchase.status = 'paid';
       else if (purchase.amountPaid > 0) purchase.status = 'partial';
@@ -412,8 +412,8 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
       );
     } else if (amountPaid !== undefined) {
       // Fallback for simple status updates without specific payment details
-      purchase.amountPaid = Number(amountPaid);
-      purchase.balance = purchase.grandTotal - purchase.amountPaid;
+      purchase.amountPaid = Math.round(Number(amountPaid) * 100) / 100;
+      purchase.balance = Math.round((purchase.grandTotal - purchase.amountPaid) * 100) / 100;
       if (paymentMode) purchase.paymentMode = paymentMode;
       if (purchase.amountPaid >= purchase.grandTotal) purchase.status = 'paid';
       else if (purchase.amountPaid > 0) purchase.status = 'partial';
