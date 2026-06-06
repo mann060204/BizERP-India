@@ -143,7 +143,8 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       customerId, customerSnapshot, placeOfSupply, isInterState,
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceType, shippingAddress,
-      txnId, deliveryTerms, deliveryRemarks, paymentHistory
+      txnId, deliveryTerms, deliveryRemarks, paymentHistory,
+      discountAmount, roundOff
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -157,8 +158,10 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType === 'NON-GST');
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
-    totals.grandTotal += shipping;
-    const balance = totals.grandTotal - received;
+    const dAmount = Number(discountAmount) || 0;
+    const rOff = Number(roundOff) || 0;
+    totals.grandTotal = Math.round((totals.grandTotal - dAmount + shipping + rOff) * 100) / 100;
+    const balance = Math.round((totals.grandTotal - received) * 100) / 100;
 
     // Deduct stock for product items
     for (const item of lineItems) {
@@ -211,8 +214,10 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       totalIGST: totals.totalIGST,
       totalGST: totals.totalGST,
       grandTotal: totals.grandTotal,
+      discountAmount: dAmount,
       amountReceived: received,
       shippingCharge: shipping,
+      roundOff: rOff,
       balance,
       paymentMode: paymentMode || 'Cash',
       paymentHistory: paymentHistory || [],
@@ -241,7 +246,8 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
       customerId, customerSnapshot, placeOfSupply, isInterState,
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceDate, invoiceType,
-      txnId, deliveryTerms, deliveryRemarks, paymentHistory
+      txnId, deliveryTerms, deliveryRemarks, paymentHistory,
+      discountAmount, roundOff
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -272,8 +278,10 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType === 'NON-GST');
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
-    totals.grandTotal += shipping;
-    const balance = totals.grandTotal - received;
+    const dAmount = Number(discountAmount) || 0;
+    const rOff = Number(roundOff) || 0;
+    totals.grandTotal = Math.round((totals.grandTotal - dAmount + shipping + rOff) * 100) / 100;
+    const balance = Math.round((totals.grandTotal - received) * 100) / 100;
 
     // Apply new stock deductions
     for (const item of lineItems) {
@@ -318,8 +326,10 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
         totalIGST: totals.totalIGST,
         totalGST: totals.totalGST,
         grandTotal: totals.grandTotal,
+        discountAmount: dAmount,
         amountReceived: received,
         shippingCharge: shipping,
+        roundOff: rOff,
         balance,
         paymentMode: paymentMode || existingInvoice.paymentMode,
         paymentHistory: paymentHistory || existingInvoice.paymentHistory,

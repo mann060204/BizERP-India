@@ -37,6 +37,7 @@ export interface IInvoice extends Document {
   lineItems: ILineItem[];
   subtotal: number;
   totalDiscount: number;
+  discountAmount?: number;
   totalTaxableAmount: number;
   totalCGST: number;
   totalSGST: number;
@@ -47,6 +48,7 @@ export interface IInvoice extends Document {
   shippingCharge: number;
   shippingGstRate: number;
   balance: number;
+  roundOff?: number;
   paymentMode: string;
   status: 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
   notes?: string;
@@ -116,6 +118,7 @@ const InvoiceSchema = new Schema<IInvoice>(
     lineItems: [LineItemSchema],
     subtotal: { type: Number, default: 0 },
     totalDiscount: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
     totalTaxableAmount: { type: Number, default: 0 },
     totalCGST: { type: Number, default: 0 },
     totalSGST: { type: Number, default: 0 },
@@ -126,6 +129,7 @@ const InvoiceSchema = new Schema<IInvoice>(
     shippingCharge: { type: Number, default: 0 },
     shippingGstRate: { type: Number, default: 0 },
     balance: { type: Number, default: 0 },
+    roundOff: { type: Number, default: 0 },
     paymentMode: { type: String, default: 'Cash' },
     status: {
       type: String,
