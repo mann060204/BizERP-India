@@ -10,17 +10,17 @@ import ExportDropdown from '../../../components/shared/ExportDropdown';
 interface Invoice { _id: string; invoiceNumber: string; invoiceDate: string; customerSnapshot: { name: string; mobile?: string }; grandTotal: number; amountReceived: number; balance: number; status: string; paymentMode: string; }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  draft:     { label: 'Draft',    color: 'text-slate-800 bg-slate-200 font-bold border border-slate-300 shadow-sm', icon: FileText },
-  partial:   { label: 'Partial',  color: 'text-white bg-orange-500 font-bold shadow-sm border border-orange-600',icon: AlertCircle },
-  paid:      { label: 'Paid',     color: 'text-white bg-emerald-500 font-bold shadow-sm border border-emerald-600',  icon: CheckCircle },
-  overdue:   { label: 'Overdue',  color: 'text-white bg-red-500 font-bold shadow-sm border border-red-600',      icon: AlertCircle },
-  cancelled: { label: 'Cancelled',color: 'text-white bg-slate-500 font-bold shadow-sm border border-slate-600', icon: XCircle },
+  draft:     { label: 'Unpaid',    color: 'text-red-700 bg-red-100 font-bold border border-red-300 shadow-sm', icon: FileText },
+  partial:   { label: 'Partial',   color: 'text-white bg-orange-500 font-bold shadow-sm border border-orange-600',icon: AlertCircle },
+  paid:      { label: 'Paid',      color: 'text-white bg-emerald-500 font-bold shadow-sm border border-emerald-600',  icon: CheckCircle },
+  overdue:   { label: 'Overdue',   color: 'text-white bg-red-500 font-bold shadow-sm border border-red-600',      icon: AlertCircle },
+  cancelled: { label: 'Cancelled', color: 'text-white bg-slate-500 font-bold shadow-sm border border-slate-600', icon: XCircle },
 };
 
 export default function SalesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [summary, setSummary] = useState<any>({});
 
@@ -29,7 +29,7 @@ export default function SalesPage() {
       setLoading(true);
       try {
         const [invRes, sumRes] = await Promise.all([
-          invoicesApi.list({ status: statusFilter || undefined, limit: 50 }),
+          invoicesApi.list({ status: (activeTab !== 'All' ? activeTab.toLowerCase() : undefined), limit: 50 }),
           invoicesApi.summary(),
         ]);
         setInvoices(invRes.data.invoices);
@@ -38,7 +38,7 @@ export default function SalesPage() {
       finally { setLoading(false); }
     };
     fetchData();
-  }, [statusFilter]);
+  }, [activeTab]);
 
   const handleCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel invoice ${num}?`)) return;
@@ -48,7 +48,6 @@ export default function SalesPage() {
 
   const handleWhatsApp = (inv: Invoice) => {
     const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : ((inv as any).quotationNumber ? 'quotation ' + (inv as any).quotationNumber : 'document');
-    const targetPath = inv.invoiceNumber ? '/print/invoice/' : '/print/quotation/';
     const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 
 Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
@@ -129,11 +128,18 @@ Thank you for your business!`;
         </div>
 
         {/* Status Filters */}
-        <div className="flex gap-2 flex-wrap">
-          {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
-            <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
-              {label}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {['All', 'Unpaid', 'Partial', 'Paid', 'Overdue', 'Cancelled'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+                activeTab === tab 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                  : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              {tab}
             </button>
           ))}
         </div>
@@ -175,16 +181,17 @@ Thank you for your business!`;
                         <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{inv.paymentMode}</td>
                         <td className="px-5 py-4">
-                          <div className="flex flex-col gap-1 items-start">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
-                              <StatusIcon className="w-3 h-3" /> {sc.label}
-                            </span>
-                            {inv.balance > 0 && inv.status !== 'cancelled' && inv.status !== 'paid' && (
-                              <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
-                                {Math.max(0, Math.floor((new Date().getTime() - new Date(inv.invoiceDate).getTime()) / (1000 * 3600 * 24)))} days pending
+                            <div className="flex flex-col items-center gap-1">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[10px] uppercase tracking-wider ${sc.color}`}>
+                                <StatusIcon className="w-3 h-3" />
+                                {sc.label}
                               </span>
-                            )}
-                          </div>
+                              {inv.balance > 0 && inv.status !== 'cancelled' && inv.status !== 'paid' && (
+                                <span className="text-[10px] font-bold text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded border border-orange-300 shadow-sm">
+                                  {Math.max(0, Math.floor((new Date().getTime() - new Date(inv.invoiceDate).getTime()) / (1000 * 3600 * 24)))} days pending
+                                </span>
+                              )}
+                            </div>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
