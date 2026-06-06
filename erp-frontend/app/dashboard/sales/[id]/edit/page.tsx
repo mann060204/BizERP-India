@@ -56,8 +56,6 @@ export default function NewInvoicePage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
-  const [contactPersonName, setContactPersonName] = useState('');
-  const [contactPersonNumber, setContactPersonNumber] = useState('');
   const [isInterState, setIsInterState] = useState(false);
   const [useShippingAddress, setUseShippingAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
