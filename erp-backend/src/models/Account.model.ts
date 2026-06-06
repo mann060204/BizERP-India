@@ -15,6 +15,7 @@ export interface IAccount extends Document {
   isActive: boolean;
   isDefaultUpi?: boolean;
   isDefaultNeft?: boolean;
+  isDefaultCheque?: boolean;
 }
 
 const accountSchema = new mg.Schema(
@@ -33,7 +34,8 @@ const accountSchema = new mg.Schema(
     currentBalance: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
     isDefaultUpi: { type: Boolean, default: false },
-    isDefaultNeft: { type: Boolean, default: false }
+    isDefaultNeft: { type: Boolean, default: false },
+    isDefaultCheque: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

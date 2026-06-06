@@ -175,7 +175,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       paymentMode: paymentMode || 'Cash',
       bankId: paymentBankId || undefined,
       paymentDate: req.body.paymentDate ? new Date(req.body.paymentDate) : undefined,
-      status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
+      status: status || (paid + 0.05 >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
       notes,
       createdBy: req.user!.userId,
     });
@@ -284,7 +284,28 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
             salePrice: item.rate,
             quantity: item.quantity
           });
+        } else {
+          // Sync frontend edits if it missed sending them in batches array or quantity changed
+          const existingBatchIdx = newBatchesArray.findIndex((b: any) => b.productId?.toString() === item.productId?.toString() && b.batchNo === item.batchNo);
+          if (existingBatchIdx === -1) {
+            newBatchesArray.push({
+              productId: item.productId,
+              batchNo: item.batchNo,
+              mrp: item.mrp,
+              salePrice: item.rate,
+              quantity: item.quantity
+            });
+          } else {
+            // Only sync quantity if there's only 1 batch for this item in newBatchesArray (no split)
+            const count = newBatchesArray.filter((b: any) => b.productId?.toString() === item.productId?.toString()).length;
+            if (count === 1) {
+               newBatchesArray[existingBatchIdx].quantity = item.quantity;
+               newBatchesArray[existingBatchIdx].salePrice = item.rate;
+               newBatchesArray[existingBatchIdx].mrp = item.mrp;
+            }
+          }
         }
+        
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
@@ -367,7 +388,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
         paymentMode: paymentMode || 'Cash',
         bankId: paymentBankId === '' ? null : (paymentBankId || existingPurchase.bankId),
         paymentDate: paymentDate ? new Date(paymentDate) : undefined,
-        status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
+        status: status || (paid + 0.05 >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
         notes,
       },
       { new: true }
@@ -396,7 +417,7 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
       purchase.amountPaid = Math.round(((purchase.amountPaid || 0) + pAmt) * 100) / 100;
       purchase.balance = Math.round((purchase.grandTotal - purchase.amountPaid) * 100) / 100;
       if (paymentMode) purchase.paymentMode = paymentMode;
-      if (purchase.amountPaid >= purchase.grandTotal) purchase.status = 'paid';
+      if (purchase.amountPaid + 0.05 >= purchase.grandTotal) purchase.status = 'paid';
       else if (purchase.amountPaid > 0) purchase.status = 'partial';
       
       // Record the specific payment in the ledger
@@ -415,7 +436,7 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
       purchase.amountPaid = Math.round(Number(amountPaid) * 100) / 100;
       purchase.balance = Math.round((purchase.grandTotal - purchase.amountPaid) * 100) / 100;
       if (paymentMode) purchase.paymentMode = paymentMode;
-      if (purchase.amountPaid >= purchase.grandTotal) purchase.status = 'paid';
+      if (purchase.amountPaid + 0.05 >= purchase.grandTotal) purchase.status = 'paid';
       else if (purchase.amountPaid > 0) purchase.status = 'partial';
     }
 

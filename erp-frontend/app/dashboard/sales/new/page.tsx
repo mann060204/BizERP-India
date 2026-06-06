@@ -106,9 +106,12 @@ export default function NewInvoicePage() {
     if (paymentMode1 === 'UPI') {
       const defaultUpiBank = banks.find(b => b.isDefaultUpi);
       if (defaultUpiBank) setBankId1(defaultUpiBank._id);
-    } else if (paymentMode1 === 'Bank Transfer' || paymentMode1 === 'Cheque') {
+    } else if (paymentMode1 === 'Bank Transfer' || paymentMode1 === 'NEFT' || paymentMode1 === 'RTGS') {
       const defaultNeftBank = banks.find(b => b.isDefaultNeft);
       if (defaultNeftBank) setBankId1(defaultNeftBank._id);
+    } else if (paymentMode1 === 'Cheque') {
+      const defaultChequeBank = banks.find(b => b.isDefaultCheque);
+      if (defaultChequeBank) setBankId1(defaultChequeBank._id);
     }
   }, [paymentMode1, banks]);
 
@@ -116,9 +119,12 @@ export default function NewInvoicePage() {
     if (paymentMode2 === 'UPI') {
       const defaultUpiBank = banks.find(b => b.isDefaultUpi);
       if (defaultUpiBank) setBankId2(defaultUpiBank._id);
-    } else if (paymentMode2 === 'Bank Transfer' || paymentMode2 === 'Cheque') {
+    } else if (paymentMode2 === 'Bank Transfer' || paymentMode2 === 'NEFT' || paymentMode2 === 'RTGS') {
       const defaultNeftBank = banks.find(b => b.isDefaultNeft);
       if (defaultNeftBank) setBankId2(defaultNeftBank._id);
+    } else if (paymentMode2 === 'Cheque') {
+      const defaultChequeBank = banks.find(b => b.isDefaultCheque);
+      if (defaultChequeBank) setBankId2(defaultChequeBank._id);
     }
   }, [paymentMode2, banks]);
   const [amountReceived1, setAmountReceived1] = useState(0);
@@ -571,7 +577,7 @@ export default function NewInvoicePage() {
         deliveryRemarks,
         soldBy,
         billTo,
-        status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'draft',
+        status: (totalAmountReceived + 0.05 >= preRoundTotal || totalAmountReceived + 0.05 >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'draft',
       };
       const { data } = await invoicesApi.create(payload);
       toast.success(`Invoice ${data.invoice.invoiceNumber} Saved!`);

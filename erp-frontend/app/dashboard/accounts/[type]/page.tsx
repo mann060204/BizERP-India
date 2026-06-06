@@ -7,7 +7,7 @@ import { formatAccountingBalance } from '../../../../lib/utils';
 import { Plus, Search, Landmark, ArrowRightLeft, Loader2, X, Download, Filter, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; isDefaultUpi?: boolean; isDefaultNeft?: boolean; }
+interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; isDefaultUpi?: boolean; isDefaultNeft?: boolean; isDefaultCheque?: boolean; }
 interface LedgerEntry { _id: string; date: string; description: string; debit: number; credit: number; referenceType: string; closingBalance?: number; }
 
 export default function AccountsPage() {
@@ -94,11 +94,12 @@ export default function AccountsPage() {
   const [balType, setBalType] = useState('Dr');
   const [isDefaultUpi, setIsDefaultUpi] = useState(false);
   const [isDefaultNeft, setIsDefaultNeft] = useState(false);
+  const [isDefaultCheque, setIsDefaultCheque] = useState(false);
 
   const handleOpenAddAccount = () => {
     setEditAccountId(null);
     setAccName(''); setBankName(''); setAccNo(''); setOpeningBal(''); setBalType('Dr');
-    setIsDefaultUpi(false); setIsDefaultNeft(false);
+    setIsDefaultUpi(false); setIsDefaultNeft(false); setIsDefaultCheque(false);
     setShowAddAccount(true);
   };
 
@@ -112,6 +113,7 @@ export default function AccountsPage() {
     setBalType(selectedAccount.balanceType || 'Dr');
     setIsDefaultUpi(selectedAccount.isDefaultUpi || false);
     setIsDefaultNeft(selectedAccount.isDefaultNeft || false);
+    setIsDefaultCheque(selectedAccount.isDefaultCheque || false);
     setShowAddAccount(true);
   };
 
@@ -145,7 +147,8 @@ export default function AccountsPage() {
         openingBalance: openingBal || 0,
         balanceType: balType,
         isDefaultUpi,
-        isDefaultNeft
+        isDefaultNeft,
+        isDefaultCheque
       };
 
       if (editAccountId) {
@@ -280,6 +283,7 @@ export default function AccountsPage() {
                         {acc.name}
                         {acc.isDefaultUpi && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 uppercase">UPI</span>}
                         {acc.isDefaultNeft && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-700 uppercase">NEFT</span>}
+                        {acc.isDefaultCheque && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-700 uppercase">CHEQUE</span>}
                       </div>
                       {acc.accountNumber && <div className="text-xs text-slate-500 mt-0.5">A/c No: {acc.accountNumber}</div>}
                     </button>
@@ -466,7 +470,11 @@ export default function AccountsPage() {
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={isDefaultNeft} onChange={e => setIsDefaultNeft(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
-                    <span className="text-sm font-semibold text-slate-700">Default for NEFT/Bank Transfer</span>
+                    <span className="text-sm font-semibold text-slate-700">Default NEFT/Bank Txn</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={isDefaultCheque} onChange={e => setIsDefaultCheque(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
+                    <span className="text-sm font-semibold text-slate-700">Default for Cheque</span>
                   </label>
                 </div>
               )}

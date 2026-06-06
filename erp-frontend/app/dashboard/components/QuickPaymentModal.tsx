@@ -63,9 +63,12 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
     if (paymentMode === 'UPI') {
       const defaultUpiBank = banks.find(b => b.isDefaultUpi);
       if (defaultUpiBank) setBankId(defaultUpiBank._id);
-    } else if (paymentMode === 'Bank Transfer' || paymentMode === 'Cheque') {
+    } else if (paymentMode === 'Bank Transfer' || paymentMode === 'NEFT' || paymentMode === 'RTGS') {
       const defaultNeftBank = banks.find(b => b.isDefaultNeft);
       if (defaultNeftBank) setBankId(defaultNeftBank._id);
+    } else if (paymentMode === 'Cheque') {
+      const defaultChequeBank = banks.find(b => b.isDefaultCheque);
+      if (defaultChequeBank) setBankId(defaultChequeBank._id);
     }
   }, [paymentMode, banks]);
 

@@ -110,9 +110,12 @@ export default function NewPurchasePage() {
     if (paymentMode === 'UPI') {
       const defaultUpiBank = banks.find(b => b.isDefaultUpi);
       if (defaultUpiBank) setPaymentBankId(defaultUpiBank._id);
-    } else if (paymentMode === 'Bank Transfer' || paymentMode === 'Cheque') {
+    } else if (paymentMode === 'Bank Transfer' || paymentMode === 'NEFT' || paymentMode === 'RTGS') {
       const defaultNeftBank = banks.find(b => b.isDefaultNeft);
       if (defaultNeftBank) setPaymentBankId(defaultNeftBank._id);
+    } else if (paymentMode === 'Cheque') {
+      const defaultChequeBank = banks.find(b => b.isDefaultCheque);
+      if (defaultChequeBank) setPaymentBankId(defaultChequeBank._id);
     }
   }, [paymentMode, banks]);
 
@@ -369,7 +372,7 @@ export default function NewPurchasePage() {
         paymentDate,
         txnId,
         notes: remarks,
-        status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
+        status: saveStatus === 'paid' ? 'paid' : (amountPaid + 0.05 >= grandTotal) ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
       };
       const res = await purchasesApi.create(payload);
       toast.success(`Purchase Bill ${billNumber} Recorded!`);

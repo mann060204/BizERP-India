@@ -18,12 +18,13 @@ export const getAccounts = async (req: AuthRequest, res: Response): Promise<void
 
 export const createAccount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, bankName, type, accountNumber, openingBalance, balanceType, isDefaultUpi, isDefaultNeft } = req.body;
+    const { name, bankName, type, accountNumber, openingBalance, balanceType, isDefaultUpi, isDefaultNeft, isDefaultCheque } = req.body;
     const businessId = req.user!.businessId;
 
     if (type === 'Bank') {
       if (isDefaultUpi) await Account.updateMany({ businessId, type: 'Bank' }, { isDefaultUpi: false });
       if (isDefaultNeft) await Account.updateMany({ businessId, type: 'Bank' }, { isDefaultNeft: false });
+      if (isDefaultCheque) await Account.updateMany({ businessId, type: 'Bank' }, { isDefaultCheque: false });
     }
 
     const account = await Account.create({
@@ -36,7 +37,8 @@ export const createAccount = async (req: AuthRequest, res: Response): Promise<vo
       balanceType: balanceType || 'Dr',
       currentBalance: Number(openingBalance) || 0,
       isDefaultUpi: type === 'Bank' ? (isDefaultUpi || false) : undefined,
-      isDefaultNeft: type === 'Bank' ? (isDefaultNeft || false) : undefined
+      isDefaultNeft: type === 'Bank' ? (isDefaultNeft || false) : undefined,
+      isDefaultCheque: type === 'Bank' ? (isDefaultCheque || false) : undefined
     });
 
     if (account.openingBalance > 0) {
@@ -137,28 +139,30 @@ export const addTransaction = async (req: AuthRequest, res: Response): Promise<v
 export const updateAccount = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, bankName, accountNumber, openingBalance, balanceType, isDefaultUpi, isDefaultNeft } = req.body;
+    const { name, bankName, type, accountNumber, openingBalance, balanceType, isDefaultUpi, isDefaultNeft, isDefaultCheque } = req.body;
     const businessId = req.user!.businessId;
 
     const account = await Account.findOne({ _id: id, businessId });
     if (!account) { res.status(404).json({ message: 'Account not found' }); return; }
 
     if (account.type === 'Bank') {
-      if (isDefaultUpi && !account.isDefaultUpi) await Account.updateMany({ businessId, type: 'Bank' }, { isDefaultUpi: false });
-      if (isDefaultNeft && !account.isDefaultNeft) await Account.updateMany({ businessId, type: 'Bank' }, { isDefaultNeft: false });
+      if (isDefaultUpi) await Account.updateMany({ businessId, type: 'Bank', _id: { $ne: account._id } }, { isDefaultUpi: false });
+      if (isDefaultNeft) await Account.updateMany({ businessId, type: 'Bank', _id: { $ne: account._id } }, { isDefaultNeft: false });
+      if (isDefaultCheque) await Account.updateMany({ businessId, type: 'Bank', _id: { $ne: account._id } }, { isDefaultCheque: false });
     }
 
     const oldOpeningBalance = account.openingBalance || 0;
-    const oldBalanceType = account.balanceType || 'Dr';
-    const newOpeningBalance = Number(openingBalance) || 0;
-    const newBalanceType = balanceType || 'Dr';
+    const oldBalanceType = account.balanceType;
+    const newOpeningBalance = openingBalance !== undefined ? Number(openingBalance) : oldOpeningBalance;
+    const newBalanceType = balanceType || oldBalanceType;
 
-    account.name = name;
+    if (name !== undefined) account.name = name;
     if (bankName !== undefined) account.bankName = bankName;
     if (accountNumber !== undefined) account.accountNumber = accountNumber;
     if (account.type === 'Bank') {
       if (isDefaultUpi !== undefined) account.isDefaultUpi = isDefaultUpi;
       if (isDefaultNeft !== undefined) account.isDefaultNeft = isDefaultNeft;
+      if (isDefaultCheque !== undefined) account.isDefaultCheque = isDefaultCheque;
     }
 
     if (oldOpeningBalance !== newOpeningBalance || oldBalanceType !== newBalanceType) {

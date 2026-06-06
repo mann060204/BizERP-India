@@ -224,7 +224,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       txnId,
       deliveryTerms,
       deliveryRemarks,
-      status: status || (received >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
+      status: status || (received + 0.05 >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
       notes,
       termsAndConditions,
       isReverseCharge: !!isReverseCharge,
@@ -336,7 +336,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
         txnId: txnId !== undefined ? txnId : existingInvoice.txnId,
         deliveryTerms: deliveryTerms !== undefined ? deliveryTerms : existingInvoice.deliveryTerms,
         deliveryRemarks: deliveryRemarks !== undefined ? deliveryRemarks : existingInvoice.deliveryRemarks,
-        status: status || (received >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
+        status: status || (received + 0.05 >= totals.grandTotal ? 'paid' : received > 0 ? 'partial' : 'draft'),
         notes,
         termsAndConditions,
         isReverseCharge: !!isReverseCharge,
@@ -367,7 +367,7 @@ export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Prom
       invoice.amountReceived = (invoice.amountReceived || 0) + pAmt;
       invoice.balance = invoice.grandTotal - invoice.amountReceived;
       if (paymentMode) invoice.paymentMode = paymentMode;
-      if (invoice.amountReceived >= invoice.grandTotal) invoice.status = 'paid';
+      if (invoice.amountReceived + 0.05 >= invoice.grandTotal) invoice.status = 'paid';
       else if (invoice.amountReceived > 0) invoice.status = 'partial';
       
       // Record the specific payment in the ledger
@@ -386,7 +386,7 @@ export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Prom
       invoice.amountReceived = Number(amountReceived);
       invoice.balance = invoice.grandTotal - invoice.amountReceived;
       if (paymentMode) invoice.paymentMode = paymentMode;
-      if (invoice.amountReceived >= invoice.grandTotal) invoice.status = 'paid';
+      if (invoice.amountReceived + 0.05 >= invoice.grandTotal) invoice.status = 'paid';
       else if (invoice.amountReceived > 0) invoice.status = 'partial';
     }
 
