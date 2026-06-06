@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { expensesApi, businessApi } from '../../../lib/erp-api';
-import { Plus, Search, Receipt, Trash2, Loader2, X } from 'lucide-react';
+import { expensesApi, businessApi, accountsApi } from '../../../lib/erp-api';
+import { Plus, Search, Receipt, Trash2, Loader2, X, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Expense { _id: string; category: string; amount: number; date: string; paymentMode: string; vendorName?: string; notes?: string; totalWithTax: number; }
+interface Expense { _id: string; category: string; amount: number; date: string; paymentMode: string; vendorName?: string; notes?: string; totalWithTax: number; bankAccountId?: string; }
 
 const DEFAULT_CATEGORIES = ['Rent', 'Salaries', 'Electricity', 'Internet', 'Marketing', 'Travel', 'Office Supplies', 'Maintenance', 'Legal & Professional', 'Miscellaneous'];
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit Card'];
@@ -17,9 +17,15 @@ export default function ExpensesPage() {
   const [summary, setSummary] = useState<any>({ monthTotal: 0, byCategory: [] });
 
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [form, setForm] = useState({ category: 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false });
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
+  const [form, setForm] = useState({ category: 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false, bankAccountId: '' });
+
+  useEffect(() => {
+    accountsApi.list({ type: 'Bank' }).then(res => setBankAccounts(res.data.accounts || [])).catch(() => {});
+  }, []);
 
   // Load categories from business profile on mount
   useEffect(() => {
@@ -47,14 +53,35 @@ export default function ExpensesPage() {
 
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
 
-  const openCreate = () => { setForm({ category: categories[0] || 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false }); setShowModal(true); };
+  const openCreate = () => { setEditingId(null); setForm({ category: categories[0] || 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false, bankAccountId: '' }); setShowModal(true); };
+
+  const openEdit = (e: any) => {
+    setEditingId(e._id);
+    setForm({
+      category: e.category || 'Miscellaneous',
+      amount: e.amount || 0,
+      date: e.date ? new Date(e.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      paymentMode: e.paymentMode || 'Cash',
+      vendorName: e.vendorName || '',
+      notes: e.notes || '',
+      gstRate: e.gstRate || 0,
+      isInterState: e.isInterState || false,
+      bankAccountId: e.bankAccountId || ''
+    });
+    setShowModal(true);
+  };
 
   const handleSave = async () => {
     if (!form.amount || form.amount <= 0) { toast.error('Amount is required'); return; }
     setSaving(true);
     try {
-      await expensesApi.create(form);
-      toast.success('Expense recorded');
+      if (editingId) {
+        await expensesApi.update(editingId, form);
+        toast.success('Expense updated');
+      } else {
+        await expensesApi.create(form);
+        toast.success('Expense recorded');
+      }
       setShowModal(false); fetchExpenses();
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to save'); }
     finally { setSaving(false); }
@@ -137,7 +164,8 @@ export default function ExpensesPage() {
                       </td>
                       <td className="px-5 py-4 text-slate-600">{e.paymentMode}</td>
                       <td className="px-5 py-4 font-bold text-red-400">₹{e.totalWithTax.toFixed(2)}</td>
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-4 flex items-center gap-1">
+                        <button onClick={() => openEdit(e)} className="p-1.5 rounded-lg hover:bg-action-500/10 text-slate-600 hover:text-action-500 transition opacity-0 group-hover:opacity-100"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(e._id)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
@@ -154,7 +182,7 @@ export default function ExpensesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50 backdrop-blur-sm">
           <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl">
             <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <h3 className="text-slate-900 font-bold text-lg">Record Expense</h3>
+              <h3 className="text-slate-900 font-bold text-lg">{editingId ? 'Edit Expense' : 'Record Expense'}</h3>
               <button onClick={() => setShowModal(false)} className="text-slate-600 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
@@ -185,6 +213,16 @@ export default function ExpensesPage() {
                     {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
+                {['UPI', 'NEFT', 'RTGS', 'Cheque'].includes(form.paymentMode) && bankAccounts.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1.5">Bank Account</label>
+                    <select value={form.bankAccountId} onChange={e => setForm({ ...form, bankAccountId: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
+                      <option value="">Select Bank Account...</option>
+                      {bankAccounts.map(b => <option key={b._id} value={b._id}>{b.bankName} - {b.accountNumber}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1.5">Vendor / Payee Name</label>
@@ -225,7 +263,7 @@ export default function ExpensesPage() {
             <div className="flex gap-3 p-6 border-t border-slate-200">
               <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">Cancel</button>
               <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2">
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />} Record Expense
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editingId ? 'Update' : 'Record'} Expense
               </button>
             </div>
           </div>

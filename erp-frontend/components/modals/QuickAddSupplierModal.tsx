@@ -107,7 +107,7 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
         email: form.email,
         phoneNo: form.phoneNo,
         mobile: form.mobile,
-        panNo: form.panNo,
+        pan: form.panNo,
         gstin: form.gstin,
         gstType: form.gstType,
         tradeName: form.tradeName,
@@ -120,7 +120,7 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
         creditAllowed: form.creditAllowed,
         creditLimit: form.creditLimit,
         priceCategory: form.priceCategory,
-        remark: form.remark,
+        note: form.remark,
         photo: photo || undefined,
       };
       const { data } = await suppliersApi.create(payload);

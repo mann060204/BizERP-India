@@ -108,11 +108,11 @@ export default function NewSupplierPage() {
     try {
       const payload = {
         name: form.name,
-        billingAddress: { street: form.billingAddress, city: form.city, state: form.state, pinCode: form.pinCode, country: form.country },
+        address: { street: form.billingAddress, city: form.city, state: form.state, pinCode: form.pinCode, country: form.country },
         email: form.email,
         phoneNo: form.phoneNo,
         mobile: form.mobile,
-        panNo: form.panNo,
+        pan: form.panNo,
         gstin: form.gstin,
         gstType: form.gstType,
         tradeName: form.tradeName,
@@ -125,7 +125,7 @@ export default function NewSupplierPage() {
         creditAllowed: form.creditAllowed,
         creditLimit: form.creditLimit,
         priceCategory: form.priceCategory,
-        remark: form.remark,
+        note: form.remark,
         photo: photo || undefined,
       };
       await suppliersApi.create(payload);

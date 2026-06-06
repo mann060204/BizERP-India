@@ -107,15 +107,15 @@ export default function EditSupplierPage() {
         const c = data.supplier;
         setForm({
           name: c.name || '',
-          billingAddress: c.billingAddress?.street || '',
-          city: c.billingAddress?.city || '',
-          state: c.billingAddress?.state || '',
-          pinCode: c.billingAddress?.pinCode || '',
-          country: c.billingAddress?.country || 'India',
+          billingAddress: c.address?.street || '',
+          city: c.address?.city || '',
+          state: c.address?.state || '',
+          pinCode: c.address?.pinCode || '',
+          country: c.address?.country || 'India',
           email: c.email || '',
           phoneNo: c.phoneNo || '',
           mobile: c.mobile || '',
-          panNo: c.panNo || '',
+          panNo: c.pan || '',
           gstin: c.gstin || '',
           gstType: c.gstType || 'Unregistered',
           tradeName: c.tradeName || '',
@@ -130,7 +130,7 @@ export default function EditSupplierPage() {
           creditAllowed: c.creditAllowed || false,
           creditLimit: c.creditLimit || 0,
           priceCategory: c.priceCategory || 'Retail',
-          remark: c.remark || '',
+          remark: c.note || '',
         });
         if (c.photo) setPhoto(c.photo);
       } catch {
@@ -176,16 +176,16 @@ export default function EditSupplierPage() {
     try {
       const payload = {
         name: form.name,
-        billingAddress: { street: form.billingAddress, city: form.city, state: form.state, pinCode: form.pinCode, country: form.country },
+        address: { street: form.billingAddress, city: form.city, state: form.state, pinCode: form.pinCode, country: form.country },
         email: form.email, phoneNo: form.phoneNo, mobile: form.mobile,
-        panNo: form.panNo, gstin: form.gstin, gstType: form.gstType, tradeName: form.tradeName,
+        pan: form.panNo, gstin: form.gstin, gstType: form.gstType, tradeName: form.tradeName,
         balanceType: form.balanceType,
         openingBalance: form.balanceType === 'Credit' ? -Math.abs(form.openingBalance) : Math.abs(form.openingBalance),
         documentType: form.documentType, documentNo: form.documentNo,
         dob: form.dobApplicable ? form.dob : undefined,
         anniversary: form.anniversaryApplicable ? form.anniversary : undefined,
         creditAllowed: form.creditAllowed, creditLimit: form.creditLimit,
-        priceCategory: form.priceCategory, remark: form.remark,
+        priceCategory: form.priceCategory, note: form.remark,
         photo: photo || null,
       };
       await suppliersApi.update(id as string, payload);

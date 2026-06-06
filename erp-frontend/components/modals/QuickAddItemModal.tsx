@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { productsApi, businessApi } from '../../lib/erp-api';
 import { X, Loader2, Save, Layers, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CategoryMasterModal from '../masters/CategoryMasterModal';
 const GST_RATES = [0, 5, 12, 18, 28];
 const UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
 
@@ -91,28 +92,14 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
     fetchSettings();
   }, [fetchSettings]);
 
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+
   const handleAddGroup = async () => {
-    const name = window.prompt('Enter new Group name:');
-    if (!name || !name.trim()) return;
-    try {
-      const newGroups = [...productGroups, name.trim()];
-      await businessApi.updateProfile({ productGroups: newGroups });
-      setProductGroups(newGroups);
-      setForm(prev => ({...prev, group: name.trim()}));
-      toast.success('Group added successfully');
-    } catch (e) { toast.error('Failed to add group'); }
+    setShowCategoryModal(true);
   };
 
   const handleAddBrand = async () => {
-    const name = window.prompt('Enter new Brand name:');
-    if (!name || !name.trim()) return;
-    try {
-      const newBrands = [...productBrands, name.trim()];
-      await businessApi.updateProfile({ productBrands: newBrands });
-      setProductBrands(newBrands);
-      setForm(prev => ({...prev, brand: name.trim()}));
-      toast.success('Brand added successfully');
-    } catch (e) { toast.error('Failed to add brand'); }
+    setShowCategoryModal(true);
   };
 
   const handleSave = async () => {
@@ -376,6 +363,14 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
             </div>
           </div>
         </div>
+      )}
+      {showCategoryModal && (
+        <CategoryMasterModal 
+          onClose={() => setShowCategoryModal(false)} 
+          onSaveSuccess={() => {
+            fetchSettings();
+          }} 
+        />
       )}
     </>
   );

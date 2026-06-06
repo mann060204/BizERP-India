@@ -672,7 +672,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-xs font-bold text-slate-700">Cash in Hand</span>
                   </div>
-                  <span className="text-sm font-black text-emerald-600">{renderAmount(cashInHand)}</span>
+                  <span className={`text-sm font-black ${cashInHand < 0 ? 'text-red-500' : 'text-emerald-600'}`}>{renderAmount(cashInHand)}</span>
                 </div>
                 {banks.map(bank => (
                   <div key={bank._id} 

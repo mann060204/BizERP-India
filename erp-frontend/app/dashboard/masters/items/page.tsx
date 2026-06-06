@@ -200,9 +200,6 @@ export default function MastersPage() {
             <h2 className="text-xl font-bold text-slate-900">Items & Services</h2>
             <p className="text-slate-600 text-sm mt-0.5">{products.length} item{products.length !== 1 ? 's' : ''} in master</p>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
-            <Plus className="w-4 h-4" /> Add Item
-          </button>
         </div>
 
         {/* Filters */}
@@ -227,8 +224,7 @@ export default function MastersPage() {
           <div className="glass rounded-2xl p-16 text-center">
             <Package className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No items yet</p>
-            <p className="text-slate-600 text-sm mt-1 mb-6">Add your products and services to start billing</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">Add Item</button>
+            <p className="text-slate-600 text-sm mt-1 mb-6">Add your products and services from purchase/sales to start billing</p>
           </div>
         ) : (
           <div className="glass rounded-2xl overflow-hidden">
@@ -267,7 +263,7 @@ export default function MastersPage() {
                       <td className="px-5 py-4 text-slate-600">₹{p.purchasePrice.toFixed(2)}</td>
                       <td className="px-5 py-4 text-slate-900 font-semibold">₹{p.sellingPrice.toFixed(2)}</td>
                       <td className="px-5 py-4 text-slate-600">{p.mrp ? `₹${p.mrp.toFixed(2)}` : '—'}</td>
-                      <td className="px-5 py-4"><span className="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-300">{p.gstRate}%</span></td>
+                      <td className="px-5 py-4"><span className="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">{p.gstRate}%</span></td>
                       <td className="px-5 py-4">
                         {p.type === 'product' ? (
                           <span className={p.currentStock <= p.reorderLevel ? 'text-red-400 font-medium' : 'text-emerald-400'}>
