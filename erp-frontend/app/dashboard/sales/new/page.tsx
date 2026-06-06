@@ -98,6 +98,16 @@ export default function NewInvoicePage() {
   const [bankId1, setBankId1] = useState('');
   const [banks, setBanks] = useState<any[]>([]);
 
+  const [amountReceived1, setAmountReceived1] = useState(0);
+  const [txnId1, setTxnId1] = useState('');
+  const [paymentDate1, setPaymentDate1] = useState('');
+
+  const [paymentMode2, setPaymentMode2] = useState('');
+  const [bankId2, setBankId2] = useState('');
+  const [amountReceived2, setAmountReceived2] = useState(0);
+  const [txnId2, setTxnId2] = useState('');
+  const [paymentDate2, setPaymentDate2] = useState('');
+
   useEffect(() => {
     accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
   }, []);
@@ -127,15 +137,6 @@ export default function NewInvoicePage() {
       if (defaultChequeBank) setBankId2(defaultChequeBank._id);
     }
   }, [paymentMode2, banks]);
-  const [amountReceived1, setAmountReceived1] = useState(0);
-  const [txnId1, setTxnId1] = useState('');
-  const [paymentDate1, setPaymentDate1] = useState('');
-
-  const [paymentMode2, setPaymentMode2] = useState('');
-  const [bankId2, setBankId2] = useState('');
-  const [amountReceived2, setAmountReceived2] = useState(0);
-  const [txnId2, setTxnId2] = useState('');
-  const [paymentDate2, setPaymentDate2] = useState('');
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
