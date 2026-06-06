@@ -129,10 +129,10 @@ export default function NewQuotationPage() {
         setPlaceOfSupply(inv.placeOfSupply);
         setIsInterState(inv.isInterState);
         setBillTo(inv.billTo || 'Customer');
-        setCustomerSearch(inv.customerSnapshot.name);
-        setContactNo(inv.customerSnapshot.mobile || '');
-        setCustomerAddress(inv.customerSnapshot.address || '');
-        setCustomerGstin(inv.customerSnapshot.gstin || '');
+        setCustomerSearch(inv.customerSnapshot?.name || '');
+        setContactNo(inv.customerSnapshot?.mobile || '');
+        setCustomerAddress(inv.customerSnapshot?.address || '');
+        setCustomerGstin(inv.customerSnapshot?.gstin || '');
         if (inv.customerId) setSelectedCustomer(cRes.data.customers.find((c: any) => c._id === (inv.customerId._id || inv.customerId)));
         
         setLineItems(inv.lineItems.map((item: any) => ({
