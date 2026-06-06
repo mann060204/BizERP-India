@@ -59,6 +59,7 @@ export default function NewPurchasePage() {
   const [supplierSearch, setSupplierSearch] = useState('');
   const [supplierSnapshot, setSupplierSnapshot] = useState<any>(null);
   const [showSupplierDD, setShowSupplierDD] = useState(false);
+  const [supplierHighlightIndex, setSupplierHighlightIndex] = useState(-1);
   const [showQuickAddSupplierModal, setShowQuickAddSupplierModal] = useState(false);
   const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
@@ -83,6 +84,7 @@ export default function NewPurchasePage() {
   });
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
+  const [itemHighlightIndex, setItemHighlightIndex] = useState(-1);
   const [itemIdentifierType, setItemIdentifierType] = useState<'tag' | 'code'>('tag');
   const [lastPrices, setLastPrices] = useState<any[]>([]);
 
@@ -407,15 +409,23 @@ export default function NewPurchasePage() {
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
-                  <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); }} onFocus={() => setShowSupplierDD(true)} className="erp-input w-full pr-8" placeholder="Select or type..." />
+                  <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); setSupplierHighlightIndex(-1); }} onFocus={() => setShowSupplierDD(true)} 
+                    onKeyDown={e => {
+                      if (!showSupplierDD) return;
+                      if (e.key === 'ArrowDown') { e.preventDefault(); setSupplierHighlightIndex(prev => Math.min(prev + 1, filteredSuppliers.length - 1)); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); setSupplierHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                      else if (e.key === 'Enter') { e.preventDefault(); if (supplierHighlightIndex >= 0 && filteredSuppliers[supplierHighlightIndex]) pickSupplier(filteredSuppliers[supplierHighlightIndex]); }
+                      else if (e.key === 'Escape') { setShowSupplierDD(false); }
+                    }}
+                    className="erp-input w-full pr-8" placeholder="Select or type..." />
                   <button type="button" onClick={() => setShowSupplierDD(!showSupplierDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                     <ChevronDown className="w-4 h-4" />
                   </button>
                 </div>
                 {showSupplierDD && filteredSuppliers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                    {filteredSuppliers.map(s => (
-                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
+                    {filteredSuppliers.map((s, idx) => (
+                      <div key={s._id} onClick={() => pickSupplier(s)} className={`px-2 py-1 text-xs cursor-pointer border-b border-slate-200 ${supplierHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                         {s.name}
                       </div>
                     ))}
@@ -487,15 +497,23 @@ export default function NewPurchasePage() {
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
-                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full pr-8" placeholder="Select item..." />
+                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); setItemHighlightIndex(-1); }} onFocus={() => setShowItemDD(true)} 
+                      onKeyDown={e => {
+                        if (!showItemDD) return;
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setItemHighlightIndex(prev => Math.min(prev + 1, filteredProducts.length - 1)); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); setItemHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                        else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) pickProduct(filteredProducts[itemHighlightIndex]); }
+                        else if (e.key === 'Escape') { setShowItemDD(false); }
+                      }}
+                      className="erp-input w-full pr-8" placeholder="Select item..." />
                     <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                      {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between">
+                      {filteredProducts.map((p, idx) => (
+                        <div key={p._id} onClick={() => pickProduct(p)} className={`px-2 py-1 text-xs cursor-pointer border-b border-slate-200 flex justify-between ${itemHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                           <span>{p.name}</span>
                           <span className="text-slate-600">₹{p.purchasePrice}</span>
                         </div>

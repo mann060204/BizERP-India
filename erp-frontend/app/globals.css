@@ -274,7 +274,7 @@
 
   /* ── ERP Form Components ── */
   .erp-container {
-    @apply border bg-white rounded-lg overflow-hidden;
+    @apply border bg-white rounded-lg;
     border-color: var(--border);
   }
   .erp-header {

@@ -52,6 +52,7 @@ export default function NewInvoicePage() {
   const [contactNo, setContactNo] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDD, setShowCustomerDD] = useState(false);
+  const [customerHighlightIndex, setCustomerHighlightIndex] = useState(-1);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
@@ -67,6 +68,7 @@ export default function NewInvoicePage() {
   });
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
+  const [itemHighlightIndex, setItemHighlightIndex] = useState(-1);
   const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [pendingBatchItem, setPendingBatchItem] = useState<{product: Product, quantity: number, itemInputData: any} | null>(null);
@@ -614,7 +616,15 @@ export default function NewInvoicePage() {
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
-                  <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
+                  <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); setCustomerHighlightIndex(-1); }} onFocus={() => setShowCustomerDD(true)} 
+                    onKeyDown={e => {
+                      if (!showCustomerDD) return;
+                      if (e.key === 'ArrowDown') { e.preventDefault(); setCustomerHighlightIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1)); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); setCustomerHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                      else if (e.key === 'Enter') { e.preventDefault(); if (customerHighlightIndex >= 0 && filteredCustomers[customerHighlightIndex]) pickCustomer(filteredCustomers[customerHighlightIndex]); }
+                      else if (e.key === 'Escape') { setShowCustomerDD(false); }
+                    }}
+                    className="erp-input w-full pr-24" placeholder="Search customer..." />
                   <button type="button" onClick={() => setShowCustomerDD(!showCustomerDD)} className="absolute right-8 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -626,9 +636,9 @@ export default function NewInvoicePage() {
                 )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                    {filteredCustomers.map(c => (
-                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
-                        {c.name}
+                    {filteredCustomers.map((c, idx) => (
+                      <div key={c._id} onClick={() => pickCustomer(c)} className={`px-2 py-1 text-xs cursor-pointer border-b border-slate-200 ${customerHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
+                        {c.name} {c.mobile ? `(${c.mobile})` : ''}
                       </div>
                     ))}
                   </div>
@@ -714,15 +724,23 @@ export default function NewInvoicePage() {
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
-                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full pr-8" placeholder="Type item name..." />
+                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); setItemHighlightIndex(-1); }} onFocus={() => setShowItemDD(true)} 
+                      onKeyDown={e => {
+                        if (!showItemDD) return;
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setItemHighlightIndex(prev => Math.min(prev + 1, filteredProducts.length - 1)); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); setItemHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                        else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) handleProductSelect(filteredProducts[itemHighlightIndex]); }
+                        else if (e.key === 'Escape') { setShowItemDD(false); }
+                      }}
+                      className="erp-input w-full pr-8" placeholder="Type item name..." />
                     <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                      {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
+                      {filteredProducts.map((p, idx) => (
+                        <div key={p._id} onClick={() => pickProduct(p)} className={`px-2 py-1.5 text-xs cursor-pointer border-b border-slate-200 flex justify-between items-center group ${itemHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                           <div className="flex flex-col">
                             <span className="text-slate-900 font-medium">{p.name}</span>
                             <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{parseFloat((p.currentStock || 0).toFixed(3))}</span></span>
