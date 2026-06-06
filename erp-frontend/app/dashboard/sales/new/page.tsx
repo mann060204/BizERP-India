@@ -113,8 +113,8 @@ export default function NewInvoicePage() {
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
-  const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0);
-  const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
+  const [globalDiscountType, setGlobalDiscountType] = useState('%');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
   
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
@@ -504,7 +504,7 @@ export default function NewInvoicePage() {
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   
-  const globalDiscountAmount = round2((totalTaxable * globalDiscountPercent) / 100) + discountAmountFlat;
+  const globalDiscountAmount = globalDiscountType === '%' ? round2((totalTaxable * globalDiscountValue) / 100) : globalDiscountValue;
   const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
@@ -988,15 +988,12 @@ export default function NewInvoicePage() {
               
               <div>
                 <label className="erp-label block mb-1">Overall Discount</label>
-                <div className="flex gap-1">
-                  <div className="relative w-1/2">
-                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">%</span>
-                    <input type="number" value={globalDiscountPercent === 0 ? '' : globalDiscountPercent} onChange={e => { setGlobalDiscountPercent(parseFloat(e.target.value) || 0); setDiscountAmountFlat(0); }} className="erp-input w-full pl-4" placeholder="Percent" />
-                  </div>
-                  <div className="relative w-1/2">
-                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
-                    <input type="number" value={discountAmountFlat === 0 ? '' : discountAmountFlat} onChange={e => { setDiscountAmountFlat(parseFloat(e.target.value) || 0); setGlobalDiscountPercent(0); }} className="erp-input w-full pl-3" placeholder="Amount" />
-                  </div>
+                <div className="flex">
+                  <input type="number" value={globalDiscountValue === 0 ? '' : globalDiscountValue} onChange={e => setGlobalDiscountValue(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-r-none border-r-0 pl-2" placeholder="0.00" />
+                  <select value={globalDiscountType} onChange={e => setGlobalDiscountType(e.target.value)} className="erp-input w-16 rounded-l-none bg-gray-50 text-gray-700 px-1 font-bold text-center border-l-0">
+                    <option value="%">%</option>
+                    <option value="₹">₹</option>
+                  </select>
                 </div>
               </div>
 

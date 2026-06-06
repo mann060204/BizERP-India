@@ -1,9 +1,9 @@
 // @ts-nocheck
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi, businessApi } from '../../../../../lib/erp-api';
+import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi } from '../../../../../lib/erp-api';
 import { formatAccountingBalance } from '@/lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
@@ -30,7 +30,7 @@ const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','G
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export default function NewInvoicePage() {
+export default function EditInvoicePage() {
   const router = useRouter();
   const { id } = useParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -44,19 +44,23 @@ export default function NewInvoicePage() {
   // Header State
   const [invoiceType, setInvoiceType] = useState('GST');
   const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  // FY date range — clamped to selected financial year
+  const [fyDateRange, setFyDateRange] = useState<{ min: string; max: string; default: string } | null>(null);
+  const [invoiceDate, setInvoiceDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
   const [contactNo, setContactNo] = useState('');
-  const [contactPersonName, setContactPersonName] = useState('');
-  const [contactPersonNumber, setContactPersonNumber] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDD, setShowCustomerDD] = useState(false);
+  const [customerHighlightIndex, setCustomerHighlightIndex] = useState(-1);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
+  const [contactPersonName, setContactPersonName] = useState('');
+  const [contactPersonNumber, setContactPersonNumber] = useState('');
   const [isInterState, setIsInterState] = useState(false);
   const [useShippingAddress, setUseShippingAddress] = useState(false);
   const [shippingAddress, setShippingAddress] = useState('');
@@ -69,6 +73,7 @@ export default function NewInvoicePage() {
   });
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
+  const [itemHighlightIndex, setItemHighlightIndex] = useState(-1);
   const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [pendingBatchItem, setPendingBatchItem] = useState<{product: Product, quantity: number, itemInputData: any} | null>(null);
@@ -91,19 +96,27 @@ export default function NewInvoicePage() {
   const [deliveryRemarks, setDeliveryRemarks] = useState('');
   const [remarks, setRemarks] = useState('');
   const [paymentMode1, setPaymentMode1] = useState('Cash');
+  const [bankId1, setBankId1] = useState('');
+  const [banks, setBanks] = useState<any[]>([]);
+
+  useEffect(() => {
+    accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
+  }, []);
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');
-  const [paymentDate1, setPaymentDate1] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate1, setPaymentDate1] = useState('');
 
   const [paymentMode2, setPaymentMode2] = useState('');
+  const [bankId2, setBankId2] = useState('');
   const [amountReceived2, setAmountReceived2] = useState(0);
   const [txnId2, setTxnId2] = useState('');
-  const [paymentDate2, setPaymentDate2] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate2, setPaymentDate2] = useState('');
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
-  const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0);
-  const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
+  const [globalDiscountType, setGlobalDiscountType] = useState('%');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
+  
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const formatDate = (d: string) => d.split('-').reverse().join('/');
@@ -112,9 +125,8 @@ export default function NewInvoicePage() {
     : paymentMode1;
   const combinedTxnId = (txnId1 && txnId2 && amountReceived2 > 0) ? `${txnId1} | ${txnId2}` : (txnId1 ? txnId1 : (txnId2 ? txnId2 : ''));
 
-  
   useEffect(() => {
-    const init = async () => {
+    const fetchData = async () => {
       try {
         const [cRes, pRes, iRes, bRes] = await Promise.all([
           customersApi.list({ limit: 200 }),
@@ -122,7 +134,6 @@ export default function NewInvoicePage() {
           invoicesApi.get(id as string),
           businessApi.getProfile()
         ]);
-        
         setCustomers(cRes.data.customers);
         setProducts(pRes.data.products);
         const bizUnits = bRes.data?.business?.units;
@@ -168,23 +179,58 @@ export default function NewInvoicePage() {
         setTxnId1(inv.txnId || '');
         
         setShippingCharge(inv.shippingCharge || 0);
-          setShippingGstRate(inv.shippingGstRate || 0);
-        if (inv.discountAmount) { setDiscountAmountFlat(inv.discountAmount); }
+        setShippingGstRate(inv.shippingGstRate || 0);
+        
+        if (inv.discountAmount) { 
+          setGlobalDiscountType('₹'); 
+          setGlobalDiscountValue(inv.discountAmount); 
+        }
+        
         setRemarks(inv.notes || '');
         setDeliveryTerms(inv.deliveryTerms || '');
         setDeliveryRemarks(inv.deliveryRemarks || '');
         setSoldBy(inv.soldBy || '');
-        
-      } catch (e) {
-        console.error(e);
-        toast.error('Failed to load invoice');
-        router.push('/dashboard/sales');
+
+        // ── Parse Financial Year to clamp invoice dates ──────────────────
+        const fyLabel: string = bRes.data?.business?.financialYearLabel || '';
+        // Expected format: "FY 2025-26" or "FY 2024-25"
+        const match = fyLabel.match(/(\d{4})-(\d{2,4})/);
+        if (match) {
+          const startYear = parseInt(match[1]);
+          // Indian FY: 1 Apr YYYY to 31 Mar YYYY+1
+          const fyStart = `${startYear}-04-01`;
+          const fyEnd   = `${startYear + 1}-03-31`;
+          const today   = new Date().toISOString().split('T')[0];
+          // Default to today if within FY range, else clamp to FY start
+          const defaultDate = today >= fyStart && today <= fyEnd ? today : fyStart;
+          setFyDateRange({ min: fyStart, max: fyEnd, default: defaultDate });
+          setInvoiceDate(defaultDate);
+          setDueDate(defaultDate);
+          setPaymentDate1(defaultDate);
+          setPaymentDate2(defaultDate);
+        }
+      } catch (err) {
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
-    if (id) init();
+    if (id) fetchData();
   }, [id]);
+
+  // Auto-calculate Due Date based on Payment Terms
+  useEffect(() => {
+    if (!invoiceDate || !paymentTerms) return;
+    const match = paymentTerms.match(/\d+/);
+    if (match) {
+      const days = parseInt(match[0], 10);
+      const d = new Date(invoiceDate);
+      d.setDate(d.getDate() + days);
+      setDueDate(d.toISOString().split('T')[0]);
+    } else if (paymentTerms.toLowerCase() === 'due on receipt' || paymentTerms.toLowerCase().includes('cash')) {
+      setDueDate(invoiceDate);
+    }
+  }, [paymentTerms, invoiceDate]);
 
   const applyDiscountScheme = (schemeId: string) => {
     setSelectedSchemeId(schemeId);
@@ -211,7 +257,6 @@ export default function NewInvoicePage() {
     toast.success(`Discount scheme "${scheme.name}" (${discountPercent}%) applied!`);
   };
 
-
   const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
 
@@ -231,8 +276,8 @@ export default function NewInvoicePage() {
     setSelectedCustomer(c);
     setCustomerSearch(c.name);
     setContactNo(c.mobile || '');
-    setContactPersonName((c as any).contactPerson || '');
-    setContactPersonNumber((c as any).contactPersonNumber || '');
+    setContactPersonName(c.contactPerson || '');
+    setContactPersonNumber(c.contactPersonNumber || '');
     
     let addrStr = '';
     if (c.billingAddress) {
@@ -319,11 +364,21 @@ export default function NewInvoicePage() {
 
   useEffect(() => {
     setLineItems(prev => prev.map(item => calculateItem(item, invoiceType, isInterState)));
-    setInvoiceNumber(prev => {
-      if (invoiceType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
-      if (invoiceType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
-      return prev;
-    });
+    // Fetch next invoice number based on type
+    invoicesApi.getNextNumber(invoiceType as 'GST' | 'NON-GST')
+      .then(res => {
+        if (res.data?.nextInvoiceNumber) {
+          setInvoiceNumber(res.data.nextInvoiceNumber);
+        }
+      })
+      .catch(() => {
+        // Fallback
+        setInvoiceNumber(prev => {
+          if (invoiceType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
+          if (invoiceType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
+          return prev;
+        });
+      });
   }, [invoiceType, isInterState]);
 
   const addItem = () => {
@@ -383,6 +438,65 @@ export default function NewInvoicePage() {
     setPendingBatchItem(null);
   };
 
+  const handleAutoAssign = async () => {
+    if (lineItems.length === 0) {
+      toast.error('Add items first to auto-assign batches');
+      return;
+    }
+    
+    // Check if we need to auto-assign any items (items without batchNo but with product Id)
+    const itemsToAssign = lineItems.filter(i => !i.batchNo && i.productId);
+    if (itemsToAssign.length === 0) {
+      toast.error('All items already have batches assigned or no products selected.');
+      return;
+    }
+
+    const toastId = toast.loading('Auto-assigning batches...');
+    try {
+      const payload = {
+        items: itemsToAssign.map(i => ({ productId: i.productId, quantity: i.quantity }))
+      };
+      const res = await inventoryApi.autoSequence(payload);
+      
+      const newItems: LineItem[] = [];
+      let didAssign = false;
+
+      lineItems.forEach(item => {
+        if (item.batchNo || !item.productId) {
+          newItems.push(item);
+          return;
+        }
+
+        const allocationInfo = res.allocations.find((a: any) => a.productId === item.productId);
+        if (!allocationInfo || allocationInfo.allocatedBatches.length === 0) {
+          newItems.push(item); // couldn't allocate
+          return;
+        }
+
+        didAssign = true;
+        // Split item if multiple batches are assigned
+        allocationInfo.allocatedBatches.forEach((alloc: any) => {
+          newItems.push({
+            ...item,
+            batchNo: alloc.batchNo,
+            quantity: alloc.allocatedQuantity,
+            rate: alloc.salePrice || item.rate, // Optionally use batch salePrice
+            mrp: alloc.mrp || item.mrp
+          });
+        });
+      });
+
+      if (didAssign) {
+        setLineItems(newItems.map(item => calculateItem(item)));
+        toast.success(`Batches auto-assigned via ${res.strategy} strategy!`, { id: toastId });
+      } else {
+        toast.error('Could not auto-assign batches (insufficient stock?).', { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error('Failed to auto-assign batches', { id: toastId });
+    }
+  };
+
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
 
   const editItem = (idx: number) => {
@@ -394,9 +508,9 @@ export default function NewInvoicePage() {
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
-  const totalDiscount = lineItems.reduce((s, i) => s + (i.discountType === 'percentage' ? (i.quantity * i.rate * i.discount / 100) : (i.discountAmount || 0)), 0);
-  const globalDiscountAmount = (subtotal * (globalDiscountPercent || 0) / 100) + (discountAmountFlat || 0);
+  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
+  
   let shipCGST = 0;
   let shipSGST = 0;
   let shipIGST = 0;
@@ -413,9 +527,9 @@ export default function NewInvoicePage() {
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shipCGST;
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
-  const totalCess = lineItems.reduce((s, i) => s + (invoiceType === 'GST' ? round2((i.taxableAmount * i.cess) / 100) : 0), 0);
   
-  const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + totalCess + shippingCharge;
+  const globalDiscountAmount = globalDiscountType === '%' ? round2((totalTaxable * globalDiscountValue) / 100) : globalDiscountValue;
+  const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
@@ -444,12 +558,14 @@ export default function NewInvoicePage() {
         lineItems,
         paymentMode: combinedPaymentMode,
         paymentHistory: [
-          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
-          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
+          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, bankId: bankId1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
+          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, bankId: bankId2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
         ],
         amountReceived: totalAmountReceived,
         txnId: combinedTxnId,
         shippingCharge,
+        shippingGstRate,
+        grandTotal,
         balance,
         roundOff,
         subtotal,
@@ -461,10 +577,10 @@ export default function NewInvoicePage() {
         billTo,
         status: (totalAmountReceived >= preRoundTotal || totalAmountReceived >= grandTotal) ? 'paid' : totalAmountReceived > 0 ? 'partial' : 'draft',
       };
-      await invoicesApi.update(id as string, payload);
-      toast.success('Invoice Updated!');
+      const { data } = await invoicesApi.update(id as string, payload);
+      toast.success(`Invoice ${data.invoice.invoiceNumber} Updated!`);
       if (printAfterSave) {
-        window.open(`/print/invoice/${id}`, '_blank');
+        window.open(`/print/invoice/${data.invoice._id}`, '_blank');
       }
       router.push('/dashboard/sales');
     } catch (e: any) {
@@ -488,7 +604,7 @@ export default function NewInvoicePage() {
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label">Invoice Type</label>
-              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} disabled className="erp-input w-full bg-slate-100 cursor-not-allowed">
+              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
@@ -498,8 +614,12 @@ export default function NewInvoicePage() {
               <input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
-              <label className="erp-label">Date</label>
-              <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="erp-input w-full" />
+              <label className="erp-label">Date {fyDateRange && <span className="ml-1 text-[9px] bg-indigo-100 text-indigo-600 font-semibold px-1.5 py-0.5 rounded-full">{fyDateRange.min.slice(0,4)}-{fyDateRange.max.slice(0,4)}</span>}</label>
+              <input type="date" value={invoiceDate}
+                min={fyDateRange?.min}
+                max={fyDateRange?.max}
+                title={fyDateRange ? `FY: ${fyDateRange.min} to ${fyDateRange.max}` : ''}
+                onChange={e => setInvoiceDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
@@ -509,7 +629,10 @@ export default function NewInvoicePage() {
             </div>
             <div>
               <label className="erp-label">Due Date</label>
-              <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
+              <input type="date" value={dueDate}
+                min={fyDateRange?.min}
+                max={fyDateRange?.max}
+                onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
             </div>
             <div className="flex items-center gap-2 pt-4">
                <label className="flex items-center gap-1 text-[10px] cursor-pointer">
@@ -533,18 +656,28 @@ export default function NewInvoicePage() {
                      </button>
                    )}
                  </label>
-                 {selectedCustomer && (() => {
-                    const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
-                    return (
-                      <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-red-50 text-red-700 border-red-200' : bal < 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                          A/C Bal: {formatAccountingBalance(bal, 'customer').text}
-                      </div>
-                    );
-                  })()}
+                 {selectedCustomer && (
+                   (() => {
+                     const bal = selectedCustomer.currentBalance !== undefined ? selectedCustomer.currentBalance : (selectedCustomer.openingBalance || 0);
+                     return (
+                       <div className={`text-xs px-2 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-red-50 text-red-700 border-red-200' : bal < 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                         A/C Bal: {formatAccountingBalance(bal, 'customer').text}
+                       </div>
+                     );
+                   })()
+                 )}
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
-                  <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); }} onFocus={() => setShowCustomerDD(true)} className="erp-input w-full pr-24" placeholder="Search customer..." />
+                  <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); setCustomerHighlightIndex(-1); }} onFocus={() => setShowCustomerDD(true)} 
+                    onKeyDown={e => {
+                      if (!showCustomerDD) return;
+                      if (e.key === 'ArrowDown') { e.preventDefault(); setCustomerHighlightIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1)); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); setCustomerHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                      else if (e.key === 'Enter') { e.preventDefault(); if (customerHighlightIndex >= 0 && filteredCustomers[customerHighlightIndex]) pickCustomer(filteredCustomers[customerHighlightIndex]); }
+                      else if (e.key === 'Escape') { setShowCustomerDD(false); }
+                    }}
+                    className="erp-input w-full pr-24" placeholder="Search customer..." />
                   <button type="button" onClick={() => setShowCustomerDD(!showCustomerDD)} className="absolute right-8 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -556,9 +689,9 @@ export default function NewInvoicePage() {
                 )}
                 {showCustomerDD && filteredCustomers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                    {filteredCustomers.map(c => (
-                      <div key={c._id} onClick={() => pickCustomer(c)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
-                        {c.name}
+                    {filteredCustomers.map((c, idx) => (
+                      <div key={c._id} onClick={() => pickCustomer(c)} className={`px-2 py-1 text-xs cursor-pointer border-b border-slate-200 ${customerHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
+                        {c.name} {c.mobile ? `(${c.mobile})` : ''}
                       </div>
                     ))}
                   </div>
@@ -644,15 +777,23 @@ export default function NewInvoicePage() {
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
-                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full pr-8" placeholder="Type item name..." />
+                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); setItemHighlightIndex(-1); }} onFocus={() => setShowItemDD(true)} 
+                      onKeyDown={e => {
+                        if (!showItemDD) return;
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setItemHighlightIndex(prev => Math.min(prev + 1, filteredProducts.length - 1)); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); setItemHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                        else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) handleProductSelect(filteredProducts[itemHighlightIndex]); }
+                        else if (e.key === 'Escape') { setShowItemDD(false); }
+                      }}
+                      className="erp-input w-full pr-8" placeholder="Type item name..." />
                     <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                      {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
+                      {filteredProducts.map((p, idx) => (
+                        <div key={p._id} onClick={() => pickProduct(p)} className={`px-2 py-1.5 text-xs cursor-pointer border-b border-slate-200 flex justify-between items-center group ${itemHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                           <div className="flex flex-col">
                             <span className="text-slate-900 font-medium">{p.name}</span>
                             <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{parseFloat((p.currentStock || 0).toFixed(3))}</span></span>
@@ -709,18 +850,6 @@ export default function NewInvoicePage() {
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
                 </div>
                 
-                {lastPriceInfo && (
-                  <div className="absolute top-full left-0 mt-0.5 text-[9px] text-emerald-400 bg-slate-50/80 px-1 rounded shadow cursor-pointer hover:bg-[#F1F5F9] whitespace-nowrap z-40" onClick={() => {
-                     let newRate = lastPriceInfo.price;
-                     if (itemInput.unit === itemInput.secondaryUnit && itemInput.conversionRate) {
-                       newRate = lastPriceInfo.price / itemInput.conversionRate;
-                     }
-                     setItemInput({...itemInput, rate: newRate, selectedBaseRate: lastPriceInfo.price});
-                  }}>
-                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
-                  </div>
-                )}
-
                 {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
                   <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-white border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
@@ -812,6 +941,12 @@ export default function NewInvoicePage() {
 
         {/* Section 3: Item Grid */}
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
+           <div className="flex justify-between items-center bg-[#F8FAFC] px-2 py-1 border-b border-slate-200">
+             <div className="text-xs font-bold text-slate-700">Added Items</div>
+             <button onClick={handleAutoAssign} className="text-[10px] bg-action-100 text-action-700 font-bold px-2 py-1 rounded hover:bg-action-200 transition">
+               ✨ Auto-Assign Batches
+             </button>
+           </div>
            <div className="grid grid-cols-12 erp-grid-header border-b border-slate-200">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
@@ -877,15 +1012,12 @@ export default function NewInvoicePage() {
               
               <div>
                 <label className="erp-label block mb-1">Overall Discount</label>
-                <div className="flex gap-1">
-                  <div className="relative w-1/2">
-                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">%</span>
-                    <input type="number" value={globalDiscountPercent === 0 ? '' : globalDiscountPercent} onChange={e => { setGlobalDiscountPercent(parseFloat(e.target.value) || 0); setDiscountAmountFlat(0); }} className="erp-input w-full pl-4" placeholder="Percent" />
-                  </div>
-                  <div className="relative w-1/2">
-                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
-                    <input type="number" value={discountAmountFlat === 0 ? '' : discountAmountFlat} onChange={e => { setDiscountAmountFlat(parseFloat(e.target.value) || 0); setGlobalDiscountPercent(0); }} className="erp-input w-full pl-3" placeholder="Amount" />
-                  </div>
+                <div className="flex">
+                  <input type="number" value={globalDiscountValue === 0 ? '' : globalDiscountValue} onChange={e => setGlobalDiscountValue(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-r-none border-r-0 pl-2" placeholder="0.00" />
+                  <select value={globalDiscountType} onChange={e => setGlobalDiscountType(e.target.value)} className="erp-input w-16 rounded-l-none bg-gray-50 text-gray-700 px-1 font-bold text-center border-l-0">
+                    <option value="%">%</option>
+                    <option value="₹">₹</option>
+                  </select>
                 </div>
               </div>
 
@@ -930,9 +1062,15 @@ export default function NewInvoicePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 1</div>
-                  <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                  <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
+                  {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode1) && (
+                    <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                      <option value="">-- Select Bank --</option>
+                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                    </select>
+                  )}
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                     <input type="number" value={amountReceived1 === 0 ? '' : amountReceived1} onChange={e => setAmountReceived1(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 1" />
@@ -945,10 +1083,16 @@ export default function NewInvoicePage() {
                 
                 <div className="space-y-1">
                   <div className="text-[9px] text-slate-600 font-bold">PAYMENT 2 (Opt)</div>
-                  <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7">
+                  <select value={paymentMode2} onChange={e => setPaymentMode2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                     <option value="">None</option>
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
+                  {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode2) && (
+                    <select value={bankId2} onChange={e => setBankId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                      <option value="">-- Select Bank --</option>
+                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                    </select>
+                  )}
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                     <input type="number" value={amountReceived2 === 0 ? '' : amountReceived2} onChange={e => setAmountReceived2(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amt 2" />
@@ -989,12 +1133,7 @@ export default function NewInvoicePage() {
                     <span>-₹{(totalDiscount + globalDiscountAmount).toFixed(2)}</span>
                   </div>
                 )}
-                {shippingCharge > 0 && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>Shipping</span>
-                    <span>₹{shippingCharge.toFixed(2)}</span>
-                  </div>
-                )}
+                
                 
                 {invoiceType === 'GST' && (
                   <>
@@ -1017,10 +1156,6 @@ export default function NewInvoicePage() {
                     )}
                   </>
                 )}
-
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
-                  <span className="erp-label">Shipping / GST%</span>`n                  <div className="flex gap-1">`n                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right h-7" placeholder="Amt" />`n                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-12 text-right h-7" placeholder="GST%" />`n                  </div>
-                </div>
               </div>
 
               <div className="mt-4 pt-3 border-t-2 border-slate-300 space-y-1 bg-white -mx-2 -mb-2 p-3 rounded-b-lg">
@@ -1165,16 +1300,11 @@ export default function NewInvoicePage() {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={() => handleSave(true)} disabled={saving} className="bg-action-500 hover:bg-action-600 text-white px-4 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.2)]">
-            <Printer className="w-4 h-4" /> Save and Print
-          </button>
-          <button onClick={() => handleSave(false)} disabled={saving} className="bg-action-700 hover:bg-action-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
-            <Save className="w-4 h-4" /> Update
-          </button>
+            <button onClick={() => handleSave(true)} disabled={saving} className="btn-primary py-1.5 px-3 flex items-center gap-1 text-sm"><Printer className="w-4 h-4" /> Save and Print</button>
+            <button onClick={() => handleSave(false)} disabled={saving} className="btn-secondary py-1.5 px-3 flex items-center gap-1 text-sm"><Save className="w-4 h-4" /> Update</button>
         </div>
       </footer>
     </div>
   );
 }
-
 
