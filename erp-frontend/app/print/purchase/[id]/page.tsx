@@ -239,12 +239,24 @@ export default function PrintablePurchasePage() {
                    )}
                  </>
                )}
-               <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Discount :</span><span className="text-red-600">-{purchase.totalDiscount.toFixed(2)}</span>
-               </div>
+               {purchase.totalDiscount > 0 && (
+                 <div className="flex justify-between border-b border-gray-300 px-2 py-1">
+                   <span>Item Discount :</span><span className="text-red-600">-{purchase.totalDiscount.toFixed(2)}</span>
+                 </div>
+               )}
+               {purchase.additionalDiscount > 0 && (
+                 <div className="flex justify-between border-b border-gray-300 px-2 py-1">
+                   <span>Discount :</span><span className="text-red-600">-{purchase.additionalDiscount.toFixed(2)}</span>
+                 </div>
+               )}
                {purchase.shippingCharge > 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                    <span>Shipping / Freight :</span><span>{purchase.shippingCharge.toFixed(2)}</span>
+                 </div>
+               )}
+               {purchase.roundOff !== 0 && (
+                 <div className="flex justify-between border-b border-gray-300 px-2 py-1">
+                   <span>Round off :</span><span>{purchase.roundOff.toFixed(2)}</span>
                  </div>
                )}
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
