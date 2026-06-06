@@ -10,7 +10,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../hooks/useRedux';
 import { logout } from '../../store/slices/authSlice';
 
-const VERSION = 'v 2.0.0';
+const VERSION = 'v 2.5.0';
 
 const NAV_ITEMS = [
   { label: 'Dashboard',   href: '/dashboard',           icon: LayoutDashboard },

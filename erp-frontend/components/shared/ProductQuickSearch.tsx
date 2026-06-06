@@ -76,7 +76,7 @@ export default function ProductQuickSearch() {
               <div>
                 <p className="text-sm font-bold text-slate-900">{p.name}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Stock: {p.currentStock || 0}</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Stock: {p.currentStock || 0} {p.unit || ''}</span>
                   <span className="text-[10px] font-semibold px-2 py-0.5 bg-green-50 text-green-700 rounded border border-green-100">₹{p.sellingPrice}</span>
                 </div>
               </div>
@@ -104,10 +104,17 @@ export default function ProductQuickSearch() {
             <div className="p-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Selling Price</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Retail Price</span>
                   <div className="text-sm font-bold text-emerald-700 flex items-center gap-1">
                     <IndianRupee className="w-3.5 h-3.5" />
-                    {selectedProduct.sellingPrice}
+                    {selectedProduct.sellingPrice || 0}
+                  </div>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Wholesale Price</span>
+                  <div className="text-sm font-bold text-purple-700 flex items-center gap-1">
+                    <IndianRupee className="w-3.5 h-3.5" />
+                    {selectedProduct.sellingPrice2 || selectedProduct.sellingPrice || 0}
                   </div>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
@@ -115,6 +122,13 @@ export default function ProductQuickSearch() {
                   <div className="text-sm font-bold text-slate-700 flex items-center gap-1">
                     <IndianRupee className="w-3.5 h-3.5" />
                     {selectedProduct.purchasePrice || 0}
+                  </div>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">M.R.P</span>
+                  <div className="text-sm font-bold text-orange-700 flex items-center gap-1">
+                    <IndianRupee className="w-3.5 h-3.5" />
+                    {selectedProduct.mrp || 0}
                   </div>
                 </div>
                 <div className="bg-slate-50 border border-slate-100 rounded-xl p-3">
