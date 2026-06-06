@@ -47,6 +47,7 @@ export default function NewInvoicePage() {
   const [fyDateRange, setFyDateRange] = useState<{ min: string; max: string; default: string } | null>(null);
   const [invoiceDate, setInvoiceDate] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
   const [contactNo, setContactNo] = useState('');
