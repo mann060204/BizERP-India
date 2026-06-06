@@ -1,4 +1,11 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Fix for local development: Force Node.js to use Google's DNS servers
+// This completely bypasses ISP DNS blocking of mongodb+srv:// SRV records
+if (process.env.NODE_ENV === 'development') {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+}
 
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) {
