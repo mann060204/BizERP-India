@@ -557,6 +557,7 @@ export default function NewInvoicePage() {
         isInterState,
         invoiceType,
         discountAmount: globalDiscountAmount,
+        roundOff,
         lineItems,
         paymentMode: combinedPaymentMode,
         paymentHistory: [
