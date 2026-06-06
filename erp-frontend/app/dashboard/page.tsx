@@ -457,32 +457,39 @@ export default function DashboardPage() {
               </ChartCard>
               )}
 
-              {/* Dead vs Fast Moving */}
-              <ChartCard title="Dead vs Fast Moving Stock" icon={<SlidersHorizontal className="w-5 h-5 text-blue-500" />}
-                filter={<MiniFilter onChange={p => { setStockLoading(true); dashboardApi.stockMovement(p).then(d => setStockMovement(d.data || { summary: [], deadItems: [] })).finally(() => setStockLoading(false)); }} />}
-                loading={stockLoading}>
+              {/* Cash Flow Overview */}
+              <ChartCard title="Cash Flow Overview" icon={<IndianRupee className="w-5 h-5 text-emerald-500" />}>
                 <div className="flex items-center gap-3 h-64">
-                  <div className="w-32 h-full flex-shrink-0">
+                  <div className="w-48 h-full flex-shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={stockMovement.summary} cx="50%" cy="50%" innerRadius={28} outerRadius={48} dataKey="value" nameKey="name" paddingAngle={4}>
-                          {stockMovement.summary.map((_: any, i: number) => <Cell key={i} fill={DONUT_COLORS[i]} />)}
+                        <Pie data={[
+                          { name: 'Income', value: trendData.reduce((s, t) => s + (t.sales || 0), 0) },
+                          { name: 'Purchases', value: trendData.reduce((s, t) => s + (t.purchases || 0), 0) },
+                          { name: 'Expenses', value: trendData.reduce((s, t) => s + (t.expenses || 0), 0) }
+                        ]} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" nameKey="name" paddingAngle={4}>
+                          <Cell fill="#10B981" />
+                          <Cell fill="#F59E0B" />
+                          <Cell fill="#EF4444" />
                         </Pie>
                         <Tooltip content={<CustomTip />} />
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: '9px' }} />
+                        <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex-1 overflow-y-auto space-y-1 max-h-64 pr-1">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dead Stock</p>
-                    {stockMovement.deadItems?.slice(0, 5).map((item: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between py-0.5 border-b border-slate-50">
-                        <span className="text-[10px] text-slate-600 truncate max-w-[90px]">{item.name}</span>
-                        <span className="text-[10px] font-bold text-red-500 ml-1">{parseFloat(Number(item.stock).toFixed(3))} u</span>
-                      </div>
-                    ))}
-                    {(!stockMovement.deadItems || stockMovement.deadItems.length === 0) &&
-                      <p className="text-[10px] text-emerald-500 font-medium">No dead stock 🎉</p>}
+                  <div className="flex-1 space-y-3 pr-2 flex flex-col justify-center">
+                    <div className="border-b border-slate-100 pb-2">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Income</p>
+                      <p className="text-sm font-bold text-emerald-600">₹{fmt(trendData.reduce((s, t) => s + (t.sales || 0), 0))}</p>
+                    </div>
+                    <div className="border-b border-slate-100 pb-2">
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Purchases</p>
+                      <p className="text-sm font-bold text-amber-600">₹{fmt(trendData.reduce((s, t) => s + (t.purchases || 0), 0))}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Expenses</p>
+                      <p className="text-sm font-bold text-red-600">₹{fmt(trendData.reduce((s, t) => s + (t.expenses || 0), 0))}</p>
+                    </div>
                   </div>
                 </div>
               </ChartCard>
