@@ -9,7 +9,7 @@ import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, 
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';
-import { banksApi } from '../../../../lib/erp-api';
+import { banksApi, accountsApi } from '../../../../lib/erp-api';
 
 interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; currentBalance?: number; openingBalance?: number; }
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
@@ -113,7 +113,7 @@ export default function NewPurchasePage() {
           suppliersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
           businessApi.getProfile(),
-          banksApi.list()
+          accountsApi.list({ type: 'Bank' })
         ]);
         setSuppliers(sRes.data.suppliers);
         const urlSuppId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('supplier') : null;
@@ -143,7 +143,7 @@ export default function NewPurchasePage() {
           }
         }
         setProducts(pRes.data.products);
-        setBanks(banksRes.data?.data || banksRes.data || []);
+        setBanks(banksRes.accounts || []);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) {
           setUnits(bizUnits);

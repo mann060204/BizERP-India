@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi } from '../../../../lib/erp-api';
+import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '@/lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
@@ -95,7 +95,7 @@ export default function NewInvoicePage() {
   const [banks, setBanks] = useState<any[]>([]);
 
   useEffect(() => {
-    banksApi.list().then(res => setBanks(res.data?.data || res.data || []));
+    accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
   }, []);
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');

@@ -4,7 +4,7 @@ import {
   X, Search, User, Briefcase, FileText, 
   CreditCard, Calendar, FileType, CheckCircle2, Loader2, AlertCircle 
 } from 'lucide-react';
-import { customersApi, suppliersApi, invoicesApi, purchasesApi, banksApi } from '../../../lib/erp-api';
+import { customersApi, suppliersApi, invoicesApi, purchasesApi, banksApi, accountsApi } from '../../../lib/erp-api';
 import toast from 'react-hot-toast';
 import { formatAccountingBalance } from '@/lib/utils';
 
@@ -48,8 +48,8 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
     const fetchBanks = async () => {
       setLoadingBanks(true);
       try {
-        const res = await banksApi.list();
-        setBanks(res.data?.data || res.data || []);
+        const res: any = await accountsApi.list({ type: 'Bank' });
+        setBanks(res.accounts || []);
       } catch (err) {
         toast.error('Failed to load banks');
       } finally {
