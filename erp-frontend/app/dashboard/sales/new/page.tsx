@@ -101,6 +101,26 @@ export default function NewInvoicePage() {
   useEffect(() => {
     accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
   }, []);
+
+  useEffect(() => {
+    if (paymentMode1 === 'UPI') {
+      const defaultUpiBank = banks.find(b => b.isDefaultUpi);
+      if (defaultUpiBank) setBankId1(defaultUpiBank._id);
+    } else if (paymentMode1 === 'Bank Transfer' || paymentMode1 === 'Cheque') {
+      const defaultNeftBank = banks.find(b => b.isDefaultNeft);
+      if (defaultNeftBank) setBankId1(defaultNeftBank._id);
+    }
+  }, [paymentMode1, banks]);
+
+  useEffect(() => {
+    if (paymentMode2 === 'UPI') {
+      const defaultUpiBank = banks.find(b => b.isDefaultUpi);
+      if (defaultUpiBank) setBankId2(defaultUpiBank._id);
+    } else if (paymentMode2 === 'Bank Transfer' || paymentMode2 === 'Cheque') {
+      const defaultNeftBank = banks.find(b => b.isDefaultNeft);
+      if (defaultNeftBank) setBankId2(defaultNeftBank._id);
+    }
+  }, [paymentMode2, banks]);
   const [amountReceived1, setAmountReceived1] = useState(0);
   const [txnId1, setTxnId1] = useState('');
   const [paymentDate1, setPaymentDate1] = useState('');

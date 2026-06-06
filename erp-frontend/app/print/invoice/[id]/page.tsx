@@ -483,13 +483,13 @@ export default function PrintableInvoicePage() {
                  </>
                )}
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Discount :</span><span className="text-red-600">-{invoice.totalDiscount.toFixed(2)}</span>
+                 <span>Discount :</span><span className="text-red-600">-{(invoice.totalDiscount + (invoice.discountAmount || 0)).toFixed(2)}</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
                  <span>Shipping / Freight :</span><span>{invoice.shippingCharge.toFixed(2)}</span>
                </div>
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1">
-                 <span>Round off :</span><span>{(invoice.grandTotal - (invoice.totalTaxableAmount + invoice.totalGST + invoice.shippingCharge - invoice.totalDiscount)).toFixed(2)}</span>
+                 <span>Round off :</span><span>{invoice.roundOff !== undefined ? invoice.roundOff.toFixed(2) : (invoice.grandTotal - (invoice.totalTaxableAmount + invoice.totalGST + invoice.shippingCharge - (invoice.discountAmount || 0))).toFixed(2)}</span>
                </div>
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
                  <span>Total Amount :</span><span>{invoice.grandTotal.toFixed(2)}</span>

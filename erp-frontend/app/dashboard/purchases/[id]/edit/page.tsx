@@ -108,6 +108,16 @@ export default function EditPurchasePage() {
   const [paymentBankId, setPaymentBankId] = useState('');
 
   useEffect(() => {
+    if (paymentMode === 'UPI') {
+      const defaultUpiBank = banks.find(b => b.isDefaultUpi);
+      if (defaultUpiBank) setPaymentBankId(defaultUpiBank._id);
+    } else if (paymentMode === 'Bank Transfer' || paymentMode === 'Cheque') {
+      const defaultNeftBank = banks.find(b => b.isDefaultNeft);
+      if (defaultNeftBank) setPaymentBankId(defaultNeftBank._id);
+    }
+  }, [paymentMode, banks]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const [sRes, pRes, bRes, banksRes] = await Promise.all([

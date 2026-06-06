@@ -1,13 +1,16 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { accountsApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '../../../../lib/utils';
 import { Plus, Search, Landmark, ArrowRightLeft, Loader2, X, Download, Filter, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; }
+interface Account { _id: string; name: string; type: string; bankName?: string; accountNumber?: string; currentBalance: number; balanceType: string; openingBalance?: number; isDefaultUpi?: boolean; isDefaultNeft?: boolean; }
 interface LedgerEntry { _id: string; date: string; description: string; debit: number; credit: number; referenceType: string; closingBalance?: number; }
 
 export default function AccountsPage() {
@@ -92,10 +95,13 @@ export default function AccountsPage() {
   const [accNo, setAccNo] = useState('');
   const [openingBal, setOpeningBal] = useState('');
   const [balType, setBalType] = useState('Dr');
+  const [isDefaultUpi, setIsDefaultUpi] = useState(false);
+  const [isDefaultNeft, setIsDefaultNeft] = useState(false);
 
   const handleOpenAddAccount = () => {
     setEditAccountId(null);
     setAccName(''); setBankName(''); setAccNo(''); setOpeningBal(''); setBalType('Dr');
+    setIsDefaultUpi(false); setIsDefaultNeft(false);
     setShowAddAccount(true);
   };
 
@@ -107,6 +113,8 @@ export default function AccountsPage() {
     setAccNo(selectedAccount.accountNumber || '');
     setOpeningBal(selectedAccount.openingBalance?.toString() || '');
     setBalType(selectedAccount.balanceType || 'Dr');
+    setIsDefaultUpi(selectedAccount.isDefaultUpi || false);
+    setIsDefaultNeft(selectedAccount.isDefaultNeft || false);
     setShowAddAccount(true);
   };
 
@@ -138,7 +146,9 @@ export default function AccountsPage() {
         type: type,
         accountNumber: accNo,
         openingBalance: openingBal || 0,
-        balanceType: balType
+        balanceType: balType,
+        isDefaultUpi,
+        isDefaultNeft
       };
 
       if (editAccountId) {
@@ -269,7 +279,11 @@ export default function AccountsPage() {
                       onClick={() => { setSelectedAccount(acc); setFromDate(''); setToDate(''); }}
                       className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition ${selectedAccount?._id === acc._id ? 'bg-blue-50/50 border-l-4 border-action-500' : 'border-l-4 border-transparent'}`}
                     >
-                      <div className="font-semibold text-slate-900 text-sm truncate">{acc.name}</div>
+                      <div className="font-semibold text-slate-900 text-sm truncate flex items-center gap-2">
+                        {acc.name}
+                        {acc.isDefaultUpi && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 uppercase">UPI</span>}
+                        {acc.isDefaultNeft && <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-blue-700 uppercase">NEFT</span>}
+                      </div>
                       {acc.accountNumber && <div className="text-xs text-slate-500 mt-0.5">A/c No: {acc.accountNumber}</div>}
                     </button>
                   ))}
@@ -300,144 +314,6 @@ export default function AccountsPage() {
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Current Balance</p>
                   <p className={`text-2xl font-bold ${formatAccountingBalance(selectedAccount.balanceType === 'Dr' ? selectedAccount.currentBalance : -selectedAccount.currentBalance, type).colorClass}`}>
                     {formatAccountingBalance(selectedAccount.balanceType === 'Dr' ? selectedAccount.currentBalance : -selectedAccount.currentBalance, type).text}
-                  </p>
-                </div>
-              </div>
-
-              {/* Filters & Actions */}
-              <div className="p-4 bg-slate-50/50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-600 uppercase">From</span>
-                    <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-600 uppercase">To</span>
-                    <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white" />
-                  </div>
-                  <button onClick={handleSearchLedger} className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg transition">
-                    Search
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setShowAddTransaction(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition">
-                    <Plus className="w-4 h-4" /> Adjust
-                  </button>
-                  <button onClick={() => setShowTransfer(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition">
-                    <ArrowRightLeft className="w-4 h-4" /> Transfer
-                  </button>
-                </div>
-              </div>
-
-              {/* Ledger Table */}
-              <div className="flex-1 overflow-auto bg-white">
-                {loadingLedger ? (
-                  <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-500" /></div>
-                ) : (
-                  <div className="overflow-x-auto w-full">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-[#1A1A1A] sticky top-0">
-                      <tr>
-                        <th className="px-5 py-3 text-white font-medium text-xs tracking-wider">Date</th>
-                        <th className="px-5 py-3 text-white font-medium text-xs tracking-wider">Description</th>
-                        <th className="px-5 py-3 text-white font-medium text-xs tracking-wider text-right">Debit (₹)</th>
-                        <th className="px-5 py-3 text-white font-medium text-xs tracking-wider text-right">Credit (₹)</th>
-                        <th className="px-5 py-3 text-white font-medium text-xs tracking-wider text-right w-12"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {/* Opening Balance Row */}
-                      {fromDate && (
-                        <tr className="bg-slate-50/80 font-semibold">
-                          <td className="px-5 py-3 text-slate-600" colSpan={2}>Opening Balance</td>
-                          <td className="px-5 py-3 text-right text-red-600">{selectedAccount.balanceType === 'Dr' ? periodOpeningBalance.toFixed(2) : ''}</td>
-                          <td className="px-5 py-3 text-right text-emerald-600">{selectedAccount.balanceType === 'Cr' ? periodOpeningBalance.toFixed(2) : ''}</td>
-                          <td className="px-5 py-3"></td>
-                        </tr>
-                      )}
-                      
-                      {/* Transactions */}
-                      {ledger.map((txn) => {
-                        return (
-                          <tr key={txn._id} className="hover:bg-slate-50 transition group/row">
-                            <td className="px-5 py-3 text-slate-600">{new Date(txn.date).toLocaleDateString('en-IN')}</td>
-                            <td className="px-5 py-3 text-slate-900">{txn.description}</td>
-                            <td className="px-5 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
-                            <td className="px-5 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
-                            <td className="px-2 py-3 text-right">
-                              {txn.referenceType !== 'Opening' && (
-                                <button onClick={() => handleDeleteTransaction(txn._id, txn.referenceType)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition opacity-0 group-hover/row:opacity-100">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-
-                      {/* Closing Balance Row */}
-                      {(() => {
-                        const totalDr = ledger.reduce((acc, curr) => acc + (curr.debit || 0), 0) + (selectedAccount.balanceType === 'Dr' ? periodOpeningBalance : 0);
-                        const totalCr = ledger.reduce((acc, curr) => acc + (curr.credit || 0), 0) + (selectedAccount.balanceType === 'Cr' ? periodOpeningBalance : 0);
-                        const diff = totalDr - totalCr;
-                        const closingBal = Math.abs(diff);
-                        const closingBalType = diff >= 0 ? 'Dr' : 'Cr';
-
-                        return (
-                          <tr className="bg-slate-50/80 font-bold border-t-2 border-slate-200">
-                            <td className="px-5 py-4 text-slate-800" colSpan={2}>Closing Balance</td>
-                            <td colSpan={2} className="px-5 py-4 text-right text-slate-900">
-                              {closingBal.toFixed(2)} {closingBalType}
-                            </td>
-                            <td className="px-5 py-4"></td>
-                          </tr>
-                        );
-                      })()}
-                    </tbody>
-                  </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center h-full text-slate-500">
-              <Landmark className="w-16 h-16 mb-4 text-slate-300" />
-              <p>Select an account from the left pane to view its ledger.</p>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Modals */}
-      {showAddAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-bold text-slate-900">{editAccountId ? 'Edit' : 'Add'} {type} Account</h3>
-              <button onClick={() => setShowAddAccount(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"><X className="w-5 h-5" /></button>
-            </div>
-            <form onSubmit={handleCreateAccount} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Account Name <span className="text-red-500">*</span></label>
-                <input required value={accName} onChange={e => setAccName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. State Bank of India" />
-              </div>
-              {(type === 'Bank' || type === 'Loan') && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Bank Name</label>
-                    <input value={bankName} onChange={e => setBankName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Account Number</label>
-                    <input value={accNo} onChange={e => setAccNo(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
-                  </div>
-                </>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Opening Balance</label>
-                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
-                </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Type</label>
                   <select value={balType} onChange={e => setBalType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">

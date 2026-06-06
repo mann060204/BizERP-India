@@ -13,6 +13,8 @@ export interface IAccount extends Document {
   balanceType: 'Dr' | 'Cr';
   currentBalance: number;
   isActive: boolean;
+  isDefaultUpi?: boolean;
+  isDefaultNeft?: boolean;
 }
 
 const accountSchema = new mg.Schema(
@@ -29,7 +31,9 @@ const accountSchema = new mg.Schema(
     openingBalance: { type: Number, default: 0 },
     balanceType: { type: String, enum: ['Dr', 'Cr'], required: true, default: 'Dr' },
     currentBalance: { type: Number, default: 0 },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    isDefaultUpi: { type: Boolean, default: false },
+    isDefaultNeft: { type: Boolean, default: false }
   },
   { timestamps: true }
 );

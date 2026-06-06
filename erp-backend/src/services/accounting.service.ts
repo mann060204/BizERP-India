@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
+import Account from '../models/Account.model';
 import AccountLedger from '../models/AccountLedger.model';
 import Customer from '../models/Customer.model';
 import Supplier from '../models/Supplier.model';
 import Business from '../models/Business.model';
-import Bank from '../models/Bank.model';
 
 export class AccountingService {
   /**
@@ -66,17 +66,45 @@ export class AccountingService {
   /**
    * Helper to update Cash or specific Bank balance based on payment received or made
    */
-  static async updateCashOrBankBalance(businessId: string, amount: number, paymentMode: string, bankId?: string, isReceiving: boolean = true) {
+  static async updateCashOrBankBalance(
+    businessId: string, 
+    amount: number, 
+    paymentMode: string, 
+    bankId?: string, 
+    isReceiving: boolean = true,
+    description: string = 'Payment',
+    referenceType: string = 'Payment',
+    referenceId?: string
+  ) {
     if (!amount) return;
     const change = isReceiving ? amount : -amount;
     
     if (paymentMode.toLowerCase() === 'cash') {
       await Business.findByIdAndUpdate(businessId, { $inc: { cashInHand: change } });
     } else if (bankId && paymentMode.toLowerCase() !== 'cash') {
-      await Bank.findOneAndUpdate(
-        { _id: bankId, businessId },
-        { $inc: { currentBalance: change } }
-      );
+      const account = await Account.findOne({ _id: bankId, businessId });
+      if (account) {
+        // Update balance
+        if (account.balanceType === 'Dr') {
+          account.currentBalance += change;
+        } else {
+          account.currentBalance -= change;
+        }
+        await account.save();
+
+        // Create Ledger Entry
+        await AccountLedger.create({
+          businessId,
+          accountId: bankId,
+          date: new Date(),
+          description,
+          debit: isReceiving ? amount : 0,
+          credit: !isReceiving ? amount : 0,
+          referenceType,
+          referenceId,
+          closingBalance: account.currentBalance
+        });
+      }
     }
   }
 
@@ -111,7 +139,10 @@ export class AccountingService {
           referenceType: 'Payment',
           referenceId: invoice._id.toString()
         });
-        await this.updateCashOrBankBalance(invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, true);
+        await this.updateCashOrBankBalance(
+          invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, true,
+          `Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+        );
       }
     } else if (invoice.amountReceived > 0) {
       await AccountLedger.create({
@@ -124,7 +155,10 @@ export class AccountingService {
         referenceType: 'Payment',
         referenceId: invoice._id.toString()
       });
-      await this.updateCashOrBankBalance(invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, true);
+      await this.updateCashOrBankBalance(
+        invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, true,
+        `Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+      );
     }
 
     await this.updateCustomerBalance(invoice.customerId, invoice.businessId.toString());
@@ -144,10 +178,16 @@ export class AccountingService {
     // Reverse Cash/Bank
     if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {
       for (const payment of invoice.paymentHistory) {
-        await this.updateCashOrBankBalance(invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, false);
+        await this.updateCashOrBankBalance(
+          invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, false,
+          `Reversal: Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+        );
       }
     } else if (invoice.amountReceived > 0) {
-      await this.updateCashOrBankBalance(invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, false);
+      await this.updateCashOrBankBalance(
+        invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, false,
+        `Reversal: Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+      );
     }
     
     await this.updateCustomerBalance(invoice.customerId, invoice.businessId.toString());
@@ -183,7 +223,10 @@ export class AccountingService {
         referenceType: 'Payment',
         referenceId: bill._id.toString()
       });
-      await this.updateCashOrBankBalance(bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, false);
+      await this.updateCashOrBankBalance(
+        bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, false,
+        `Payment Made (Bill #${bill.billNumber})`, 'Payment', bill._id.toString()
+      );
     }
 
     await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
@@ -202,7 +245,10 @@ export class AccountingService {
     
     // Reverse Cash/Bank (For purchase, we originally paid, so to reverse we add the cash back)
     if (bill.amountPaid > 0) {
-      await this.updateCashOrBankBalance(bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, true);
+      await this.updateCashOrBankBalance(
+        bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, true,
+        `Reversal: Payment Made (Bill #${bill.billNumber})`, 'Payment', bill._id.toString()
+      );
     }
     
     await this.updateSupplierBalance(bill.supplierId, bill.businessId.toString());
