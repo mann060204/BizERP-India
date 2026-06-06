@@ -365,7 +365,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
         amountPaid: paid,
         balance,
         paymentMode: paymentMode || 'Cash',
-        bankId: paymentBankId !== undefined ? paymentBankId : existingPurchase.bankId,
+        bankId: paymentBankId === '' ? null : (paymentBankId || existingPurchase.bankId),
         paymentDate: paymentDate ? new Date(paymentDate) : undefined,
         status: status || (paid >= totals.grandTotal ? 'paid' : paid > 0 ? 'partial' : 'received'),
         notes,

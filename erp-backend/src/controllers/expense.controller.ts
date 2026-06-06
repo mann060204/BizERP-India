@@ -71,7 +71,7 @@ export const createExpense = async (req: AuthRequest, res: Response): Promise<vo
       req.user!.businessId.toString(),
       totalWithTax,
       paymentMode || 'Cash',
-      req.body.bankId,
+      req.body.bankId === '' ? undefined : req.body.bankId,
       false // Outflow
     );
 

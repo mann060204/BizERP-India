@@ -133,7 +133,7 @@ export const recordPayment = async (req: AuthRequest, res: Response): Promise<vo
       date ? new Date(date) : new Date(), 
       referenceNo || '', 
       notes || '',
-      bankId
+      bankId === '' ? undefined : bankId
     );
     
     res.json({ message: 'Payment recorded successfully', newBalance });
