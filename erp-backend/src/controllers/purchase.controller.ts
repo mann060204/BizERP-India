@@ -73,14 +73,19 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       Number(shippingCharge) || 0, 
       Number(shippingGstRate) || 0
     );
+    // Override auto-rounded grandTotal to allow accurate explicit roundOff
+    totals.grandTotal = Math.round((totals.totalTaxableAmount + totals.totalGST + (Number(shippingCharge) || 0)) * 100) / 100;
+    
     if (additionalDiscount && !isNaN(Number(additionalDiscount))) {
       totals.grandTotal -= Number(additionalDiscount);
     }
     if (roundOff && !isNaN(Number(roundOff))) {
       totals.grandTotal += Number(roundOff);
     }
+    totals.grandTotal = Math.round(totals.grandTotal * 100) / 100;
+    
     const paid = Number(amountPaid) || 0;
-    const balance = totals.grandTotal - paid;
+    const balance = Math.round((totals.grandTotal - paid) * 100) / 100;
 
     // Add stock for product items
     let batchesArray = batches || [];
@@ -250,15 +255,19 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
       Number(shippingCharge) || 0, 
       Number(shippingGstRate) || 0
     );
+    // Override auto-rounded grandTotal to allow accurate explicit roundOff
+    totals.grandTotal = Math.round((totals.totalTaxableAmount + totals.totalGST + (Number(shippingCharge) || 0)) * 100) / 100;
+    
     if (additionalDiscount && !isNaN(Number(additionalDiscount))) {
       totals.grandTotal -= Number(additionalDiscount);
     }
     if (roundOff && !isNaN(Number(roundOff))) {
       totals.grandTotal += Number(roundOff);
     }
+    totals.grandTotal = Math.round(totals.grandTotal * 100) / 100;
     
     const paid = Number(amountPaid) || 0;
-    const balance = totals.grandTotal - paid;
+    const balance = Math.round((totals.grandTotal - paid) * 100) / 100;
 
     // Add new stock
     let newBatchesArray = batches || [];
