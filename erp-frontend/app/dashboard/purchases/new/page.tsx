@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchasesApi, businessApi, inventoryApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '@/lib/utils';
-import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
+import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplierModal';

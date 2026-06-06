@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../../lib/erp-api';
-import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
+import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../../components/modals/QuickAddSupplierModal';
