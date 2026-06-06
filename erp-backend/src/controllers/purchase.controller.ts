@@ -73,17 +73,17 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
       Number(shippingCharge) || 0, 
       Number(shippingGstRate) || 0
     );
-    // Override auto-rounded grandTotal to allow accurate explicit roundOff
-    totals.grandTotal = Math.round((totals.totalTaxableAmount + totals.totalGST + (Number(shippingCharge) || 0)) * 100) / 100;
-    
+
+    // Apply additional discount and round-off on top of the accurate base total
+    let computedGrandTotal = totals.grandTotal;
     if (additionalDiscount && !isNaN(Number(additionalDiscount))) {
-      totals.grandTotal -= Number(additionalDiscount);
+      computedGrandTotal -= Number(additionalDiscount);
     }
     if (roundOff && !isNaN(Number(roundOff))) {
-      totals.grandTotal += Number(roundOff);
+      computedGrandTotal += Number(roundOff);
     }
-    totals.grandTotal = Math.round(totals.grandTotal * 100) / 100;
-    
+    totals.grandTotal = Math.round(computedGrandTotal * 100) / 100;
+
     const paid = Number(amountPaid) || 0;
     const balance = Math.round((totals.grandTotal - paid) * 100) / 100;
 
@@ -255,17 +255,17 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
       Number(shippingCharge) || 0, 
       Number(shippingGstRate) || 0
     );
-    // Override auto-rounded grandTotal to allow accurate explicit roundOff
-    totals.grandTotal = Math.round((totals.totalTaxableAmount + totals.totalGST + (Number(shippingCharge) || 0)) * 100) / 100;
-    
+
+    // Apply additional discount and round-off on top of the accurate base total
+    let computedGrandTotal = totals.grandTotal;
     if (additionalDiscount && !isNaN(Number(additionalDiscount))) {
-      totals.grandTotal -= Number(additionalDiscount);
+      computedGrandTotal -= Number(additionalDiscount);
     }
     if (roundOff && !isNaN(Number(roundOff))) {
-      totals.grandTotal += Number(roundOff);
+      computedGrandTotal += Number(roundOff);
     }
-    totals.grandTotal = Math.round(totals.grandTotal * 100) / 100;
-    
+    totals.grandTotal = Math.round(computedGrandTotal * 100) / 100;
+
     const paid = Number(amountPaid) || 0;
     const balance = Math.round((totals.grandTotal - paid) * 100) / 100;
 

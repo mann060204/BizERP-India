@@ -56,7 +56,8 @@ export const calculateInvoiceTotals = (
 
     const gross = qty * rate;
     const discountAmt = (gross * discountPct) / 100;
-    const taxableAmount = gross - discountAmt;
+    // Round taxable amount per item — matches frontend calculateItem()
+    const taxableAmount = round2(gross - discountAmt);
 
     let cgst = 0, sgst = 0, igst = 0;
     if (isNonGst) {
@@ -64,16 +65,17 @@ export const calculateInvoiceTotals = (
       sgst = 0;
       igst = 0;
     } else if (isInterState) {
-      igst = (taxableAmount * gstRate) / 100;
+      igst = round2((taxableAmount * gstRate) / 100);
     } else {
-      cgst = (taxableAmount * gstRate) / 2 / 100;
-      sgst = (taxableAmount * gstRate) / 2 / 100;
+      cgst = round2((taxableAmount * gstRate) / 2 / 100);
+      sgst = round2((taxableAmount * gstRate) / 2 / 100);
     }
 
-    const totalAmount = taxableAmount + cgst + sgst + igst;
+    const totalAmount = round2(taxableAmount + cgst + sgst + igst);
 
     subtotal += gross;
-    totalDiscount += discountAmt;
+    totalDiscount += round2(discountAmt);
+    // Accumulate already-rounded values — keeps backend in sync with frontend
     totalTaxableAmount += taxableAmount;
     totalCGST += cgst;
     totalSGST += sgst;
@@ -83,11 +85,11 @@ export const calculateInvoiceTotals = (
       ...item,
       unit: item.unit || 'Nos',
       discount: discountPct,
-      taxableAmount: round2(taxableAmount),
-      cgst: round2(cgst),
-      sgst: round2(sgst),
-      igst: round2(igst),
-      totalAmount: round2(totalAmount),
+      taxableAmount,
+      cgst,
+      sgst,
+      igst,
+      totalAmount,
     };
   });
 
@@ -120,7 +122,7 @@ export const calculateInvoiceTotals = (
     totalSGST: round2(totalSGST),
     totalIGST: round2(totalIGST),
     totalGST: round2(totalGST),
-    grandTotal: Math.round(grandTotal),
+    grandTotal: round2(grandTotal),
   };
 };
 
