@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { expensesApi, businessApi, accountsApi } from '../../../lib/erp-api';
+import { expensesApi, businessApi, accountsApi, banksApi } from '../../../lib/erp-api';
 import { Plus, Search, Receipt, Trash2, Loader2, X, Edit } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -24,7 +24,7 @@ export default function ExpensesPage() {
   const [form, setForm] = useState({ category: 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false, bankAccountId: '' });
 
   useEffect(() => {
-    accountsApi.list({ type: 'Bank' }).then(data => setBankAccounts(data.accounts || [])).catch(() => {});
+    banksApi.list().then(res => setBankAccounts(res.data || [])).catch(() => {});
   }, []);
 
   // Load categories from business profile on mount
