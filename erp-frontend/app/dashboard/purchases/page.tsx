@@ -11,7 +11,7 @@ interface Purchase { _id: string; billNumber: string; billDate: string; supplier
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   draft:     { label: 'Draft',    color: 'text-slate-800 bg-slate-200 font-bold border border-slate-300 shadow-sm', icon: FileText },
-  received:  { label: 'Received', color: 'text-blue-700 bg-blue-50 border border-blue-200',    icon: Clock },
+  received:  { label: 'Unpaid',   color: 'text-red-700 bg-red-50 border border-red-200 font-bold',    icon: Clock },
   paid:      { label: 'Paid',     color: 'text-white bg-emerald-500 font-bold shadow-sm border border-emerald-600',  icon: CheckCircle },
   partial:   { label: 'Partial',  color: 'text-white bg-orange-500 font-bold shadow-sm border border-orange-600',icon: AlertCircle },
   overdue:   { label: 'Overdue',  color: 'text-white bg-red-500 font-bold shadow-sm border border-red-600',      icon: AlertCircle },

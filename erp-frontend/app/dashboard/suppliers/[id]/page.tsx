@@ -483,11 +483,11 @@ export default function EditSupplierPage() {
                           <tbody className="divide-y divide-[#1A1A1A]">
                             {purchaseBills.map((bill: any) => (
                                <tr key={bill._id} className="hover:bg-[#F1F5F9] cursor-pointer" onClick={() => router.push(`/dashboard/purchases`)}>
-                                 <td className="px-4 py-3 text-blue-400 font-mono">{bill.purchaseBillNumber}</td>
-                                 <td className="px-4 py-3">{new Date(bill.purchaseBillDate).toLocaleDateString()}</td>
+                                 <td className="px-4 py-3 text-blue-400 font-mono">{bill.billNumber}</td>
+                                 <td className="px-4 py-3">{new Date(bill.billDate).toLocaleDateString()}</td>
                                  <td className="px-4 py-3">{bill.lineItems?.length || 0}</td>
                                  <td className="px-4 py-3">
-                                   <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide border ${bill.status === 'paid' ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm' : bill.status === 'partial' ? 'bg-orange-500 text-white border-orange-600 shadow-sm' : 'bg-slate-200 text-slate-800 border-slate-300 shadow-sm'}`}>{bill.status}</span>
+                                   <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide border ${bill.status === 'paid' ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm' : bill.status === 'partial' ? 'bg-orange-500 text-white border-orange-600 shadow-sm' : bill.status === 'received' ? 'bg-red-50 text-red-700 border-red-200 shadow-sm' : 'bg-slate-200 text-slate-800 border-slate-300 shadow-sm'}`}>{bill.status === 'received' ? 'unpaid' : bill.status}</span>
                                  </td>
                                  <td className="px-4 py-3 text-right font-bold text-slate-900">₹{bill.grandTotal?.toFixed(2) || '0.00'}</td>
                                </tr>
