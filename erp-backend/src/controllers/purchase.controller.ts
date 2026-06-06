@@ -102,6 +102,9 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
             salePrice: item.rate,
             quantity: item.quantity
           });
+          // Update the totals.lineItems array so the batchNo is saved to the database
+          const tItem = totals.lineItems.find(t => t.productId?.toString() === item.productId?.toString() && !t.batchNo);
+          if (tItem) tItem.batchNo = item.batchNo;
         }
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
@@ -284,6 +287,9 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
             salePrice: item.rate,
             quantity: item.quantity
           });
+          // Update the totals.lineItems array so the batchNo is saved to the database
+          const tItem = totals.lineItems.find(t => t.productId?.toString() === item.productId?.toString() && !t.batchNo);
+          if (tItem) tItem.batchNo = item.batchNo;
         } else {
           // Sync frontend edits if it missed sending them in batches array or quantity changed
           const existingBatchIdx = newBatchesArray.findIndex((b: any) => b.productId?.toString() === item.productId?.toString() && b.batchNo === item.batchNo);
