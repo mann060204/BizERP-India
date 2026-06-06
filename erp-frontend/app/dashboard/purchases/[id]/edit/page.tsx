@@ -310,6 +310,24 @@ export default function EditPurchasePage() {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
     const newItem = calculateItem(itemInput);
     setLineItems([...lineItems, newItem]);
+
+    setBatches(prev => {
+       const productBatches = prev.filter(b => b.productId === newItem.productId);
+       if (productBatches.length === 1) {
+          return prev.map(b => b.productId === newItem.productId ? { ...b, quantity: newItem.quantity, mrp: newItem.mrp || newItem.rate } : b);
+       } else if (newItem.batchNo && productBatches.length === 0) {
+          return [...prev, {
+            productId: newItem.productId || '',
+            productName: newItem.productName,
+            batchNo: newItem.batchNo,
+            mrp: newItem.mrp || newItem.rate,
+            salePrice: 0,
+            quantity: newItem.quantity,
+            manufacturingDate: '', expiryDate: ''
+          }];
+       }
+       return prev;
+    });
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
       quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
