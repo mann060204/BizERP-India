@@ -296,6 +296,9 @@ const COUNTRY_CODES: Record<string, string> = {
                      <label className="text-slate-600">Email ID</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} />
                      
+                     <label className="text-slate-600">Phone No</label>
+                     <input className="erp-input w-full bg-[#F1F5F9]" value={form.phoneNo} onChange={e=>setForm({...form, phoneNo: e.target.value})} />
+
                      <label className="text-slate-600">Mobile No. <span className="text-red-500">*</span></label>
                      <div className="flex gap-1">
                        <input className="erp-input w-16 bg-[#F1F5F9] text-center px-1" value={form.mobileCode} onChange={e=>setForm({...form, mobileCode: e.target.value})} placeholder="+91" />

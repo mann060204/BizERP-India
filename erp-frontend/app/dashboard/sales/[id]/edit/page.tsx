@@ -49,6 +49,8 @@ export default function NewInvoicePage() {
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billTo, setBillTo] = useState<'Cash' | 'Customer'>('Customer');
   const [contactNo, setContactNo] = useState('');
+  const [contactPersonName, setContactPersonName] = useState('');
+  const [contactPersonNumber, setContactPersonNumber] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDD, setShowCustomerDD] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -140,6 +142,8 @@ export default function NewInvoicePage() {
         setBillTo(inv.billTo || 'Customer');
         setCustomerSearch(inv.customerSnapshot.name);
         setContactNo(inv.customerSnapshot.mobile || '');
+        setContactPersonName(inv.customerSnapshot.contactPerson || '');
+        setContactPersonNumber(inv.customerSnapshot.contactPersonNumber || '');
         setCustomerAddress(inv.customerSnapshot.address || '');
         setCustomerGstin(inv.customerSnapshot.gstin || '');
         if (inv.customerId) setSelectedCustomer(cRes.data.customers.find((c: any) => c._id === (inv.customerId._id || inv.customerId)));
@@ -226,6 +230,8 @@ export default function NewInvoicePage() {
     setSelectedCustomer(c);
     setCustomerSearch(c.name);
     setContactNo(c.mobile || '');
+    setContactPersonName((c as any).contactPerson || '');
+    setContactPersonNumber((c as any).contactPersonNumber || '');
     
     let addrStr = '';
     if (c.billingAddress) {
@@ -426,7 +432,9 @@ export default function NewInvoicePage() {
           name: selectedCustomer.name,
           mobile: contactNo,
           gstin: customerGstin,
-          address: customerAddress
+          address: customerAddress,
+          contactPerson: contactPersonName,
+          contactPersonNumber: contactPersonNumber
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
@@ -554,6 +562,14 @@ export default function NewInvoicePage() {
             <div>
               <label className="erp-label">Contact No.</label>
               <input value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label">Contact Person</label>
+              <input value={contactPersonName} onChange={e => setContactPersonName(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label">Person No.</label>
+              <input value={contactPersonNumber} onChange={e => setContactPersonNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div className="col-span-2">
               <label className="erp-label">Address</label>

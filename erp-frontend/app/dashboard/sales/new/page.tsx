@@ -136,6 +136,8 @@ export default function NewInvoicePage() {
             setSelectedCustomer(cust);
             setCustomerSearch(cust.name);
             setContactNo(cust.mobile || '');
+            setContactPersonName(cust.contactPerson || '');
+            setContactPersonNumber(cust.contactPersonNumber || '');
             let addrStr = '';
             if (cust.billingAddress) {
               if (typeof cust.billingAddress === 'string') {
@@ -246,6 +248,8 @@ export default function NewInvoicePage() {
     setSelectedCustomer(c);
     setCustomerSearch(c.name);
     setContactNo(c.mobile || '');
+    setContactPersonName(c.contactPerson || '');
+    setContactPersonNumber(c.contactPersonNumber || '');
     
     let addrStr = '';
     if (c.billingAddress) {
@@ -515,7 +519,9 @@ export default function NewInvoicePage() {
           name: selectedCustomer.name,
           mobile: contactNo,
           gstin: customerGstin,
-          address: customerAddress
+          address: customerAddress,
+          contactPerson: contactPersonName,
+          contactPersonNumber: contactPersonNumber
         } : { name: customerSearch || 'Cash Customer' },
         placeOfSupply,
         isInterState,
@@ -662,6 +668,14 @@ export default function NewInvoicePage() {
             <div>
               <label className="erp-label">Contact No.</label>
               <input value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label">Contact Person</label>
+              <input value={contactPersonName} onChange={e => setContactPersonName(e.target.value)} className="erp-input w-full" />
+            </div>
+            <div>
+              <label className="erp-label">Person No.</label>
+              <input value={contactPersonNumber} onChange={e => setContactPersonNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div className="col-span-2">
               <label className="erp-label">Address</label>

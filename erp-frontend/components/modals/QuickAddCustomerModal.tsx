@@ -81,9 +81,14 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
     e.target.value = '';
   };
 
+const COUNTRY_CODES: Record<string, string> = {
+  'India': '+91', 'United States': '+1', 'United Kingdom': '+44', 'Canada': '+1', 'Australia': '+61', 'Singapore': '+65', 'United Arab Emirates': '+971'
+};
+
   const [form, setForm] = useState({
     name: '', billingAddress: '', city: '', state: '', pinCode: '', country: 'India',
-    email: '', phoneNo: '', mobile: '',
+    email: '', phoneNo: '', mobile: '', mobileCode: '+91',
+    contactPersonName: '', contactPersonNumber: '', contactPersonCode: '+91',
     panNo: '', gstin: '', gstType: 'Unregistered', tradeName: '',
     balanceType: 'Debit', openingBalance: 0,
     documentType: '', documentNo: '',
@@ -93,11 +98,19 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
     priceCategory: 'Retail', remark: ''
   });
 
+  const handleCountryChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const val = e.target.value;
+    const code = COUNTRY_CODES[val] || '';
+    setForm(f => ({ ...f, country: val, ...(code ? { mobileCode: code, contactPersonCode: code } : {}) }));
+  };
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Full Name is required'); return; }
     if (!form.billingAddress.trim()) { toast.error('Billing Address is required'); return; }
     if (!form.state.trim()) { toast.error('State is required'); return; }
-    if (!form.mobile.trim()) { toast.error('Contact No is required'); return; }
+    if (!form.mobile.trim()) { toast.error('Mobile No is required'); return; }
+    if (form.mobile.trim() && !/^\d{10}$/.test(form.mobile.trim())) { toast.error('Mobile No must be exactly 10 digits'); return; }
+    if (form.contactPersonNumber.trim() && !/^\d{10}$/.test(form.contactPersonNumber.trim())) { toast.error('Contact Person No must be exactly 10 digits'); return; }
 
     setSaving(true);
     try {
@@ -107,6 +120,10 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
         email: form.email,
         phoneNo: form.phoneNo,
         mobile: form.mobile,
+        mobileCode: form.mobileCode,
+        contactPerson: form.contactPersonName,
+        contactPersonNumber: form.contactPersonNumber,
+        contactPersonCode: form.contactPersonCode,
         panNo: form.panNo,
         gstin: form.gstin,
         gstType: form.gstType,
@@ -275,7 +292,7 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.pinCode} onChange={e=>setForm({...form, pinCode: e.target.value})} />
                      
                      <label className="text-slate-600">Country</label>
-                     <input className="erp-input w-full bg-[#F1F5F9]" value={form.country} onChange={e=>setForm({...form, country: e.target.value})} />
+                     <input className="erp-input w-full bg-[#F1F5F9]" value={form.country} onChange={handleCountryChange} />
                      
                      <label className="text-slate-600">Email ID</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} />
@@ -283,8 +300,20 @@ export default function QuickAddCustomerModal({ onClose, onAdded }: { onClose: (
                      <label className="text-slate-600">Phone No</label>
                      <input className="erp-input w-full bg-[#F1F5F9]" value={form.phoneNo} onChange={e=>setForm({...form, phoneNo: e.target.value})} />
                      
-                     <label className="text-slate-600">Contact No <span className="text-red-500">*</span></label>
-                     <input className="erp-input w-full bg-[#F1F5F9]" value={form.mobile} onChange={e=>setForm({...form, mobile: e.target.value})} />
+                     <label className="text-slate-600">Mobile No. <span className="text-red-500">*</span></label>
+                     <div className="flex gap-1">
+                       <input className="erp-input w-16 bg-[#F1F5F9] text-center px-1" value={form.mobileCode} onChange={e=>setForm({...form, mobileCode: e.target.value})} placeholder="+91" />
+                       <input className="erp-input flex-1 bg-[#F1F5F9]" value={form.mobile} onChange={e=>setForm({...form, mobile: e.target.value.replace(/\D/g, '').slice(0,10)})} placeholder="10-digit number" />
+                     </div>
+
+                     <label className="text-slate-600">Contact Person</label>
+                     <input className="erp-input w-full bg-[#F1F5F9]" value={form.contactPersonName} onChange={e=>setForm({...form, contactPersonName: e.target.value})} placeholder="Person Name" />
+
+                     <label className="text-slate-600">Person No.</label>
+                     <div className="flex gap-1">
+                       <input className="erp-input w-16 bg-[#F1F5F9] text-center px-1" value={form.contactPersonCode} onChange={e=>setForm({...form, contactPersonCode: e.target.value})} placeholder="+91" />
+                       <input className="erp-input flex-1 bg-[#F1F5F9]" value={form.contactPersonNumber} onChange={e=>setForm({...form, contactPersonNumber: e.target.value.replace(/\D/g, '').slice(0,10)})} placeholder="10-digit number" />
+                     </div>
                    </div>
                  </fieldset>
                  

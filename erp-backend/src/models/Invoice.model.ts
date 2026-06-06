@@ -31,7 +31,7 @@ export interface IInvoice extends Document {
   dueDate?: Date;
   shippingAddress?: string;
   customerId?: mongoose.Types.ObjectId;
-  customerSnapshot: { name: string; gstin?: string; address?: string; mobile?: string };
+  customerSnapshot: { name: string; gstin?: string; address?: string; mobile?: string; contactPerson?: string; contactPersonNumber?: string };
   placeOfSupply: string;
   isInterState: boolean;
   lineItems: ILineItem[];
@@ -108,6 +108,8 @@ const InvoiceSchema = new Schema<IInvoice>(
       gstin: String,
       address: String,
       mobile: String,
+      contactPerson: String,
+      contactPersonNumber: String,
     },
     placeOfSupply: { type: String, default: '' },
     isInterState: { type: Boolean, default: false },

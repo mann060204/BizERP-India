@@ -4,6 +4,7 @@ export interface ICustomer extends Document {
   businessId: mongoose.Types.ObjectId;
   name: string;
   mobile?: string;
+  mobileCode?: string;
   email?: string;
   gstin?: string;
   billingAddress?: { street?: string; city?: string; state?: string; pinCode?: string; country?: string };
@@ -11,6 +12,9 @@ export interface ICustomer extends Document {
   gstType?: string;
   tradeName?: string;
   phoneNo?: string;
+  contactPerson?: string;
+  contactPersonNumber?: string;
+  contactPersonCode?: string;
   balanceType?: 'Debit' | 'Credit';
   documentType?: string;
   documentNo?: string;
@@ -34,6 +38,7 @@ const CustomerSchema = new Schema<ICustomer>(
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
     name: { type: String, required: true, trim: true },
     mobile: { type: String, trim: true },
+    mobileCode: { type: String, default: '+91' },
     email: { type: String, lowercase: true, trim: true },
     gstin: { type: String, trim: true },
     billingAddress: {
@@ -43,6 +48,9 @@ const CustomerSchema = new Schema<ICustomer>(
     gstType: { type: String, default: 'Unregistered' },
     tradeName: String,
     phoneNo: String,
+    contactPerson: { type: String, trim: true },
+    contactPersonNumber: { type: String, trim: true },
+    contactPersonCode: { type: String, default: '+91' },
     balanceType: { type: String, enum: ['Debit', 'Credit'], default: 'Debit' },
     documentType: String,
     documentNo: String,
