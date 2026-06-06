@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchasesApi, businessApi } from '../../../../../lib/erp-api';
+import { suppliersApi, productsApi, purchasesApi, businessApi, inventoryApi } from '../../../../../lib/erp-api';
+import { formatAccountingBalance } from '@/lib/utils';
 import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../../components/modals/QuickAddSupplierModal';
+import { banksApi, accountsApi } from '../../../../../lib/erp-api';
 
-interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; }
+interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; currentBalance?: number; openingBalance?: number; }
 interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
@@ -38,6 +40,7 @@ export default function EditPurchasePage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
+
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,16 +55,17 @@ export default function EditPurchasePage() {
 
   // Header State
   const [purchaseType, setPurchaseType] = useState('GST');
-  const [billDate, setBillDate] = useState(new Date().toISOString().split('T')[0]);
+  const [billDate, setBillDate] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
   const [supplierSnapshot, setSupplierSnapshot] = useState<any>(null);
   const [showSupplierDD, setShowSupplierDD] = useState(false);
+  const [supplierHighlightIndex, setSupplierHighlightIndex] = useState(-1);
   const [showQuickAddSupplierModal, setShowQuickAddSupplierModal] = useState(false);
   const [showEditSupplierModal, setShowEditSupplierModal] = useState(false);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState('');
-  const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [dueDate, setDueDate] = useState('');
   
   const [placeOfSupply, setPlaceOfSupply] = useState('Gujarat');
   const [billNumber, setBillNumber] = useState('');
@@ -81,6 +85,7 @@ export default function EditPurchasePage() {
   });
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
+  const [itemHighlightIndex, setItemHighlightIndex] = useState(-1);
   const [itemIdentifierType, setItemIdentifierType] = useState<'tag' | 'code'>('tag');
   const [lastPrices, setLastPrices] = useState<any[]>([]);
 
@@ -89,7 +94,8 @@ export default function EditPurchasePage() {
 
   // Footer State
   const [showAdditionalDiscount, setShowAdditionalDiscount] = useState(false);
-  const [additionalDiscount, setAdditionalDiscount] = useState(0);
+  const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0);
+  const [discountAmountFlat, setDiscountAmountFlat] = useState(0);
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
   const [roundOff, setRoundOff] = useState(0);
@@ -97,28 +103,33 @@ export default function EditPurchasePage() {
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [amountPaid, setAmountPaid] = useState(0);
   const [txnId, setTxnId] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentDate, setPaymentDate] = useState('');
+  const [banks, setBanks] = useState<any[]>([]);
+  const [paymentBankId, setPaymentBankId] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sRes, pRes, bRes] = await Promise.all([
+        const [sRes, pRes, bRes, banksRes] = await Promise.all([
           suppliersApi.list({ limit: 200 }),
           productsApi.list({ limit: 500 }),
-          businessApi.getProfile()
+          businessApi.getProfile(),
+          accountsApi.list({ type: 'Bank' })
         ]);
         setSuppliers(sRes.data.suppliers);
         setProducts(pRes.data.products);
+        setBanks(banksRes.accounts || []);
         const bizUnits = bRes.data?.business?.units;
         if (bizUnits && bizUnits.length > 0) {
           setUnits(bizUnits);
           setItemInput(prev => ({ ...prev, unit: bizUnits[0] }));
         }
 
+        // Load existing purchase bill data
         if (id) {
           const { data } = await purchasesApi.get(id);
           const p = data.purchase;
-          
+
           setPurchaseType(p.purchaseType || 'GST');
           setBillNumber(p.billNumber || '');
           setBillDate(new Date(p.billDate).toISOString().split('T')[0]);
@@ -128,7 +139,7 @@ export default function EditPurchasePage() {
           if (p.purchaseOrderDate) setPurchaseOrderDate(new Date(p.purchaseOrderDate).toISOString().split('T')[0]);
           setPaymentTerms(p.paymentTerms || '');
           setEwayBillNo(p.ewayBillNo || '');
-          
+
           if (p.supplierId) {
             setSupplierId(p.supplierId._id);
             setSupplierSnapshot(p.supplierId);
@@ -155,20 +166,26 @@ export default function EditPurchasePage() {
             setSupplierSnapshot(p.supplierSnapshot);
             setSupplierSearch(p.supplierSnapshot.name || 'Walk-in Supplier');
           }
-          
+
           setLineItems(p.lineItems || []);
           setBatches(p.batches || []);
-          
-          setAdditionalDiscount(p.additionalDiscount || 0);
+
+          setAdditionalDiscountFromBill(p.additionalDiscount || 0);
           setShippingCharge(p.shippingCharge || 0);
           setShippingGstRate(p.shippingGstRate || 0);
           setRoundOff(p.roundOff || 0);
           setRemarks(p.notes || '');
-          
+
           setPaymentMode(p.paymentMode || 'Cash');
           setAmountPaid(p.amountPaid || 0);
           setTxnId(p.txnId || '');
           if (p.paymentDate) setPaymentDate(new Date(p.paymentDate).toISOString().split('T')[0]);
+          else setPaymentDate(new Date().toISOString().split('T')[0]);
+        } else {
+          const today = new Date().toISOString().split('T')[0];
+          setBillDate(today);
+          setDueDate(today);
+          setPaymentDate(today);
         }
       } catch (err) {
         toast.error('Failed to load data');
@@ -179,13 +196,35 @@ export default function EditPurchasePage() {
     fetchData();
   }, [id]);
 
+  // Helper to set additional discount as flat amount (from loaded bill)
+  const [_loadedAdditionalDiscount, setAdditionalDiscountFromBill] = useState(0);
+  useEffect(() => {
+    if (_loadedAdditionalDiscount > 0) {
+      setDiscountAmountFlat(_loadedAdditionalDiscount);
+    }
+  }, [_loadedAdditionalDiscount]);
+
+  // Auto-calculate Due Date based on Payment Terms
+  useEffect(() => {
+    if (!billDate || !paymentTerms) return;
+    const match = paymentTerms.match(/\d+/);
+    if (match) {
+      const days = parseInt(match[0], 10);
+      const d = new Date(billDate);
+      d.setDate(d.getDate() + days);
+      setDueDate(d.toISOString().split('T')[0]);
+    } else if (paymentTerms.toLowerCase() === 'due on receipt' || paymentTerms.toLowerCase().includes('cash')) {
+      setDueDate(billDate);
+    }
+  }, [paymentTerms, billDate]);
+
   const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const pickSupplier = (s: Supplier) => {
     setSupplierId(s._id);
-    setSupplierSnapshot(s);
     setSupplierSearch(s.name);
+    setSupplierSnapshot(s);
     setContactNo(s.mobile || '');
     let addrStr = '';
     if (s.address) {
@@ -220,7 +259,7 @@ export default function EditPurchasePage() {
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
-
+    
     if (supplierId) {
       try {
         const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
@@ -274,6 +313,7 @@ export default function EditPurchasePage() {
     setLineItems(lineItems.filter((_, i) => i !== idx));
   };
 
+  // Totals
   const totalTaxableAmount = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
 
   let shipCGST = 0;
@@ -292,9 +332,11 @@ export default function EditPurchasePage() {
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shipCGST;
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
-
+  
   const totalGST = totalCGST + totalSGST + totalIGST;
   const subtotal = round2(totalTaxableAmount + totalGST);
+  const globalDiscountAmount = round2((subtotal * globalDiscountPercent) / 100) + discountAmountFlat;
+  const additionalDiscount = globalDiscountAmount;
   const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
   const grandTotal = round2(subtotal - additionalDiscount + shippingCharge + roundOff);
   const balance = round2(grandTotal - amountPaid);
@@ -353,6 +395,7 @@ export default function EditPurchasePage() {
         additionalDiscount,
         amountPaid,
         paymentMode,
+        paymentBankId,
         paymentDate,
         txnId,
         notes: remarks,
@@ -365,7 +408,7 @@ export default function EditPurchasePage() {
       }
       router.push('/dashboard/purchases');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to save purchase bill');
+      toast.error(e.response?.data?.message || 'Failed to update purchase bill');
     } finally {
       setSaving(false);
     }
@@ -375,8 +418,9 @@ export default function EditPurchasePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="Edit Purchase Bill" />
+      <Topbar title="EDIT PURCHASE BILL" />
 
+      {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">
          <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Purchase Bill</div>
          <div onClick={() => setActiveTab('batches')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'batches' ? 'bg-white border-t-2 border-t-red-500 border-l border-r border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Batch Numbers</div>
@@ -387,7 +431,7 @@ export default function EditPurchasePage() {
         {activeTab === 'bill' ? (
           <>
         <div className="erp-container">
-          <div className="erp-header py-1 text-xs">Purchase bill information</div>
+          <div className="erp-header py-1 text-xs">PURCHASE BILL INFORMATION</div>
           <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
@@ -403,25 +447,45 @@ export default function EditPurchasePage() {
             </div>
             <div>
               <div className="flex justify-between items-center mb-1">
-                 <label className="erp-label block">Supplier Name <span className="text-red-500">*</span></label>
+                 <div className="flex items-center gap-2">
+                   <label className="erp-label !mb-0">Supplier Name <span className="text-red-500">*</span></label>
+                   {supplierId && supplierSnapshot && (
+                     (() => {
+                       const bal = supplierSnapshot.currentBalance !== undefined ? supplierSnapshot.currentBalance : (supplierSnapshot.openingBalance || 0);
+                       return (
+                         <div className={`text-[10px] px-1.5 py-0.5 rounded font-bold border ${bal > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : bal < 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                           A/C Bal: {formatAccountingBalance(bal, 'supplier').text}
+                         </div>
+                       );
+                     })()
+                   )}
+                 </div>
                  <div className="flex gap-2">
                    {supplierId && supplierSnapshot && (
-                     <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
+                     <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
                    )}
-                   <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add</span>
+                   <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add</span>
                  </div>
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
-                  <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); }} onFocus={() => setShowSupplierDD(true)} className="erp-input w-full pr-8" placeholder="Select or type..." />
+                  <input value={supplierSearch} onChange={e => { setSupplierSearch(e.target.value); setShowSupplierDD(true); setSupplierHighlightIndex(-1); }} onFocus={() => setShowSupplierDD(true)} 
+                    onKeyDown={e => {
+                      if (!showSupplierDD) return;
+                      if (e.key === 'ArrowDown') { e.preventDefault(); setSupplierHighlightIndex(prev => Math.min(prev + 1, filteredSuppliers.length - 1)); }
+                      else if (e.key === 'ArrowUp') { e.preventDefault(); setSupplierHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                      else if (e.key === 'Enter') { e.preventDefault(); if (supplierHighlightIndex >= 0 && filteredSuppliers[supplierHighlightIndex]) pickSupplier(filteredSuppliers[supplierHighlightIndex]); }
+                      else if (e.key === 'Escape') { setShowSupplierDD(false); }
+                    }}
+                    className="erp-input w-full pr-8" placeholder="Select or type..." />
                   <button type="button" onClick={() => setShowSupplierDD(!showSupplierDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                     <ChevronDown className="w-4 h-4" />
                   </button>
                 </div>
                 {showSupplierDD && filteredSuppliers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                    {filteredSuppliers.map(s => (
-                      <div key={s._id} onClick={() => pickSupplier(s)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200">
+                    {filteredSuppliers.map((s, idx) => (
+                      <div key={s._id} onClick={() => pickSupplier(s)} className={`px-2 py-1 text-xs cursor-pointer border-b border-slate-200 ${supplierHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                         {s.name}
                       </div>
                     ))}
@@ -484,7 +548,7 @@ export default function EditPurchasePage() {
             <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a1a00] text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
@@ -493,15 +557,23 @@ export default function EditPurchasePage() {
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
-                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); }} onFocus={() => setShowItemDD(true)} className="erp-input w-full pr-8" placeholder="Select item..." />
+                    <input value={itemSearch} onChange={e => { setItemSearch(e.target.value); setShowItemDD(true); setItemHighlightIndex(-1); }} onFocus={() => setShowItemDD(true)} 
+                      onKeyDown={e => {
+                        if (!showItemDD) return;
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setItemHighlightIndex(prev => Math.min(prev + 1, filteredProducts.length - 1)); }
+                        else if (e.key === 'ArrowUp') { e.preventDefault(); setItemHighlightIndex(prev => Math.max(prev - 1, 0)); }
+                        else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) pickProduct(filteredProducts[itemHighlightIndex]); }
+                        else if (e.key === 'Escape') { setShowItemDD(false); }
+                      }}
+                      className="erp-input w-full pr-8" placeholder="Select item..." />
                     <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
                   {showItemDD && filteredProducts.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
-                      {filteredProducts.map(p => (
-                        <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between">
+                      {filteredProducts.map((p, idx) => (
+                        <div key={p._id} onClick={() => pickProduct(p)} className={`px-2 py-1 text-xs cursor-pointer border-b border-slate-200 flex justify-between ${itemHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                           <span>{p.name}</span>
                           <span className="text-slate-600">₹{p.purchasePrice}</span>
                         </div>
@@ -523,7 +595,7 @@ export default function EditPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -551,7 +623,8 @@ export default function EditPurchasePage() {
                     <option value="amount">₹</option>
                   </select>
                 </div>
-              </div>{purchaseType !== 'Non-GST' && (
+              </div>
+              {purchaseType !== 'Non-GST' && (
                 <>
                   <div>
                     <label className="erp-label block mb-1">Tax (%)</label>
@@ -566,12 +639,12 @@ export default function EditPurchasePage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                    <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
               <div className="flex items-center justify-center pb-[2px]">
-                 <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
+                 <button onClick={addItem} className="bg-slate-900 hover:bg-slate-800 text-white p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
                    <Plus className="w-5 h-5" />
                  </button>
               </div>
@@ -580,10 +653,10 @@ export default function EditPurchasePage() {
             <div className="grid grid-cols-[1fr_8fr] gap-2 items-center pt-1">
                <div className="flex items-center gap-3">
                   <label className="flex items-center gap-1 text-[11px] cursor-pointer">
-                    <input type="radio" checked={itemIdentifierType === 'tag'} onChange={() => setItemIdentifierType('tag')} className="accent-white" /> Item Tag
+                    <input type="radio" checked={itemIdentifierType === 'tag'} onChange={() => setItemIdentifierType('tag')} className="accent-blue-600" /> Item Tag
                   </label>
                   <label className="flex items-center gap-1 text-[11px] cursor-pointer">
-                    <input type="radio" checked={itemIdentifierType === 'code'} onChange={() => setItemIdentifierType('code')} className="accent-white" /> Item Code
+                    <input type="radio" checked={itemIdentifierType === 'code'} onChange={() => setItemIdentifierType('code')} className="accent-blue-600" /> Item Code
                   </label>
                </div>
                <div>
@@ -595,54 +668,57 @@ export default function EditPurchasePage() {
 
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div 
-             className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-10' : ''} bg-[#F1F5F9] text-slate-600 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200`}
-             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' } : {}}
+             className={`erp-grid-header grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} sticky top-0 z-10`}
+             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
            >
-             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">S. No.</div>
-             <div className="col-span-3 border-r border-slate-200 px-2 py-1.5 text-center">Item Name</div>
-             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Quantity</div>
-             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Unit</div>
-             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Price/Unit</div>
-             <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Discount</div>
-             {purchaseType !== 'Non-GST' && (
-                <>
-                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Tax (%)</div>
-                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">CGST</div>
-                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">SGST</div>
-                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">IGST</div>
-                  <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">Cess (%)</div>
-                </>
-             )}
-             <div className={`px-2 py-1.5 text-center font-semibold text-slate-700 ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
-             <div className="col-span-1 px-2 py-1.5 text-center"></div>
-           </div>
+               <div className="col-span-1 erp-grid-cell text-center">S.No.</div>
+               <div className="col-span-3 erp-grid-cell">Item Details</div>
+               <div className="col-span-1 erp-grid-cell text-center">Qty</div>
+               <div className="col-span-1 erp-grid-cell text-center">Unit</div>
+               <div className="col-span-1 erp-grid-cell text-center">Price</div>
+               <div className="col-span-1 erp-grid-cell text-center">Disc</div>
+               {purchaseType !== 'Non-GST' && (
+                 <>
+                   <div className="col-span-1 erp-grid-cell text-center">Tax (%)</div>
+                   <div className="col-span-1 erp-grid-cell text-center">CGST</div>
+                   <div className="col-span-1 erp-grid-cell text-center">SGST</div>
+                   <div className="col-span-1 erp-grid-cell text-center">IGST</div>
+                   <div className="col-span-1 erp-grid-cell text-center">Cess</div>
+                 </>
+               )}
+               <div className={`erp-grid-cell text-right ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
+               <div className="col-span-1 erp-grid-cell text-center"></div>
+             </div>
            
-           <div className="flex-1 overflow-y-auto bg-[#E2E8F0]">
+           <div className="flex-1 overflow-y-auto bg-white">
               {lineItems.length === 0 ? (
-                <div className="p-10 text-center text-slate-600 italic text-sm"></div>
+                <div className="p-10 text-center text-slate-400 italic text-sm">No items added yet.</div>
               ) : (
                 lineItems.map((item, idx) => (
                   <div 
                     key={idx} 
-                    className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} erp-grid-row group text-[11px]`}
+                    className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}
                     style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
                   >
-                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
-                    <div className="col-span-3 border-r border-slate-200 px-2 py-1.5 font-medium">
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
+                    <div className="col-span-3 border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
                       {item.productName}
-                      {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
+                      {item.tag && <span className="ml-2 text-[9px] bg-slate-200 px-1 rounded text-slate-600">{item.tag}</span>}
                     </div>
-                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.quantity}</div>
-                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
-                    <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(2)}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-red-500">
+                      {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
+                      {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
+                    </div>
                     {purchaseType !== 'Non-GST' && (
                         <>
-                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
-                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">{item.cgst > 0 ? item.cgst.toFixed(2) : '-'}</div>
-                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">{item.sgst > 0 ? item.sgst.toFixed(2) : '-'}</div>
-                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-right">{item.igst > 0 ? item.igst.toFixed(2) : '-'}</div>
-                          <div className="col-span-1 border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.gstRate}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.cgst > 0 ? item.cgst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.sgst > 0 ? item.sgst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.igst > 0 ? item.igst.toFixed(2) : '-'}</div>
+                          <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
                         </>
                     )}
                     <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} border-r border-slate-100 px-2 py-1.5 text-right font-medium flex items-center justify-end`}>
@@ -662,106 +738,134 @@ export default function EditPurchasePage() {
            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-1">
-           <div className="col-span-1 space-y-2">
-              <label className="flex items-center gap-2 text-xs cursor-pointer">
-                <input type="checkbox" checked={showAdditionalDiscount} onChange={e => setShowAdditionalDiscount(e.target.checked)} className="accent-white" />
-                <span className="text-slate-700">Add'l Discount</span>
-              </label>
-              {showAdditionalDiscount && (
-                <div className="flex">
-                   <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                   <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+             
+             {/* Column 1: Summary */}
+             <div className="erp-footer-box flex flex-col justify-between">
+                <div>
+                  <label className="erp-label block mb-1">Total Quantity</label>
+                  <div className="text-xl font-bold bg-yellow-50 p-1 border border-yellow-200 text-yellow-700 rounded text-center">{lineItems.reduce((s, i) => s + i.quantity, 0)}</div>
                 </div>
-              )}
-
-              {lastPrices.length > 0 && (
-                <div className="mt-4 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
-                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 Purchases ({itemInput.productName})</p>
-                  {lastPrices.map((lp, idx) => (
-                    <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-1">
-                      <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
-                      <span>{lp.billNumber}</span>
-                      <span className="font-medium text-sm">₹{lp.rate}</span>
-                    </div>
-                  ))}
+                
+                <div className="flex gap-2 mt-2">
+                  <div className="flex-1">
+                    <label className="erp-label block mb-1">Discount (%)</label>
+                    <input type="number" value={globalDiscountPercent === 0 ? '' : globalDiscountPercent} onChange={e => setGlobalDiscountPercent(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="%" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="erp-label block mb-1">Discount (₹)</label>
+                    <input type="number" value={discountAmountFlat === 0 ? '' : discountAmountFlat} onChange={e => setDiscountAmountFlat(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="₹" />
+                  </div>
                 </div>
-              )}
-              <div>
-                <label className="erp-label block mb-1 mt-2">Shipping Charge</label>
-                <div className="flex gap-1">
-                  <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-full" placeholder="Amount" />
-                </div>
-              </div>
-           </div>
 
-           <div className="col-span-1">
-              <div className="erp-container border-slate-200">
-                <div className="erp-header bg-transparent border-none py-1">Remarks (Private Use)</div>
-                <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full min-h-[80px] resize-y border-none border-t border-slate-200" />
-              </div>
-           </div>
-
-           <div className="col-span-1">
-              <div className="erp-container border-slate-200">
-                <div className="erp-header bg-transparent border-none py-1">Payments</div>
-                <div className="p-2 space-y-2 border-t border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Mode</span>
-                    <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input flex-1">
-                      {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                {lastPrices.length > 0 && (
+                  <div className="mt-2 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
+                    <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last Purchases</p>
+                    {lastPrices.slice(0,3).map((lp, idx) => (
+                      <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-0.5">
+                        <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
+                        <span className="font-medium text-xs">₹{lp.rate}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-2">
+                  <label className="erp-label block mb-1">Shipping Charge & GST</label>
+                  <div className="flex gap-1">
+                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-2/3" placeholder="Amount" />
+                    <select value={shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value))} className="erp-input w-1/3">
+                      <option value="0">0%</option>
+                      <option value="5">5%</option>
+                      <option value="12">12%</option>
+                      <option value="18">18%</option>
+                      <option value="28">28%</option>
                     </select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Txn. ID</span>
-                    <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input flex-1" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Amount</span>
-                    <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
-                       <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
+                </div>
+             </div>
+
+             {/* Column 2 & 3: Payment Details & Remarks */}
+             <div className="erp-footer-box space-y-2 col-span-2 flex flex-col">
+                <div className="bg-[#F1F5F9] p-1 text-[10px] font-bold text-center border border-slate-200">PAYMENT DETAILS & REMARKS</div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                  <div className="space-y-1">
+                    <div className="text-[9px] text-slate-600 font-bold">PAYMENT DETAILS</div>
+                    <select value={paymentMode} onChange={e => setPaymentMode(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                      {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
+                    </select>
+                    {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode) && (
+                      <select value={paymentBankId} onChange={e => setPaymentBankId(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                        <option value="">-- Select Bank --</option>
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                      </select>
+                    )}
+                    <div className="relative">
+                      <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
+                      <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full pl-3 text-xs p-1 h-7 text-emerald-400 font-bold" placeholder="Amount Paid" />
+                    </div>
+                    <div className="flex gap-1">
+                      <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="erp-input w-full text-xs p-1 h-7" title="Payment Date" />
+                      <input value={txnId} onChange={e => setTxnId(e.target.value)} className="erp-input w-full text-xs p-1 h-7" placeholder="Txn ID" />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Date</span>
-                    <input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="erp-input flex-1" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-600 w-12">Balance</span>
-                    <div className="flex flex-1">
-                       <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
-                       <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
-                    </div>
+                  
+                  <div className="space-y-1 h-full flex flex-col">
+                    <div className="text-[9px] text-slate-600 font-bold">REMARKS (PRIVATE)</div>
+                    <textarea value={remarks} onChange={e => setRemarks(e.target.value)} className="erp-input w-full flex-1 min-h-[60px] resize-none" placeholder="Enter remarks here..." />
                   </div>
                 </div>
-              </div>
-           </div>
+             </div>
 
-           <div className="col-span-1">
-              <div className="erp-container border-slate-200 h-full flex flex-col p-3 space-y-2">
-                 <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                   <span className="text-xs font-bold text-slate-600">Sub Total</span>
-                   <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
-                 </div>
-                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                   <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping Charge</span>
-                   <div className="flex gap-2">
-                     <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
-                   </div>
-                 </div>
-                 <div className="flex justify-between items-center py-2 border-b border-slate-100">
-                   <span className="text-[10px] text-slate-500 font-medium uppercase">Round Off</span>
-                   <div className="flex gap-2">
-                     <input type="number" value={roundOff === 0 ? '' : roundOff} onChange={e => setRoundOff(parseFloat(e.target.value) || 0)} className="erp-input w-20 text-right" placeholder="Amt" />
-                   </div>
-                 </div>
-                 <div className="flex justify-between items-center pt-2">
-                   <span className="text-xs font-bold text-slate-800 uppercase">Total Amount</span>
-                   <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(2)}</span>
-                 </div>
-              </div>
-           </div>
+             {/* Column 4: Totals & Grand Total */}
+             <div className="erp-footer-box flex flex-col justify-between">
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Subtotal</span>
+                    <span>₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  {(globalDiscountAmount) > 0 && (
+                    <div className="flex justify-between text-red-400">
+                      <span>Discount</span>
+                      <span>-₹{(globalDiscountAmount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  {purchaseType !== 'Non-GST' && (
+                    <>
+                      <div className="flex justify-between text-slate-600">
+                        <span>CGST</span>
+                        <span>₹{totalCGST.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>SGST</span>
+                        <span>₹{totalSGST.toFixed(2)}</span>
+                      </div>
+                      {totalIGST > 0 && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>IGST</span>
+                          <span>₹{totalIGST.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                
+                <div className="pt-2 border-t border-slate-200 mt-2 space-y-1">
+                  <div className="flex justify-between font-bold text-lg text-emerald-600">
+                    <span>Grand Total</span>
+                    <span>₹{grandTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-500 items-center">
+                    <span>Round Off</span>
+                    <input type="number" value={roundOff === 0 ? '' : roundOff} onChange={e => setRoundOff(parseFloat(e.target.value) || 0)} className="erp-input w-24 text-right h-7 p-1 text-xs" placeholder="0.00" />
+                  </div>
+                  <div className="flex justify-between font-bold text-sm text-blue-600 mt-1">
+                    <span>Balance</span>
+                    <span>₹{balance.toFixed(2)}</span>
+                  </div>
+                </div>
+             </div>
         </div>
           </>
         ) : (
@@ -797,7 +901,7 @@ export default function EditPurchasePage() {
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Sale Price</label>
                  <div className="flex">
-                    <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
                     <input type="number" value={batchInput.salePrice || ''} onChange={e => setBatchInput({...batchInput, salePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
@@ -827,7 +931,7 @@ export default function EditPurchasePage() {
 
                     setBatches([...batches.filter(b => !(b.productId === batchInput.productId && b.batchNo === batchInput.batchNo)), batchInput]);
                     setBatchInput({productId: '', productName: '', batchNo: '', mrp: 0, salePrice: 0, minSalePrice: 0, quantity: 1, expiryDate: '', manufacturingDate: ''});
-                 }} className="bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition h-[30px]"><Save className="w-3.5 h-3.5" /> Save</button>
+                 }} className="bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded text-xs flex items-center gap-1 transition h-[30px]"><Save className="w-3.5 h-3.5" /> Save</button>
               </div>
             </div>
 
@@ -835,7 +939,7 @@ export default function EditPurchasePage() {
             <div className="flex-1 overflow-y-auto bg-slate-50 p-2">
                {batches.length === 0 ? (
                  <div className="flex flex-col items-center justify-center h-[200px] text-slate-400 opacity-50">
-                    <Search className="w-16 h-16 mb-2 text-yellow-500 opacity-80" />
+                    <Search className="w-16 h-16 mb-2 text-slate-400 opacity-80" />
                     <span className="text-sm">No batches added yet</span>
                  </div>
                ) : (
@@ -875,6 +979,7 @@ export default function EditPurchasePage() {
         )}
       </main>
 
+      {/* Modals */}
       {showQuickAddSupplierModal && (
         <QuickAddSupplierModal 
           onClose={() => setShowQuickAddSupplierModal(false)}
@@ -916,11 +1021,10 @@ export default function EditPurchasePage() {
               <Printer className="w-4 h-4" /> Save and Print
             </button>
             <button onClick={() => handleSave('received')} disabled={saving} className="bg-action-700 hover:bg-action-800 text-white px-6 py-1.5 rounded flex items-center gap-2 text-xs font-bold transition">
-              <Save className="w-4 h-4" /> Save
+              <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}
             </button>
           </div>
       </footer>
     </div>
   );
 }
-
