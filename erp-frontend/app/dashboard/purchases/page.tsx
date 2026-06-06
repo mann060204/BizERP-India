@@ -130,9 +130,9 @@ export default function PurchasesPage() {
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{pur.billNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(pur.billDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{pur.supplierSnapshot.name}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{pur.grandTotal.toFixed(2)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{pur.amountPaid.toFixed(2)}</td>
-                        <td className="px-5 py-4"><span className={pur.balance > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{pur.balance.toFixed(2)}</span></td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(pur.grandTotal || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4 text-green-400">₹{(pur.amountPaid || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4"><span className={(pur.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(pur.balance || 0).toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{pur.paymentMode}</td>
                         <td className="px-5 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>

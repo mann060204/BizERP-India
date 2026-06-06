@@ -170,9 +170,9 @@ Thank you for your business!`;
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{inv.invoiceNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.invoiceDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot?.name || 'Walk-in Customer'}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{inv.amountReceived.toFixed(2)}</td>
-                        <td className="px-5 py-4"><span className={inv.balance > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{inv.balance.toFixed(2)}</span></td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(inv.grandTotal || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{inv.paymentMode}</td>
                         <td className="px-5 py-4">
                           <div className="flex flex-col gap-1 items-start">
