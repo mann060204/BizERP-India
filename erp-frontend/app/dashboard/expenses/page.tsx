@@ -24,7 +24,7 @@ export default function ExpensesPage() {
   const [form, setForm] = useState({ category: 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false, bankAccountId: '' });
 
   useEffect(() => {
-    accountsApi.list({ type: 'Bank' }).then(res => setBankAccounts(res.data.accounts || [])).catch(() => {});
+    accountsApi.list({ type: 'Bank' }).then(data => setBankAccounts(data.accounts || [])).catch(() => {});
   }, []);
 
   // Load categories from business profile on mount
