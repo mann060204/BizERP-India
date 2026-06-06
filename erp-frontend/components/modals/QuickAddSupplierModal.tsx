@@ -4,7 +4,7 @@ import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, VideoOff } from '
 import toast from 'react-hot-toast';
 const INDIAN_STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
-export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: () => void; onAdded: (Supplier: any) => void; }) {
+export default function QuickAddSupplierModal({ onClose, onAdded, supplierToEdit }: { onClose: () => void; onAdded: (Supplier: any) => void; supplierToEdit?: any; }) {
   const [saving, setSaving] = useState(false);
 
   // --- Photo State ---
@@ -93,6 +93,39 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
     priceCategory: 'Retail', remark: ''
   });
 
+  useEffect(() => {
+    if (supplierToEdit) {
+      setForm({
+        name: supplierToEdit.name || '',
+        address: supplierToEdit.address?.street || supplierToEdit.address || '',
+        city: supplierToEdit.address?.city || '',
+        state: supplierToEdit.address?.state || '',
+        pinCode: supplierToEdit.address?.pinCode || '',
+        country: supplierToEdit.address?.country || 'India',
+        email: supplierToEdit.email || '',
+        phoneNo: supplierToEdit.phoneNo || '',
+        mobile: supplierToEdit.mobile || '',
+        panNo: supplierToEdit.pan || supplierToEdit.panNo || '',
+        gstin: supplierToEdit.gstin || '',
+        gstType: supplierToEdit.gstType || 'Unregistered',
+        tradeName: supplierToEdit.tradeName || '',
+        balanceType: supplierToEdit.balanceType || 'Debit',
+        openingBalance: Math.abs(supplierToEdit.openingBalance || 0),
+        documentType: supplierToEdit.documentType || '',
+        documentNo: supplierToEdit.documentNo || '',
+        dobApplicable: !!supplierToEdit.dob,
+        dob: supplierToEdit.dob ? new Date(supplierToEdit.dob).toISOString().split('T')[0] : '',
+        anniversaryApplicable: !!supplierToEdit.anniversary,
+        anniversary: supplierToEdit.anniversary ? new Date(supplierToEdit.anniversary).toISOString().split('T')[0] : '',
+        creditAllowed: supplierToEdit.creditAllowed || false,
+        creditLimit: supplierToEdit.creditLimit || 0,
+        priceCategory: supplierToEdit.priceCategory || 'Retail',
+        remark: supplierToEdit.note || supplierToEdit.remark || ''
+      });
+      if (supplierToEdit.photo) setPhoto(supplierToEdit.photo);
+    }
+  }, [supplierToEdit]);
+
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Full Name is required'); return; }
     if (!form.address.trim()) { toast.error('Billing Address is required'); return; }
@@ -123,9 +156,15 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
         note: form.remark,
         photo: photo || undefined,
       };
-      const { data } = await suppliersApi.create(payload);
-      toast.success('Supplier Information Saved!');
-      onAdded(data.Supplier);
+      if (supplierToEdit) {
+        const { data } = await suppliersApi.update(supplierToEdit._id, payload);
+        toast.success('Supplier Information Updated!');
+        onAdded(data.Supplier || data.supplier || data);
+      } else {
+        const { data } = await suppliersApi.create(payload);
+        toast.success('Supplier Information Saved!');
+        onAdded(data.Supplier);
+      }
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save Supplier');
     } finally {
@@ -138,7 +177,7 @@ export default function QuickAddSupplierModal({ onClose, onAdded }: { onClose: (
       <div className="bg-[#F1F5F9] border border-slate-200 rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0 bg-white rounded-t-2xl">
           <div>
-            <h3 className="text-slate-900 font-bold text-lg">Add New Supplier</h3>
+            <h3 className="text-slate-900 font-bold text-lg">{supplierToEdit ? 'Edit Supplier' : 'Add New Supplier'}</h3>
             <p className="text-xs text-slate-600 mt-0.5">Fill in the Supplier details below</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-[#F1F5F9] text-slate-600 hover:text-slate-900 transition"><X className="w-5 h-5" /></button>
