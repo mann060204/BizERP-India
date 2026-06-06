@@ -838,11 +838,17 @@ export default function NewPurchasePage() {
                           <span>₹{totalIGST.toFixed(2)}</span>
                         </div>
                       )}
-                    </>
-                  )}
-                </div>
-                
-                <div className="pt-2 border-t border-slate-200 mt-2 space-y-1">
+                      </>
+                    )}
+                    {shippingCharge > 0 && (
+                      <div className="flex justify-between text-slate-600">
+                        <span>Shipping Charge</span>
+                        <span>₹{shippingCharge.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="pt-2 border-t border-slate-200 mt-2 space-y-1">
                   <div className="flex justify-between font-bold text-lg text-emerald-600">
                     <span>Grand Total</span>
                     <span>₹{grandTotal.toFixed(2)}</span>

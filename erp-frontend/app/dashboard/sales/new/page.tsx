@@ -1160,6 +1160,12 @@ export default function NewInvoicePage() {
                     )}
                   </>
                 )}
+                {shippingCharge > 0 && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Shipping Charge</span>
+                    <span>₹{shippingCharge.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 pt-3 border-t-2 border-slate-300 space-y-1 bg-white -mx-2 -mb-2 p-3 rounded-b-lg">
