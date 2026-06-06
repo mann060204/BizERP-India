@@ -560,8 +560,8 @@ export default function NewInvoicePage() {
         lineItems,
         paymentMode: combinedPaymentMode,
         paymentHistory: [
-          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, bankId: bankId1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
-          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, bankId: bankId2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
+          ...(amountReceived1 > 0 ? [{ mode: paymentMode1, bankId: bankId1 === '' ? undefined : bankId1, amount: amountReceived1, date: paymentDate1, txnId: txnId1 }] : []),
+          ...(amountReceived2 > 0 ? [{ mode: paymentMode2, bankId: bankId2 === '' ? undefined : bankId2, amount: amountReceived2, date: paymentDate2, txnId: txnId2 }] : [])
         ],
         amountReceived: totalAmountReceived,
         txnId: combinedTxnId,

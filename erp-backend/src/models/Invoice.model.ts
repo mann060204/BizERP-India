@@ -148,7 +148,7 @@ const InvoiceSchema = new Schema<IInvoice>(
     isReverseCharge: { type: Boolean, default: false },
     paymentHistory: [{
       amount: { type: Number, required: true },
-      mode: { type: String, enum: ['Cash', 'Bank', 'UPI', 'Cheque', 'Credit'], required: true },
+      mode: { type: String, enum: ['Cash', 'Bank', 'Bank Transfer', 'UPI', 'Cheque', 'Credit', 'NEFT', 'RTGS'], required: true },
       date: { type: Date, required: true, default: Date.now },
       txnId: { type: String },
       bankId: { type: Schema.Types.ObjectId, ref: 'Bank' }
