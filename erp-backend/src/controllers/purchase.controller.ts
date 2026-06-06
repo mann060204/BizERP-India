@@ -92,20 +92,6 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     
     for (const item of lineItems) {
       if (item.productId) {
-        if (!item.batchNo) {
-          item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
-          // Auto-generated batch goes to batches array
-          batchesArray.push({
-            productId: item.productId,
-            batchNo: item.batchNo,
-            mrp: item.mrp,
-            salePrice: item.rate,
-            quantity: item.quantity
-          });
-          // Update the totals.lineItems array so the batchNo is saved to the database
-          const tItem = totals.lineItems.find(t => t.productId?.toString() === item.productId?.toString() && !t.batchNo);
-          if (tItem) tItem.batchNo = item.batchNo;
-        }
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
@@ -277,20 +263,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     
     for (const item of lineItems) {
       if (item.productId) {
-        if (!item.batchNo) {
-          item.batchNo = `B-${Date.now().toString().slice(-5)}${Math.floor(Math.random()*100)}`;
-          // Auto-generated batch goes to batches array
-          newBatchesArray.push({
-            productId: item.productId,
-            batchNo: item.batchNo,
-            mrp: item.mrp,
-            salePrice: item.rate,
-            quantity: item.quantity
-          });
-          // Update the totals.lineItems array so the batchNo is saved to the database
-          const tItem = totals.lineItems.find(t => t.productId?.toString() === item.productId?.toString() && !t.batchNo);
-          if (tItem) tItem.batchNo = item.batchNo;
-        } else {
+        if (item.batchNo) {
           // Sync frontend edits if it missed sending them in batches array or quantity changed
           const existingBatchIdx = newBatchesArray.findIndex((b: any) => b.productId?.toString() === item.productId?.toString() && b.batchNo === item.batchNo);
           if (existingBatchIdx === -1) {
