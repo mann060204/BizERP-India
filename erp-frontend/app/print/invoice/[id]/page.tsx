@@ -131,7 +131,7 @@ export default function PrintableInvoicePage() {
   
   const template = printFormat || business.invoiceTemplate || 'A4';
   const isInterState = invoice.isInterState;
-  const isNonGst = invoice.invoiceType === 'NON-GST';
+  const isNonGst = invoice.invoiceType === 'NON-GST' || invoice.invoiceType === 'Bill of Supply';
   const tAndC = invoice.termsAndConditions || business.termsAndConditions || '1. Any complaint regarding goods should be made within 24 hrs from the Receipt.\n2. Interest will be charged @ 18% p.a. on invoice amount including GST amount.\n3. Goods once sold will not be taken back.';
 
   if (template === 'POS') {

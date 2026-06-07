@@ -59,7 +59,7 @@ export default function PrintablePurchaseOrderPage() {
   if (!order || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Purchase Order not found</div>;
 
   const isInterState = order.isInterState;
-  const isNonGst = order.purchaseType === 'NON-GST';
+  const isNonGst = order.purchaseType === 'NON-GST' || order.purchaseType === 'Bill of Supply';
   const tAndC = order.termsAndConditions || business.termsAndConditions || '1. This is a Purchase Order only — prices may vary.\n2. Valid for 30 days from Purchase Order date.\n3. Subject to availability of goods.';
 
   return (

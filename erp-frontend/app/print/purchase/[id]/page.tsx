@@ -61,7 +61,7 @@ export default function PrintablePurchasePage() {
   if (!purchase || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Purchase Bill not found</div>;
 
   const isInterState = purchase.isInterState;
-  const isNonGst = purchase.purchaseType === 'NON-GST';
+  const isNonGst = purchase.purchaseType === 'NON-GST' || purchase.purchaseType === 'Bill of Supply';
   const tAndC = purchase.termsAndConditions || business.termsAndConditions || '1. This is a Purchase Bill only — prices may vary.\n2. Valid for 30 days from Purchase Bill date.\n3. Subject to availability of goods.';
 
   return (
