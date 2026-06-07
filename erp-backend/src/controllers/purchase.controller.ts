@@ -69,7 +69,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const totals = calculateInvoiceTotals(
       lineItems, 
       !!isInterState, 
-      false, 
+      purchaseType === 'NON-GST' || purchaseType === 'Bill of Supply', 
       Number(shippingCharge) || 0, 
       Number(shippingGstRate) || 0
     );
@@ -240,7 +240,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const totals = calculateInvoiceTotals(
       lineItems, 
       !!isInterState, 
-      false, 
+      purchaseType === 'NON-GST' || purchaseType === 'Bill of Supply', 
       Number(shippingCharge) || 0, 
       Number(shippingGstRate) || 0
     );
