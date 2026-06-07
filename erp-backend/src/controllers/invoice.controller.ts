@@ -311,6 +311,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       id,
       {
+        invoiceType: invoiceType === 'NON-GST' ? 'NON-GST' : 'GST',
         dueDate: dueDate || existingInvoice.dueDate,
         invoiceDate: updatedInvoiceDate,
         customerId: customerId || undefined,
