@@ -153,9 +153,9 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     const businessId = req.user!.businessId;
-    const invType = invoiceType === 'NON-GST' ? 'NON-GST' : 'GST';
+    const invType = invoiceType?.toUpperCase() === 'NON-GST' ? 'NON-GST' : 'GST';
     const invoiceNumber = await getNextInvoiceNumber(businessId, invType);
-    const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType === 'NON-GST' || invoiceType === 'Bill of Supply');
+    const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType?.toUpperCase() === 'NON-GST' || invoiceType === 'Bill of Supply');
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
     const dAmount = Number(discountAmount) || 0;
@@ -275,7 +275,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
       }
     }
 
-    const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType === 'NON-GST' || invoiceType === 'Bill of Supply');
+    const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType?.toUpperCase() === 'NON-GST' || invoiceType === 'Bill of Supply');
     const received = Number(amountReceived) || 0;
     const shipping = Number(shippingCharge) || 0;
     const dAmount = Number(discountAmount) || 0;
