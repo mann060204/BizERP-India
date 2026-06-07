@@ -53,7 +53,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
       additionalDiscount, shippingCharge, shippingGstRate, roundOff,
-      lineItems, amountPaid, batches, paymentMode, status, notes, paymentBankId
+      lineItems, amountPaid, batches, paymentMode, status, notes, paymentBankId, purchaseType
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -182,7 +182,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const {
       billNumber, billDate, dueDate, supplierId, supplierSnapshot, isInterState,
       lineItems, batches, paymentMode, amountPaid, notes, status, paymentBankId,
-      shippingCharge, shippingGstRate, additionalDiscount, roundOff, paymentDate
+      shippingCharge, shippingGstRate, additionalDiscount, roundOff, paymentDate, purchaseType
     } = req.body;
 
     const purchaseId = req.params['id'];

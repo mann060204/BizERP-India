@@ -631,7 +631,7 @@ export default function EditInvoicePage() {
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label">Invoice Type</label>
-              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full bg-slate-100 cursor-not-allowed" disabled>
+              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
                 <option>Bill of Supply</option>
