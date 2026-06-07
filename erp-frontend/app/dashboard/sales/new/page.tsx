@@ -107,6 +107,10 @@ export default function NewInvoicePage() {
   const [amountReceived2, setAmountReceived2] = useState(0);
   const [txnId2, setTxnId2] = useState('');
   const [paymentDate2, setPaymentDate2] = useState('');
+  const [shippingCharge, setShippingCharge] = useState(0);
+  const [shippingGstRate, setShippingGstRate] = useState(0);
+  const [globalDiscountType, setGlobalDiscountType] = useState('%');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
 
   useEffect(() => {
     accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
@@ -138,11 +142,6 @@ export default function NewInvoicePage() {
     }
   }, [paymentMode2, banks]);
 
-  const [shippingCharge, setShippingCharge] = useState(0);
-  const [shippingGstRate, setShippingGstRate] = useState(0);
-  const [globalDiscountType, setGlobalDiscountType] = useState('%');
-  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
-  
   
   const totalAmountReceived = amountReceived1 + amountReceived2;
   const formatDate = (d: string) => d.split('-').reverse().join('/');
