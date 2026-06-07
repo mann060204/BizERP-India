@@ -342,6 +342,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     const updatedPurchase = await PurchaseBill.findOneAndUpdate(
       { _id: purchaseId, businessId },
       {
+        purchaseType: purchaseType || existingPurchase.purchaseType,
         billNumber,
         billDate: updatedBillDate,
         dueDate: dueDate === '' ? undefined : dueDate,
