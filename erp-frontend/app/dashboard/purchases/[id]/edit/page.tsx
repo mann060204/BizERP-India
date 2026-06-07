@@ -470,7 +470,7 @@ export default function EditPurchasePage() {
           <div className="p-1.5 grid grid-cols-5 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label block mb-1">Purchase Type <span className="text-red-500">*</span></label>
-              <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full">
+              <select value={purchaseType} onChange={e => setPurchaseType(e.target.value)} className="erp-input w-full bg-gray-100 cursor-not-allowed" disabled>
                 <option>GST</option>
                 <option value="Non-GST">Non-GST</option>
                 <option>Bill of Supply</option>
