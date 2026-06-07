@@ -139,6 +139,7 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
 
     const purchase = await PurchaseBill.create({
       businessId,
+      purchaseType: purchaseType || 'GST',
       billNumber,
       billDate: billDate ? new Date(billDate) : new Date(),
       dueDate: dueDate === '' ? undefined : dueDate,

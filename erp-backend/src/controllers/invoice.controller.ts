@@ -11,7 +11,7 @@ import { generateSequenceNumber } from '../utils/sequenceGenerator';
 import Customer from '../models/Customer.model';
 
 // Helper: generate next invoice number
-const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' = 'GST'): Promise<string> => {
+const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' | 'Bill of Supply' = 'GST'): Promise<string> => {
   const docKey = invoiceType === 'GST' ? 'GST_INVOICE' : 'NON_GST_INVOICE';
   
   const business = await Business.findByIdAndUpdate(
@@ -153,7 +153,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     const businessId = req.user!.businessId;
-    const invType = invoiceType?.toUpperCase() === 'NON-GST' ? 'NON-GST' : 'GST';
+    const invType = invoiceType?.toUpperCase() === 'NON-GST' ? 'NON-GST' : invoiceType === 'Bill of Supply' ? 'Bill of Supply' : 'GST';
     const invoiceNumber = await getNextInvoiceNumber(businessId, invType);
     const totals = calculateInvoiceTotals(lineItems, !!isInterState, invoiceType?.toUpperCase() === 'NON-GST' || invoiceType === 'Bill of Supply');
     const received = Number(amountReceived) || 0;
@@ -311,7 +311,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       id,
       {
-        invoiceType: invoiceType === 'NON-GST' ? 'NON-GST' : 'GST',
+        invoiceType: invoiceType?.toUpperCase() === 'NON-GST' ? 'NON-GST' : invoiceType === 'Bill of Supply' ? 'Bill of Supply' : 'GST',
         dueDate: dueDate || existingInvoice.dueDate,
         invoiceDate: updatedInvoiceDate,
         customerId: customerId || undefined,

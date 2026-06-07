@@ -61,7 +61,7 @@ export default function PrintableQuotationPage() {
   if (!quotation || !business) return <div className="p-10 text-center text-red-500 font-bold bg-white min-h-screen">Quotation not found</div>;
 
   const isInterState = quotation.isInterState;
-  const isNonGst = quotation.quotationType === 'NON-GST' || quotation.quotationType === 'Bill of Supply';
+  const isNonGst = quotation.quotationType?.toUpperCase() === 'NON-GST' || quotation.quotationType === 'Bill of Supply';
   const tAndC = quotation.termsAndConditions || business.termsAndConditions || '1. This is an estimate only — prices may vary.\n2. Valid for 30 days from quotation date.\n3. Subject to availability of goods.';
 
   return (
