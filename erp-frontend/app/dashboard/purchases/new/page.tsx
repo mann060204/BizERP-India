@@ -247,7 +247,7 @@ export default function NewPurchasePage() {
   // Determine if Inter-State based on placeOfSupply vs 'Gujarat' (assuming company state is Gujarat for now)
   const isInterState = placeOfSupply !== 'Gujarat';
 
-  const calculateItem = (item: LineItem) => {
+  const calculateItem = (item: LineItem, invType = purchaseType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
     let discountAmt = item.discountAmount || 0;
     let discountPerc = item.discount || 0;
@@ -259,12 +259,16 @@ export default function NewPurchasePage() {
     }
     
     const taxableAmount = round2(gross - discountAmt);
-    const cgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
-    const sgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
-    const igst = isInterState ? round2((taxableAmount * item.gstRate) / 100) : 0;
-    const cessAmt = round2((taxableAmount * item.cess) / 100);
+    const cgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
+    const sgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
+    const igst = (invType === 'GST' && interState) ? round2((taxableAmount * item.gstRate) / 100) : 0;
+    const cessAmt = (invType === 'GST') ? round2((taxableAmount * item.cess) / 100) : 0;
     return { ...item, discount: round2(discountPerc), discountAmount: round2(discountAmt), taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
   };
+
+  useEffect(() => {
+    setLineItems(prev => prev.map(item => calculateItem(item, purchaseType, isInterState)));
+  }, [purchaseType, isInterState]);
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
@@ -311,7 +315,7 @@ export default function NewPurchasePage() {
   let shipSGST = 0;
   let shipIGST = 0;
   
-  if (shippingCharge > 0 && shippingGstRate > 0 && purchaseType !== 'Non-GST') {
+  if (shippingCharge > 0 && shippingGstRate > 0 && purchaseType === 'GST') {
     if (isInterState) {
       shipIGST = (shippingCharge * shippingGstRate) / 100;
     } else {
@@ -615,7 +619,7 @@ export default function NewPurchasePage() {
                   </select>
                 </div>
               </div>
-                            {purchaseType !== 'Non-GST' && (
+                            {purchaseType === 'GST' && (
                 <>
                   <div>
                     <label className="erp-label block mb-1">Tax (%)</label>
@@ -660,7 +664,7 @@ export default function NewPurchasePage() {
         <div className="erp-container flex-1 overflow-hidden flex flex-col min-h-[150px]">
            <div 
              className={`erp-grid-header grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} sticky top-0 z-10`}
-             style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
+             style={purchaseType === 'GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
            >
                <div className="col-span-1 erp-grid-cell text-center">S.No.</div>
                <div className="col-span-3 erp-grid-cell">Item Details</div>
@@ -668,7 +672,7 @@ export default function NewPurchasePage() {
                <div className="col-span-1 erp-grid-cell text-center">Unit</div>
                <div className="col-span-1 erp-grid-cell text-center">Price</div>
                <div className="col-span-1 erp-grid-cell text-center">Disc</div>
-               {purchaseType !== 'Non-GST' && (
+               {purchaseType === 'GST' && (
                  <>
                    <div className="col-span-1 erp-grid-cell text-center">Tax (%)</div>
                    <div className="col-span-1 erp-grid-cell text-center">CGST</div>
@@ -677,7 +681,7 @@ export default function NewPurchasePage() {
                    <div className="col-span-1 erp-grid-cell text-center">Cess</div>
                  </>
                )}
-               <div className={`erp-grid-cell text-right ${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
+               <div className={`erp-grid-cell text-right ${purchaseType === 'GST' ? 'col-span-1' : 'col-span-2'}`}>Amount</div>
                <div className="col-span-1 erp-grid-cell text-center"></div>
              </div>
            
@@ -689,7 +693,7 @@ export default function NewPurchasePage() {
                   <div 
                     key={idx} 
                     className={`grid ${purchaseType === 'Non-GST' ? 'grid-cols-11' : ''} hover:bg-slate-50 border-b border-slate-100 text-[11px] group`}
-                    style={purchaseType !== 'Non-GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
+                    style={purchaseType === 'GST' ? { gridTemplateColumns: 'repeat(15, minmax(0, 1fr))' } : {}}
                   >
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-slate-600">{idx + 1}</div>
                     <div className="col-span-3 border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
@@ -703,7 +707,7 @@ export default function NewPurchasePage() {
                       {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
                       {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
                     </div>
-                    {purchaseType !== 'Non-GST' && (
+                    {purchaseType === 'GST' && (
                         <>
                           <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.gstRate}</div>
                           <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">{item.cgst > 0 ? item.cgst.toFixed(2) : '-'}</div>
@@ -712,7 +716,7 @@ export default function NewPurchasePage() {
                           <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.cess || ''}</div>
                         </>
                     )}
-                    <div className={`${purchaseType !== 'Non-GST' ? 'col-span-1' : 'col-span-2'} border-r border-slate-100 px-2 py-1.5 text-right font-medium flex items-center justify-end`}>
+                    <div className={`${purchaseType === 'GST' ? 'col-span-1' : 'col-span-2'} border-r border-slate-100 px-2 py-1.5 text-right font-medium flex items-center justify-end`}>
                       ₹{item.totalAmount.toFixed(2)}
                     </div>
                     <div className="col-span-1 px-2 py-1.5 flex items-center justify-center gap-1">
@@ -822,7 +826,7 @@ export default function NewPurchasePage() {
                     </div>
                   )}
                   
-                  {purchaseType !== 'Non-GST' && (
+                  {purchaseType === 'GST' && (
                     <>
                       <div className="flex justify-between text-slate-600">
                         <span>CGST</span>
