@@ -319,16 +319,6 @@ export default function EditPurchasePage() {
        const productBatches = prev.filter(b => b.productId === newItem.productId);
        if (productBatches.length === 1) {
           return prev.map(b => b.productId === newItem.productId ? { ...b, quantity: newItem.quantity, mrp: newItem.mrp || newItem.rate } : b);
-       } else if (newItem.batchNo && productBatches.length === 0) {
-          return [...prev, {
-            productId: newItem.productId || '',
-            productName: newItem.productName,
-            batchNo: newItem.batchNo,
-            mrp: newItem.mrp || newItem.rate,
-            salePrice: 0,
-            quantity: newItem.quantity,
-            manufacturingDate: '', expiryDate: ''
-          }];
        }
        return prev;
     });
@@ -415,7 +405,7 @@ export default function EditPurchasePage() {
         } : { name: supplierSearch || 'Cash Supplier' },
         isInterState,
         lineItems,
-        batches: batches.length > 0 ? batches : lineItems.filter(i => i.batchNo).map(i => ({ productId: i.productId, batchNo: i.batchNo, mrp: i.mrp, quantity: i.quantity })),
+        batches: batches,
         subtotal,
         totalDiscount,
         totalTaxableAmount,
@@ -1007,8 +997,9 @@ export default function EditPurchasePage() {
                          <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(2)}</td>
                          <td className="p-2 border border-slate-200 text-slate-500">{b.manufacturingDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
-                         <td className="p-2 border border-slate-200 text-center">
-                            <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
+                         <td className="p-2 border border-slate-200 text-center flex justify-center gap-2">
+                             <button onClick={() => { setBatchInput(batches[i]); setActiveTab('batches'); }} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded"><Pencil className="w-3.5 h-3.5" /></button>
+                             <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
                          </td>
                        </tr>
                      ))}

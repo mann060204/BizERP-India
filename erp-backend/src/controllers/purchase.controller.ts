@@ -264,28 +264,7 @@ export const updatePurchase = async (req: AuthRequest, res: Response): Promise<v
     
     for (const item of lineItems) {
       if (item.productId) {
-        if (item.batchNo) {
-          // Sync frontend edits if it missed sending them in batches array or quantity changed
-          const existingBatchIdx = newBatchesArray.findIndex((b: any) => b.productId?.toString() === item.productId?.toString() && b.batchNo === item.batchNo);
-          if (existingBatchIdx === -1) {
-            newBatchesArray.push({
-              productId: item.productId,
-              batchNo: item.batchNo,
-              mrp: item.mrp,
-              salePrice: item.rate,
-              quantity: item.quantity
-            });
-          } else {
-            // Only sync quantity if there's only 1 batch for this item in newBatchesArray (no split)
-            const count = newBatchesArray.filter((b: any) => b.productId?.toString() === item.productId?.toString()).length;
-            if (count === 1) {
-               newBatchesArray[existingBatchIdx].quantity = item.quantity;
-               newBatchesArray[existingBatchIdx].salePrice = item.rate;
-               newBatchesArray[existingBatchIdx].mrp = item.mrp;
-            }
-          }
-        }
-        
+
         await Product.findByIdAndUpdate(item.productId, {
           $inc: { currentStock: item.quantity },
         });
