@@ -44,6 +44,7 @@ export const suppliersApi = {
   list: (params?: any) => api.get('/suppliers', { params }),
   get: (id: string) => api.get(`/suppliers/${id}`),
   create: (data: any) => api.post('/suppliers', data),
+  bulkCreate: (data: any) => api.post('/suppliers/bulk', data),
   update: (id: string, data: any) => api.put(`/suppliers/${id}`, data),
   delete: (id: string) => api.delete(`/suppliers/${id}`),
     getLedger: (id: string) => api.get(`/suppliers/${id}/ledger`),

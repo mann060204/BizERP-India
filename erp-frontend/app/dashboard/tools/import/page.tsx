@@ -4,9 +4,9 @@ import Topbar from '../../../../components/layout/Topbar';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Info, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
-import { productsApi, customersApi } from '../../../../lib/erp-api';
+import { productsApi, customersApi, suppliersApi } from '../../../../lib/erp-api';
 
-type ImportType = 'products' | 'customers';
+type ImportType = 'products' | 'customers' | 'suppliers';
 
 export default function BulkImportPage() {
   const [importType, setImportType] = useState<ImportType>('products');
@@ -21,6 +21,9 @@ export default function BulkImportPage() {
     if (importType === 'products') {
       headers = 'Name,Print Name,SKU,Category,Group,Brand,Unit,Secondary Unit,Conversion Rate,Purchase Price,Selling Price,MRP,Sale Discount,Discount Type,GST %,HSN Code,Stock\n"Sample Item","Sample P-Name","SKU001","General","Main Group","Brand X","Nos","Box","10","80","100","120","5","percentage","18","1234","50"';
       filename = 'products_import_template.csv';
+    } else if (importType === 'suppliers') {
+      headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Opening Balance,Street,City,State,Pincode\n"Supplier ABC","9876543211","supplier@example.com","27AADCB2230M1Z3","ABCDE1234G","ABC Enterprises","0","123 Industrial St","Pune","Maharashtra","411001"';
+      filename = 'suppliers_import_template.csv';
     } else {
       headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Credit Limit,Opening Balance,Street,City,State,Pincode\n"John Doe","9876543210","john@example.com","27AADCB2230M1Z2","ABCDE1234F","Doe Enterprises","50000","0","123 Main St","Mumbai","Maharashtra","400001"';
       filename = 'customers_import_template.csv';
@@ -92,6 +95,27 @@ export default function BulkImportPage() {
         };
         const res = await productsApi.bulkCreate(payload);
         toast.success(res.data.message);
+      } else if (importType === 'suppliers') {
+        const payload = {
+          suppliers: data.map(item => ({
+            name: item.name || item.Name,
+            mobile: item.mobile || item.Mobile || '',
+            email: item.email || item.Email || '',
+            gstin: item.gstin || item.GSTIN || '',
+            panNo: item.panNo || item['PAN No'] || '',
+            tradeName: item.tradeName || item['Trade Name'] || '',
+            openingBalance: parseFloat(item.openingBalance || item['Opening Balance'] || '0'),
+            billingAddress: {
+              street: item.street || item.Street || '',
+              city: item.city || item.City || '',
+              state: item.state || item.State || '',
+              pincode: item.pincode || item.Pincode || ''
+            },
+            isActive: true
+          }))
+        };
+        const res = await suppliersApi.bulkCreate(payload);
+        toast.success(res.data.message);
       } else {
         const payload = {
           customers: data.map(item => ({
@@ -157,6 +181,13 @@ export default function BulkImportPage() {
                   </div>
                   <span className="font-medium">Customers</span>
                 </button>
+                <button onClick={() => { setImportType('suppliers'); setFile(null); setData([]); }} 
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${importType === 'suppliers' ? 'bg-[#D4D4D4]/10 border-[#D4D4D4] text-slate-700' : 'bg-white border-slate-200 text-slate-900 hover:border-[#475569]'}`}>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${importType === 'suppliers' ? 'border-[#D4D4D4]' : 'border-[#475569]'}`}>
+                    {importType === 'suppliers' && <div className="w-2 h-2 rounded-full bg-[#D4D4D4]" />}
+                  </div>
+                  <span className="font-medium">Suppliers</span>
+                </button>
               </div>
             </div>
 
@@ -172,6 +203,11 @@ export default function BulkImportPage() {
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
                       Expected Headers:<br/>
                       <span className="text-emerald-400">Name</span>, Print Name, SKU, Category, Group, Brand, Unit, Secondary Unit, Conversion Rate, <span className="text-emerald-400">Selling Price</span>, Purchase Price, MRP, Sale Discount, Discount Type, GST %, HSN Code, Stock
+                    </div>
+                  ) : importType === 'suppliers' ? (
+                    <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      Expected Headers:<br/>
+                      <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, PAN No, Trade Name, Opening Balance, Street, City, State, Pincode
                     </div>
                   ) : (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
