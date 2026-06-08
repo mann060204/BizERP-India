@@ -78,7 +78,7 @@ export const adjustInventory = async (req: AuthRequest, res: Response): Promise<
           action: type === 'add' ? 'STOCK_IN' : 'STOCK_OUT',
           quantityChanged: incValue,
           currentStock: updatedBatch.currentStock,
-          documentType: 'InventoryAdjustment',
+          documentType: 'Adjustment',
           documentNumber: `ADJ-${reason}`,
           userId: req.user!.userId,
         });
@@ -317,7 +317,7 @@ export const saveBatch = async (req: AuthRequest, res: Response): Promise<void> 
           action: 'STOCK_IN',
           quantityChanged: qty,
           currentStock: updatedBatch.currentStock,
-          documentType: 'ManualBatchEntry',
+          documentType: 'Manual',
           documentNumber: `BATCH-${batchNo.trim()}`,
           userId: req.user!.userId,
         });
@@ -352,7 +352,7 @@ export const saveBatch = async (req: AuthRequest, res: Response): Promise<void> 
           action: 'STOCK_IN',
           quantityChanged: qty,
           currentStock: newBatch.currentStock,
-          documentType: 'ManualBatchEntry',
+          documentType: 'Manual',
           documentNumber: `BATCH-${batchNo.trim()}`,
           userId: req.user!.userId,
         });
