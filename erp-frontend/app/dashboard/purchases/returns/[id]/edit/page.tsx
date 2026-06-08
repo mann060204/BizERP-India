@@ -455,7 +455,12 @@ export default function EditpurchaseReturnPage() {
             <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
-                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a1a00] text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
+                <input list="batch-list" value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-[#1a1a00] text-yellow-100 placeholder-yellow-900/50" placeholder="||||||" />
+                <datalist id="batch-list">
+                  {itemInput.productId && products.find(p => p._id === itemInput.productId)?.batches?.map((b: any) => (
+                    <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {parseFloat((b.currentStock || 0).toFixed(3))})</option>
+                  ))}
+                </datalist>
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">

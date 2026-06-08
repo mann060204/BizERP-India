@@ -42,8 +42,17 @@ export default function PurchasesPage() {
 
   const handleCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel purchase bill ${num}?`)) return;
-    try { await purchasesApi.cancel(id); toast.success('Purchase bill cancelled'); setPurchases(pur => pur.filter(p => p._id !== id)); }
+    try { await purchasesApi.cancel(id); toast.success('Purchase bill cancelled'); 
+          // Keep it in the list but update status
+          setPurchases(pur => pur.map(p => p._id === id ? { ...p, status: 'cancelled' } : p)); 
+    }
     catch { toast.error('Failed to cancel'); }
+  };
+
+  const handleDelete = async (id: string, num: string) => {
+    if (!confirm(`Are you sure you want to completely delete purchase bill ${num}? This cannot be undone.`)) return;
+    try { await purchasesApi.hardDelete(id); toast.success('Purchase bill deleted'); setPurchases(pur => pur.filter(p => p._id !== id)); }
+    catch { toast.error('Failed to delete'); }
   };
 
   return (
@@ -146,7 +155,10 @@ export default function PurchasesPage() {
                             </Link>
                             <Link href={`/dashboard/purchases/${pur._id}/edit`} className="px-2 py-1 rounded-lg text-xs text-blue-500 hover:bg-blue-100 transition">Edit</Link>
                             {pur.status !== 'cancelled' && (
-                              <button onClick={() => handleCancel(pur._id, pur.billNumber)} className="px-2 py-1 rounded-lg text-xs text-red-500 hover:bg-red-100 transition">Cancel</button>
+                              <button onClick={() => handleCancel(pur._id, pur.billNumber)} className="px-2 py-1 rounded-lg text-xs text-orange-500 hover:bg-orange-100 transition">Cancel</button>
+                            )}
+                            {pur.status === 'cancelled' && (
+                              <button onClick={() => handleDelete(pur._id, pur.billNumber)} className="px-2 py-1 rounded-lg text-xs text-red-500 hover:bg-red-100 transition">Delete</button>
                             )}
                           </div>
                         </td>

@@ -87,6 +87,7 @@ export const purchasesApi = {
   updateStatus: (id: string, data: any) => api.put(`/purchases/${id}/status`, data),
   getLastPrices: (supplierId: string, productId: string) => api.get(`/purchases/last-prices?supplierId=${supplierId}&productId=${productId}`),
   cancel: (id: string) => api.delete(`/purchases/${id}`),
+  hardDelete: (id: string) => api.delete(`/purchases/${id}/hard`),
   summary: (params?: any) => api.get('/purchases/analytics/summary', { params }),
 };
 

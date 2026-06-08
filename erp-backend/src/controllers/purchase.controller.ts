@@ -427,6 +427,23 @@ export const cancelPurchase = async (req: AuthRequest, res: Response): Promise<v
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// DELETE /api/v1/purchases/:id/hard  (hard delete)
+export const hardDeletePurchase = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const purchase = await PurchaseBill.findOne({ _id: req.params['id'], businessId: req.user!.businessId });
+    if (!purchase) { res.status(404).json({ message: 'Purchase bill not found' }); return; }
+
+    if (purchase.status !== 'cancelled') {
+      res.status(400).json({ message: 'Only cancelled purchase bills can be deleted' });
+      return;
+    }
+
+    await PurchaseBill.deleteOne({ _id: purchase._id });
+
+    res.json({ message: 'Purchase bill permanently deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // GET /api/v1/purchases/analytics/summary
 export const getPurchaseSummary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
