@@ -876,7 +876,10 @@ export default function NewPurchasePage() {
                     onChange={e => {
                        const pName = e.target.options[e.target.selectedIndex].text;
                        const existingBatch = lineItems.find(l => l.productId === e.target.value)?.batchNo || '';
-                       setBatchInput({...batchInput, productId: e.target.value, productName: pName, batchNo: existingBatch});
+                       const totalQty = lineItems.filter(l => l.productId === e.target.value).reduce((s, l) => s + l.quantity, 0);
+                       const assignedQty = batches.filter(b => b.productId === e.target.value).reduce((s, b) => s + b.quantity, 0);
+                       const remQty = Math.max(0, totalQty - assignedQty);
+                       setBatchInput({...batchInput, productId: e.target.value, productName: pName, batchNo: existingBatch, quantity: remQty});
                     }} 
                     className="erp-input w-full"
                  >
@@ -892,8 +895,15 @@ export default function NewPurchasePage() {
                  <input value={batchInput.batchNo} onChange={e => setBatchInput({...batchInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
               </div>
               <div className="col-span-1">
-                 <label className="erp-label block mb-1">Quantity</label>
-                 <input type="number" value={batchInput.quantity || ''} onChange={e => setBatchInput({...batchInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                 <label className="erp-label block mb-1">
+                   Quantity 
+                   {batchInput.productId && (
+                     <span className="text-[10px] text-orange-600 font-bold ml-1">
+                       (Rem: {Math.max(0, lineItems.filter(l => l.productId === batchInput.productId).reduce((s, l) => s + l.quantity, 0) - batches.filter(b => b.productId === batchInput.productId && b !== batchInput).reduce((s, b) => s + b.quantity, 0))})
+                     </span>
+                   )}
+                 </label>
+                 <input type="number" value={batchInput.quantity === 0 ? '' : batchInput.quantity} onChange={e => setBatchInput({...batchInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Sale Price</label>
