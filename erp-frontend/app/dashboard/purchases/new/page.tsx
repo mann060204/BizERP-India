@@ -699,6 +699,7 @@ export default function NewPurchasePage() {
                     <div className="col-span-3 border-r border-slate-100 px-2 py-1.5 font-medium text-slate-900">
                       {item.productName}
                       {item.tag && <span className="ml-2 text-[9px] bg-slate-200 px-1 rounded text-slate-600">{item.tag}</span>}
+                      {item.description && <div className="text-[10px] text-slate-500 font-normal truncate mt-0.5" title={item.description}>{item.description}</div>}
                     </div>
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
