@@ -464,9 +464,9 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={[
-                          { name: 'Income', value: trendData.reduce((s, t) => s + (t.sales || 0), 0) },
-                          { name: 'Purchases', value: trendData.reduce((s, t) => s + (t.purchases || 0), 0) },
-                          { name: 'Expenses', value: trendData.reduce((s, t) => s + (t.expenses || 0), 0) }
+                          { name: 'Income', value: Math.max(0, stats.sales || 0) },
+                          { name: 'Purchases', value: Math.max(0, stats.purchases || 0) },
+                          { name: 'Expenses', value: Math.max(0, stats.expenses || 0) }
                         ]} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" nameKey="name" paddingAngle={4}>
                           <Cell fill="#10B981" />
                           <Cell fill="#F59E0B" />
@@ -480,15 +480,15 @@ export default function DashboardPage() {
                   <div className="flex-1 space-y-3 pr-2 flex flex-col justify-center">
                     <div className="border-b border-slate-100 pb-2">
                       <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Income</p>
-                      <p className="text-sm font-bold text-emerald-600">₹{fmt(trendData.reduce((s, t) => s + (t.sales || 0), 0))}</p>
+                      <p className="text-sm font-bold text-emerald-600">{fmt(stats.sales || 0)}</p>
                     </div>
                     <div className="border-b border-slate-100 pb-2">
                       <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Purchases</p>
-                      <p className="text-sm font-bold text-amber-600">₹{fmt(trendData.reduce((s, t) => s + (t.purchases || 0), 0))}</p>
+                      <p className="text-sm font-bold text-amber-600">{fmt(stats.purchases || 0)}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Expenses</p>
-                      <p className="text-sm font-bold text-red-600">₹{fmt(trendData.reduce((s, t) => s + (t.expenses || 0), 0))}</p>
+                      <p className="text-sm font-bold text-red-600">{fmt(stats.expenses || 0)}</p>
                     </div>
                   </div>
                 </div>
