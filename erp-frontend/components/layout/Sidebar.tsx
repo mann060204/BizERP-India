@@ -28,7 +28,12 @@ const NAV_ITEMS = [
       { label: 'Debit Notes (Returns)', href: '/dashboard/purchases/returns' },
     ]
   },
-  { label: 'Inventory',   href: '/dashboard/inventory', icon: Database },
+  { label: 'Inventory',   href: '#',                    icon: Database,
+    subItems: [
+      { label: 'Stock Levels',     href: '/dashboard/inventory' },
+      { label: 'Batch Numbers',    href: '/dashboard/inventory/batches' },
+    ]
+  },
   { label: 'Accounts',    href: '/dashboard/accounts',  icon: Landmark,
     subItems: [
       { label: 'Bank Account',    href: '/dashboard/accounts/Bank' },

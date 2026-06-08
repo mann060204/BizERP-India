@@ -229,3 +229,138 @@ export const getBatchLogs = async (req: AuthRequest, res: Response): Promise<voi
     res.status(500).json({ message: error.message });
   }
 };
+
+// GET /api/v1/inventory/batches
+export const listBatches = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const { search, productId } = req.query as any;
+
+    const query: any = { businessId, isActive: true };
+    if (productId) query.productId = productId;
+
+    const batches = await Batch.find(query)
+      .populate('productId', 'name sku unit')
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .lean();
+
+    // If search is provided, filter by product name or batch number
+    let filtered = batches;
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      filtered = batches.filter((b: any) =>
+        regex.test(b.batchNo) || regex.test(b.productId?.name || '')
+      );
+    }
+
+    res.json({ batches: filtered });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// POST /api/v1/inventory/batches
+export const saveBatch = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { productId, batchNo, quantity, salePrice, manufacturingDate, expiryDate, mrp } = req.body;
+    const businessId = req.user!.businessId;
+
+    if (!productId || !batchNo) {
+      res.status(400).json({ message: 'Product and Batch No. are required' });
+      return;
+    }
+
+    // Verify product exists
+    const product = await Product.findOne({ _id: productId, businessId });
+    if (!product) {
+      res.status(404).json({ message: 'Product not found' });
+      return;
+    }
+
+    const qty = Number(quantity) || 0;
+
+    const updateDoc: any = {
+      $set: {
+        mrp: Number(mrp) || Number(salePrice) || 0,
+        salePrice: Number(salePrice) || 0,
+        isActive: true,
+      }
+    };
+
+    if (manufacturingDate) updateDoc.$set.manufacturingDate = new Date(manufacturingDate);
+    if (expiryDate) updateDoc.$set.expiryDate = new Date(expiryDate);
+
+    // Check if batch already exists
+    const existingBatch = await Batch.findOne({ businessId, productId, batchNo: batchNo.trim() });
+
+    if (existingBatch) {
+      // Update existing batch - add quantity to current stock
+      if (qty > 0) updateDoc.$inc = { currentStock: qty };
+      const updatedBatch = await Batch.findOneAndUpdate(
+        { businessId, productId, batchNo: batchNo.trim() },
+        updateDoc,
+        { new: true }
+      );
+
+      // Also update product stock
+      if (qty > 0) {
+        await Product.findByIdAndUpdate(productId, { $inc: { currentStock: qty } });
+      }
+
+      // Create batch log
+      if (updatedBatch && qty > 0) {
+        await BatchLog.create({
+          businessId,
+          batchId: updatedBatch._id,
+          productId,
+          action: 'STOCK_IN',
+          quantityChanged: qty,
+          currentStock: updatedBatch.currentStock,
+          documentType: 'ManualBatchEntry',
+          documentNumber: `BATCH-${batchNo.trim()}`,
+          userId: req.user!.userId,
+        });
+      }
+
+      res.json({ message: 'Batch updated', batch: updatedBatch });
+    } else {
+      // Create new batch
+      const newBatch = await Batch.create({
+        businessId,
+        productId,
+        batchNo: batchNo.trim(),
+        mrp: Number(mrp) || Number(salePrice) || 0,
+        salePrice: Number(salePrice) || 0,
+        currentStock: qty,
+        manufacturingDate: manufacturingDate ? new Date(manufacturingDate) : undefined,
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+        isActive: true,
+      });
+
+      // Also update product stock
+      if (qty > 0) {
+        await Product.findByIdAndUpdate(productId, { $inc: { currentStock: qty } });
+      }
+
+      // Create batch log
+      if (qty > 0) {
+        await BatchLog.create({
+          businessId,
+          batchId: newBatch._id,
+          productId,
+          action: 'STOCK_IN',
+          quantityChanged: qty,
+          currentStock: newBatch.currentStock,
+          documentType: 'ManualBatchEntry',
+          documentNumber: `BATCH-${batchNo.trim()}`,
+          userId: req.user!.userId,
+        });
+      }
+
+      res.status(201).json({ message: 'Batch created', batch: newBatch });
+    }
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};

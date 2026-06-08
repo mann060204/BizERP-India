@@ -102,6 +102,8 @@ export const inventoryApi = {
   autoSequence: (data: any) => api.post('/inventory/auto-sequence', data).then(res => res.data),
   getBatchAlerts: () => api.get('/inventory/batch-alerts').then(res => res.data),
   getBatchLogs: (params?: any) => api.get('/inventory/batch-logs', { params }).then(res => res.data),
+  listBatches: (params?: any) => api.get('/inventory/batches', { params }),
+  saveBatch: (data: any) => api.post('/inventory/batches', data),
 };
 
 // ─── Expenses ─────────────────────────────────────────────────────────────────
