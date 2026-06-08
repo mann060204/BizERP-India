@@ -108,6 +108,35 @@ export default function GlobalCalculator() {
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
+  // Calculator Keyboard Support
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'calc') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't interfere if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const key = e.key;
+      if (/[0-9]/.test(key)) {
+        inputDigit(key);
+      } else if (key === '.') {
+        inputDecimal();
+      } else if (key === '+' || key === '-' || key === '*' || key === '/' || key === '%') {
+        performOperation(key);
+      } else if (key === 'Enter' || key === '=') {
+        e.preventDefault();
+        performOperation('=');
+      } else if (key === 'Escape') {
+        setIsOpen(false);
+      } else if (key === 'Backspace' || key === 'Delete') {
+        clear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   // --- Calculator Logic ---
   const inputDigit = (digit: string) => {
     if (waitingForNewValue) {
@@ -221,7 +250,7 @@ export default function GlobalCalculator() {
       >
         <div className="flex items-center space-x-2 text-gray-300">
           <Calculator size={18} />
-          <span className="font-semibold text-sm tracking-wide">CITIZEN</span>
+          <span className="font-semibold text-sm tracking-wide">OZEN CALCULATOR</span>
         </div>
         <div className="flex space-x-2 no-drag">
           <button onClick={() => setActiveTab('calc')} className={`p-1 rounded ${activeTab === 'calc' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-white'}`} title="Calculator">

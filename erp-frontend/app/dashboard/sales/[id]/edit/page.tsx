@@ -809,7 +809,7 @@ export default function EditInvoicePage() {
                         if (!showItemDD) return;
                         if (e.key === 'ArrowDown') { e.preventDefault(); setItemHighlightIndex(prev => Math.min(prev + 1, filteredProducts.length - 1)); }
                         else if (e.key === 'ArrowUp') { e.preventDefault(); setItemHighlightIndex(prev => Math.max(prev - 1, 0)); }
-                        else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) handleProductSelect(filteredProducts[itemHighlightIndex]); }
+                        else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) pickProduct(filteredProducts[itemHighlightIndex]); }
                         else if (e.key === 'Escape') { setShowItemDD(false); }
                       }}
                       className="erp-input w-full pr-8" placeholder="Type item name..." />
