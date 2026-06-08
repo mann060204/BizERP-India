@@ -40,7 +40,7 @@ export const getInventoryLevels = async (req: AuthRequest, res: Response): Promi
 // POST /api/v1/inventory/adjust
 export const adjustInventory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { productId, type, quantity, reason, notes } = req.body;
+    const { productId, type, quantity, reason, notes, batchNo } = req.body;
     if (!productId || !type || !quantity || !reason) {
       res.status(400).json({ message: 'Missing required fields' });
       return;
@@ -58,9 +58,32 @@ export const adjustInventory = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    // Perform adjustment
+    // Perform product-level adjustment
     product.currentStock += incValue;
     await product.save();
+
+    // If batchNo is provided, also adjust batch-level stock
+    if (batchNo && batchNo.trim()) {
+      const updatedBatch = await Batch.findOneAndUpdate(
+        { businessId, productId, batchNo: batchNo.trim() },
+        { $inc: { currentStock: incValue } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+
+      if (updatedBatch) {
+        await BatchLog.create({
+          businessId,
+          batchId: updatedBatch._id,
+          productId,
+          action: type === 'add' ? 'STOCK_IN' : 'STOCK_OUT',
+          quantityChanged: incValue,
+          currentStock: updatedBatch.currentStock,
+          documentType: 'InventoryAdjustment',
+          documentNumber: `ADJ-${reason}`,
+          userId: req.user!.userId,
+        });
+      }
+    }
 
     // Log adjustment
     const adjustment = await InventoryAdjustment.create({
@@ -68,6 +91,7 @@ export const adjustInventory = async (req: AuthRequest, res: Response): Promise<
       productId,
       type,
       quantity: qty,
+      batchNo: batchNo?.trim() || undefined,
       reason,
       notes,
       createdBy: req.user!.userId,
@@ -76,6 +100,7 @@ export const adjustInventory = async (req: AuthRequest, res: Response): Promise<
     res.status(201).json({ message: 'Inventory adjusted successfully', product, adjustment });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
+
 
 // GET /api/v1/inventory/adjustments
 export const getAdjustments = async (req: AuthRequest, res: Response): Promise<void> => {

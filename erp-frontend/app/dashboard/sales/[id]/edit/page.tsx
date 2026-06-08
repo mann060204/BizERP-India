@@ -231,9 +231,8 @@ export default function EditInvoicePage() {
           // Default to today if within FY range, else clamp to FY start
           const defaultDate = today >= fyStart && today <= fyEnd ? today : fyStart;
           setFyDateRange({ min: fyStart, max: fyEnd, default: defaultDate });
-          setInvoiceDate(defaultDate);
-          setDueDate(defaultDate);
-          setPaymentDate1(defaultDate);
+          // Only set payment dates to default; preserve loaded invoice date & due date
+          if (!inv.paymentDate) setPaymentDate1(defaultDate);
           setPaymentDate2(defaultDate);
         }
       } catch (err) {

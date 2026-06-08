@@ -5,6 +5,7 @@ export interface IInventoryAdjustment extends Document {
   productId: mongoose.Types.ObjectId;
   type: 'add' | 'subtract';
   quantity: number;
+  batchNo?: string;
   reason: string;
   notes?: string;
   createdBy: mongoose.Types.ObjectId;
@@ -18,6 +19,7 @@ const InventoryAdjustmentSchema = new Schema<IInventoryAdjustment>(
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true, index: true },
     type: { type: String, enum: ['add', 'subtract'], required: true },
     quantity: { type: Number, required: true, min: 0.01 },
+    batchNo: { type: String, trim: true },
     reason: { type: String, required: true },
     notes: String,
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },

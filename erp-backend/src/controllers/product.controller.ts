@@ -45,9 +45,11 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
 // GET /api/v1/products/:id
 export const getProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const product = await Product.findOne({ _id: req.params['id'], businessId: req.user!.businessId });
+    const businessId = req.user!.businessId;
+    const product = await Product.findOne({ _id: req.params['id'], businessId }).lean();
     if (!product) { res.status(404).json({ message: 'Product not found' }); return; }
-    res.json({ product });
+    const productBatches = await Batch.find({ businessId, productId: product._id, isActive: true }).lean();
+    res.json({ product: { ...product, batches: productBatches } });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 

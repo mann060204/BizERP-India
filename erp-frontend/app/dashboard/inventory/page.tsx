@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { inventoryApi } from '../../../lib/erp-api';
+import { inventoryApi, productsApi } from '../../../lib/erp-api';
 import { Search, Database, AlertCircle, TrendingDown, TrendingUp, Settings2, Loader2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
 
 interface Product { _id: string; name: string; sku?: string; category?: string; location?: string; unit: string; currentStock: number; reorderLevel: number; purchasePrice: number; }
+interface BatchInfo { batchNo: string; currentStock: number; mrp?: number; salePrice?: number; }
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<Product[]>([]);
@@ -18,7 +19,9 @@ export default function InventoryPage() {
   const [showModal, setShowModal] = useState(false);
   const [adjusting, setAdjusting] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ type: 'add', quantity: 0, reason: '', notes: '' });
+  const [form, setForm] = useState({ type: 'add', quantity: 0, reason: '', notes: '', batchNo: '' });
+  const [batches, setBatches] = useState<BatchInfo[]>([]);
+  const [loadingBatches, setLoadingBatches] = useState(false);
 
   const fetchInventory = useCallback(async () => {
     setLoading(true);
@@ -32,7 +35,20 @@ export default function InventoryPage() {
 
   useEffect(() => { fetchInventory(); }, [fetchInventory]);
 
-  const openAdjust = (p: Product) => { setAdjusting(p); setForm({ type: 'add', quantity: 0, reason: 'Physical Count', notes: '' }); setShowModal(true); };
+  const openAdjust = async (p: Product) => {
+    setAdjusting(p);
+    setForm({ type: 'add', quantity: 0, reason: 'Physical Count', notes: '', batchNo: '' });
+    setBatches([]);
+    setShowModal(true);
+    // Fetch batches for this product
+    setLoadingBatches(true);
+    try {
+      const { data } = await productsApi.get(p._id);
+      const productBatches = data?.product?.batches || data?.product?.availableBatches || [];
+      setBatches(productBatches.filter((b: BatchInfo) => b.currentStock > 0 || true));
+    } catch { setBatches([]); }
+    finally { setLoadingBatches(false); }
+  };
 
   const handleSave = async () => {
     if (!form.quantity || form.quantity <= 0) { toast.error('Enter valid quantity'); return; }
@@ -129,7 +145,7 @@ export default function InventoryPage() {
                         <td className="px-5 py-4 text-slate-600">{p.category || '—'}</td>
                         <td className="px-5 py-4 text-slate-600">{p.location || '—'}</td>
                         <td className="px-5 py-4 font-bold text-slate-900">{parseFloat((p.currentStock || 0).toFixed(3))} {p.unit}</td>
-                        <td className="px-5 py-4 text-emerald-400">₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
+                        <td className={`px-5 py-4 font-semibold ${isLow ? 'text-red-500' : 'text-emerald-400'}`}>₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
                         <td className="px-5 py-4">
                           {isLow ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-700 bg-red-50 border border-red-200"><AlertCircle className="w-3 h-3" /> Low Stock</span>
@@ -183,6 +199,25 @@ export default function InventoryPage() {
                 <label className="block text-xs font-medium text-slate-600 mb-1.5">Quantity to {form.type === 'add' ? 'Add' : 'Remove'}</label>
                 <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })} min="0" step="any"
                   className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">Batch No. <span className="text-slate-400">(Optional)</span></label>
+                {loadingBatches ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 py-2"><Loader2 className="w-3 h-3 animate-spin" /> Loading batches...</div>
+                ) : batches.length > 0 ? (
+                  <select value={form.batchNo} onChange={e => setForm({ ...form, batchNo: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
+                    <option value="">— No Batch —</option>
+                    {batches.map(b => (
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Stock: {parseFloat((b.currentStock || 0).toFixed(3))})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input value={form.batchNo} onChange={e => setForm({ ...form, batchNo: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition"
+                    placeholder="Enter batch number (optional)" />
+                )}
               </div>
 
               <div>

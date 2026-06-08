@@ -144,7 +144,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceType, shippingAddress,
       txnId, deliveryTerms, deliveryRemarks, paymentHistory,
-      discountAmount, roundOff
+      discountAmount, roundOff, invoiceDate
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -198,7 +198,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       businessId,
       invoiceNumber,
       invoiceType: invType,
-      invoiceDate: new Date(),
+      invoiceDate: invoiceDate ? new Date(invoiceDate) : new Date(),
       dueDate,
       shippingAddress: shippingAddress || undefined,
       customerId: customerId || undefined,
