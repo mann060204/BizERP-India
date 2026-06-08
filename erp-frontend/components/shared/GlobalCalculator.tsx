@@ -9,7 +9,7 @@ export default function GlobalCalculator() {
   const [activeTab, setActiveTab] = useState<'calc' | 'units' | 'settings'>('calc');
   
   // Dragging State
-  const [position, setPosition] = useState({ x: window.innerWidth - 350, y: 100 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const calcRef = useRef<HTMLDivElement>(null);
