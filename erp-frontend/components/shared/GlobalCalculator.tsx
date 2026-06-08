@@ -40,7 +40,7 @@ export default function GlobalCalculator() {
       setTempShortcut(saved);
     }
     // Set initial position more safely after mount
-    setPosition({ Math.max(0, window.innerWidth - 350), Math.max(0, window.innerHeight / 2 - 250) });
+    setPosition({ x: Math.max(0, window.innerWidth - 350), y: Math.max(0, window.innerHeight / 2 - 250) });
   }, []);
 
   // Keyboard shortcut listener
