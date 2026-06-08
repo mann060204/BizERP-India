@@ -98,8 +98,8 @@ export default function BatchNumbersPage() {
       <main className="flex-1 p-6 space-y-6">
 
         {/* ─── ADD BATCH FORM ─────────────────────────────────────── */}
-        <div className="glass rounded-2xl overflow-hidden">
-          <div className="px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="glass rounded-2xl relative z-20">
+          <div className="px-6 py-3 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
             <h2 className="text-sm font-bold text-blue-700 uppercase tracking-wider">Add Batch Number</h2>
           </div>
 
