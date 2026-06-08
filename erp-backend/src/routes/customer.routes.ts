@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCustomers, getCustomer, createCustomer, updateCustomer, deleteCustomer, createBulkCustomers, getCustomerLedger, recordPayment } from '../controllers/customer.controller';
+import { getCustomers, getCustomer, createCustomer, updateCustomer, deleteCustomer, createBulkCustomers, getCustomerLedger, recordPayment, addLedgerAdjustment, updateCustomerLedgerEntry, deleteCustomerLedgerEntry } from '../controllers/customer.controller';
 import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -11,6 +11,9 @@ router.get('/', getCustomers);
 router.get('/:id', getCustomer);
 router.get('/:id/ledger', getCustomerLedger);
 router.post('/:id/payments', recordPayment);
+router.post('/:id/adjustments', addLedgerAdjustment);
+router.put('/:id/ledger/:ledgerId', updateCustomerLedgerEntry);
+router.delete('/:id/ledger/:ledgerId', deleteCustomerLedgerEntry);
 
 router.post('/', createCustomer);
 router.put('/:id', updateCustomer);

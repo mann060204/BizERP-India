@@ -4,7 +4,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { customersApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '../../../../lib/utils';
-import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, Loader2, VideoOff } from 'lucide-react';
+import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, Loader2, VideoOff, Edit, Trash2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { invoicesApi } from '../../../../lib/erp-api';
 
@@ -223,6 +223,13 @@ const COUNTRY_CODES: Record<string, string> = {
   const [toDate, setToDate] = useState<string>('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ amount: '', mode: 'Cash', date: new Date().toISOString().split('T')[0], referenceNo: '', notes: '' });
+  
+  const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
+  const [adjustmentForm, setAdjustmentForm] = useState({ type: 'Debit', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ id: '', amount: '', date: '', description: '' });
+
   const [invoices, setInvoices] = useState<any[]>([]);
   useEffect(() => {
     if (id) {
@@ -237,6 +244,45 @@ const COUNTRY_CODES: Record<string, string> = {
       }).catch(() => {});
     }
   }, [id]);
+
+  const refreshLedger = async () => {
+    try {
+      const res = await customersApi.getLedger(id as string);
+      setLedger(res.data.ledger || []);
+      setCurrentBalance(res.data.currentBalance || 0);
+    } catch(e) {}
+  };
+
+  const handleAdjustmentSubmit = async () => {
+    if (!adjustmentForm.amount) return toast.error('Enter amount');
+    if (!adjustmentForm.description) return toast.error('Enter description');
+    try {
+      await customersApi.addAdjustment(id as string, adjustmentForm);
+      toast.success('Adjustment added');
+      setShowAdjustmentModal(false);
+      refreshLedger();
+    } catch(e:any) { toast.error(e.response?.data?.message || 'Error adding adjustment'); }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editForm.amount) return toast.error('Enter amount');
+    try {
+      await customersApi.updateLedgerEntry(id as string, editForm.id, editForm);
+      toast.success('Entry updated');
+      setShowEditModal(false);
+      refreshLedger();
+    } catch(e:any) { toast.error(e.response?.data?.message || 'Error updating entry'); }
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!window.confirm('Are you sure you want to delete this entry? This action cannot be undone.')) return;
+    try {
+      await customersApi.deleteLedgerEntry(id as string, entryId);
+      toast.success('Entry deleted');
+      refreshLedger();
+    } catch(e:any) { toast.error(e.response?.data?.message || 'Error deleting entry'); }
+  };
+
 
   if (loading) return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900">
@@ -600,17 +646,25 @@ const COUNTRY_CODES: Record<string, string> = {
                             <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="text-sm px-3 py-1.5 rounded-lg border border-slate-200 bg-white" />
                           </div>
                         </div>
-                        <button 
-                          onClick={() => {
-                            const query = new URLSearchParams();
-                            if (fromDate) query.set('from', fromDate);
-                            if (toDate) query.set('to', toDate);
-                            window.open(`/print/ledger/customer/${id}?${query.toString()}`, '_blank');
-                          }}
-                          className="flex items-center gap-1.5 px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg transition"
-                        >
-                          Print Ledger
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => setShowAdjustmentModal(true)}
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
+                          >
+                            <Plus className="w-4 h-4" /> Add Adjustment
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const query = new URLSearchParams();
+                              if (fromDate) query.set('from', fromDate);
+                              if (toDate) query.set('to', toDate);
+                              window.open(`/print/ledger/customer/${id}?${query.toString()}`, '_blank');
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg transition"
+                          >
+                            Print Ledger
+                          </button>
+                        </div>
                       </div>
 
                       <div className="flex-1 overflow-auto">
@@ -624,6 +678,7 @@ const COUNTRY_CODES: Record<string, string> = {
                               <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Debit</th>
                               <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Credit</th>
                               <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Balance</th>
+                              <th className="px-4 py-3 text-white font-medium text-xs tracking-wider text-right">Actions</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100">
@@ -658,6 +713,7 @@ const COUNTRY_CODES: Record<string, string> = {
                                     <td className="px-4 py-3 text-slate-600"></td>
                                     <td className="px-4 py-3 text-slate-900" colSpan={4}>Opening Balance</td>
                                     <td className="px-4 py-3 text-right text-slate-900">{formatBal(currentBal)}</td>
+                                    <td></td>
                                   </tr>
                                   {displayTxns.map((txn, idx) => {
                                     if (txn.closingBalance !== undefined) {
@@ -681,6 +737,21 @@ const COUNTRY_CODES: Record<string, string> = {
                                         <td className="px-4 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
                                         <td className="px-4 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
                                         <td className="px-4 py-3 text-right text-slate-900 font-medium">{formatBal(currentBal)}</td>
+                                        <td className="px-4 py-3 text-right">
+                                          {['Payment', 'Adjustment'].includes(txn.referenceType) && (
+                                            <div className="flex justify-end gap-2 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                              <button onClick={() => {
+                                                setEditForm({ id: txn._id, amount: (txn.debit || txn.credit).toString(), date: new Date(txn.date).toISOString().split('T')[0], description: txn.description });
+                                                setShowEditModal(true);
+                                              }} className="text-blue-500 hover:text-blue-700" title="Edit">
+                                                <Edit className="w-4 h-4" />
+                                              </button>
+                                              <button onClick={() => handleDeleteEntry(txn._id)} className="text-red-500 hover:text-red-700" title="Delete">
+                                                <Trash2 className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                          )}
+                                        </td>
                                       </tr>
                                     );
                                   })}
@@ -689,6 +760,7 @@ const COUNTRY_CODES: Record<string, string> = {
                                     <td className="px-4 py-4 text-right text-slate-900">{periodDr.toFixed(2)}</td>
                                     <td className="px-4 py-4 text-right text-slate-900">{periodCr.toFixed(2)}</td>
                                     <td className="px-4 py-4 text-right text-slate-900">{formatBal(currentBal)}</td>
+                                    <td></td>
                                   </tr>
                                 </>
                               );
@@ -753,13 +825,85 @@ const COUNTRY_CODES: Record<string, string> = {
                 <textarea value={paymentForm.notes} onChange={e => setPaymentForm({...paymentForm, notes: e.target.value})} className="erp-input w-full h-20 resize-none" placeholder="Enter ledger narration..." />
               </div>
             </div>
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-              <button onClick={() => setShowPaymentModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900">Cancel</button>
-              <button onClick={handlePaymentSubmit} className="px-6 py-2 bg-action-600 text-white text-sm font-medium rounded-xl hover:bg-action-700 shadow-sm shadow-action-600/20">Record Payment</button>
+             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
+              <button onClick={() => setShowPaymentModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+              <button onClick={handlePaymentSubmit} className="px-4 py-2 text-sm font-medium text-white bg-action-600 hover:bg-action-700 rounded-lg transition shadow-sm">Record Payment</button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Adjustment Modal */}
+      {showAdjustmentModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Add Manual Adjustment</h2>
+              <button onClick={() => setShowAdjustmentModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Type</label>
+                <div className="flex gap-4 items-center h-[42px]">
+                   <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={adjustmentForm.type === 'Debit'} onChange={() => setAdjustmentForm({...adjustmentForm, type: 'Debit'})} className="accent-blue-600 w-4 h-4" /> Debit (+)</label>
+                   <label className="flex items-center gap-1.5 cursor-pointer"><input type="radio" checked={adjustmentForm.type === 'Credit'} onChange={() => setAdjustmentForm({...adjustmentForm, type: 'Credit'})} className="accent-blue-600 w-4 h-4" /> Credit (-)</label>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">Date</label>
+                  <input type="date" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={adjustmentForm.date} onChange={e=>setAdjustmentForm({...adjustmentForm, date: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">Amount</label>
+                  <input type="number" placeholder="0.00" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={adjustmentForm.amount} onChange={e=>setAdjustmentForm({...adjustmentForm, amount: e.target.value})} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Particulars / Notes</label>
+                <input placeholder="E.g., Opening Balance Correction" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={adjustmentForm.description} onChange={e=>setAdjustmentForm({...adjustmentForm, description: e.target.value})} />
+              </div>
+            </div>
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
+              <button onClick={() => setShowAdjustmentModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+              <button onClick={handleAdjustmentSubmit} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-sm">Save Adjustment</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Entry Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Edit Ledger Entry</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><X className="w-5 h-5"/></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">Date</label>
+                  <input type="date" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={editForm.date} onChange={e=>setEditForm({...editForm, date: e.target.value})} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-700">Amount</label>
+                  <input type="number" placeholder="0.00" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={editForm.amount} onChange={e=>setEditForm({...editForm, amount: e.target.value})} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Particulars / Notes</label>
+                <input placeholder="Description" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={editForm.description} onChange={e=>setEditForm({...editForm, description: e.target.value})} />
+              </div>
+            </div>
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
+              <button onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button>
+              <button onClick={handleEditSubmit} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-sm">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -291,4 +291,85 @@ export class AccountingService {
   }
 
 
+  /**
+   * Records a manual Adjustment (Debit or Credit) to a Customer or Supplier ledger
+   */
+  static async addManualAdjustment(businessId: string, entityId: string, entityType: 'Customer' | 'Supplier', type: 'Debit' | 'Credit', amount: number, date: Date, description: string) {
+    if (amount <= 0) throw new Error('Amount must be greater than 0');
+
+    await AccountLedger.create({
+      businessId,
+      [entityType === 'Customer' ? 'customerId' : 'supplierId']: entityId,
+      date,
+      description,
+      debit: type === 'Debit' ? amount : 0,
+      credit: type === 'Credit' ? amount : 0,
+      referenceType: 'Adjustment',
+      referenceId: ''
+    });
+
+    if (entityType === 'Customer') {
+      return await this.updateCustomerBalance(entityId, businessId);
+    } else {
+      return await this.updateSupplierBalance(entityId, businessId);
+    }
+  }
+
+  /**
+   * Edits an existing Payment or Adjustment ledger entry
+   */
+  static async updateLedgerEntry(businessId: string, ledgerId: string, updates: { date?: Date, description?: string, amount?: number }) {
+    const entry = await AccountLedger.findOne({ _id: ledgerId, businessId });
+    if (!entry) throw new Error('Ledger entry not found');
+
+    if (!['Payment', 'Adjustment'].includes(entry.referenceType || '')) {
+      throw new Error('Only manual Payments or Adjustments can be edited directly');
+    }
+
+    if (updates.date) entry.date = updates.date;
+    if (updates.description) entry.description = updates.description;
+    
+    if (updates.amount !== undefined && updates.amount > 0) {
+      const isDebit = entry.debit > 0;
+      const oldAmount = isDebit ? entry.debit : entry.credit;
+      const amountDiff = updates.amount - oldAmount;
+
+      if (isDebit) entry.debit = updates.amount;
+      else entry.credit = updates.amount;
+
+      // Note: We don't adjust cash/bank automatically for edits to avoid complex cascading issues.
+      // If bank adjustment is needed, it should be done via accounts.
+    }
+
+    await entry.save();
+
+    if (entry.customerId) {
+      return await this.updateCustomerBalance(entry.customerId, businessId);
+    } else if (entry.supplierId) {
+      return await this.updateSupplierBalance(entry.supplierId, businessId);
+    }
+    return 0;
+  }
+
+  /**
+   * Deletes an existing Payment or Adjustment ledger entry
+   */
+  static async deleteLedgerEntry(businessId: string, ledgerId: string) {
+    const entry = await AccountLedger.findOne({ _id: ledgerId, businessId });
+    if (!entry) throw new Error('Ledger entry not found');
+
+    if (!['Payment', 'Adjustment'].includes(entry.referenceType || '')) {
+      throw new Error('Only manual Payments or Adjustments can be deleted directly');
+    }
+
+    await AccountLedger.deleteOne({ _id: ledgerId, businessId });
+
+    if (entry.customerId) {
+      return await this.updateCustomerBalance(entry.customerId, businessId);
+    } else if (entry.supplierId) {
+      return await this.updateSupplierBalance(entry.supplierId, businessId);
+    }
+    return 0;
+  }
+
 }

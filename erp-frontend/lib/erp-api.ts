@@ -10,6 +10,9 @@ export const customersApi = {
   delete: (id: string) => api.delete(`/customers/${id}`),
     getLedger: (id: string) => api.get(`/customers/${id}/ledger`),
     recordPayment: (id: string, data: any) => api.post(`/customers/${id}/payments`, data),
+    addAdjustment: (id: string, data: any) => api.post(`/customers/${id}/adjustments`, data),
+    updateLedgerEntry: (id: string, ledgerId: string, data: any) => api.put(`/customers/${id}/ledger/${ledgerId}`, data),
+    deleteLedgerEntry: (id: string, ledgerId: string) => api.delete(`/customers/${id}/ledger/${ledgerId}`),
 };
 
 // ─── Products ─────────────────────────────────────────────────────────────────
@@ -45,6 +48,9 @@ export const suppliersApi = {
   delete: (id: string) => api.delete(`/suppliers/${id}`),
     getLedger: (id: string) => api.get(`/suppliers/${id}/ledger`),
     recordPayment: (id: string, data: any) => api.post(`/suppliers/${id}/payments`, data),
+    addAdjustment: (id: string, data: any) => api.post(`/suppliers/${id}/adjustments`, data),
+    updateLedgerEntry: (id: string, ledgerId: string, data: any) => api.put(`/suppliers/${id}/ledger/${ledgerId}`, data),
+    deleteLedgerEntry: (id: string, ledgerId: string) => api.delete(`/suppliers/${id}/ledger/${ledgerId}`),
 };
 
 // ─── Purchases ────────────────────────────────────────────────────────────────

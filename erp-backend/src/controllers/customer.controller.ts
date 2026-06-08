@@ -172,3 +172,57 @@ export const recordPayment = async (req: AuthRequest, res: Response): Promise<vo
     res.json({ message: 'Payment recorded successfully', newBalance });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
+// POST /api/v1/customers/:id/adjustments
+export const addLedgerAdjustment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const customerId = req.params['id'] as string;
+    const { amount, type, date, description } = req.body;
+
+    if (!amount || amount <= 0 || !['Debit', 'Credit'].includes(type)) {
+      res.status(400).json({ message: 'Valid amount and type (Debit/Credit) are required' });
+      return;
+    }
+
+    const newBalance = await AccountingService.addManualAdjustment(
+      businessId,
+      customerId,
+      'Customer',
+      type,
+      Number(amount),
+      date ? new Date(date) : new Date(),
+      description || 'Manual Adjustment'
+    );
+
+    res.json({ message: 'Adjustment added successfully', newBalance });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+// PUT /api/v1/customers/:id/ledger/:ledgerId
+export const updateCustomerLedgerEntry = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const { ledgerId } = req.params;
+    const { amount, date, description } = req.body;
+
+    const newBalance = await AccountingService.updateLedgerEntry(businessId, ledgerId as string, {
+      amount: amount ? Number(amount) : undefined,
+      date: date ? new Date(date) : undefined,
+      description
+    });
+
+    res.json({ message: 'Ledger entry updated successfully', newBalance });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
+// DELETE /api/v1/customers/:id/ledger/:ledgerId
+export const deleteCustomerLedgerEntry = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const { ledgerId } = req.params;
+
+    const newBalance = await AccountingService.deleteLedgerEntry(businessId, ledgerId as string);
+
+    res.json({ message: 'Ledger entry deleted successfully', newBalance });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
