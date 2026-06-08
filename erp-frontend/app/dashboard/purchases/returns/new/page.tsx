@@ -802,7 +802,7 @@ export default function NewpurchaseReturnPage() {
                          <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
                          <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
                          <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(2)}</td>
-                         <td className="p-2 border border-slate-200">₹{b.salePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(2)}</td>
                          <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(2)}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-center">

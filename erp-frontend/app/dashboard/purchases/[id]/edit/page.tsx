@@ -1004,7 +1004,7 @@ export default function EditPurchasePage() {
                          <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
                          <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
                          <td className="p-2 border border-slate-200 text-center font-bold text-slate-700">{b.quantity}</td>
-                         <td className="p-2 border border-slate-200">₹{b.salePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(2)}</td>
                          <td className="p-2 border border-slate-200 text-slate-500">{b.manufacturingDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-center">
