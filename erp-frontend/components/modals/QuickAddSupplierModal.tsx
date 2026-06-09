@@ -184,7 +184,7 @@ const COUNTRY_CODES: Record<string, string> = {
       } else {
         const { data } = await suppliersApi.create(payload);
         toast.success('Supplier Information Saved!');
-        onAdded(data.Supplier);
+        onAdded(data.supplier || data.Supplier);
       }
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save Supplier');

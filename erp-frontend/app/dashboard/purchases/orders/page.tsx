@@ -124,7 +124,7 @@ export default function PurchaseOrdersPage() {
                       <tr key={ord._id} className="hover:bg-[#F1F5F9] transition-colors group">
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{ord.orderNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(ord.orderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                        <td className="px-5 py-4 text-slate-900 font-medium">{ord.supplierSnapshot.name}</td>
+                        <td className="px-5 py-4 text-slate-900 font-medium">{ord.supplierSnapshot?.name}</td>
                         <td className="px-5 py-4 text-slate-900 font-semibold">₹{ord.grandTotal.toFixed(2)}</td>
                         <td className="px-5 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>

@@ -147,7 +147,7 @@ export default function EditPurchaseOrderPage() {
             setSupplierGstin(pur.supplierId.gstin || '');
           } else if (pur.supplierSnapshot) {
             setSupplierSnapshot(pur.supplierSnapshot);
-            setSupplierSearch(pur.supplierSnapshot.name || 'Walk-in Supplier');
+            setSupplierSearch(pur.supplierSnapshot?.name || 'Walk-in Supplier');
           }
           
           setLineItems(pur.lineItems || []);
@@ -171,8 +171,8 @@ export default function EditPurchaseOrderPage() {
     fetchData();
   }, [id]);
 
-  const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+  const filteredSuppliers = suppliers.filter(s => s?.name?.toLowerCase().includes(supplierSearch.toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const pickSupplier = (s: Supplier) => {
     setSupplierId(s._id);
@@ -300,7 +300,7 @@ export default function EditPurchaseOrderPage() {
         ewayBillNo,
         supplierId: supplierId || undefined,
         supplierSnapshot: supplierSnapshot ? {
-          name: supplierSnapshot.name,
+          name: supplierSnapshot?.name,
           mobile: contactNo,
           gstin: supplierGstin,
           address: supplierAddress

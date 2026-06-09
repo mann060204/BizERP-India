@@ -259,8 +259,8 @@ export default function NewInvoicePage() {
     toast.success(`Discount scheme "${scheme.name}" (${discountPercent}%) applied!`);
   };
 
-  const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+  const filteredCustomers = customers.filter(c => c?.name?.toLowerCase().includes(customerSearch.toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const uniqueGroups = Array.from(new Set(products.map(p => p.group).filter(Boolean))) as string[];
   const uniqueBrands = Array.from(new Set(products.map(p => p.brand).filter(Boolean))) as string[];

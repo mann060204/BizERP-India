@@ -65,8 +65,7 @@ export default function BatchNumbersPage() {
   useEffect(() => { fetchBatches(); }, [fetchBatches]);
 
   // ─── Filtered product suggestions ───────────────────────────────
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
     (p.sku && p.sku.toLowerCase().includes(productSearch.toLowerCase()))
   ).slice(0, 10);
 

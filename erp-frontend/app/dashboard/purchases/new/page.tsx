@@ -133,7 +133,8 @@ export default function NewPurchasePage() {
         if (urlSuppId) {
           const supp = sRes.data.suppliers.find((s: any) => s._id === urlSuppId);
           if (supp) {
-            setSelectedSupplier(supp);
+            setSupplierId(supp._id);
+            setSupplierSnapshot(supp);
             setSupplierSearch(supp.name);
             setContactNo(supp.mobile || '');
             let addrStr = '';
@@ -189,8 +190,8 @@ export default function NewPurchasePage() {
     }
   }, [paymentTerms, billDate]);
 
-  const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+  const filteredSuppliers = suppliers.filter(s => s?.name?.toLowerCase().includes(supplierSearch.toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const pickSupplier = (s: Supplier) => {
     setSupplierId(s._id);
@@ -358,7 +359,7 @@ export default function NewPurchasePage() {
         ewayBillNo,
         supplierId: supplierId || undefined,
         supplierSnapshot: supplierSnapshot ? {
-          name: supplierSnapshot.name,
+          name: supplierSnapshot?.name,
           mobile: contactNo,
           gstin: supplierGstin,
           address: supplierAddress

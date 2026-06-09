@@ -18,7 +18,7 @@ export default function BarcodeGeneratorPage() {
     productsApi.list({ limit: 500 }).then(res => setProducts(res.data.products)).catch(() => {});
   }, []);
 
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(search.toLowerCase()));
 
   const handlePrint = () => {
     window.print();

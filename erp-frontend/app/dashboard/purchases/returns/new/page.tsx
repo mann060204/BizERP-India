@@ -127,8 +127,8 @@ export default function NewpurchaseReturnPage() {
     fetchData();
   }, []);
 
-  const filteredSuppliers = suppliers.filter(s => s.name.toLowerCase().includes(supplierSearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+  const filteredSuppliers = suppliers.filter(s => s?.name?.toLowerCase().includes(supplierSearch.toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(itemSearch.toLowerCase()));
 
 
   const fetchOriginalBill = async () => {
@@ -302,7 +302,7 @@ export default function NewpurchaseReturnPage() {
         ewayBillNo,
         supplierId: supplierId || undefined,
         supplierSnapshot: supplierSnapshot ? {
-          name: supplierSnapshot.name,
+          name: supplierSnapshot?.name,
           mobile: contactNo,
           gstin: supplierGstin,
           address: supplierAddress

@@ -161,8 +161,8 @@ export default function NewSalesReturnPage() {
     toast.success(`Discount scheme "${scheme.name}" (${discountPercent}%) applied!`);
   };
 
-  const filteredCustomers = customers.filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(itemSearch.toLowerCase()));
+  const filteredCustomers = customers.filter(c => c?.name?.toLowerCase().includes(customerSearch.toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(itemSearch.toLowerCase()));
 
   const advFilteredProducts = products.filter(p => {
     if (advGroup && p.group !== advGroup) return false;
