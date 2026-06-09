@@ -570,7 +570,7 @@ export default function EditPurchasePage() {
             <span>Particulars</span>
           </div>
           <div className="p-1.5 space-y-1">
-            <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-end">
+            <div className="grid grid-cols-[1fr_2fr_0.8fr_0.8fr_1fr_0.8fr_0.8fr_0.8fr_1fr] gap-2 items-end">
               <div>
                 <label className="erp-label block mb-1">Batch No.</label>
                 <input list="batch-list" value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full" placeholder="||||||" />
@@ -673,14 +673,9 @@ export default function EditPurchasePage() {
                    <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
-              <div className="flex items-center justify-center pb-[2px]">
-                 <button onClick={addItem} className="bg-slate-900 hover:bg-slate-800 text-white p-1 rounded-sm w-7 h-7 flex items-center justify-center transition">
-                   <Plus className="w-5 h-5" />
-                 </button>
-              </div>
             </div>
             
-            <div className="grid grid-cols-[1fr_8fr] gap-2 items-center pt-1">
+            <div className="grid grid-cols-[1fr_8fr_auto] gap-2 items-center pt-1">
                <div className="flex items-center gap-3">
                   <label className="flex items-center gap-1 text-[11px] cursor-pointer">
                     <input type="radio" checked={itemIdentifierType === 'tag'} onChange={() => setItemIdentifierType('tag')} className="accent-blue-600" /> Item Tag
@@ -691,6 +686,11 @@ export default function EditPurchasePage() {
                </div>
                <div>
                  <input value={itemInput.description} onChange={e => setItemInput({...itemInput, description: e.target.value})} className="erp-input w-full" placeholder="Item Description" />
+               </div>
+               <div className="flex items-center justify-center">
+                 <button onClick={addItem} className="bg-slate-900 hover:bg-slate-800 text-white p-1 rounded-sm w-7 h-7 flex items-center justify-center transition mt-1">
+                   <Plus className="w-5 h-5" />
+                 </button>
                </div>
             </div>
           </div>
