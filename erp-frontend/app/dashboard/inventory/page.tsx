@@ -70,7 +70,7 @@ export default function InventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="glass rounded-2xl p-4">
             <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">Total Stock Value</p>
-            <p className="text-xl font-bold text-emerald-400">₹{(summary.totalStockValue || 0).toFixed(2)}</p>
+            <p className="text-xl font-bold text-emerald-400">₹{(summary.totalStockValue || 0).toFixed(3)}</p>
             <p className="text-slate-600 text-xs mt-0.5">Based on purchase price</p>
           </div>
           <div className="glass rounded-2xl p-4">
@@ -109,8 +109,8 @@ export default function InventoryPage() {
               { header: 'Category', key: 'category' },
               { header: 'Current Stock', render: (p) => `${parseFloat((p.currentStock || 0).toFixed(3))} ${p.unit}` },
               { header: 'Reorder Level', key: 'reorderLevel' },
-              { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(2) },
-              { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(2) }
+              { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(3) },
+              { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(3) }
             ]}
           />
         </div>
@@ -145,7 +145,7 @@ export default function InventoryPage() {
                         <td className="px-5 py-4 text-slate-600">{p.category || '—'}</td>
                         <td className="px-5 py-4 text-slate-600">{p.location || '—'}</td>
                         <td className="px-5 py-4 font-bold text-slate-900">{parseFloat((p.currentStock || 0).toFixed(3))} {p.unit}</td>
-                        <td className={`px-5 py-4 font-semibold ${isLow ? 'text-red-500' : 'text-emerald-400'}`}>₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
+                        <td className={`px-5 py-4 font-semibold ${isLow ? 'text-red-500' : 'text-emerald-400'}`}>₹{(p.currentStock * p.purchasePrice).toFixed(3)}</td>
                         <td className="px-5 py-4">
                           {isLow ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-700 bg-red-50 border border-red-200"><AlertCircle className="w-3 h-3" /> Low Stock</span>

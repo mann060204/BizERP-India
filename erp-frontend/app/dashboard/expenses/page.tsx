@@ -101,7 +101,7 @@ export default function ExpensesPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="glass rounded-2xl p-6 lg:col-span-1 flex flex-col justify-center">
             <p className="text-slate-600 text-sm font-medium uppercase tracking-wider mb-2">Total Expenses (This Month)</p>
-            <p className="text-3xl font-bold text-red-400">₹{(summary.monthTotal || 0).toFixed(2)}</p>
+            <p className="text-3xl font-bold text-red-400">₹{(summary.monthTotal || 0).toFixed(3)}</p>
           </div>
           
           <div className="glass rounded-2xl p-5 lg:col-span-2 overflow-x-auto whitespace-nowrap space-x-4 flex items-center">
@@ -109,7 +109,7 @@ export default function ExpensesPage() {
               summary.byCategory.map((c: any) => (
                 <div key={c._id} className="inline-block bg-white border border-slate-200 rounded-xl p-3 min-w-[140px]">
                   <p className="text-slate-600 text-xs font-medium truncate">{c._id}</p>
-                  <p className="text-slate-900 font-bold mt-1">₹{(c.total || 0).toFixed(2)}</p>
+                  <p className="text-slate-900 font-bold mt-1">₹{(c.total || 0).toFixed(3)}</p>
                 </div>
               ))
             ) : (
@@ -163,7 +163,7 @@ export default function ExpensesPage() {
                         {e.notes && <p className="text-slate-600 text-xs mt-0.5 max-w-[200px] truncate">{e.notes}</p>}
                       </td>
                       <td className="px-5 py-4 text-slate-600">{e.paymentMode}</td>
-                      <td className="px-5 py-4 font-bold text-red-400">₹{(e.totalWithTax || e.amount || 0).toFixed(2)}</td>
+                      <td className="px-5 py-4 font-bold text-red-400">₹{(e.totalWithTax || e.amount || 0).toFixed(3)}</td>
                       <td className="px-5 py-4 flex items-center gap-1">
                         <button onClick={() => openEdit(e)} className="p-1.5 rounded-lg hover:bg-action-500/10 text-slate-600 hover:text-action-500 transition opacity-0 group-hover:opacity-100"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(e._id)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>

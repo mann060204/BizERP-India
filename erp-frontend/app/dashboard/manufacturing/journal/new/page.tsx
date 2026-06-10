@@ -202,7 +202,7 @@ export default function DirectManufacturingJournal() {
                             }}
                           /> {rm.unit}
                         </td>
-                        <td className="py-2 text-right">₹{rm.totalCost.toFixed(2)}</td>
+                        <td className="py-2 text-right">₹{rm.totalCost.toFixed(3)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -211,7 +211,7 @@ export default function DirectManufacturingJournal() {
               </div>
               <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between font-bold text-slate-700">
                 <span>Total Component Cost:</span>
-                <span>₹{totalRmCost.toFixed(2)}</span>
+                <span>₹{totalRmCost.toFixed(3)}</span>
               </div>
             </div>
 
@@ -248,7 +248,7 @@ export default function DirectManufacturingJournal() {
                             }}
                           /> {s.unit}
                         </td>
-                        <td className="py-2 text-right">₹{s.totalRecoveryValue.toFixed(2)}</td>
+                        <td className="py-2 text-right">₹{s.totalRecoveryValue.toFixed(3)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -257,7 +257,7 @@ export default function DirectManufacturingJournal() {
               </div>
               <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between font-bold text-slate-700">
                 <span>Total Scrap Value:</span>
-                <span className="text-emerald-600">-₹{totalScrapValue.toFixed(2)}</span>
+                <span className="text-emerald-600">-₹{totalScrapValue.toFixed(3)}</span>
               </div>
             </div>
           </div>
@@ -286,23 +286,23 @@ export default function DirectManufacturingJournal() {
               <h3 className="font-bold border-b border-slate-700 pb-2 text-slate-300">Effective Cost Summary</h3>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-400">Component Cost:</span>
-                <span>₹{totalRmCost.toFixed(2)}</span>
+                <span>₹{totalRmCost.toFixed(3)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-400">Scrap Recovery:</span>
-                <span className="text-emerald-400">-₹{totalScrapValue.toFixed(2)}</span>
+                <span className="text-emerald-400">-₹{totalScrapValue.toFixed(3)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-400">Additional Costs:</span>
-                <span>₹{(laborCost + overheadCost).toFixed(2)}</span>
+                <span>₹{(laborCost + overheadCost).toFixed(3)}</span>
               </div>
               <div className="flex justify-between items-center pt-4 border-t border-slate-700">
                 <span className="text-lg font-bold">Effective Cost:</span>
-                <span className="text-2xl font-black text-primary-400">₹{effectiveCost.toFixed(2)}</span>
+                <span className="text-2xl font-black text-primary-400">₹{effectiveCost.toFixed(3)}</span>
               </div>
               <div className="flex justify-between text-xs text-slate-400 pt-2">
                 <span>Effective Rate / Unit:</span>
-                <span>₹{costPerUnit.toFixed(2)}</span>
+                <span>₹{costPerUnit.toFixed(3)}</span>
               </div>
             </div>
           </div>

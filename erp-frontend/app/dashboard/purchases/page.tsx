@@ -22,14 +22,21 @@ export default function PurchasesPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [summary, setSummary] = useState<any>({});
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [purRes, sumRes] = await Promise.all([
-          purchasesApi.list({ status: statusFilter || undefined, limit: 50 }),
+          purchasesApi.list({ status: statusFilter || undefined, search: debouncedSearch || undefined, limit: 50 }),
           purchasesApi.summary(),
         ]);
         setPurchases(purRes.data.purchases);
@@ -38,7 +45,7 @@ export default function PurchasesPage() {
       finally { setLoading(false); }
     };
     fetchData();
-  }, [statusFilter]);
+  }, [statusFilter, debouncedSearch]);
 
   const handleCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel purchase bill ${num}?`)) return;
@@ -62,9 +69,9 @@ export default function PurchasesPage() {
         {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'This Month', value: `₹${(summary.monthPurchases || 0).toFixed(2)}`, sub: `${summary.monthPurchaseCount || 0} bills`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-            { label: 'Total Paid', value: `₹${(summary.totalPaid || 0).toFixed(2)}`, sub: 'Total payments made', color: 'text-blue-400', bg: 'bg-blue-400/10' },
-            { label: 'Outstanding Payables', value: `₹${(summary.outstanding || 0).toFixed(2)}`, sub: 'Pending to suppliers', color: 'text-orange-400', bg: 'bg-orange-400/10' },
+            { label: 'This Month', value: `₹${(summary.monthPurchases || 0).toFixed(3)}`, sub: `${summary.monthPurchaseCount || 0} bills`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+            { label: 'Total Paid', value: `₹${(summary.totalPaid || 0).toFixed(3)}`, sub: 'Total payments made', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+            { label: 'Outstanding Payables', value: `₹${(summary.outstanding || 0).toFixed(3)}`, sub: 'Pending to suppliers', color: 'text-orange-400', bg: 'bg-orange-400/10' },
           ].map(({ label, value, sub, color, bg }) => (
             <div key={label} className="glass rounded-2xl p-4">
               <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
@@ -85,9 +92,9 @@ export default function PurchasesPage() {
                 { header: 'Date', render: (p) => new Date(p.billDate).toLocaleDateString('en-GB') },
                 { header: 'Bill No.', key: 'billNumber' },
                 { header: 'Supplier', render: (p) => p.supplierSnapshot?.name || '' },
-                { header: 'Total Amount', render: (p) => (p.grandTotal || 0).toFixed(2) },
-                { header: 'Amount Paid', render: (p) => (p.amountPaid || 0).toFixed(2) },
-                { header: 'Balance', render: (p) => (p.balance || 0).toFixed(2) },
+                { header: 'Total Amount', render: (p) => (p.grandTotal || 0).toFixed(3) },
+                { header: 'Amount Paid', render: (p) => (p.amountPaid || 0).toFixed(3) },
+                { header: 'Balance', render: (p) => (p.balance || 0).toFixed(3) },
                 { header: 'Status', render: (p) => STATUS_CONFIG[p.status]?.label || p.status }
               ]}
             />
@@ -97,14 +104,26 @@ export default function PurchasesPage() {
           </div>
         </div>
 
-        {/* Status Filters */}
-        <div className="flex gap-2 flex-wrap">
-          {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
-            <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
-              {label}
-            </button>
-          ))}
+        {/* Status Filters and Search */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="flex gap-2 flex-wrap">
+            {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
+              <button key={val} onClick={() => setStatusFilter(val)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Search Supplier, Address, Bill No..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition-all shadow-sm"
+            />
+          </div>
         </div>
 
         {/* Table */}
@@ -139,9 +158,9 @@ export default function PurchasesPage() {
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{pur.billNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(pur.billDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{pur.supplierSnapshot?.name}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(pur.grandTotal || 0).toFixed(2)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{(pur.amountPaid || 0).toFixed(2)}</td>
-                        <td className="px-5 py-4"><span className={(pur.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(pur.balance || 0).toFixed(2)}</span></td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(pur.grandTotal || 0).toFixed(3)}</td>
+                        <td className="px-5 py-4 text-green-400">₹{(pur.amountPaid || 0).toFixed(3)}</td>
+                        <td className="px-5 py-4"><span className={(pur.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(pur.balance || 0).toFixed(3)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{pur.paymentMode}</td>
                         <td className="px-5 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>

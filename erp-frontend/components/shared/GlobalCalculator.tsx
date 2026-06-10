@@ -191,7 +191,7 @@ export default function GlobalCalculator() {
       // Reverse GST calculation: e.g. amount is 118, rate is 18%, actual was 100
       result = current / (1 + rate / 100);
     }
-    setDisplayValue(result.toFixed(2));
+    setDisplayValue(result.toFixed(3));
     setWaitingForNewValue(true);
   };
 

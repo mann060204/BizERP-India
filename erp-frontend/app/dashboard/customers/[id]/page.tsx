@@ -566,7 +566,7 @@ const COUNTRY_CODES: Record<string, string> = {
                                  <td className="px-4 py-3">
                                    <span className={`px-2 py-1 text-[10px] rounded-full font-bold uppercase tracking-wide border ${inv.status === 'paid' ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm' : inv.status === 'partial' ? 'bg-orange-500 text-white border-orange-600 shadow-sm' : 'bg-slate-200 text-slate-800 border-slate-300 shadow-sm'}`}>{inv.status}</span>
                                  </td>
-                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.grandTotal?.toFixed(2) || '0.00'}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-slate-900">₹{inv.grandTotal?.toFixed(3) || '0.00'}</td>
                                </tr>
                             ))}
                           </tbody>
@@ -601,7 +601,7 @@ const COUNTRY_CODES: Record<string, string> = {
                                  <td className="px-4 py-3">{new Date(txn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
                                  <td className="px-4 py-3 text-slate-800">{txn.description}</td>
                                  <td className="px-4 py-3 text-blue-500 font-mono">{txn.referenceId || '—'}</td>
-                                 <td className="px-4 py-3 text-right font-bold text-emerald-500">+ ₹{txn.credit?.toFixed(2)}</td>
+                                 <td className="px-4 py-3 text-right font-bold text-emerald-500">+ ₹{txn.credit?.toFixed(3)}</td>
                                </tr>
                             ))}
                           </tbody>
@@ -626,11 +626,11 @@ const COUNTRY_CODES: Record<string, string> = {
                       </div>
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Total Billed</div>
-                         <div className="text-xl font-bold mt-1 text-orange-400">₹{invoices.reduce((acc, inv) => acc + (inv.grandTotal || 0), 0).toFixed(2)}</div>
+                         <div className="text-xl font-bold mt-1 text-orange-400">₹{invoices.reduce((acc, inv) => acc + (inv.grandTotal || 0), 0).toFixed(3)}</div>
                       </div>
                       <div className="bg-[#F1F5F9] border border-slate-200 p-4 rounded-xl">
                          <div className="text-xs text-slate-600 uppercase">Total Received</div>
-                         <div className="text-xl font-bold mt-1 text-emerald-400">₹{invoices.reduce((acc, inv) => acc + (inv.amountReceived || 0), 0).toFixed(2)}</div>
+                         <div className="text-xl font-bold mt-1 text-emerald-400">₹{invoices.reduce((acc, inv) => acc + (inv.amountReceived || 0), 0).toFixed(3)}</div>
                       </div>
                     </div>
                     
@@ -734,8 +734,8 @@ const COUNTRY_CODES: Record<string, string> = {
                                         <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{new Date(txn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
                                         <td className="px-4 py-3 text-slate-900">{txn.description}</td>
                                         <td className="px-4 py-3 text-slate-600">{vchType}</td>
-                                        <td className="px-4 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
-                                        <td className="px-4 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
+                                        <td className="px-4 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(3) : ''}</td>
+                                        <td className="px-4 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(3) : ''}</td>
                                         <td className="px-4 py-3 text-right text-slate-900 font-medium">{formatBal(currentBal)}</td>
                                         <td className="px-4 py-3 text-right">
                                           {['Payment', 'Adjustment'].includes(txn.referenceType) && (
@@ -757,8 +757,8 @@ const COUNTRY_CODES: Record<string, string> = {
                                   })}
                                   <tr className="bg-slate-50/80 font-bold border-t-2 border-slate-200">
                                     <td className="px-4 py-4 text-slate-800" colSpan={3}>Closing Balance</td>
-                                    <td className="px-4 py-4 text-right text-slate-900">{periodDr.toFixed(2)}</td>
-                                    <td className="px-4 py-4 text-right text-slate-900">{periodCr.toFixed(2)}</td>
+                                    <td className="px-4 py-4 text-right text-slate-900">{periodDr.toFixed(3)}</td>
+                                    <td className="px-4 py-4 text-right text-slate-900">{periodCr.toFixed(3)}</td>
                                     <td className="px-4 py-4 text-right text-slate-900">{formatBal(currentBal)}</td>
                                     <td></td>
                                   </tr>

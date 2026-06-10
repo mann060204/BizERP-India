@@ -154,17 +154,17 @@ export default function PrintablePurchaseOrderPage() {
                       </td>
                       {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>}
                       <td className="border-r-2 border-gray-800 px-1 py-1">{item.quantity} {item.unit}</td>
-                      <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.rate.toFixed(2)}</td>
-                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>}
+                      <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.rate.toFixed(3)}</td>
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(3)}</td>}
                       {!isNonGst && (
                         <td className="border-r-2 border-gray-800 p-0">
                            <div className="flex h-full min-h-[24px]">
                              <span className="w-1/2 border-r-2 border-gray-800 pt-[2px]">{item.gstRate}%</span>
-                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(2)}</span>
+                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(3)}</span>
                            </div>
                         </td>
                       )}
-                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(2) : totalAmt.toFixed(2)}</td>
+                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(3) : totalAmt.toFixed(3)}</td>
                     </tr>
                   );
                 })}
@@ -175,16 +175,16 @@ export default function PrintablePurchaseOrderPage() {
                   {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
                   <td className="border-r-2 border-gray-800">{order.lineItems.reduce((s:any, i:any)=>s + i.quantity, 0)}</td>
                   <td className="border-r-2 border-gray-800"></td>
-                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{order.totalTaxableAmount.toFixed(2)}</td>}
+                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{order.totalTaxableAmount.toFixed(3)}</td>}
                   {!isNonGst && (
                     <td className="border-r-2 border-gray-800 p-0">
                        <div className="flex h-full">
                          <span className="w-1/2 border-r-2 border-gray-800"></span>
-                         <span className="w-1/2 text-right pr-1 pt-[2px]">{order.totalGST.toFixed(2)}</span>
+                         <span className="w-1/2 text-right pr-1 pt-[2px]">{order.totalGST.toFixed(3)}</span>
                        </div>
                     </td>
                   )}
-                  <td className="text-right pr-1">{isNonGst ? order.subtotal.toFixed(2) : (order.totalTaxableAmount + order.totalGST).toFixed(2)}</td>
+                  <td className="text-right pr-1">{isNonGst ? order.subtotal.toFixed(3) : (order.totalTaxableAmount + order.totalGST).toFixed(3)}</td>
                 </tr>
                 {/* Filler space */}
                 <tr className="h-full">
@@ -218,36 +218,36 @@ export default function PrintablePurchaseOrderPage() {
                  <span>SUMMARY</span><span>AMOUNT</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? order.subtotal.toFixed(2) : order.totalTaxableAmount.toFixed(2)}</span>
+                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? order.subtotal.toFixed(3) : order.totalTaxableAmount.toFixed(3)}</span>
                </div>
                {!isNonGst && (
                  <>
                    {isInterState ? (
                      <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                       <span>IGST Amt :</span><span>{order.totalIGST.toFixed(2)}</span>
+                       <span>IGST Amt :</span><span>{order.totalIGST.toFixed(3)}</span>
                      </div>
                    ) : (
                      <>
                        <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                         <span>CGST Amt :</span><span>{order.totalCGST.toFixed(2)}</span>
+                         <span>CGST Amt :</span><span>{order.totalCGST.toFixed(3)}</span>
                        </div>
                        <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                         <span>SGST Amt :</span><span>{order.totalSGST.toFixed(2)}</span>
+                         <span>SGST Amt :</span><span>{order.totalSGST.toFixed(3)}</span>
                        </div>
                      </>
                    )}
                  </>
                )}
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Discount :</span><span className="text-red-600">-{order.totalDiscount.toFixed(2)}</span>
+                 <span>Discount :</span><span className="text-red-600">-{order.totalDiscount.toFixed(3)}</span>
                </div>
                {order.shippingCharge > 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                   <span>Shipping / Freight :</span><span>{order.shippingCharge.toFixed(2)}</span>
+                   <span>Shipping / Freight :</span><span>{order.shippingCharge.toFixed(3)}</span>
                  </div>
                )}
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
-                 <span>Total Amount :</span><span>{order.grandTotal.toFixed(2)}</span>
+                 <span>Total Amount :</span><span>{order.grandTotal.toFixed(3)}</span>
                </div>
                <div className="p-2 flex-1 flex flex-col justify-end items-center text-center">
                  <p className="font-bold text-[10px] text-blue-900 uppercase">For, {business.businessName || business.name}</p>

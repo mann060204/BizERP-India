@@ -229,8 +229,8 @@ export default function BatchNumbersPage() {
                         <td className={`px-5 py-3 font-semibold ${b.currentStock <= 0 ? 'text-red-500' : 'text-slate-900'}`}>
                           {parseFloat((b.currentStock || 0).toFixed(3))} {b.productId?.unit || ''}
                         </td>
-                        <td className="px-5 py-3 text-slate-700">₹{(b.salePrice || 0).toFixed(2)}</td>
-                        <td className="px-5 py-3 text-slate-700">₹{(b.mrp || 0).toFixed(2)}</td>
+                        <td className="px-5 py-3 text-slate-700">₹{(b.salePrice || 0).toFixed(3)}</td>
+                        <td className="px-5 py-3 text-slate-700">₹{(b.mrp || 0).toFixed(3)}</td>
                         <td className="px-5 py-3 text-slate-600 text-xs">
                           {b.manufacturingDate ? new Date(b.manufacturingDate).toLocaleDateString('en-IN') : '—'}
                         </td>

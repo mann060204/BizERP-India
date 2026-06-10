@@ -80,23 +80,23 @@ export default function GstCalculatorPage() {
             <div className="space-y-4 text-sm">
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#F1F5F9]">
                 <span className="text-slate-600">Net / Taxable Amount</span>
-                <span className="font-semibold text-slate-900">₹{result.base.toFixed(2)}</span>
+                <span className="font-semibold text-slate-900">₹{result.base.toFixed(3)}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#F1F5F9]">
                 <span className="text-slate-600">CGST ({(rate / 2).toFixed(1)}%)</span>
-                <span className="font-medium text-slate-900">₹{result.cgst.toFixed(2)}</span>
+                <span className="font-medium text-slate-900">₹{result.cgst.toFixed(3)}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#F1F5F9]">
                 <span className="text-slate-600">SGST ({(rate / 2).toFixed(1)}%)</span>
-                <span className="font-medium text-slate-900">₹{result.sgst.toFixed(2)}</span>
+                <span className="font-medium text-slate-900">₹{result.sgst.toFixed(3)}</span>
               </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-[#F1F5F9]">
                 <span className="text-slate-600">Total Tax ({rate}%)</span>
-                <span className="font-semibold text-red-400">₹{result.tax.toFixed(2)}</span>
+                <span className="font-semibold text-red-400">₹{result.tax.toFixed(3)}</span>
               </div>
               <div className="flex justify-between items-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mt-4">
                 <span className="text-emerald-500 font-bold uppercase tracking-wider text-xs">Grand Total</span>
-                <span className="text-2xl font-black text-emerald-400">₹{result.total.toFixed(2)}</span>
+                <span className="text-2xl font-black text-emerald-400">₹{result.total.toFixed(3)}</span>
               </div>
             </div>
           </div>

@@ -260,9 +260,9 @@ export default function MastersPage() {
                         <span className="text-slate-900">{p.unit}</span>
                         {p.secondaryUnit && <div className="text-xs">1 = {p.conversionRate} {p.secondaryUnit}</div>}
                       </td>
-                      <td className="px-5 py-4 text-slate-600">₹{p.purchasePrice.toFixed(2)}</td>
-                      <td className="px-5 py-4 text-slate-900 font-semibold">₹{p.sellingPrice.toFixed(2)}</td>
-                      <td className="px-5 py-4 text-slate-600">{p.mrp ? `₹${p.mrp.toFixed(2)}` : '—'}</td>
+                      <td className="px-5 py-4 text-slate-600">₹{p.purchasePrice.toFixed(3)}</td>
+                      <td className="px-5 py-4 text-slate-900 font-semibold">₹{p.sellingPrice.toFixed(3)}</td>
+                      <td className="px-5 py-4 text-slate-600">{p.mrp ? `₹${p.mrp.toFixed(3)}` : '—'}</td>
                       <td className="px-5 py-4"><span className="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">{p.gstRate}%</span></td>
                       <td className="px-5 py-4">
                         {p.type === 'product' ? (

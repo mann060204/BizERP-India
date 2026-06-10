@@ -11,12 +11,19 @@ import Supplier from '../models/Supplier.model';
 // GET /api/v1/purchases
 export const getPurchases = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { from, to, status, supplierId, billNumber, page = '1', limit = '20' } = req.query as any;
+    const { from, to, status, supplierId, billNumber, search, page = '1', limit = '20' } = req.query as any;
     const businessId = req.user!.businessId;
     const query: any = { businessId };
     if (status) query.status = status;
     if (supplierId) query.supplierId = supplierId;
     if (billNumber) query.billNumber = billNumber;
+    if (search) {
+      query.$or = [
+        { 'supplierSnapshot.name': { $regex: search, $options: 'i' } },
+        { 'supplierSnapshot.address': { $regex: search, $options: 'i' } },
+        { billNumber: { $regex: search, $options: 'i' } }
+      ];
+    }
     if (from || to) {
       query.billDate = {};
       if (from) query.billDate.$gte = new Date(from);

@@ -297,7 +297,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
                         }, 0);
                         return (
                           <td key={i} className="px-4 py-2.5 text-right font-semibold text-slate-700 text-xs">
-                            {sum !== 0 ? (col.format ? col.format(sum, {}) : sum.toFixed(2)) : ''}
+                            {sum !== 0 ? (col.format ? col.format(sum, {}) : sum.toFixed(3)) : ''}
                           </td>
                         );
                       }

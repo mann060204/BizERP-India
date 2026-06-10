@@ -90,7 +90,7 @@ export default function BarcodeGeneratorPage() {
                 <div key={i} className="bg-white p-3 rounded-lg flex flex-col items-center justify-center border border-gray-200 print:border-dashed print:border-gray-400 print:rounded-none">
                   <p className="text-black text-xs font-bold mb-1 truncate w-full text-center">{selectedProduct.name}</p>
                   <Barcode value={selectedProduct.sku || selectedProduct._id.substring(0, 10)} width={1.2} height={40} fontSize={12} margin={0} />
-                  <p className="text-black text-xs font-bold mt-1">₹{selectedProduct.sellingPrice.toFixed(2)}</p>
+                  <p className="text-black text-xs font-bold mt-1">₹{selectedProduct.sellingPrice.toFixed(3)}</p>
                 </div>
               ))}
             </div>

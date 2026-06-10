@@ -119,7 +119,7 @@ export default function DiscountSchemesPage() {
                     </td>
                     <td className="p-4">
                       <span className="font-bold text-slate-900">
-                        {scheme.type === 'PERCENTAGE' ? scheme.value + '%' : '₹' + scheme.value.toFixed(2)}
+                        {scheme.type === 'PERCENTAGE' ? scheme.value + '%' : '₹' + scheme.value.toFixed(3)}
                       </span>
                     </td>
                     <td className="p-4">

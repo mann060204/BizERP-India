@@ -60,7 +60,7 @@ export default function BalanceSheetPage() {
               <tr key={i} className="hover:bg-slate-50 transition">
                 <td className="px-4 py-3 text-slate-800">{item.name}</td>
                 <td className="px-4 py-3 text-slate-500 text-xs">{item.accountType}</td>
-                <td className="px-4 py-3 text-right font-medium text-slate-900">₹{(item.balance || 0).toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-medium text-slate-900">₹{(item.balance || 0).toFixed(3)}</td>
               </tr>
             ))}
           </tbody>

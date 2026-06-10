@@ -147,7 +147,7 @@ export default function BankMasterPage() {
                         <td className="px-6 py-4 text-slate-600">{bank.accountName}</td>
                         <td className="px-6 py-4 font-mono text-slate-600">{bank.accountNumber}</td>
                         <td className="px-6 py-4 font-mono text-slate-600">{bank.ifsc || '-'}</td>
-                        <td className="px-6 py-4 text-right font-semibold text-slate-700">₹{bank.openingBalance.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-right font-semibold text-slate-700">₹{bank.openingBalance.toFixed(3)}</td>
                         <td className="px-6 py-4">
                           <div className="flex justify-center gap-3">
                             <button onClick={() => handleEdit(bank)} className="text-blue-600 hover:text-blue-800 transition"><Edit2 className="w-4 h-4" /></button>
