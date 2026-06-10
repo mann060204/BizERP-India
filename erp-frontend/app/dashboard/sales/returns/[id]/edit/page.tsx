@@ -923,7 +923,11 @@ export default function NewSalesReturnPage() {
                 )}
 
                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-200">
-                  <span className="erp-label">Shipping / GST%</span>`n                  <div className="flex gap-1">`n                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right h-7" placeholder="Amt" />`n                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-12 text-right h-7" placeholder="GST%" />`n                  </div>
+                  <span className="erp-label">Shipping / GST%</span>
+                  <div className="flex gap-1">
+                    <input type="number" value={shippingCharge === 0 ? '' : shippingCharge} onChange={e => setShippingCharge(parseFloat(e.target.value) || 0)} className="erp-input w-16 text-right h-7" placeholder="Amt" />
+                    <input type="number" value={shippingGstRate === 0 ? '' : shippingGstRate} onChange={e => setShippingGstRate(parseFloat(e.target.value) || 0)} className="erp-input w-12 text-right h-7" placeholder="GST%" />
+                  </div>
                 </div>
               </div>
 

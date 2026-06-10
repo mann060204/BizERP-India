@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
 import { suppliersApi, productsApi, purchaseOrdersApi, businessApi } from '../../../../../lib/erp-api';
-import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode } from 'lucide-react';
+import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode , Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../components/modals/QuickAddItemModal';
 import QuickAddSupplierModal from '../../../../../components/modals/QuickAddSupplierModal';
@@ -210,6 +210,11 @@ export default function NewPurchaseOrderPage() {
   };
 
   const removeItem = (idx: number) => setLineItems(lineItems.filter((_, i) => i !== idx));
+  const editItem = (idx: number) => {
+    setItemInput(lineItems[idx]);
+    setItemSearch(lineItems[idx].productName);
+    setLineItems(lineItems.filter((_, i) => i !== idx));
+  };
 
   // Totals
   const totalTaxableAmount = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
@@ -552,9 +557,8 @@ export default function NewPurchaseOrderPage() {
                     )}
                     <div className=" px-2 py-1.5 text-right font-medium flex justify-between items-center">
                       <span>₹{item.totalAmount.toFixed(2)}</span>
-                      <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <button onClick={() => editItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-blue-400 hover:text-blue-500 transition"><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   </div>
                 ))
