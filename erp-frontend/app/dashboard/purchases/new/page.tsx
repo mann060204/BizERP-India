@@ -581,13 +581,13 @@ export default function NewPurchasePage() {
               </div>
               <div>
                 <label className="erp-label block mb-1">Quantity <span className="text-red-500">*</span></label>
-                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full" />
               </div>
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
                 <div className="flex">
                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
+                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} step="0.001" onChange={e => setItemInput({...itemInput, rate: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
                             <div>
@@ -623,7 +623,7 @@ export default function NewPurchasePage() {
                   </div>
                   <div>
                     <label className="erp-label block mb-1">Cess (%)</label>
-                    <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0}) } className="erp-input w-full" />
+                    <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} step="0.001" onChange={e => setItemInput({...itemInput, cess: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full" />
                   </div>
                 </>
               )}

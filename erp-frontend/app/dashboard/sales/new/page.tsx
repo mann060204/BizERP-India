@@ -844,13 +844,13 @@ export default function NewInvoicePage() {
               </div>
               <div>
                 <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
-                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full" />
               </div>
               <div className="relative group">
                 <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
-                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} step="0.001" onChange={e => setItemInput({...itemInput, rate: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full pl-3" />
                 </div>
                 
                 {/* Price Options Dropdown on hover */}
@@ -882,7 +882,7 @@ export default function NewInvoicePage() {
                 <label className="erp-label">MRP</label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
-                   <input type="number" value={itemInput.mrp === 0 ? '' : itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                   <input type="number" value={itemInput.mrp === 0 ? '' : itemInput.mrp} step="0.001" onChange={e => setItemInput({...itemInput, mrp: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full pl-3" />
                 </div>
               </div>
               <div>
