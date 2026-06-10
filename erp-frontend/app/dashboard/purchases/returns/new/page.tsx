@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -291,7 +291,7 @@ export default function NewpurchaseReturnPage() {
   const balance = round2(grandTotal - amountPaid);
 
   const handleSave = async (saveStatus: 'draft' | 'received' | 'paid') => {
-    if (!billNumber.trim()) { toast.error('purchaseReturn Return No. is required'); return; }
+    if (!billNumber.trim()) { toast.error('Purchase Return No. is required'); return; }
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     setSaving(true);
     try {
@@ -335,10 +335,10 @@ export default function NewpurchaseReturnPage() {
         status: saveStatus === 'paid' ? 'paid' : amountPaid > 0 ? 'partial' : saveStatus,
       };
       await purchaseReturnsApi.create(payload);
-      toast.success(`purchaseReturn Return ${billNumber} Recorded!`);
+      toast.success(`Purchase Return ${billNumber} Recorded!`);
       router.push('/dashboard/purchases/returns');
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Failed to save purchaseReturn Return');
+      toast.error(e.response?.data?.message || 'Failed to save Purchase Return');
     } finally {
       setSaving(false);
     }
@@ -348,11 +348,11 @@ export default function NewpurchaseReturnPage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      <Topbar title="NEW purchaseReturn Return" />
+      <Topbar title="NEW Purchase Return" />
 
       {/* Tabs */}
       <div className="flex px-4 pt-2 border-b border-slate-200 bg-[#F1F5F9] gap-1">
-         <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>purchaseReturn Return</div>
+         <div onClick={() => setActiveTab('bill')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'bill' ? 'bg-[#F1F5F9] border border-b-0 border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Purchase Return</div>
          <div onClick={() => setActiveTab('batches')} className={`px-4 py-2 text-xs font-semibold cursor-pointer ${activeTab === 'batches' ? 'bg-white border-t-2 border-t-red-500 border-l border-r border-slate-200 rounded-t text-slate-900' : 'text-slate-600 hover:text-slate-900 border border-transparent'}`}>Batch Numbers</div>
       </div>
 
@@ -361,7 +361,7 @@ export default function NewpurchaseReturnPage() {
         {activeTab === 'bill' ? (
           <>
         <div className="erp-container">
-          <div className="erp-header py-1 text-xs">purchaseReturn Return information</div>
+          <div className="erp-header py-1 text-xs">Purchase Return information</div>
           <div className="p-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
             {/* Row 1 */}
             <div>
@@ -484,7 +484,7 @@ export default function NewpurchaseReturnPage() {
                       {filteredProducts.map(p => (
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between">
                           <span>{p.name}</span>
-                          <span className="text-slate-600">₹{p.purchaseReturnPrice}</span>
+                          <span className="text-slate-600">â‚¹{p.purchaseReturnPrice}</span>
                         </div>
                       ))}
                     </div>
@@ -502,9 +502,9 @@ export default function NewpurchaseReturnPage() {
                 <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div>
-                <label className="erp-label block mb-1">purchaseReturn Price <span className="text-red-500">*</span></label>
+                <label className="erp-label block mb-1">Return Price <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                 </div>
               </div>
@@ -529,7 +529,7 @@ export default function NewpurchaseReturnPage() {
                     onChange={e => setItemInput({...itemInput, discountType: e.target.value as 'percentage' | 'amount', discount: 0, discountAmount: 0})} 
                     className="erp-input rounded-l-none bg-slate-100 px-1 border-l-0 text-xs w-12 cursor-pointer outline-none focus:ring-0">
                     <option value="percentage">%</option>
-                    <option value="amount">₹</option>
+                    <option value="amount">â‚¹</option>
                   </select>
                 </div>
               </div>
@@ -548,7 +548,7 @@ export default function NewpurchaseReturnPage() {
               <div>
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
-                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                    <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
@@ -608,10 +608,10 @@ export default function NewpurchaseReturnPage() {
                     </div>
                     <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
                     <div className="border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(3)}</div>
+                    <div className="border-r border-slate-100 px-2 py-1.5 text-right">â‚¹{item.rate.toFixed(3)}</div>
                     <div className="border-r border-slate-100 px-2 py-1.5 text-center text-red-500">
                       {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
-                      {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
+                      {item.discountType === 'amount' && item.discountAmount > 0 ? `â‚¹${item.discountAmount.toFixed(2)}` : ''}
                     </div>
                     {purchaseReturnType !== 'Non-GST' && (
                         <>
@@ -623,7 +623,7 @@ export default function NewpurchaseReturnPage() {
                         </>
                     )}
                     <div className=" px-2 py-1.5 text-right font-medium flex justify-between items-center">
-                      <span>₹{item.totalAmount.toFixed(2)}</span>
+                      <span>â‚¹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => editItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-blue-400 hover:text-blue-500 transition"><Pencil className="w-3.5 h-3.5" /></button>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
@@ -641,19 +641,19 @@ export default function NewpurchaseReturnPage() {
               </label>
               {showAdditionalDiscount && (
                 <div className="flex">
-                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                   <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                    <input type="number" value={additionalDiscount === 0 ? '' : additionalDiscount} onChange={e => setAdditionalDiscount(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                 </div>
               )}
 
               {lastPrices.length > 0 && (
                 <div className="mt-4 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
-                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 purchaseReturns ({itemInput.productName})</p>
+                  <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last 5 Returns ({itemInput.productName})</p>
                   {lastPrices.map((lp, idx) => (
                     <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-1">
                       <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
                       <span>{lp.billNumber}</span>
-                      <span className="font-medium text-sm">₹{lp.rate}</span>
+                      <span className="font-medium text-sm">â‚¹{lp.rate}</span>
                     </div>
                   ))}
                 </div>
@@ -684,14 +684,14 @@ export default function NewpurchaseReturnPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Amount</span>
                     <div className="flex flex-1">
-                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                        <input type="number" value={amountPaid === 0 ? '' : amountPaid} onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-none" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 w-12">Balance</span>
                     <div className="flex flex-1">
-                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
+                       <span className="bg-slate-100 px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                        <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
@@ -703,7 +703,7 @@ export default function NewpurchaseReturnPage() {
               <div className="erp-container border-slate-200 h-full flex flex-col p-3 space-y-2">
                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                    <span className="text-xs font-bold text-slate-600">Sub Total</span>
-                   <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
+                   <span className="text-sm font-bold text-slate-800">â‚¹ {subtotal.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
                    <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping / GST%</span>
@@ -714,7 +714,7 @@ export default function NewpurchaseReturnPage() {
                  </div>
                  <div className="flex justify-between items-center pt-2">
                    <span className="text-xs font-bold text-slate-800 uppercase">Total Amount</span>
-                   <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(2)}</span>
+                   <span className="text-base font-bold text-slate-900">â‚¹ {grandTotal.toFixed(2)}</span>
                  </div>
               </div>
            </div>
@@ -745,21 +745,21 @@ export default function NewpurchaseReturnPage() {
               <div className="col-span-1">
                  <label className="erp-label block mb-1">M.R.P.</label>
                  <div className="flex">
-                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                     <input type="number" value={batchInput.mrp || ''} onChange={e => setBatchInput({...batchInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Sale Price</label>
                  <div className="flex">
-                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                     <input type="number" value={batchInput.salePrice || ''} onChange={e => setBatchInput({...batchInput, salePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
               <div className="col-span-1">
                  <label className="erp-label block mb-1">Min. Sale Price</label>
                  <div className="flex">
-                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
+                    <span className="bg-slate-100 px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">â‚¹</span>
                     <input type="number" value={batchInput.minSalePrice || ''} onChange={e => setBatchInput({...batchInput, minSalePrice: parseFloat(e.target.value) || 0})} className="erp-input w-full rounded-none" />
                  </div>
               </div>
@@ -810,9 +810,9 @@ export default function NewpurchaseReturnPage() {
                        <tr key={i} className="text-xs hover:bg-slate-50">
                          <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
                          <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
-                         <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(2)}</td>
-                         <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(2)}</td>
-                         <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">â‚¹{b.mrp.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">â‚¹{(b.salePrice || 0).toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">â‚¹{b.minSalePrice.toFixed(2)}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-center">
                             <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -877,6 +877,7 @@ export default function NewpurchaseReturnPage() {
     </div>
   );
 }
+
 
 
 
