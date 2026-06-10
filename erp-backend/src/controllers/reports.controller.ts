@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import AccountLedger from '../models/AccountLedger.model';
@@ -21,7 +22,7 @@ const sendError = (res: Response, message: string, status = 500) => res.status(s
 
 export const getCashBook = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     
     const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', description: { $regex: /Cash/i } }).lean();
     
@@ -78,7 +79,7 @@ export const getCashBook = async (req: AuthRequest, res: Response) => {
 
 export const getBusinessBook = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const ledgers = await AccountLedger.find({ businessId })
       .populate('accountId', 'name type')
       .populate('customerId', 'name')
@@ -119,7 +120,7 @@ export const getBusinessBook = async (req: AuthRequest, res: Response) => {
 
 export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', debit: { $gt: 0 }, supplierId: { $exists: true } }).populate('supplierId', 'name').sort({ date: -1 }).lean();
     
     const bankAccounts = await Account.find({ businessId, type: 'Bank' });
@@ -169,7 +170,7 @@ export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
 
 export const getPaymentReceived = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', credit: { $gt: 0 }, customerId: { $exists: true } }).populate('customerId', 'name').sort({ date: -1 }).lean();
     
     const bankAccounts = await Account.find({ businessId, type: 'Bank' });
@@ -207,7 +208,7 @@ export const getPaymentReceived = async (req: AuthRequest, res: Response) => {
 
 export const getChartOfAccounts = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const accounts = await Account.find({ businessId }).sort({ type: 1, name: 1 });
     
     // Transform to match frontend columns: name, accountType, group, openingBalance
@@ -228,7 +229,7 @@ export const getChartOfAccounts = async (req: AuthRequest, res: Response) => {
 
 export const getBalanceSheet = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const accounts = await Account.find({ businessId });
     
     // Account model types: 'Bank', 'Loan', 'Asset', 'Capital', 'Income', 'Tax'
@@ -259,7 +260,7 @@ export const getBalanceSheet = async (req: AuthRequest, res: Response) => {
 
 export const getItemRegister = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const products = await Product.find({ businessId }).sort({ name: 1 });
     
     const transformed = products.map((p: any) => ({
@@ -281,7 +282,7 @@ export const getItemRegister = async (req: AuthRequest, res: Response) => {
 
 export const getLowLevelStock = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     // Use reorderLevel (not lowStockAlert) - that's the actual field name in Product model
     const products = await Product.find({
       businessId,
@@ -305,7 +306,7 @@ export const getLowLevelStock = async (req: AuthRequest, res: Response) => {
 
 export const getStockAvailability = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const products = await Product.find({ businessId, currentStock: { $gt: 0 } }).sort({ name: 1 });
     
     const transformed = products.map((p: any) => ({
@@ -325,7 +326,7 @@ export const getStockAvailability = async (req: AuthRequest, res: Response) => {
 
 export const getStockAdjustment = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const adjustments = await InventoryAdjustment.find({ businessId })
       .populate('productId', 'name sku')
       .sort({ createdAt: -1 });
@@ -347,7 +348,7 @@ export const getStockAdjustment = async (req: AuthRequest, res: Response) => {
 
 export const getConsumableStock = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     // Consumable = products with category containing 'consumable' OR productType General with low stock
     const products = await Product.find({
       businessId,
@@ -373,7 +374,7 @@ export const getConsumableStock = async (req: AuthRequest, res: Response) => {
 
 export const getFastMovingItems = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
@@ -408,7 +409,7 @@ export const getFastMovingItems = async (req: AuthRequest, res: Response) => {
 
 export const getSlowMovingItems = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
@@ -441,7 +442,7 @@ export const getSlowMovingItems = async (req: AuthRequest, res: Response) => {
 
 export const getAvailableSerials = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const batches = await Batch.find({ businessId, currentStock: { $gt: 0 } })
       .populate('productId', 'name sku')
       .sort({ createdAt: -1 });
@@ -464,7 +465,7 @@ export const getAvailableSerials = async (req: AuthRequest, res: Response) => {
 
 export const getItemList = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const products = await Product.find({ businessId })
       .select('name sku barcode category unit purchasePrice sellingPrice mrp currentStock gstRate productType')
       .sort({ name: 1 });
@@ -507,7 +508,7 @@ const getDateRange = (from?: string, to?: string) => {
 // GET /api/v1/reports/pnl
 export const getProfitAndLoss = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     
     const invoiceQuery: any = { businessId, status: { $ne: 'cancelled' } };
@@ -550,7 +551,7 @@ export const getProfitAndLoss = async (req: AuthRequest, res: Response): Promise
 // GET /api/v1/reports/gstr
 export const getGstReport = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
 
     const invoiceQuery: any = { businessId, status: { $ne: 'cancelled' } };
@@ -635,7 +636,7 @@ export const getGstReport = async (req: AuthRequest, res: Response): Promise<voi
 // GET /api/v1/reports/daybook
 export const getDaybook = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { date } = req.query as any;
     
     let startOfDay, endOfDay;
@@ -718,7 +719,7 @@ export const getDaybook = async (req: AuthRequest, res: Response): Promise<void>
 // GET /api/v1/reports/dashboard-charts
 export const getDashboardCharts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const now = new Date();
 
     // 1. Sales Chart (Last 30 Days)
@@ -808,7 +809,7 @@ const buildDateFilter = (from?: string, to?: string, field = 'invoiceDate') => {
 // GET /api/v1/reports/sales/aging
 export const getSalesAging = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const today = new Date();
     const invoices = await Invoice.find({
       businessId,
@@ -850,7 +851,7 @@ export const getSalesAging = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/sales/itemwise
 export const getSalesItemwise = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -881,7 +882,7 @@ export const getSalesItemwise = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/sales/invoicewise
 export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to, status } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, ...dateFilter };
@@ -898,7 +899,7 @@ export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/sales/invoicewise-margin
 export const getInvoicewiseMargin = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -931,7 +932,7 @@ export const getInvoicewiseMargin = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/sales/itemwise-margin
 export const getItemwiseMargin = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -976,7 +977,7 @@ export const getItemwiseMargin = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/sales/customerwise-margin
 export const getCustomerwiseMargin = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1002,7 +1003,7 @@ export const getCustomerwiseMargin = async (req: AuthRequest, res: Response) => 
 // GET /api/v1/reports/sales/invoicewise-summary
 export const getSalesInvoicewiseSummary = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1017,7 +1018,7 @@ export const getSalesInvoicewiseSummary = async (req: AuthRequest, res: Response
 // GET /api/v1/reports/sales/customerwise-summary
 export const getSalesCustomerwiseSummary = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1044,7 +1045,7 @@ export const getSalesCustomerwiseSummary = async (req: AuthRequest, res: Respons
 // GET /api/v1/reports/sales/itemwise-summary
 export const getSalesItemwiseSummary = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1074,7 +1075,7 @@ export const getSalesItemwiseSummary = async (req: AuthRequest, res: Response) =
 // GET /api/v1/reports/sales/gst
 export const getSalesGST = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1105,7 +1106,7 @@ export const getSalesGST = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/sales/recurring
 export const getActiveRecurringInvoices = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const invoices = await Invoice.find({
       businessId,
       status: { $in: ['sent', 'partial', 'overdue'] },
@@ -1129,7 +1130,7 @@ export const getActiveRecurringInvoices = async (req: AuthRequest, res: Response
 // GET /api/v1/reports/customers/amount-due
 export const getCustomerAmountDue = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const customers = await Customer.find({ businessId, isActive: true },
       'name mobile gstin currentBalance balanceType creditLimit openingBalance'
     ).sort({ currentBalance: -1 }).lean();
@@ -1167,7 +1168,7 @@ export const getCustomerAmountDue = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/customers/payment-history
 export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to, customerId } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'date');
     const match: any = { businessId, ...dateFilter };
@@ -1202,7 +1203,7 @@ export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response)
 // GET /api/v1/reports/customers/account-balances
 export const getCustomerAccountBalances = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const customers = await Customer.find({ businessId, isActive: true },
       'name mobile gstin currentBalance openingBalance balanceType creditLimit priceCategory'
     ).sort({ name: 1 }).lean();
@@ -1226,7 +1227,7 @@ export const getCustomerAccountBalances = async (req: AuthRequest, res: Response
 // GET /api/v1/reports/purchases/aging
 export const getPurchaseAging = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const today = new Date();
     const bills = await PurchaseBill.find({
       businessId,
@@ -1267,7 +1268,7 @@ export const getPurchaseAging = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/purchases/billwise
 export const getPurchasesBillwise = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to, status } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, ...dateFilter };
@@ -1284,7 +1285,7 @@ export const getPurchasesBillwise = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/purchases/itemwise
 export const getPurchasesItemwise = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1316,7 +1317,7 @@ export const getPurchasesItemwise = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/purchases/billwise-summary
 export const getPurchasesBillwiseSummary = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1331,7 +1332,7 @@ export const getPurchasesBillwiseSummary = async (req: AuthRequest, res: Respons
 // GET /api/v1/reports/purchases/itemwise-summary
 export const getPurchasesItemwiseSummary = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1360,7 +1361,7 @@ export const getPurchasesItemwiseSummary = async (req: AuthRequest, res: Respons
 // GET /api/v1/reports/purchases/supplierwise-summary
 export const getPurchasesSupplierwise = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
@@ -1387,7 +1388,7 @@ export const getPurchasesSupplierwise = async (req: AuthRequest, res: Response) 
 // GET /api/v1/reports/purchases/gst
 export const getPurchasesGST = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { 
@@ -1475,7 +1476,7 @@ export const getPurchasesGST = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/suppliers/account-balances
 export const getSupplierAccountBalances = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const suppliers = await Supplier.find({ businessId, isActive: true },
       'name mobile gstin currentBalance openingBalance balanceType creditLimit'
     ).sort({ name: 1 }).lean();
@@ -1496,7 +1497,7 @@ export const getSupplierAccountBalances = async (req: AuthRequest, res: Response
 // GET /api/v1/reports/suppliers/payment-history
 export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to, supplierId } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'billDate');
     const match: any = { businessId, ...dateFilter };
@@ -1526,7 +1527,7 @@ export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response)
 // GET /api/v1/reports/expenses/search
 export const getExpensesSearch = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to, category, paymentMode } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'date');
     const match: any = { businessId, ...dateFilter };
@@ -1558,7 +1559,7 @@ export const getExpensesSearch = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/expenses/indirect
 export const getIndirectExpenses = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to, 'date');
     const match: any = { businessId, ...dateFilter };
@@ -1585,7 +1586,7 @@ export const getIndirectExpenses = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/gstr/gstr1
 export const getGSTR1 = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const match: any = { businessId, status: { $ne: 'cancelled' }, invoiceType: 'GST', ...dateFilter };
@@ -1633,7 +1634,7 @@ export const getGSTR1 = async (req: AuthRequest, res: Response) => {
 // GET /api/v1/reports/gstr/gstr3b
 export const getGSTR3B = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { from, to } = req.query as any;
     const dateFilter = buildDateFilter(from, to);
     const purchaseDateFilter = buildDateFilter(from, to, 'billDate');
@@ -1739,7 +1740,7 @@ function getDashboardDateRange(req: any): { start: Date; end: Date; groupBy: str
 // GET /reports/dashboard/business-trend
 export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end, groupBy } = getDashboardDateRange(req);
     const mongoose = require('mongoose');
 
@@ -1781,7 +1782,7 @@ export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response)
 // GET /reports/dashboard/inventory-volume
 export const getDashboardInventoryVolume = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const products = await Product.find({ businessId, isActive: true })
       .select('name currentStock')
       .sort({ currentStock: -1 });
@@ -1796,7 +1797,7 @@ export const getDashboardInventoryVolume = async (req: AuthRequest, res: Respons
 // GET /reports/dashboard/top-items-profit
 export const getDashboardTopItemsProfit = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end } = getDashboardDateRange(req);
     const order = req.query.order === 'asc' ? 1 : -1;
     const limit = parseInt(req.query.limit as string) || 5;
@@ -1826,7 +1827,7 @@ export const getDashboardTopItemsProfit = async (req: AuthRequest, res: Response
 // GET /reports/dashboard/stock-movement
 export const getDashboardStockMovement = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end } = getDashboardDateRange(req);
     const mongoose = require('mongoose');
 
@@ -1861,7 +1862,7 @@ export const getDashboardStockMovement = async (req: AuthRequest, res: Response)
 // GET /reports/dashboard/top-customers
 export const getDashboardTopCustomers = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end } = getDashboardDateRange(req);
     const limit = parseInt(req.query.limit as string) || 5;
     const mongoose = require('mongoose');
@@ -1881,7 +1882,7 @@ export const getDashboardTopCustomers = async (req: AuthRequest, res: Response) 
 // GET /reports/dashboard/customer-pending
 export const getDashboardCustomerPending = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const customers = await Customer.find({ businessId, currentBalance: { $gt: 0 } })
       .select('name mobile currentBalance')
       .sort({ currentBalance: -1 })
@@ -1893,7 +1894,7 @@ export const getDashboardCustomerPending = async (req: AuthRequest, res: Respons
 // GET /reports/dashboard/supplier-pending
 export const getDashboardSupplierPending = async (req: AuthRequest, res: Response) => {
   try {
-    const businessId = req.user!.businessId;
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     // For suppliers, currentBalance might also signify pending payments to them
     const suppliers = await Supplier.find({ businessId, currentBalance: { $lt: 0 } })
       .select('name mobile currentBalance')
