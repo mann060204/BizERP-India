@@ -6,7 +6,7 @@ import { customersApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '../../../../lib/utils';
 import { Upload, Camera, RefreshCw, X, Save, User as UserIcon, Loader2, VideoOff, Edit, Trash2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { invoicesApi } from '../../../../lib/erp-api';
+import { invoicesApi, accountsApi } from '../../../../lib/erp-api';
 
 const INDIAN_STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
@@ -161,6 +161,9 @@ const COUNTRY_CODES: Record<string, string> = {
   
   const handlePaymentSubmit = async () => {
     if (!paymentForm.amount) return toast.error('Enter amount');
+    if (['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentForm.mode) && !paymentForm.bankId) {
+      return toast.error('Please select a bank account');
+    }
     try {
       await customersApi.recordPayment(id as string, paymentForm);
       toast.success('Payment recorded');
@@ -222,7 +225,8 @@ const COUNTRY_CODES: Record<string, string> = {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({ amount: '', mode: 'Cash', date: new Date().toISOString().split('T')[0], referenceNo: '', notes: '' });
+  const [paymentForm, setPaymentForm] = useState({ amount: '', mode: 'Cash', date: new Date().toISOString().split('T')[0], referenceNo: '', notes: '', bankId: '' });
+  const [banks, setBanks] = useState<any[]>([]);
   
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [adjustmentForm, setAdjustmentForm] = useState({ type: 'Debit', amount: '', date: new Date().toISOString().split('T')[0], description: '' });
@@ -241,6 +245,10 @@ const COUNTRY_CODES: Record<string, string> = {
       customersApi.getLedger(id as string).then(res => {
          setLedger(res.data.ledger || []);
          setCurrentBalance(res.data.currentBalance || 0);
+      }).catch(() => {});
+      
+      accountsApi.list({ type: 'Bank' }).then(res => {
+         setBanks(res.accounts || res.data?.accounts || []);
       }).catch(() => {});
     }
   }, [id]);
@@ -808,9 +816,20 @@ const COUNTRY_CODES: Record<string, string> = {
                 <div>
                   <label className="erp-label">Payment Mode</label>
                   <select value={paymentForm.mode} onChange={e => setPaymentForm({...paymentForm, mode: e.target.value})} className="erp-input w-full">
-                    <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Cheque</option>
+                    <option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Cheque</option><option>NEFT</option><option>RTGS</option>
                   </select>
                 </div>
+                {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentForm.mode) && (
+                  <div className="col-span-1 md:col-span-2 mt-2 md:mt-0">
+                    <label className="erp-label">Select Bank Account <span className="text-red-500">*</span></label>
+                    <select value={paymentForm.bankId} onChange={e => setPaymentForm({...paymentForm, bankId: e.target.value})} className="erp-input w-full">
+                      <option value="">-- Select Bank --</option>
+                      {banks.map(b => (
+                        <option key={b._id} value={b._id}>{b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="erp-label">Date</label>
                   <input type="date" value={paymentForm.date} onChange={e => setPaymentForm({...paymentForm, date: e.target.value})} className="erp-input w-full" />
