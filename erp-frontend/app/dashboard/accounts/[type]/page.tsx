@@ -247,7 +247,7 @@ export default function AccountsPage() {
   
   // Ledger row rendering logic
   const renderBalance = (bal: number, type: string) => {
-     return <span className={bal < 0 ? 'text-red-600' : 'text-slate-900'}>₹{Math.abs(bal).toFixed(3)} {type}</span>;
+     return <span className={bal < 0 ? 'text-red-600' : 'text-slate-900'}>₹{Math.abs(bal).toFixed(2)} {type}</span>;
   };
 
   return (
@@ -365,8 +365,8 @@ export default function AccountsPage() {
                       {fromDate && (
                         <tr className="bg-slate-50/80 font-semibold">
                           <td className="px-5 py-3 text-slate-600" colSpan={2}>Opening Balance</td>
-                          <td className="px-5 py-3 text-right text-red-600">{selectedAccount.balanceType === 'Dr' ? periodOpeningBalance.toFixed(3) : ''}</td>
-                          <td className="px-5 py-3 text-right text-emerald-600">{selectedAccount.balanceType === 'Cr' ? periodOpeningBalance.toFixed(3) : ''}</td>
+                          <td className="px-5 py-3 text-right text-red-600">{selectedAccount.balanceType === 'Dr' ? periodOpeningBalance.toFixed(2) : ''}</td>
+                          <td className="px-5 py-3 text-right text-emerald-600">{selectedAccount.balanceType === 'Cr' ? periodOpeningBalance.toFixed(2) : ''}</td>
                           <td className="px-5 py-3"></td>
                         </tr>
                       )}
@@ -377,8 +377,8 @@ export default function AccountsPage() {
                           <tr key={txn._id} className="hover:bg-slate-50 transition group/row">
                             <td className="px-5 py-3 text-slate-600">{new Date(txn.date).toLocaleDateString('en-IN')}</td>
                             <td className="px-5 py-3 text-slate-900">{txn.description}</td>
-                            <td className="px-5 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(3) : ''}</td>
-                            <td className="px-5 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(3) : ''}</td>
+                            <td className="px-5 py-3 text-right text-slate-600">{txn.debit > 0 ? txn.debit.toFixed(2) : ''}</td>
+                            <td className="px-5 py-3 text-right text-slate-600">{txn.credit > 0 ? txn.credit.toFixed(2) : ''}</td>
                             <td className="px-2 py-3 text-right">
                               {txn.referenceType !== 'Opening' && (
                                 <button onClick={() => handleDeleteTransaction(txn._id, txn.referenceType)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition opacity-0 group-hover/row:opacity-100">
@@ -402,7 +402,7 @@ export default function AccountsPage() {
                           <tr className="bg-slate-50/80 font-bold border-t-2 border-slate-200">
                             <td className="px-5 py-4 text-slate-800" colSpan={2}>Closing Balance</td>
                             <td colSpan={2} className="px-5 py-4 text-right text-slate-900">
-                              {closingBal.toFixed(3)} {closingBalType}
+                              {closingBal.toFixed(2)} {closingBalType}
                             </td>
                             <td className="px-5 py-4"></td>
                           </tr>

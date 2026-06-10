@@ -57,7 +57,7 @@ export const calculateInvoiceTotals = (
     const gross = qty * rate;
     const discountAmt = (gross * discountPct) / 100;
     // Round taxable amount per item — matches frontend calculateItem()
-    const taxableAmount = round3(gross - discountAmt);
+    const taxableAmount = round2(gross - discountAmt);
 
     let cgst = 0, sgst = 0, igst = 0;
     if (isNonGst) {
@@ -65,16 +65,16 @@ export const calculateInvoiceTotals = (
       sgst = 0;
       igst = 0;
     } else if (isInterState) {
-      igst = round3((taxableAmount * gstRate) / 100);
+      igst = round2((taxableAmount * gstRate) / 100);
     } else {
-      cgst = round3((taxableAmount * gstRate) / 2 / 100);
-      sgst = round3((taxableAmount * gstRate) / 2 / 100);
+      cgst = round2((taxableAmount * gstRate) / 2 / 100);
+      sgst = round2((taxableAmount * gstRate) / 2 / 100);
     }
 
-    const totalAmount = round3(taxableAmount + cgst + sgst + igst);
+    const totalAmount = round2(taxableAmount + cgst + sgst + igst);
 
     subtotal += gross;
-    totalDiscount += round3(discountAmt);
+    totalDiscount += round2(discountAmt);
     // Accumulate already-rounded values — keeps backend in sync with frontend
     totalTaxableAmount += taxableAmount;
     totalCGST += cgst;
@@ -115,15 +115,15 @@ export const calculateInvoiceTotals = (
 
   return {
     lineItems,
-    subtotal: round3(subtotal),
-    totalDiscount: round3(totalDiscount),
-    totalTaxableAmount: round3(totalTaxableAmount),
-    totalCGST: round3(totalCGST),
-    totalSGST: round3(totalSGST),
-    totalIGST: round3(totalIGST),
-    totalGST: round3(totalGST),
-    grandTotal: round3(grandTotal),
+    subtotal: round2(subtotal),
+    totalDiscount: round2(totalDiscount),
+    totalTaxableAmount: round2(totalTaxableAmount),
+    totalCGST: round2(totalCGST),
+    totalSGST: round2(totalSGST),
+    totalIGST: round2(totalIGST),
+    totalGST: round2(totalGST),
+    grandTotal: round2(grandTotal),
   };
 };
 
-const round3 = (n: number) => Math.round(n * 1000) / 1000;
+const round2 = (n: number) => Math.round(n * 100) / 100;

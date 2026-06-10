@@ -146,7 +146,7 @@ export default function BatchNumbersPage() {
               {/* Quantity */}
               <div>
                 <label className="block text-xs font-medium text-slate-500 mb-1">Quantity</label>
-                <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })} min="0" step="any"
+                <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })} min="0" step="0.001"
                   className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition" />
               </div>
 
@@ -155,7 +155,7 @@ export default function BatchNumbersPage() {
                 <label className="block text-xs font-medium text-slate-500 mb-1">Sale Price</label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input type="number" value={form.salePrice} onChange={e => setForm({ ...form, salePrice: parseFloat(e.target.value) || 0 })} min="0" step="any"
+                  <input type="number" value={form.salePrice} onChange={e => setForm({ ...form, salePrice: parseFloat(e.target.value) || 0 })} min="0" step="0.001"
                     className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition" />
                 </div>
               </div>
@@ -227,10 +227,10 @@ export default function BatchNumbersPage() {
                           </span>
                         </td>
                         <td className={`px-5 py-3 font-semibold ${b.currentStock <= 0 ? 'text-red-500' : 'text-slate-900'}`}>
-                          {parseFloat((b.currentStock || 0).toFixed(3))} {b.productId?.unit || ''}
+                          {parseFloat((b.currentStock || 0).toFixed(2))} {b.productId?.unit || ''}
                         </td>
-                        <td className="px-5 py-3 text-slate-700">₹{(b.salePrice || 0).toFixed(3)}</td>
-                        <td className="px-5 py-3 text-slate-700">₹{(b.mrp || 0).toFixed(3)}</td>
+                        <td className="px-5 py-3 text-slate-700">₹{(b.salePrice || 0).toFixed(2)}</td>
+                        <td className="px-5 py-3 text-slate-700">₹{(b.mrp || 0).toFixed(2)}</td>
                         <td className="px-5 py-3 text-slate-600 text-xs">
                           {b.manufacturingDate ? new Date(b.manufacturingDate).toLocaleDateString('en-IN') : '—'}
                         </td>

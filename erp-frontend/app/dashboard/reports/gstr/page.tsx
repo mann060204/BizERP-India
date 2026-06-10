@@ -145,21 +145,21 @@ export default function GstReportPage() {
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">CGST</p>
                     <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.cgst))}</p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {n(outward.cgst).toFixed(3)} − {n(inward.cgst).toFixed(3)}
+                      {n(outward.cgst).toFixed(2)} − {n(inward.cgst).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">SGST</p>
                     <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.sgst))}</p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {n(outward.sgst).toFixed(3)} − {n(inward.sgst).toFixed(3)}
+                      {n(outward.sgst).toFixed(2)} − {n(inward.sgst).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-white rounded-xl p-4 border border-slate-200">
                     <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">IGST</p>
                     <p className="text-slate-900 font-bold text-lg">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n(netGstPayable.igst))}</p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {n(outward.igst).toFixed(3)} − {n(inward.igst).toFixed(3)}
+                      {n(outward.igst).toFixed(2)} − {n(inward.igst).toFixed(2)}
                     </p>
                   </div>
                   <div className="bg-orange-500 rounded-xl p-4 text-white">

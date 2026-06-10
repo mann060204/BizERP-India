@@ -30,7 +30,7 @@ interface BatchConfig {
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
 const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
-const round3 = (n: number) => Math.round(n * 1000) / 1000;
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export default function EditPurchaseOrderPage() {
   const router = useRouter();
@@ -238,12 +238,12 @@ export default function EditPurchaseOrderPage() {
       discountAmt = (gross * discountPerc) / 100;
     }
     
-    const taxableAmount = round3(gross - discountAmt);
-    const cgst = isInterState ? 0 : round3((taxableAmount * item.gstRate) / 2 / 100);
-    const sgst = isInterState ? 0 : round3((taxableAmount * item.gstRate) / 2 / 100);
-    const igst = isInterState ? round3((taxableAmount * item.gstRate) / 100) : 0;
-    const cessAmt = round3((taxableAmount * item.cess) / 100);
-    return { ...item, discount: round3(discountPerc), discountAmount: round3(discountAmt), taxableAmount, cgst, sgst, igst, totalAmount: round3(taxableAmount + cgst + sgst + igst + cessAmt) };
+    const taxableAmount = round2(gross - discountAmt);
+    const cgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
+    const sgst = isInterState ? 0 : round2((taxableAmount * item.gstRate) / 2 / 100);
+    const igst = isInterState ? round2((taxableAmount * item.gstRate) / 100) : 0;
+    const cessAmt = round2((taxableAmount * item.cess) / 100);
+    return { ...item, discount: round2(discountPerc), discountAmount: round2(discountAmt), taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
   };
 
   const addItem = () => {
@@ -280,10 +280,10 @@ export default function EditPurchaseOrderPage() {
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
 
   const totalGST = totalCGST + totalSGST + totalIGST;
-  const subtotal = round3(totalTaxableAmount + totalGST);
+  const subtotal = round2(totalTaxableAmount + totalGST);
   const totalDiscount = lineItems.reduce((s, i) => s + ((i.quantity * i.rate) * i.discount / 100), 0);
-  const grandTotal = round3(subtotal - additionalDiscount + shippingCharge);
-  const balance = round3(grandTotal - amountPaid);
+  const grandTotal = round2(subtotal - additionalDiscount + shippingCharge);
+  const balance = round2(grandTotal - amountPaid);
 
   const handleSave = async (saveStatus: string) => {
     if (!orderNumber.trim()) { toast.error('Order Number is required'); return; }
@@ -473,7 +473,7 @@ export default function EditPurchaseOrderPage() {
               </div>
               <div>
                 <label className="erp-label block mb-1">Quantity <span className="text-red-500">*</span></label>
-                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div>
                 <label className="erp-label block mb-1">Purchase Price <span className="text-red-500">*</span></label>
@@ -522,7 +522,7 @@ export default function EditPurchaseOrderPage() {
                 <label className="erp-label block mb-1">Amount <span className="text-red-500">*</span></label>
                 <div className="flex">
                    <span className="bg-[#1e3a8a] text-white px-2 py-1 text-xs border border-slate-200 border-r-0 flex items-center">₹</span>
-                   <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(3) : ''}</div>
+                   <div className="erp-input w-full rounded-none bg-white flex items-center">{calculateItem(itemInput).totalAmount > 0 ? calculateItem(itemInput).totalAmount.toFixed(2) : ''}</div>
                 </div>
               </div>
               <div className="flex items-center justify-center pb-[2px]">
@@ -586,7 +586,7 @@ export default function EditPurchaseOrderPage() {
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
                     <div className="col-span-3 px-2 py-1.5 text-right font-medium flex justify-between items-center">
-                      <span>₹{item.totalAmount.toFixed(3)}</span>
+                      <span>₹{item.totalAmount.toFixed(2)}</span>
                       <button onClick={() => removeItem(idx)} className="opacity-0 group-hover:opacity-100 p-0.5 text-red-500 hover:text-red-400 transition">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -656,7 +656,7 @@ export default function EditPurchaseOrderPage() {
                     <span className="text-xs text-slate-600 w-12">Balance</span>
                     <div className="flex flex-1">
                        <span className="bg-[#1e3a8a] text-white px-2 py-1 text-[10px] border border-slate-200 border-r-0 flex items-center">₹</span>
-                       <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(3)}</div>
+                       <div className="erp-input w-full rounded-none bg-white flex items-center">{balance.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -667,7 +667,7 @@ export default function EditPurchaseOrderPage() {
               <div className="erp-container border-slate-200 h-full flex flex-col p-3 space-y-2">
                  <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                    <span className="text-xs font-bold text-slate-600">Sub Total</span>
-                   <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(3)}</span>
+                   <span className="text-sm font-bold text-slate-800">₹ {subtotal.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between items-center py-2 border-b border-slate-100">
                    <span className="text-[10px] text-slate-500 font-medium uppercase">Shipping / GST%</span>
@@ -678,7 +678,7 @@ export default function EditPurchaseOrderPage() {
                  </div>
                  <div className="flex justify-between items-center pt-2">
                    <span className="text-xs font-bold text-slate-800 uppercase">Total Amount</span>
-                   <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(3)}</span>
+                   <span className="text-base font-bold text-slate-900">₹ {grandTotal.toFixed(2)}</span>
                  </div>
               </div>
            </div>
@@ -774,9 +774,9 @@ export default function EditPurchaseOrderPage() {
                        <tr key={i} className="text-xs hover:bg-slate-50">
                          <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
                          <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
-                         <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(3)}</td>
-                         <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(3)}</td>
-                         <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(3)}</td>
+                         <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(2)}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-center">
                             <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>

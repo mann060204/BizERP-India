@@ -206,7 +206,7 @@ export default function PrintableInvoicePage() {
                     {item.description && <span className="block text-[10px] text-gray-700">{item.description}</span>}
                   </td>
                   <td className="py-1 text-right whitespace-nowrap">{item.quantity} x {item.rate}</td>
-                  <td className="py-1 text-right font-bold">{(item.taxableAmount + item.cgst + item.sgst + item.igst).toFixed(3)}</td>
+                  <td className="py-1 text-right font-bold">{(item.taxableAmount + item.cgst + item.sgst + item.igst).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -214,18 +214,18 @@ export default function PrintableInvoicePage() {
           </div>
 
           <div className="space-y-1 mb-4 text-right">
-            <p>Subtotal: {invoice.totalTaxableAmount.toFixed(3)}</p>
+            <p>Subtotal: {invoice.totalTaxableAmount.toFixed(2)}</p>
             {isInterState ? (
-              <p>IGST: {invoice.totalIGST.toFixed(3)}</p>
+              <p>IGST: {invoice.totalIGST.toFixed(2)}</p>
             ) : (
               <>
-                <p>CGST: {invoice.totalCGST.toFixed(3)}</p>
-                <p>SGST: {invoice.totalSGST.toFixed(3)}</p>
+                <p>CGST: {invoice.totalCGST.toFixed(2)}</p>
+                <p>SGST: {invoice.totalSGST.toFixed(2)}</p>
               </>
             )}
-            <p className="text-lg font-bold border-t border-dashed border-black pt-1">Total: ₹{invoice.grandTotal.toFixed(3)}</p>
-            <p>Paid: {invoice.amountReceived.toFixed(3)}</p>
-            <p>Balance: {invoice.balance.toFixed(3)}</p>
+            <p className="text-lg font-bold border-t border-dashed border-black pt-1">Total: ₹{invoice.grandTotal.toFixed(2)}</p>
+            <p>Paid: {invoice.amountReceived.toFixed(2)}</p>
+            <p>Balance: {invoice.balance.toFixed(2)}</p>
           </div>
 
           <div className="text-center border-t border-dashed border-black pt-4">
@@ -376,16 +376,16 @@ export default function PrintableInvoicePage() {
                       {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>}
                       <td className="border-r-2 border-gray-800 px-1 py-1">{item.quantity} {item.unit}</td>
                       <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.rate.toFixed(3)}</td>
-                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(3)}</td>}
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>}
                       {!isNonGst && (
                         <td className="border-r-2 border-gray-800 p-0">
                            <div className="flex h-full min-h-[24px]">
                              <span className="w-1/2 border-r-2 border-gray-800 pt-[2px]">{item.gstRate}%</span>
-                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(3)}</span>
+                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(2)}</span>
                            </div>
                         </td>
                       )}
-                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(3) : totalAmt.toFixed(3)}</td>
+                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(2) : totalAmt.toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -396,16 +396,16 @@ export default function PrintableInvoicePage() {
                   {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
                   <td className="border-r-2 border-gray-800">{invoice.lineItems.reduce((s:any, i:any)=>s + i.quantity, 0)}</td>
                   <td className="border-r-2 border-gray-800"></td>
-                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{invoice.totalTaxableAmount.toFixed(3)}</td>}
+                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{invoice.totalTaxableAmount.toFixed(2)}</td>}
                   {!isNonGst && (
                     <td className="border-r-2 border-gray-800 p-0">
                        <div className="flex h-full">
                          <span className="w-1/2 border-r-2 border-gray-800"></span>
-                         <span className="w-1/2 text-right pr-1 pt-[2px]">{invoice.totalGST.toFixed(3)}</span>
+                         <span className="w-1/2 text-right pr-1 pt-[2px]">{invoice.totalGST.toFixed(2)}</span>
                        </div>
                     </td>
                   )}
-                  <td className="text-right pr-1">{isNonGst ? invoice.subtotal.toFixed(3) : (invoice.totalTaxableAmount + invoice.totalGST).toFixed(3)}</td>
+                  <td className="text-right pr-1">{isNonGst ? invoice.subtotal.toFixed(2) : (invoice.totalTaxableAmount + invoice.totalGST).toFixed(2)}</td>
                 </tr>
                 {/* Filler space */}
                 <tr className="h-full">
@@ -443,7 +443,7 @@ export default function PrintableInvoicePage() {
                  <div className="w-[30%] p-1 flex flex-col justify-center items-center">
                     {business.bankDetails?.upiId && (
                        <>
-                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`upi://pay?pa=${business.bankDetails.upiId}&pn=${business.ownerName || business.businessName}&am=${invoice.grandTotal.toFixed(3)}&cu=INR`)}`} alt="UPI QR" className="w-[80px] h-[80px]" />
+                         <img src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`upi://pay?pa=${business.bankDetails.upiId}&pn=${business.ownerName || business.businessName}&am=${invoice.grandTotal.toFixed(2)}&cu=INR`)}`} alt="UPI QR" className="w-[80px] h-[80px]" />
                          <span className="text-[9px] mt-1 text-blue-900 font-bold">Pay using UPI</span>
                        </>
                     )}
@@ -462,37 +462,37 @@ export default function PrintableInvoicePage() {
                  <span>SUMMARY</span><span>AMOUNT</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? invoice.subtotal.toFixed(3) : invoice.totalTaxableAmount.toFixed(3)}</span>
+                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? invoice.subtotal.toFixed(2) : invoice.totalTaxableAmount.toFixed(2)}</span>
                </div>
                {!isNonGst && (
                  <>
                    {isInterState ? (
                      <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                       <span>IGST Amt :</span><span>{invoice.totalIGST.toFixed(3)}</span>
+                       <span>IGST Amt :</span><span>{invoice.totalIGST.toFixed(2)}</span>
                      </div>
                    ) : (
                      <>
                        <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                         <span>CGST Amt :</span><span>{invoice.totalCGST.toFixed(3)}</span>
+                         <span>CGST Amt :</span><span>{invoice.totalCGST.toFixed(2)}</span>
                        </div>
                        <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                         <span>SGST Amt :</span><span>{invoice.totalSGST.toFixed(3)}</span>
+                         <span>SGST Amt :</span><span>{invoice.totalSGST.toFixed(2)}</span>
                        </div>
                      </>
                    )}
                  </>
                )}
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Discount :</span><span className="text-red-600">-{(invoice.totalDiscount + (invoice.discountAmount || 0)).toFixed(3)}</span>
+                 <span>Discount :</span><span className="text-red-600">-{(invoice.totalDiscount + (invoice.discountAmount || 0)).toFixed(2)}</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Shipping / Freight :</span><span>{invoice.shippingCharge.toFixed(3)}</span>
+                 <span>Shipping / Freight :</span><span>{invoice.shippingCharge.toFixed(2)}</span>
                </div>
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1">
-                 <span>Round off :</span><span>{invoice.roundOff !== undefined ? invoice.roundOff.toFixed(3) : (invoice.grandTotal - (invoice.totalTaxableAmount + invoice.totalGST + invoice.shippingCharge - (invoice.discountAmount || 0))).toFixed(3)}</span>
+                 <span>Round off :</span><span>{invoice.roundOff !== undefined ? invoice.roundOff.toFixed(2) : (invoice.grandTotal - (invoice.totalTaxableAmount + invoice.totalGST + invoice.shippingCharge - (invoice.discountAmount || 0))).toFixed(2)}</span>
                </div>
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
-                 <span>Total Amount :</span><span>{invoice.grandTotal.toFixed(3)}</span>
+                 <span>Total Amount :</span><span>{invoice.grandTotal.toFixed(2)}</span>
                </div>
                
                <div className="p-2 flex-1 flex flex-col justify-end items-center text-center">

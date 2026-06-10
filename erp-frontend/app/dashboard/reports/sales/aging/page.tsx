@@ -106,9 +106,9 @@ export default function SalesAgingPage() {
                 <tfoot className="border-t-2 border-slate-200 bg-slate-50">
                   <tr>
                     <td colSpan={4} className="px-4 py-3 text-sm font-bold text-slate-700">Total ({displayItems.length})</td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-900">₹{displayItems.reduce((s: number, r: any) => s + (r.grandTotal || 0), 0).toFixed(3)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-green-600">₹{displayItems.reduce((s: number, r: any) => s + (r.amountReceived || 0), 0).toFixed(3)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-red-600">₹{displayItems.reduce((s: number, r: any) => s + (r.balance || 0), 0).toFixed(3)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-900">₹{displayItems.reduce((s: number, r: any) => s + (r.grandTotal || 0), 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-green-600">₹{displayItems.reduce((s: number, r: any) => s + (r.amountReceived || 0), 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-red-600">₹{displayItems.reduce((s: number, r: any) => s + (r.balance || 0), 0).toFixed(2)}</td>
                     <td colSpan={2}></td>
                   </tr>
                 </tfoot>

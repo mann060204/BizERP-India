@@ -46,7 +46,7 @@ export default function SalesPage() {
   };
 
   const handleWhatsApp = (inv: salesReturn) => {
-    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(3)} is ready.`;
+    const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -63,7 +63,7 @@ export default function SalesPage() {
 
   const handleEmail = (inv: salesReturn) => {
     const subject = `salesReturn ${inv.salesReturnNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(3)} is ready.`;
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour salesReturn ${inv.salesReturnNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
@@ -74,10 +74,10 @@ export default function SalesPage() {
         {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'This Month', value: `₹${(summary.monthSales || 0).toFixed(3)}`, sub: `${summary.monthsalesReturnCount || 0} salesReturns`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-            { label: "Today's Sales", value: `₹${(summary.todaySales || 0).toFixed(3)}`, sub: 'Today', color: 'text-blue-400', bg: 'bg-blue-400/10' },
-            { label: 'Amount Received', value: `₹${(summary.totalReceived || 0).toFixed(3)}`, sub: 'Total collected', color: 'text-violet-400', bg: 'bg-violet-400/10' },
-            { label: 'Outstanding', value: `₹${(summary.outstanding || 0).toFixed(3)}`, sub: 'Pending balance', color: 'text-orange-400', bg: 'bg-orange-400/10' },
+            { label: 'This Month', value: `₹${(summary.monthSales || 0).toFixed(2)}`, sub: `${summary.monthsalesReturnCount || 0} salesReturns`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+            { label: "Today's Sales", value: `₹${(summary.todaySales || 0).toFixed(2)}`, sub: 'Today', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+            { label: 'Amount Received', value: `₹${(summary.totalReceived || 0).toFixed(2)}`, sub: 'Total collected', color: 'text-violet-400', bg: 'bg-violet-400/10' },
+            { label: 'Outstanding', value: `₹${(summary.outstanding || 0).toFixed(2)}`, sub: 'Pending balance', color: 'text-orange-400', bg: 'bg-orange-400/10' },
           ].map(({ label, value, sub, color, bg }) => (
             <div key={label} className="glass rounded-2xl p-4">
               <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
@@ -149,9 +149,9 @@ export default function SalesPage() {
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{inv.salesReturnNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.salesReturnDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot?.name || 'Walk-in Customer'}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{inv.grandTotal.toFixed(3)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(3)}</td>
-                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(3)}</span></td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{inv.grandTotal.toFixed(2)}</td>
+                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{inv.paymentMode}</td>
                         <td className="px-5 py-4">
                           <div className="flex flex-col gap-1 items-start">

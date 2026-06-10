@@ -50,7 +50,7 @@ export default function SalesPage() {
     const docName = inv.invoiceNumber ? 'invoice ' + inv.invoiceNumber : ((inv as any).quotationNumber ? 'quotation ' + (inv as any).quotationNumber : 'document');
     const text = `Hello ${inv.customerSnapshot?.name || 'Customer'},
 
-Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(3)} is ready.
+Your ${docName} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.
 
 Thank you for your business!`;
     const phone = inv.customerSnapshot?.mobile ? inv.customerSnapshot.mobile.replace(/\D/g,'') : '';
@@ -70,7 +70,7 @@ Thank you for your business!`;
 
   const handleEmail = (inv: Invoice) => {
     const subject = `Invoice ${inv.invoiceNumber} from our business`;
-    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(3)} is ready.`;
+    const body = `Hello ${inv.customerSnapshot?.name || 'Customer'},\n\nYour invoice ${inv.invoiceNumber} for ₹${(inv.grandTotal || 0).toFixed(2)} is ready.`;
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
@@ -81,10 +81,10 @@ Thank you for your business!`;
         {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'This Month', value: `₹${(summary.monthSales || 0).toFixed(3)}`, sub: `${summary.monthInvoiceCount || 0} invoices`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-            { label: "Today's Sales", value: `₹${(summary.todaySales || 0).toFixed(3)}`, sub: 'Today', color: 'text-blue-400', bg: 'bg-blue-400/10' },
-            { label: 'Amount Received', value: `₹${(summary.totalReceived || 0).toFixed(3)}`, sub: 'Total collected', color: 'text-violet-400', bg: 'bg-violet-400/10' },
-            { label: 'Outstanding', value: `₹${(summary.outstanding || 0).toFixed(3)}`, sub: 'Pending balance', color: 'text-orange-400', bg: 'bg-orange-400/10' },
+            { label: 'This Month', value: `₹${(summary.monthSales || 0).toFixed(2)}`, sub: `${summary.monthInvoiceCount || 0} invoices`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+            { label: "Today's Sales", value: `₹${(summary.todaySales || 0).toFixed(2)}`, sub: 'Today', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+            { label: 'Amount Received', value: `₹${(summary.totalReceived || 0).toFixed(2)}`, sub: 'Total collected', color: 'text-violet-400', bg: 'bg-violet-400/10' },
+            { label: 'Outstanding', value: `₹${(summary.outstanding || 0).toFixed(2)}`, sub: 'Pending balance', color: 'text-orange-400', bg: 'bg-orange-400/10' },
           ].map(({ label, value, sub, color, bg }) => (
             <div key={label} className="glass rounded-2xl p-4">
               <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
@@ -106,8 +106,8 @@ Thank you for your business!`;
                 { header: 'Invoice No.', key: 'invoiceNumber' },
                 { header: 'Customer', render: (inv) => inv.customerSnapshot?.name || '' },
                 { header: 'Mobile', render: (inv) => inv.customerSnapshot?.mobile || '' },
-                { header: 'Total Amount', render: (inv) => (inv.grandTotal || 0).toFixed(3) },
-                { header: 'Balance', render: (inv) => (inv.balance || 0).toFixed(3) },
+                { header: 'Total Amount', render: (inv) => (inv.grandTotal || 0).toFixed(2) },
+                { header: 'Balance', render: (inv) => (inv.balance || 0).toFixed(2) },
                 { header: 'Status', render: (inv) => STATUS_CONFIG[inv.status]?.label || inv.status }
               ]}
             />
@@ -176,9 +176,9 @@ Thank you for your business!`;
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{inv.invoiceNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(inv.invoiceDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{inv.customerSnapshot?.name || 'Walk-in Customer'}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(inv.grandTotal || 0).toFixed(3)}</td>
-                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(3)}</td>
-                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(3)}</span></td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{(inv.grandTotal || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4 text-green-400">₹{(inv.amountReceived || 0).toFixed(2)}</td>
+                        <td className="px-5 py-4"><span className={(inv.balance || 0) > 0 ? 'text-red-400 font-medium' : 'text-slate-600'}>₹{(inv.balance || 0).toFixed(2)}</span></td>
                         <td className="px-5 py-4 text-slate-600">{inv.paymentMode}</td>
                         <td className="px-5 py-4">
                             <div className="flex flex-col items-center gap-1">

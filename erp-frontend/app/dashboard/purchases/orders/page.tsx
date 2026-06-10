@@ -64,8 +64,8 @@ export default function PurchaseOrdersPage() {
         {/* KPI Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { label: 'This Month', value: `₹${(summary.monthOrders || 0).toFixed(3)}`, sub: `${summary.monthOrderCount || 0} orders`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-            { label: 'Today', value: `₹${(summary.todayOrders || 0).toFixed(3)}`, sub: 'Total orders today', color: 'text-blue-400', bg: 'bg-blue-400/10' },
+            { label: 'This Month', value: `₹${(summary.monthOrders || 0).toFixed(2)}`, sub: `${summary.monthOrderCount || 0} orders`, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+            { label: 'Today', value: `₹${(summary.todayOrders || 0).toFixed(2)}`, sub: 'Total orders today', color: 'text-blue-400', bg: 'bg-blue-400/10' },
           ].map(({ label, value, sub, color, bg }) => (
             <div key={label} className="glass rounded-2xl p-4">
               <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">{label}</p>
@@ -125,7 +125,7 @@ export default function PurchaseOrdersPage() {
                         <td className="px-5 py-4 font-mono text-xs text-slate-700 font-semibold">{ord.orderNumber}</td>
                         <td className="px-5 py-4 text-slate-600">{new Date(ord.orderDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                         <td className="px-5 py-4 text-slate-900 font-medium">{ord.supplierSnapshot?.name}</td>
-                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{ord.grandTotal.toFixed(3)}</td>
+                        <td className="px-5 py-4 text-slate-900 font-semibold">₹{ord.grandTotal.toFixed(2)}</td>
                         <td className="px-5 py-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
                             <StatusIcon className="w-3 h-3" /> {sc.label}

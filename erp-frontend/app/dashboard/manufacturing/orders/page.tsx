@@ -133,7 +133,7 @@ export default function ManufacturingOrdersPage() {
                   <td className="px-6 py-4 font-medium text-slate-900">{mo.orderNumber}</td>
                   <td className="px-6 py-4 text-slate-700">{mo.productName}</td>
                   <td className="px-6 py-4 font-medium">{mo.quantityToProduce}</td>
-                  <td className="px-6 py-4 text-slate-700">₹{mo.totalEstimatedCost?.toFixed(3)}</td>
+                  <td className="px-6 py-4 text-slate-700">₹{mo.totalEstimatedCost?.toFixed(2)}</td>
                   <td className="px-6 py-4">{getStatusBadge(mo.status)}</td>
                   <td className="px-6 py-4 text-right space-x-2">
                     {mo.status === 'Pending' && (

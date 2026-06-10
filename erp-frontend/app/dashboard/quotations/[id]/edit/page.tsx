@@ -27,7 +27,7 @@ interface LineItem {
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
 const STATES = ['Andhra Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
 
-const round3 = (n: number) => Math.round(n * 1000) / 1000;
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export default function NewQuotationPage() {
   const router = useRouter();
@@ -186,7 +186,7 @@ export default function NewQuotationPage() {
       discountPercent = scheme.value;
     } else {
       if (subtotal > 0) {
-        discountPercent = round3((scheme.value / subtotal) * 100);
+        discountPercent = round2((scheme.value / subtotal) * 100);
       }
     }
     
@@ -281,12 +281,12 @@ export default function NewQuotationPage() {
   const calculateItem = (item: LineItem, invType = quotationType, interState = isInterState) => {
     const gross = item.quantity * item.rate;
     const discountAmt = (gross * item.discount) / 100;
-    const taxableAmount = round3(gross - discountAmt);
-    const cgst = (invType === 'GST' && !interState) ? round3((taxableAmount * item.gstRate) / 2 / 100) : 0;
-    const sgst = (invType === 'GST' && !interState) ? round3((taxableAmount * item.gstRate) / 2 / 100) : 0;
-    const igst = (invType === 'GST' && interState) ? round3((taxableAmount * item.gstRate) / 100) : 0;
-    const cessAmt = invType === 'GST' ? round3((taxableAmount * item.cess) / 100) : 0;
-    return { ...item, taxableAmount, cgst, sgst, igst, totalAmount: round3(taxableAmount + cgst + sgst + igst + cessAmt) };
+    const taxableAmount = round2(gross - discountAmt);
+    const cgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
+    const sgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
+    const igst = (invType === 'GST' && interState) ? round2((taxableAmount * item.gstRate) / 100) : 0;
+    const cessAmt = invType === 'GST' ? round2((taxableAmount * item.cess) / 100) : 0;
+    return { ...item, taxableAmount, cgst, sgst, igst, totalAmount: round2(taxableAmount + cgst + sgst + igst + cessAmt) };
   };
 
   useEffect(() => {
@@ -332,22 +332,22 @@ export default function NewQuotationPage() {
   
   if (shippingCharge > 0 && shippingGstRate > 0 && quotationType === 'GST') {
     if (isInterState) {
-      shipIGST = round3((shippingCharge * shippingGstRate) / 100);
+      shipIGST = round2((shippingCharge * shippingGstRate) / 100);
     } else {
-      shipCGST = round3((shippingCharge * shippingGstRate) / 2 / 100);
-      shipSGST = round3((shippingCharge * shippingGstRate) / 2 / 100);
+      shipCGST = round2((shippingCharge * shippingGstRate) / 2 / 100);
+      shipSGST = round2((shippingCharge * shippingGstRate) / 2 / 100);
     }
   }
 
   const totalCGST = lineItems.reduce((s, i) => s + i.cgst, 0) + shipCGST;
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
-  const totalCess = lineItems.reduce((s, i) => s + (quotationType === 'GST' ? round3((i.taxableAmount * i.cess) / 100) : 0), 0);
+  const totalCess = lineItems.reduce((s, i) => s + (quotationType === 'GST' ? round2((i.taxableAmount * i.cess) / 100) : 0), 0);
   
   const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + totalCess + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
-  const roundOff = round3(grandTotal - preRoundTotal);
-  const balance = round3(grandTotal - totalAmountReceived);
+  const roundOff = round2(grandTotal - preRoundTotal);
+  const balance = round2(grandTotal - totalAmountReceived);
 
   
   const handleConvertToInvoice = async () => {
@@ -546,7 +546,7 @@ export default function NewQuotationPage() {
                   </label>
                   {itemInput.productId && (
                     <span className="text-xs text-slate-600">
-                      Stock: <span className="text-emerald-600 font-bold text-sm">{parseFloat((products.find(p => p._id === itemInput.productId)?.currentStock || 0).toFixed(3))}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                      Stock: <span className="text-emerald-600 font-bold text-sm">{parseFloat((products.find(p => p._id === itemInput.productId)?.currentStock || 0).toFixed(2))}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
@@ -558,7 +558,7 @@ export default function NewQuotationPage() {
                         <div key={p._id} onClick={() => pickProduct(p)} className="px-2 py-1.5 text-xs hover:bg-slate-100 cursor-pointer border-b border-slate-200 flex justify-between items-center group">
                           <div className="flex flex-col">
                             <span className="text-slate-900 font-medium">{p.name}</span>
-                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{parseFloat((p.currentStock || 0).toFixed(3))}</span></span>
+                            <span className="text-[9px] text-slate-600">Stock: <span className={p.currentStock! <= 0 ? 'text-red-600 font-bold' : 'text-emerald-600'}>{parseFloat((p.currentStock || 0).toFixed(2))}</span></span>
                           </div>
                           <div className="flex gap-2 items-center">
                              {p.sellingPrice2 && <span className="text-[9px] text-purple-400 bg-purple-900/20 px-1 rounded opacity-0 group-hover:opacity-100">W: ₹{p.sellingPrice2}</span>}
@@ -603,7 +603,7 @@ export default function NewQuotationPage() {
               </div>
               <div>
                 <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
-                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
               <div className="relative group">
                 <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
@@ -704,7 +704,7 @@ export default function NewQuotationPage() {
                </div>
                <div className="col-span-2">
                   <label className="erp-label">Amount</label>
-                  <div className="erp-input w-full bg-emerald-50 text-emerald-600 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(3)}</div>
+                  <div className="erp-input w-full bg-emerald-50 text-emerald-600 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
                </div>
                <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded flex items-center justify-center">
                  <Plus className="w-5 h-5" />
@@ -746,12 +746,12 @@ export default function NewQuotationPage() {
                     <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(3)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">
                       {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
-                      {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(3)}` : ''}
+                      {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}
                     </div>
                     {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center text-blue-400">{item.gstRate}%</div>}
                     {quotationType === 'GST' && <div className="col-span-1 erp-grid-cell text-center">{item.cess}%</div>}
                     <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex items-center justify-end ${quotationType === 'GST' ? 'col-span-1' : 'col-span-3'}`}>
-                      ₹{item.totalAmount.toFixed(3)}
+                      ₹{item.totalAmount.toFixed(2)}
                     </div>
                     <div className="col-span-1 erp-grid-cell flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
                       <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-action-500/10 rounded">
@@ -856,12 +856,12 @@ export default function NewQuotationPage() {
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
-                  <span>₹{subtotal.toFixed(3)}</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
                 </div>
                 {totalDiscount > 0 && (
                   <div className="flex justify-between text-red-400">
                     <span>Discount</span>
-                    <span>-₹{totalDiscount.toFixed(3)}</span>
+                    <span>-₹{totalDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -871,17 +871,17 @@ export default function NewQuotationPage() {
                       <>
                         <div className="flex justify-between text-slate-600">
                           <span>CGST</span>
-                          <span>₹{totalCGST.toFixed(3)}</span>
+                          <span>₹{totalCGST.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-slate-600">
                           <span>SGST</span>
-                          <span>₹{totalSGST.toFixed(3)}</span>
+                          <span>₹{totalSGST.toFixed(2)}</span>
                         </div>
                       </>
                     ) : (
                       <div className="flex justify-between text-slate-600">
                         <span>IGST</span>
-                        <span>₹{totalIGST.toFixed(3)}</span>
+                        <span>₹{totalIGST.toFixed(2)}</span>
                       </div>
                     )}
                   </>
@@ -900,16 +900,16 @@ export default function NewQuotationPage() {
                  {roundOff !== 0 && (
                    <div className="flex justify-between text-xs font-medium text-slate-600 mb-1">
                      <span>Round Off</span>
-                     <span>{roundOff > 0 ? '+' : ''}{roundOff.toFixed(3)}</span>
+                     <span>{roundOff > 0 ? '+' : ''}{roundOff.toFixed(2)}</span>
                    </div>
                  )}
                  <div className="flex justify-between items-end">
                     <span className="text-sm font-bold text-yellow-600">GRAND TOTAL</span>
-                    <span className="text-3xl font-black text-emerald-600 tracking-tight">₹{grandTotal.toFixed(3)}</span>
+                    <span className="text-3xl font-black text-emerald-600 tracking-tight">₹{grandTotal.toFixed(2)}</span>
                  </div>
                  <div className="flex justify-between text-[11px] font-bold text-slate-600 mt-2 border-t border-slate-200 pt-2">
                     <span>Total Received</span>
-                    <span>₹{totalAmountReceived.toFixed(3)}</span>
+                    <span>₹{totalAmountReceived.toFixed(2)}</span>
                  </div>
               </div>
            </div>
@@ -973,7 +973,7 @@ export default function NewQuotationPage() {
                          <td className="p-2 text-slate-600">{p.group || '—'}</td>
                          <td className="p-2 text-slate-600">{p.brand || '—'}</td>
                          <td className="p-2 text-slate-600">{p.location || '—'}</td>
-                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{parseFloat((p.currentStock || 0).toFixed(3))}</td>
+                         <td className={`p-2 font-bold ${p.currentStock! > 0 ? 'text-emerald-400' : 'text-red-400'}`}>{parseFloat((p.currentStock || 0).toFixed(2))}</td>
                          <td className="p-2 text-slate-600">₹{p.sellingPrice}</td>
                        </tr>
                      ))}
@@ -1015,7 +1015,7 @@ export default function NewQuotationPage() {
         <div className="flex gap-4"></div>
         
         <div className="text-xs font-mono text-slate-600">
-          Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(3)}</span>
+          Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(2)}</span>
         </div>
 
         <div className="flex gap-2">

@@ -99,8 +99,8 @@ export default function Page() {
                   <tr>
                     <td className="px-4 py-3 font-bold text-slate-900">Total</td>
                     <td className="px-4 py-3 text-center font-bold">{summary.reduce((s: number, r: any) => s + (r.count || 0), 0)}</td>
-                    <td className="px-4 py-3 text-right font-bold">₹{summary.reduce((s: number, r: any) => s + (r.totalAmount || 0), 0).toFixed(3)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-orange-600">₹{summary.reduce((s: number, r: any) => s + (r.totalGST || 0), 0).toFixed(3)}</td>
+                    <td className="px-4 py-3 text-right font-bold">₹{summary.reduce((s: number, r: any) => s + (r.totalAmount || 0), 0).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-orange-600">₹{summary.reduce((s: number, r: any) => s + (r.totalGST || 0), 0).toFixed(2)}</td>
                     <td className="px-4 py-3 text-right font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(grandTotal)}</td>
                     <td className="px-4 py-3 text-center font-bold">100%</td>
                   </tr>

@@ -121,8 +121,8 @@ export default function ManualBatchSelectModal({
                     <td className="p-2 border border-slate-200 text-center font-bold text-slate-700">{b.currentStock}</td>
                     <td className="p-2 border border-slate-200 text-center text-slate-500">{b.manufacturingDate ? new Date(b.manufacturingDate).toLocaleDateString() : '-'}</td>
                     <td className="p-2 border border-slate-200 text-center text-slate-500">{b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : '-'}</td>
-                    <td className="p-2 border border-slate-200 text-right">₹{b.mrp?.toFixed(3)}</td>
-                    <td className="p-2 border border-slate-200 text-right">₹{b.salePrice?.toFixed(3)}</td>
+                    <td className="p-2 border border-slate-200 text-right">₹{b.mrp?.toFixed(2)}</td>
+                    <td className="p-2 border border-slate-200 text-right">₹{b.salePrice?.toFixed(2)}</td>
                     <td className="p-2 border border-slate-200 bg-blue-50/30">
                       <input 
                         type="number" 

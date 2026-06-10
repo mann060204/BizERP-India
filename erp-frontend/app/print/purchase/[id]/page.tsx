@@ -156,16 +156,16 @@ export default function PrintablePurchasePage() {
                       {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1">{item.hsnCode || '-'}</td>}
                       <td className="border-r-2 border-gray-800 px-1 py-1">{item.quantity} {item.unit}</td>
                       <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.rate.toFixed(3)}</td>
-                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(3)}</td>}
+                      {!isNonGst && <td className="border-r-2 border-gray-800 px-1 py-1 text-right">{item.taxableAmount.toFixed(2)}</td>}
                       {!isNonGst && (
                         <td className="border-r-2 border-gray-800 p-0">
                            <div className="flex h-full min-h-[24px]">
                              <span className="w-1/2 border-r-2 border-gray-800 pt-[2px]">{item.gstRate}%</span>
-                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(3)}</span>
+                             <span className="w-1/2 pt-[2px] text-right pr-1">{taxAmt.toFixed(2)}</span>
                            </div>
                         </td>
                       )}
-                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(3) : totalAmt.toFixed(3)}</td>
+                      <td className="px-1 py-1 text-right">{isNonGst ? (item.quantity * item.rate).toFixed(2) : totalAmt.toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -176,16 +176,16 @@ export default function PrintablePurchasePage() {
                   {!isNonGst && <td className="border-r-2 border-gray-800"></td>}
                   <td className="border-r-2 border-gray-800">{purchase.lineItems.reduce((s:any, i:any)=>s + i.quantity, 0)}</td>
                   <td className="border-r-2 border-gray-800"></td>
-                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{purchase.totalTaxableAmount.toFixed(3)}</td>}
+                  {!isNonGst && <td className="border-r-2 border-gray-800 text-right pr-1">{purchase.totalTaxableAmount.toFixed(2)}</td>}
                   {!isNonGst && (
                     <td className="border-r-2 border-gray-800 p-0">
                        <div className="flex h-full">
                          <span className="w-1/2 border-r-2 border-gray-800"></span>
-                         <span className="w-1/2 text-right pr-1 pt-[2px]">{purchase.totalGST.toFixed(3)}</span>
+                         <span className="w-1/2 text-right pr-1 pt-[2px]">{purchase.totalGST.toFixed(2)}</span>
                        </div>
                     </td>
                   )}
-                  <td className="text-right pr-1">{isNonGst ? purchase.subtotal.toFixed(3) : (purchase.totalTaxableAmount + purchase.totalGST).toFixed(3)}</td>
+                  <td className="text-right pr-1">{isNonGst ? purchase.subtotal.toFixed(2) : (purchase.totalTaxableAmount + purchase.totalGST).toFixed(2)}</td>
                 </tr>
                 {/* Filler space */}
                 <tr className="h-full">
@@ -219,21 +219,21 @@ export default function PrintablePurchasePage() {
                  <span>SUMMARY</span><span>AMOUNT</span>
                </div>
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? purchase.subtotal.toFixed(3) : purchase.totalTaxableAmount.toFixed(3)}</span>
+                 <span>{isNonGst ? 'Subtotal :' : 'Taxable Amount :'}</span><span>{isNonGst ? purchase.subtotal.toFixed(2) : purchase.totalTaxableAmount.toFixed(2)}</span>
                </div>
                {!isNonGst && (
                  <>
                    {isInterState ? (
                      <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                       <span>IGST Amt :</span><span>{purchase.totalIGST.toFixed(3)}</span>
+                       <span>IGST Amt :</span><span>{purchase.totalIGST.toFixed(2)}</span>
                      </div>
                    ) : (
                      <>
                        <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                         <span>CGST Amt :</span><span>{purchase.totalCGST.toFixed(3)}</span>
+                         <span>CGST Amt :</span><span>{purchase.totalCGST.toFixed(2)}</span>
                        </div>
                        <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                         <span>SGST Amt :</span><span>{purchase.totalSGST.toFixed(3)}</span>
+                         <span>SGST Amt :</span><span>{purchase.totalSGST.toFixed(2)}</span>
                        </div>
                      </>
                    )}
@@ -241,26 +241,26 @@ export default function PrintablePurchasePage() {
                )}
                {purchase.totalDiscount > 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                   <span>Item Discount :</span><span className="text-red-600">-{purchase.totalDiscount.toFixed(3)}</span>
+                   <span>Item Discount :</span><span className="text-red-600">-{purchase.totalDiscount.toFixed(2)}</span>
                  </div>
                )}
                {purchase.additionalDiscount > 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                   <span>Discount :</span><span className="text-red-600">-{purchase.additionalDiscount.toFixed(3)}</span>
+                   <span>Discount :</span><span className="text-red-600">-{purchase.additionalDiscount.toFixed(2)}</span>
                  </div>
                )}
                {purchase.shippingCharge > 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                   <span>Shipping / Freight :</span><span>{purchase.shippingCharge.toFixed(3)}</span>
+                   <span>Shipping / Freight :</span><span>{purchase.shippingCharge.toFixed(2)}</span>
                  </div>
                )}
                {purchase.roundOff !== 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                   <span>Round off :</span><span>{purchase.roundOff.toFixed(3)}</span>
+                   <span>Round off :</span><span>{purchase.roundOff.toFixed(2)}</span>
                  </div>
                )}
                <div className="flex justify-between border-b-2 border-gray-800 px-2 py-1.5 bg-action-100 text-[13px] text-blue-900">
-                 <span>Total Amount :</span><span>{purchase.grandTotal.toFixed(3)}</span>
+                 <span>Total Amount :</span><span>{purchase.grandTotal.toFixed(2)}</span>
                </div>
                <div className="p-2 flex-1 flex flex-col justify-end items-center text-center">
                  <p className="font-bold text-[10px] text-blue-900 uppercase">For, {business.businessName || business.name}</p>

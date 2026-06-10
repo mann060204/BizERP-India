@@ -162,7 +162,7 @@ export default function BOMPage() {
                   <td className="px-6 py-4 font-medium text-slate-900">{bom.bomNumber}</td>
                   <td className="px-6 py-4 text-slate-700">{bom.productName}</td>
                   <td className="px-6 py-4 text-slate-500">{bom.components.length} Items</td>
-                  <td className="px-6 py-4 text-slate-700">₹{bom.totalEstimatedCost?.toFixed(3)}</td>
+                  <td className="px-6 py-4 text-slate-700">₹{bom.totalEstimatedCost?.toFixed(2)}</td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-slate-400 hover:text-slate-900 p-1"><Edit className="w-4 h-4" /></button>
                   </td>
@@ -245,7 +245,7 @@ export default function BOMPage() {
                           </td>
                           <td className="p-2"><input type="number" value={comp.quantity} onChange={e => updateComponent(idx, 'quantity', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 text-sm border border-slate-200 rounded" /></td>
                           <td className="p-2"><input type="number" value={comp.costPerUnit} onChange={e => updateComponent(idx, 'costPerUnit', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 text-sm border border-slate-200 rounded" /></td>
-                          <td className="p-2 text-slate-700 font-medium">₹{comp.totalCost?.toFixed(3)}</td>
+                          <td className="p-2 text-slate-700 font-medium">₹{comp.totalCost?.toFixed(2)}</td>
                           <td className="p-2 text-right">
                             <button onClick={() => removeComponent(idx)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
                           </td>

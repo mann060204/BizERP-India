@@ -70,7 +70,7 @@ export default function InventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="glass rounded-2xl p-4">
             <p className="text-slate-600 text-xs font-medium uppercase tracking-wider mb-1">Total Stock Value</p>
-            <p className="text-xl font-bold text-emerald-400">₹{(summary.totalStockValue || 0).toFixed(3)}</p>
+            <p className="text-xl font-bold text-emerald-400">₹{(summary.totalStockValue || 0).toFixed(2)}</p>
             <p className="text-slate-600 text-xs mt-0.5">Based on purchase price</p>
           </div>
           <div className="glass rounded-2xl p-4">
@@ -107,10 +107,10 @@ export default function InventoryPage() {
               { header: 'Product Name', key: 'name' },
               { header: 'SKU', key: 'sku' },
               { header: 'Category', key: 'category' },
-              { header: 'Current Stock', render: (p) => `${parseFloat((p.currentStock || 0).toFixed(3))} ${p.unit}` },
+              { header: 'Current Stock', render: (p) => `${parseFloat((p.currentStock || 0).toFixed(2))} ${p.unit}` },
               { header: 'Reorder Level', key: 'reorderLevel' },
-              { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(3) },
-              { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(3) }
+              { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(2) },
+              { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(2) }
             ]}
           />
         </div>
@@ -144,8 +144,8 @@ export default function InventoryPage() {
                         <td className="px-5 py-4 text-slate-600 font-mono text-xs">{p.sku || '—'}</td>
                         <td className="px-5 py-4 text-slate-600">{p.category || '—'}</td>
                         <td className="px-5 py-4 text-slate-600">{p.location || '—'}</td>
-                        <td className="px-5 py-4 font-bold text-slate-900">{parseFloat((p.currentStock || 0).toFixed(3))} {p.unit}</td>
-                        <td className={`px-5 py-4 font-semibold ${isLow ? 'text-red-500' : 'text-emerald-400'}`}>₹{(p.currentStock * p.purchasePrice).toFixed(3)}</td>
+                        <td className="px-5 py-4 font-bold text-slate-900">{parseFloat((p.currentStock || 0).toFixed(2))} {p.unit}</td>
+                        <td className={`px-5 py-4 font-semibold ${isLow ? 'text-red-500' : 'text-emerald-400'}`}>₹{(p.currentStock * p.purchasePrice).toFixed(2)}</td>
                         <td className="px-5 py-4">
                           {isLow ? (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-red-700 bg-red-50 border border-red-200"><AlertCircle className="w-3 h-3" /> Low Stock</span>
@@ -180,7 +180,7 @@ export default function InventoryPage() {
               <div>
                 <p className="text-xs text-slate-600">Product</p>
                 <p className="text-slate-900 font-semibold">{adjusting.name}</p>
-                <p className="text-xs text-slate-600 mt-0.5">Current Stock: {parseFloat((adjusting.currentStock || 0).toFixed(3))} {adjusting.unit}</p>
+                <p className="text-xs text-slate-600 mt-0.5">Current Stock: {parseFloat((adjusting.currentStock || 0).toFixed(2))} {adjusting.unit}</p>
               </div>
 
               <div>
@@ -197,7 +197,7 @@ export default function InventoryPage() {
 
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1.5">Quantity to {form.type === 'add' ? 'Add' : 'Remove'}</label>
-                <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })} min="0" step="any"
+                <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })} min="0" step="0.001"
                   className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
               </div>
 
@@ -210,7 +210,7 @@ export default function InventoryPage() {
                     className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
                     <option value="">— No Batch —</option>
                     {batches.map(b => (
-                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Stock: {parseFloat((b.currentStock || 0).toFixed(3))})</option>
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Stock: {parseFloat((b.currentStock || 0).toFixed(2))})</option>
                     ))}
                   </select>
                 ) : (
