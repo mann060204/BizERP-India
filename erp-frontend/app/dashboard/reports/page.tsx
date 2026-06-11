@@ -7,7 +7,8 @@ import {
   Archive, AlertTriangle, CheckCircle, SlidersHorizontal, BatteryCharging,
   Zap, Clock, Hash, List, Users, ShoppingCart, Package, DollarSign,
   BarChart2, PieChart, Layers, UserCheck, ArrowDownCircle, Timer, IndianRupee,
-  ClipboardList, Truck, Wallet, History
+  ClipboardList, Truck, Wallet, History,
+  MapPin, Calendar, Star, ShoppingBag, GitMerge, Award, CornerUpLeft, Shield, Tag
 } from 'lucide-react';
 
 const categoryColors: Record<string, string> = {
