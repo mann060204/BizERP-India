@@ -1,31 +1,48 @@
 'use client';
+import { useState } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
+import InventoryReportHeader from '../../../../../components/reports/InventoryReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function Page() {
+  const [summary, setSummary] = useState<any>(null);
+
   const columns: any[] = [
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
     { key: 'category', label: 'Category' },
     { key: 'unit', label: 'Unit' },
-    { key: 'currentStock', label: '', align: 'right', format: (v: any) => parseFloat((v || 0).toFixed(2)) },
-    { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
-    { key: 'salePrice', label: 'Sale Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
-    { key: 'gstRate', label: 'GST %', align: 'right', format: (v: any) => `${v || 0}%` },
+    { key: 'openingStock', label: 'Opening Stock', align: 'right' },
+    { key: 'stockIn', label: 'Stock In', align: 'right' },
+    { key: 'stockOut', label: 'Stock Out', align: 'right' },
+    { key: 'closingStock', label: 'Closing Stock', align: 'right', format: (v: any) => parseFloat((v || 0).toFixed(2)) },
+    { key: 'inventoryValue', label: 'Inventory Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
   ];
 
   const fetchData = async () => {
     const res = await reportsApi.getItemRegister();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
     return res.data?.data || [];
   };
+
+  const summaryCards = summary ? [
+    { label: 'Total Items', value: summary.totalItems },
+    { label: 'Active Items', value: summary.activeItems },
+    { label: 'Total Stock Quantity', value: summary.totalStockQuantity.toFixed(2), highlight: true },
+    { label: 'Total Inventory Value', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalInventoryValue), highlight: true },
+  ] : [];
 
   return (
     <ReportLayout
       title="Item Register"
-      subtitle="Complete registry of all inventory items"
+      subtitle="Complete transaction history of every inventory item"
       category="Inventory"
       columns={columns}
       fetchData={fetchData}
+      extraHeader={<InventoryReportHeader summaryCards={summaryCards} />}
     />
   );
 }

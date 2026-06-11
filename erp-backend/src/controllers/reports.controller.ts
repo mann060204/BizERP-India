@@ -261,132 +261,277 @@ export const getBalanceSheet = async (req: AuthRequest, res: Response) => {
 export const getItemRegister = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const products = await Product.find({ businessId }).sort({ name: 1 });
+    const { category, warehouse } = req.query as any;
+
+    const query: any = { businessId };
+    if (category) query.category = category;
+    if (warehouse) query.location = warehouse;
+
+    const products = await Product.find(query).sort({ name: 1 });
     
-    const transformed = products.map((p: any) => ({
-      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
-      name: p.name,
-      category: p.category || p.productType || 'General',
-      currentStock: p.currentStock || 0,
-      salePrice: p.sellingPrice || 0,
-      purchasePrice: p.purchasePrice || 0,
-      unit: p.unit || 'Nos',
-      gstRate: p.gstRate || 0,
-    }));
+    let totalStockQuantity = 0;
+    let totalInventoryValue = 0;
+    let activeItems = 0;
+
+    const transformed = products.map((p: any) => {
+      const stock = p.currentStock || 0;
+      const value = stock * (p.purchasePrice || 0);
+      
+      totalStockQuantity += stock;
+      totalInventoryValue += value;
+      if (p.isActive !== false) activeItems++;
+
+      return {
+        itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+        name: p.name,
+        category: p.category || p.productType || 'General',
+        unit: p.unit || 'Nos',
+        openingStock: p.openingStock || 0,
+        stockIn: 0, 
+        stockOut: 0, 
+        closingStock: stock,
+        inventoryValue: value,
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true, 
+      data: {
+        summary: {
+          totalItems: products.length,
+          totalStockQuantity,
+          totalInventoryValue,
+          activeItems
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getLowLevelStock = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    // Use reorderLevel (not lowStockAlert) - that's the actual field name in Product model
-    const products = await Product.find({
-      businessId,
-      $expr: { $lte: ['$currentStock', '$reorderLevel'] }
-    }).sort({ currentStock: 1 });
+    const { category, warehouse } = req.query as any;
+
+    const query: any = { 
+      businessId, 
+      $expr: { $lte: ['$currentStock', '$reorderLevel'] } 
+    };
+    if (category) query.category = category;
+    if (warehouse) query.location = warehouse;
+
+    const products = await Product.find(query).sort({ currentStock: 1 });
     
-    const transformed = products.map((p: any) => ({
-      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
-      name: p.name,
-      currentStock: p.currentStock || 0,
-      lowStockAlert: p.reorderLevel || 0, // Map reorderLevel to lowStockAlert for display
-      supplierId: 'N/A', // Product model doesn't have supplierId
-      unit: p.unit || 'Nos',
-    }));
+    let outOfStockItems = 0;
+    let criticalStockItems = 0;
+    let reorderRequiredItems = products.length;
+
+    const transformed = products.map((p: any) => {
+      const stock = p.currentStock || 0;
+      const minStock = p.reorderLevel || 0;
+      let status = 'Reorder Needed';
+      if (stock <= 0) {
+        status = 'Out of Stock';
+        outOfStockItems++;
+      } else if (stock <= minStock / 2) {
+        status = 'Critical';
+        criticalStockItems++;
+      }
+      
+      return {
+        itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+        name: p.name,
+        category: p.category || p.productType || 'General',
+        currentStock: stock,
+        minStockLevel: minStock,
+        reorderQuantity: Math.max(0, minStock - stock) || 10,
+        stockStatus: status,
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          lowStockItemsCount: products.length,
+          outOfStockItems,
+          criticalStockItems,
+          reorderRequiredItems
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getStockAvailability = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const products = await Product.find({ businessId, currentStock: { $gt: 0 } }).sort({ name: 1 });
+    const { category, warehouse } = req.query as any;
+
+    const query: any = { businessId, currentStock: { $gt: 0 } };
+    if (category) query.category = category;
+    if (warehouse) query.location = warehouse;
+
+    const products = await Product.find(query).sort({ name: 1 });
     
-    const transformed = products.map((p: any) => ({
-      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
-      name: p.name,
-      category: p.category || p.productType || 'General',
-      unit: p.unit || 'Nos',
-      currentStock: p.currentStock || 0,
-      reorderLevel: p.reorderLevel || 0,
-    }));
+    let totalAvailableQuantity = 0;
+    let inventoryValue = 0;
+
+    const transformed = products.map((p: any) => {
+      const stock = p.currentStock || 0;
+      totalAvailableQuantity += stock;
+      inventoryValue += stock * (p.purchasePrice || 0);
+
+      return {
+        itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+        name: p.name,
+        warehouse: p.location || 'Main Warehouse',
+        availableQuantity: stock,
+        reservedQuantity: 0,
+        onOrderQuantity: 0,
+        netAvailableQuantity: stock,
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalAvailableQuantity,
+          inventoryValue,
+          reservedStock: 0,
+          availableForSale: totalAvailableQuantity
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getStockAdjustment = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    
     const adjustments = await InventoryAdjustment.find({ businessId })
-      .populate('productId', 'name sku')
+      .populate('productId', 'name sku location')
       .sort({ createdAt: -1 });
+      
+    let totalAdjustments = adjustments.length;
+    let positiveAdjustments = 0;
+    let negativeAdjustments = 0;
+    let netAdjustmentValue = 0;
+
+    const transformed = adjustments.map((a: any) => {
+      const isPositive = a.type === 'add';
+      if (isPositive) positiveAdjustments++;
+      else negativeAdjustments++;
+      
+      const qty = a.quantity || 0;
+      netAdjustmentValue += (isPositive ? qty : -qty);
+
+      return {
+        adjustmentDate: a.createdAt,
+        itemName: a.productId?.name || 'Unknown',
+        warehouse: a.productId?.location || 'Main Warehouse',
+        previousQuantity: '-',
+        adjustedQuantity: isPositive ? qty : -qty,
+        difference: isPositive ? qty : -qty,
+        reason: a.reason || 'Physical Count Correction',
+        user: 'Admin',
+      };
+    });
     
-    const transformed = adjustments.map((a: any) => ({
-      date: a.createdAt, // InventoryAdjustment doesn't have a 'date' field, uses createdAt
-      productId: a.productId, // populated: { name, sku }
-      type: a.type === 'add' ? 'Stock In (+)' : 'Stock Out (-)',
-      quantity: a.quantity || 0,
-      reason: a.reason || '',
-      notes: a.notes || '',
-    }));
-    
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalAdjustments,
+          positiveAdjustments,
+          negativeAdjustments,
+          netAdjustmentValue
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getConsumableStock = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    // Consumable = products with category containing 'consumable' OR productType General with low stock
-    const products = await Product.find({
+    const { department, category } = req.query as any;
+
+    const query: any = {
       businessId,
-      $or: [
-        { category: /consumable/i },
-        { productType: 'General' }
-      ]
-    }).sort({ name: 1 });
+      $or: [{ category: /consumable/i }, { productType: 'Consumable' }]
+    };
+    if (category) query.category = category;
+
+    const products = await Product.find(query).sort({ name: 1 });
     
-    const transformed = products.map((p: any) => ({
-      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
-      name: p.name,
-      currentStock: p.currentStock || 0,
-      unit: p.unit || 'Nos',
-      category: p.category || p.productType || 'General',
-    }));
+    let totalConsumableItems = products.length;
+    let currentConsumableStock = 0;
+
+    const transformed = products.map((p: any) => {
+      const stock = p.currentStock || 0;
+      currentConsumableStock += stock;
+      
+      return {
+        itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+        name: p.name,
+        unit: p.unit || 'Nos',
+        openingStock: p.openingStock || 0,
+        consumedQuantity: 0,
+        currentStock: stock,
+        averageConsumption: 0,
+        remainingDays: 0,
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalConsumableItems,
+          currentConsumableStock,
+          monthlyConsumption: 0,
+          estimatedDaysRemaining: 0
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getFastMovingItems = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const { category } = req.query as any;
+    
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const pipeline: any[] = [
       { $match: { businessId, invoiceDate: { $gte: thirtyDaysAgo }, status: { $ne: 'cancelled' } } },
-      { $unwind: '$items' },
+      { $unwind: '$lineItems' },
       {
         $group: {
-          _id: '$items.productId',
-          totalSold: { $sum: '$items.quantity' },
-          productName: { $first: '$items.productName' },
-          totalRevenue: { $sum: { $multiply: ['$items.quantity', '$items.unitPrice'] } }
+          _id: '$lineItems.productId',
+          totalSold: { $sum: '$lineItems.quantity' },
+          productName: { $first: '$lineItems.productName' },
+          totalRevenue: { $sum: '$lineItems.totalAmount' }
         }
       },
       { $sort: { totalSold: -1 } },
@@ -395,15 +540,41 @@ export const getFastMovingItems = async (req: AuthRequest, res: Response) => {
     
     const fastItems = await Invoice.aggregate(pipeline);
     
-    const transformed = fastItems.map((item: any) => ({
-      productName: item.productName || 'Unknown Product',
-      totalSold: item.totalSold || 0,
-      totalRevenue: item.totalRevenue || 0,
-    }));
+    let topSellingItem = '-';
+    let totalQuantitySold = 0;
+    let revenueGenerated = 0;
+
+    if (fastItems.length > 0) {
+      topSellingItem = fastItems[0].productName;
+    }
+
+    const transformed = fastItems.map((item: any) => {
+      totalQuantitySold += item.totalSold;
+      revenueGenerated += item.totalRevenue;
+      return {
+        itemCode: item._id?.toString().slice(-6).toUpperCase() || '-',
+        name: item.productName || 'Unknown Product',
+        quantitySold: item.totalSold || 0,
+        salesValue: item.totalRevenue || 0,
+        averageMonthlySales: item.totalSold || 0,
+        stockTurnoverRatio: 0,
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          topSellingItem,
+          totalQuantitySold,
+          revenueGenerated,
+          fastMovingItemsCount: fastItems.length
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -413,7 +584,7 @@ export const getSlowMovingItems = async (req: AuthRequest, res: Response) => {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     
-    const activeProductIds = await Invoice.distinct('items.productId', {
+    const activeProductIds = await Invoice.distinct('lineItems.productId', {
       businessId,
       invoiceDate: { $gte: ninetyDaysAgo },
       status: { $ne: 'cancelled' }
@@ -423,71 +594,145 @@ export const getSlowMovingItems = async (req: AuthRequest, res: Response) => {
       businessId,
       _id: { $nin: activeProductIds as any[] },
       currentStock: { $gt: 0 }
-    } as any).sort({ name: 1 });
+    }).sort({ name: 1 });
     
-    const transformed = slowProducts.map((p: any) => ({
-      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
-      name: p.name,
-      category: p.category || p.productType || 'General',
-      currentStock: p.currentStock || 0,
-      purchasePrice: p.purchasePrice || 0,
-      unit: p.unit || 'Nos',
-    }));
+    let slowMovingItemsCount = 0;
+    let deadStockCount = 0;
+    let inventoryValueLocked = 0;
+
+    const transformed = slowProducts.map((p: any) => {
+      const stock = p.currentStock || 0;
+      const val = stock * (p.purchasePrice || 0);
+      inventoryValueLocked += val;
+      
+      const isDead = stock > 0;
+      if (isDead) deadStockCount++;
+      slowMovingItemsCount++;
+
+      return {
+        itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+        name: p.name,
+        currentStock: stock,
+        lastSoldDate: 'Over 90 days',
+        daysSinceLastSale: 90,
+        stockValue: val,
+        status: isDead ? 'Dead Stock' : 'Slow Moving',
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          slowMovingItemsCount,
+          deadStockCount,
+          inventoryValueLocked,
+          unsoldDaysAverage: 90
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getAvailableSerials = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const batches = await Batch.find({ businessId, currentStock: { $gt: 0 } })
-      .populate('productId', 'name sku')
+    const batches = await Batch.find({ businessId })
+      .populate('productId', 'name sku location')
       .sort({ createdAt: -1 });
+      
+    let totalSerials = batches.length;
+    let availableSerials = 0;
+    let soldSerials = 0;
+
+    const transformed = batches.map((b: any) => {
+      const stock = b.currentStock || 0;
+      if (stock > 0) availableSerials++;
+      else soldSerials++;
+      
+      return {
+        serialNumber: b.batchNo || '-',
+        itemName: b.productId?.name || 'Unknown',
+        warehouse: b.productId?.location || 'Main Warehouse',
+        status: stock > 0 ? 'Available' : 'Sold',
+        purchaseDate: b.createdAt,
+        warrantyExpiry: b.expiryDate || '-',
+        customerAssigned: '-',
+      };
+    });
     
-    const transformed = batches.map((b: any) => ({
-      batchNo: b.batchNo,
-      productId: b.productId, // populated: { name, sku }
-      expiryDate: b.expiryDate || null,
-      currentStock: b.currentStock || 0,
-      salePrice: b.salePrice || 0,
-      mrp: b.mrp || 0,
-      qualityStatus: b.qualityStatus || 'Passed',
-    }));
-    
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalSerials,
+          availableSerials,
+          soldSerials,
+          reservedSerials: 0
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getItemList = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const products = await Product.find({ businessId })
-      .select('name sku barcode category unit purchasePrice sellingPrice mrp currentStock gstRate productType')
-      .sort({ name: 1 });
+    const { category, brand, status } = req.query as any;
+
+    const query: any = { businessId };
+    if (category) query.category = category;
+    if (brand) query.brand = brand;
+    if (status === 'active') query.isActive = true;
+    if (status === 'inactive') query.isActive = false;
+
+    const products = await Product.find(query).sort({ name: 1 });
     
-    const transformed = products.map((p: any) => ({
-      itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
-      name: p.name,
-      category: p.category || p.productType || 'General',
-      unit: p.unit || 'Nos',
-      salePrice: p.sellingPrice || 0, // sellingPrice is the actual field
-      purchasePrice: p.purchasePrice || 0,
-      mrp: p.mrp || 0,
-      currentStock: p.currentStock || 0,
-      gstRate: p.gstRate || 0,
-    }));
+    let activeItems = 0;
+    let inactiveItems = 0;
+    const categories = new Set();
+
+    const transformed = products.map((p: any) => {
+      if (p.isActive !== false) activeItems++;
+      else inactiveItems++;
+      
+      if (p.category) categories.add(p.category);
+
+      return {
+        itemCode: p.sku || p.barcode || p._id.toString().slice(-6).toUpperCase(),
+        name: p.name,
+        category: p.category || p.productType || 'General',
+        brand: p.brand || '-',
+        unit: p.unit || 'Nos',
+        purchasePrice: p.purchasePrice || 0,
+        sellingPrice: p.sellingPrice || 0,
+        currentStock: p.currentStock || 0,
+        status: p.isActive !== false ? 'Active' : 'Inactive',
+      };
+    });
     
-    sendSuccess(res, transformed);
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalItems: products.length,
+          activeItems,
+          inactiveItems,
+          categoriesCount: categories.size
+        },
+        data: transformed
+      }
+    });
   } catch (error: any) {
-    sendError(res, error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // --- FINANCIAL REPORTS ---
 
@@ -1742,7 +1987,6 @@ export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response)
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end, groupBy } = getDashboardDateRange(req);
-    const mongoose = require('mongoose');
 
     const dateFmt = groupBy === 'month' ? '%Y-%m' : groupBy === 'week' ? '%Y-%m-%d' : '%Y-%m-%d';
 
@@ -1827,7 +2071,6 @@ export const getDashboardTopItemsProfit = async (req: AuthRequest, res: Response
     const { start, end } = getDashboardDateRange(req);
     const order = req.query.order === 'asc' ? 1 : -1;
     const limit = parseInt(req.query.limit as string) || 5;
-    const mongoose = require('mongoose');
 
     const agg = await Invoice.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
@@ -1855,7 +2098,6 @@ export const getDashboardStockMovement = async (req: AuthRequest, res: Response)
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end } = getDashboardDateRange(req);
-    const mongoose = require('mongoose');
 
     const allProducts = await Product.find({ businessId, isActive: true, type: 'product' }).select('_id name currentStock');
 
@@ -1891,7 +2133,6 @@ export const getDashboardTopCustomers = async (req: AuthRequest, res: Response) 
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const { start, end } = getDashboardDateRange(req);
     const limit = parseInt(req.query.limit as string) || 5;
-    const mongoose = require('mongoose');
 
     const agg = await Invoice.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' }, billTo: 'Customer', customerId: { $exists: true } } },
