@@ -1003,7 +1003,7 @@ export default function EditInvoicePage() {
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
-                    <div className="col-span-1 erp-grid-cell text-right">₹{item.rate.toFixed(3)}</div>
+                    <div className="col-span-1 erp-grid-cell text-right">₹{(item.rate || 0).toFixed(3)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">
                       {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
                       {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}

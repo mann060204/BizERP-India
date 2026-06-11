@@ -699,7 +699,7 @@ export default function NewPurchasePage() {
                     </div>
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.quantity}</div>
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">₹{item.rate.toFixed(3)}</div>
+                    <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-right">₹{(item.rate || 0).toFixed(3)}</div>
                     <div className="col-span-1 border-r border-slate-100 px-2 py-1.5 text-center text-red-500">
                       {item.discountType === 'percentage' && item.discount > 0 ? `${item.discount}%` : ''}
                       {item.discountType === 'amount' && item.discountAmount > 0 ? `₹${item.discountAmount.toFixed(2)}` : ''}

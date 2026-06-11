@@ -586,7 +586,7 @@ export default function EditPurchaseOrderPage() {
                     </div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.quantity}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.unit}</div>
-                    <div className="border-r border-slate-200 px-2 py-1.5 text-right">₹{item.rate.toFixed(3)}</div>
+                    <div className="border-r border-slate-200 px-2 py-1.5 text-right">₹{(item.rate || 0).toFixed(3)}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.discount || ''}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.gstRate}</div>
                     <div className="border-r border-slate-200 px-2 py-1.5 text-center">{item.cess || ''}</div>
@@ -782,9 +782,9 @@ export default function EditPurchaseOrderPage() {
                        <tr key={i} className="text-xs hover:bg-slate-50">
                          <td className="p-2 border border-slate-200 text-slate-800">{b.productName}</td>
                          <td className="p-2 border border-slate-200 font-medium text-slate-900">{b.batchNo}</td>
-                         <td className="p-2 border border-slate-200">₹{b.mrp.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{(b.mrp || 0).toFixed(2)}</td>
                          <td className="p-2 border border-slate-200">₹{(b.salePrice || 0).toFixed(2)}</td>
-                         <td className="p-2 border border-slate-200">₹{b.minSalePrice.toFixed(2)}</td>
+                         <td className="p-2 border border-slate-200">₹{(b.minSalePrice || 0).toFixed(2)}</td>
                          <td className="p-2 border border-slate-200 text-slate-600">{b.expiryDate || '-'}</td>
                          <td className="p-2 border border-slate-200 text-center">
                             <button onClick={() => setBatches(batches.filter((_, idx) => idx !== i))} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
