@@ -1,27 +1,47 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
-import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
+import ReportHeader from '../../../../../components/reports/ReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
 
-const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]; const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
 export default function Page() {
-  const [from, setFrom] = useState(firstDay); const [to, setTo] = useState(lastDay); const [key, setKey] = useState(0);
+  const [summary, setSummary] = useState<any>(null);
+
   const columns: any[] = [
-    { key: 'billNumber', label: 'Bill #' },
-    { key: 'billDate', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'supplierSnapshot', label: 'Supplier', format: (v: any) => v?.name || '—' },
-    { key: 'totalTaxableAmount', label: 'Taxable', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalCGST', label: 'CGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalSGST', label: 'SGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalIGST', label: 'IGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalDiscount', label: 'Discount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'grandTotal', label: 'Grand Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'amountPaid', label: 'Paid', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'billNumber', label: 'Bill Number' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'taxableValue', label: 'Taxable Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'cgst', label: 'CGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'sgst', label: 'SGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'igst', label: 'IGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'gstTotal', label: 'GST Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'billTotal', label: 'Bill Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
   ];
-  const fetchData = useCallback(async () => { const res = await reportsApi.getPurchasesBillwiseSummary({ from, to }); return res.data?.data || []; }, [from, to]);
-  return <ReportLayout title="Billwise Purchase Summary" subtitle={`Bill-level GST and payment summary • ${from} to ${to}`} category="Purchases" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}`} extraHeader={<DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />} />;
+
+  const fetchData = async () => {
+    const res = await reportsApi.getPurchasesBillwiseSummary();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
+    return res.data?.data || [];
+  };
+
+  const summaryCards = summary ? [
+    { label: 'Total Bills', value: summary.totalBills || 0 },
+    { label: 'Taxable Purchases', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.taxablePurchases || 0) },
+    { label: 'Total GST', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalGST || 0) },
+    { label: 'Total Purchase Amount', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalPurchaseAmount || 0), highlight: true },
+  ] : [];
+
+  return (
+    <ReportLayout
+      title="Billwise Summary"
+      subtitle="Detailed bill summary with tax breakup"
+      category="Purchases"
+      columns={columns}
+      fetchData={fetchData}
+      extraHeader={<ReportHeader summaryCards={summaryCards} />}
+    />
+  );
 }

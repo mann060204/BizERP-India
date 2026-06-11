@@ -1624,401 +1624,593 @@ export const getDashboardCharts = async (req: AuthRequest, res: Response): Promi
 
 // =================== CUSTOMER REPORTS ===================
 
-// GET /api/v1/reports/customers/amount-due
 export const getCustomerAmountDue = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const customers = await Customer.find({ businessId, isActive: true },
-      'name mobile gstin currentBalance balanceType creditLimit openingBalance'
-    ).sort({ currentBalance: -1 }).lean();
-
-    // Merge with outstanding invoices
-    const outstanding = await Invoice.aggregate([
-      { $match: { businessId, status: { $in: ['sent', 'partial', 'overdue'] }, balance: { $gt: 0 } } },
-      { $group: {
-          _id: '$customerId',
-          outstandingBalance: { $sum: '$balance' },
-          invoiceCount: { $sum: 1 },
-          oldestDue: { $min: '$dueDate' },
-      }}
+    
+    // Merge customers with outstanding invoices
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] }, balance: { $gt: 0 } } },
+      { $lookup: { from: 'customers', localField: 'customerId', foreignField: '_id', as: 'customer' } },
+      { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
+      { $sort: { dueDate: 1 } }
     ]);
 
-    const outstandingMap: Record<string, any> = {};
-    outstanding.forEach((o: any) => { if (o._id) outstandingMap[o._id.toString()] = o; });
+    let totalOutstandingAmount = 0;
+    let overdueAmount = 0;
+    let dueToday = 0;
+    let totalDaysOverdue = 0;
+    let overdueCount = 0;
 
-    const result = customers.map((c: any) => ({
-      name: c.name,
-      mobile: c.mobile || '—',
-      gstin: c.gstin || '—',
-      currentBalance: c.currentBalance || 0,
-      balanceType: c.balanceType || 'Debit',
-      creditLimit: c.creditLimit || 0,
-      outstandingInvoices: outstandingMap[c._id?.toString()]?.invoiceCount || 0,
-      outstandingBalance: outstandingMap[c._id?.toString()]?.outstandingBalance || 0,
-      oldestDue: outstandingMap[c._id?.toString()]?.oldestDue || null,
-    })).filter(c => c.currentBalance > 0 || c.outstandingBalance > 0);
+    const today = new Date();
+    today.setHours(0,0,0,0);
 
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
+    const transformed = agg.map((inv: any) => {
+      const balance = inv.balance || 0;
+      totalOutstandingAmount += balance;
+      
+      const due = inv.dueDate ? new Date(inv.dueDate) : new Date(inv.invoiceDate);
+      due.setHours(0,0,0,0);
+      
+      const diffTime = today.getTime() - due.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      let daysOverdue = 0;
+      let bucketName = 'Current';
 
-// GET /api/v1/reports/customers/payment-history
-export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to, customerId } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'date');
-    const match: any = { businessId, ...dateFilter };
-    if (customerId) match.customerId = customerId;
+      if (diffDays === 0) {
+        dueToday += balance;
+      } else if (diffDays > 0) {
+        daysOverdue = diffDays;
+        overdueAmount += balance;
+        totalDaysOverdue += daysOverdue;
+        overdueCount++;
+        
+        if (daysOverdue <= 30) bucketName = '1-30 Days';
+        else if (daysOverdue <= 60) bucketName = '31-60 Days';
+        else if (daysOverdue <= 90) bucketName = '61-90 Days';
+        else bucketName = '90+ Days';
+      }
 
-    const payments = await AccountLedger.find({ 
-      ...match, 
-      referenceType: 'Payment', 
-      credit: { $gt: 0 } 
-    }).populate('customerId', 'name').sort({ date: -1 }).lean();
-
-    const formattedPayments = payments.map((l: any) => {
-      // Basic parsing of mode from description if not stored specifically in ledger
-      const modeMatch = l.description.match(/-\s*([A-Za-z]+)\s*(?:\(|$)/);
-      const parsedMode = modeMatch ? modeMatch[1] : 'Cash';
       return {
-        customer: l.customerId?.name || 'Walk-in',
-        invoiceNumber: l.referenceId || '—',
-        invoiceDate: l.date,
-        paymentDate: l.date,
-        amount: l.credit,
-        mode: parsedMode,
-        txnId: l.referenceId || '—',
-        invoiceTotal: l.credit, // No access to grandTotal from just the payment ledger easily
+        customerName: inv.customerSnapshot?.name || inv.customer?.name || 'Unknown',
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        dueDate: due,
+        invoiceAmount: inv.grandTotal,
+        paidAmount: inv.amountReceived,
+        outstandingAmount: balance,
+        daysOverdue,
+        agingCategory: bucketName
       };
     });
 
-    sendSuccess(res, formattedPayments);
-  } catch (e: any) { sendError(res, e.message); }
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalOutstandingAmount,
+          overdueAmount,
+          dueToday,
+          averageCollectionDays: overdueCount ? Math.round(totalDaysOverdue / overdueCount) : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/customers/account-balances
+export const getCustomerPaymentHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    
+    // Using invoice payment history since Customer model doesn't store robust ledger history directly here
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, paymentHistory: { $exists: true, $not: { $size: 0 } } } },
+      { $unwind: '$paymentHistory' },
+      { $sort: { 'paymentHistory.date': -1 } }
+    ]);
+
+    let totalCollections = 0;
+    const transformed = agg.map((inv: any) => {
+      const p = inv.paymentHistory;
+      totalCollections += p.amount || 0;
+      return {
+        paymentDate: p.date,
+        customerName: inv.customerSnapshot?.name || 'Unknown',
+        receiptNumber: p.txnId || '-',
+        invoiceReference: inv.invoiceNumber,
+        paymentMethod: p.mode || 'Cash',
+        amountReceived: p.amount || 0,
+        referenceNumber: p.txnId || '-',
+        remarks: '-'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalCollections,
+          numberOfPayments: transformed.length,
+          averagePaymentValue: transformed.length ? totalCollections / transformed.length : 0,
+          recentCollections: transformed.slice(0, 5).reduce((acc: number, curr: any) => acc + curr.amountReceived, 0)
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
 export const getCustomerAccountBalances = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const customers = await Customer.find({ businessId, isActive: true },
-      'name mobile gstin currentBalance openingBalance balanceType creditLimit priceCategory'
-    ).sort({ name: 1 }).lean();
+    const customers = await Customer.find({ businessId }).sort({ currentBalance: -1 });
 
-    const result = customers.map((c: any) => ({
-      name: c.name,
-      mobile: c.mobile || '—',
-      gstin: c.gstin || '—',
-      openingBalance: c.openingBalance || 0,
-      currentBalance: c.currentBalance || 0,
-      balanceType: c.balanceType || 'Debit',
-      creditLimit: c.creditLimit || 0,
-      priceCategory: c.priceCategory || 'Retail',
-    }));
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
+    let debitBalance = 0;
+    let creditBalance = 0;
+
+    const transformed = customers.map((c: any) => {
+      let debit = 0;
+      let credit = 0;
+      if (c.balanceType === 'Debit') {
+        debit = c.currentBalance;
+        debitBalance += debit;
+      } else {
+        credit = c.currentBalance;
+        creditBalance += credit;
+      }
+      return {
+        customerCode: c._id.toString().slice(-6).toUpperCase(),
+        customerName: c.name,
+        openingBalance: c.openingBalance || 0,
+        debitAmount: debit,
+        creditAmount: credit,
+        closingBalance: c.currentBalance || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalCustomers: customers.length,
+          debitBalance,
+          creditBalance,
+          netReceivable: debitBalance - creditBalance
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
 // =================== PURCHASE REPORTS ===================
 
-// GET /api/v1/reports/purchases/aging
 export const getPurchaseAging = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const today = new Date();
-    const bills = await PurchaseBill.find({
-      businessId,
-      status: { $in: ['received', 'partial', 'overdue'] },
-      balance: { $gt: 0 }
-    }, 'billNumber billDate dueDate supplierSnapshot grandTotal amountPaid balance status').lean();
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] }, balance: { $gt: 0 } }).sort({ dueDate: 1 });
 
-    const buckets: Record<string, any[]> = { '0-30': [], '31-60': [], '61-90': [], '90+': [] };
-    bills.forEach((bill: any) => {
+    let totalOutstandingPayables = 0;
+    let overdueBills = 0;
+    let currentPayables = 0;
+    let totalDaysOutstanding = 0;
+    let overdueCount = 0;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const transformed = bills.map((bill: any) => {
+      const balance = bill.balance || 0;
+      totalOutstandingPayables += balance;
+
       const due = bill.dueDate ? new Date(bill.dueDate) : new Date(bill.billDate);
-      const days = Math.floor((today.getTime() - due.getTime()) / 86400000);
-      const row = {
+      due.setHours(0,0,0,0);
+
+      const diffTime = today.getTime() - due.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      let daysOutstanding = 0;
+      let bucketName = 'Current';
+
+      if (diffDays <= 0) {
+        currentPayables += balance;
+      } else {
+        daysOutstanding = diffDays;
+        overdueBills += balance;
+        totalDaysOutstanding += daysOutstanding;
+        overdueCount++;
+
+        if (daysOutstanding <= 30) bucketName = '1-30 Days';
+        else if (daysOutstanding <= 60) bucketName = '31-60 Days';
+        else if (daysOutstanding <= 90) bucketName = '61-90 Days';
+        else bucketName = '90+ Days';
+      }
+
+      return {
         billNumber: bill.billNumber,
-        billDate: bill.billDate,
-        dueDate: bill.dueDate || bill.billDate,
         supplier: bill.supplierSnapshot?.name || 'Unknown',
-        grandTotal: bill.grandTotal,
-        amountPaid: bill.amountPaid,
-        balance: bill.balance,
-        daysOverdue: Math.max(0, days),
-        status: bill.status,
+        billDate: bill.billDate,
+        dueDate: due,
+        billAmount: bill.grandTotal,
+        paidAmount: bill.amountPaid,
+        outstandingAmount: balance,
+        daysOutstanding,
+        agingCategory: bucketName
       };
-      if (days <= 30) buckets['0-30'].push(row);
-      else if (days <= 60) buckets['31-60'].push(row);
-      else if (days <= 90) buckets['61-90'].push(row);
-      else buckets['90+'].push(row);
     });
 
-    const summary = Object.entries(buckets).map(([range, items]) => ({
-      range, count: items.length,
-      totalBalance: items.reduce((s, i) => s + i.balance, 0),
-      items
-    }));
-    sendSuccess(res, { summary, allItems: bills });
-  } catch (e: any) { sendError(res, e.message); }
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalOutstandingPayables,
+          overdueBills,
+          currentPayables,
+          averagePaymentDays: overdueCount ? Math.round(totalDaysOutstanding / overdueCount) : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/purchases/billwise
 export const getPurchasesBillwise = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to, status } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, ...dateFilter };
-    if (status) match.status = status;
-    else match.status = { $ne: 'cancelled' };
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).sort({ billDate: -1 });
 
-    const bills = await PurchaseBill.find(match,
-      'billNumber billDate purchaseType supplierSnapshot grandTotal totalTaxableAmount totalGST amountPaid balance status paymentMode dueDate'
-    ).sort({ billDate: -1 }).lean();
-    sendSuccess(res, bills);
-  } catch (e: any) { sendError(res, e.message); }
+    let totalPurchaseValue = 0;
+    let paidBills = 0;
+    let unpaidBills = 0;
+
+    const transformed = bills.map((b: any) => {
+      totalPurchaseValue += b.grandTotal || 0;
+      if (b.status === 'paid') paidBills++;
+      else unpaidBills++;
+
+      return {
+        billNumber: b.billNumber,
+        billDate: b.billDate,
+        supplier: b.supplierSnapshot?.name || 'Unknown',
+        taxableAmount: b.totalTaxableAmount || 0,
+        gstAmount: b.totalGST || 0,
+        totalBillAmount: b.grandTotal || 0,
+        paymentStatus: b.status
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalPurchaseBills: bills.length,
+          totalPurchaseValue,
+          paidBills,
+          unpaidBills
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/purchases/itemwise
 export const getPurchasesItemwise = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await PurchaseBill.aggregate([
-      { $match: match },
+    const agg = await PurchaseBill.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
       { $unwind: '$lineItems' },
       { $group: {
           _id: '$lineItems.productId',
-          productName: { $first: '$lineItems.productName' },
-          hsnCode: { $first: '$lineItems.hsnCode' },
-          totalQty: { $sum: '$lineItems.quantity' },
-          totalTaxable: { $sum: '$lineItems.taxableAmount' },
-          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
-          totalAmount: { $sum: '$lineItems.totalAmount' },
-          avgRate: { $avg: '$lineItems.rate' },
-          billCount: { $addToSet: '$_id' }
+          itemName: { $first: '$lineItems.productName' },
+          quantityPurchased: { $sum: '$lineItems.quantity' },
+          purchaseValue: { $sum: '$lineItems.totalAmount' },
+          suppliers: { $addToSet: '$supplierId' }
       }},
-      { $project: {
-          productName: 1, hsnCode: 1, totalQty: 1, totalTaxable: 1, totalGST: 1, totalAmount: 1, avgRate: 1,
-          billCount: { $size: '$billCount' }
-      }},
-      { $sort: { totalAmount: -1 } }
+      { $sort: { purchaseValue: -1 } }
     ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
+
+    let totalPurchaseQuantity = 0;
+    let totalPurchaseValue = 0;
+
+    const transformed = agg.map((a: any) => {
+      totalPurchaseQuantity += a.quantityPurchased;
+      totalPurchaseValue += a.purchaseValue;
+      return {
+        itemCode: a._id ? a._id.toString().slice(-6).toUpperCase() : '-',
+        itemName: a.itemName || 'Unknown',
+        quantityPurchased: a.quantityPurchased,
+        purchaseValue: a.purchaseValue,
+        averageCost: a.quantityPurchased ? a.purchaseValue / a.quantityPurchased : 0,
+        supplierCount: a.suppliers.length
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalItemsPurchased: agg.length,
+          totalPurchaseQuantity,
+          totalPurchaseValue,
+          averagePurchaseCost: totalPurchaseQuantity ? totalPurchaseValue / totalPurchaseQuantity : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/purchases/billwise-summary
 export const getPurchasesBillwiseSummary = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).sort({ billDate: -1 });
 
-    const bills = await PurchaseBill.find(match,
-      'billNumber billDate supplierSnapshot totalTaxableAmount totalCGST totalSGST totalIGST totalGST totalDiscount grandTotal amountPaid balance status'
-    ).sort({ billDate: -1 }).lean();
-    sendSuccess(res, bills);
-  } catch (e: any) { sendError(res, e.message); }
+    let taxablePurchases = 0;
+    let totalGST = 0;
+    let totalPurchaseAmount = 0;
+
+    const transformed = bills.map((b: any) => {
+      taxablePurchases += b.totalTaxableAmount || 0;
+      totalGST += b.totalGST || 0;
+      totalPurchaseAmount += b.grandTotal || 0;
+
+      return {
+        billNumber: b.billNumber,
+        supplier: b.supplierSnapshot?.name || 'Unknown',
+        taxableValue: b.totalTaxableAmount || 0,
+        cgst: b.totalCGST || 0,
+        sgst: b.totalSGST || 0,
+        igst: b.totalIGST || 0,
+        gstTotal: b.totalGST || 0,
+        billTotal: b.grandTotal || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalBills: bills.length,
+          taxablePurchases,
+          totalGST,
+          totalPurchaseAmount
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/purchases/itemwise-summary
 export const getPurchasesItemwiseSummary = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await PurchaseBill.aggregate([
-      { $match: match },
+    const agg = await PurchaseBill.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
       { $unwind: '$lineItems' },
       { $group: {
           _id: '$lineItems.productId',
-          productName: { $first: '$lineItems.productName' },
-          hsnCode: { $first: '$lineItems.hsnCode' },
-          totalQty: { $sum: '$lineItems.quantity' },
-          totalTaxable: { $sum: '$lineItems.taxableAmount' },
-          totalCGST: { $sum: '$lineItems.cgst' },
-          totalSGST: { $sum: '$lineItems.sgst' },
-          totalIGST: { $sum: '$lineItems.igst' },
-          totalAmount: { $sum: '$lineItems.totalAmount' },
+          itemName: { $first: '$lineItems.productName' },
+          quantity: { $sum: '$lineItems.quantity' },
+          purchaseValue: { $sum: '$lineItems.totalAmount' },
+          taxableAmount: { $sum: '$lineItems.taxableAmount' },
+          gstAmount: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } }
       }},
-      { $addFields: { totalGST: { $add: ['$totalCGST', '$totalSGST', '$totalIGST'] } } },
-      { $sort: { totalAmount: -1 } }
+      { $sort: { purchaseValue: -1 } }
     ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
+
+    let totalQuantityPurchased = 0;
+    let totalPurchaseValue = 0;
+
+    const transformed = agg.map((a: any) => {
+      totalQuantityPurchased += a.quantity || 0;
+      totalPurchaseValue += a.purchaseValue || 0;
+
+      return {
+        itemCode: a._id ? a._id.toString().slice(-6).toUpperCase() : '-',
+        itemName: a.itemName || 'Unknown',
+        quantity: a.quantity,
+        purchaseValue: a.purchaseValue,
+        taxableAmount: a.taxableAmount,
+        gstAmount: a.gstAmount
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalItems: agg.length,
+          totalQuantityPurchased,
+          totalPurchaseValue,
+          averageUnitCost: totalQuantityPurchased ? totalPurchaseValue / totalQuantityPurchased : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/purchases/supplierwise-summary
 export const getPurchasesSupplierwise = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await PurchaseBill.aggregate([
-      { $match: match },
+    const agg = await PurchaseBill.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
       { $group: {
           _id: '$supplierId',
           supplierName: { $first: '$supplierSnapshot.name' },
-          billCount: { $sum: 1 },
-          totalPurchases: { $sum: '$grandTotal' },
-          totalTaxable: { $sum: '$totalTaxableAmount' },
-          totalGST: { $sum: '$totalGST' },
-          totalDiscount: { $sum: '$totalDiscount' },
-          totalPaid: { $sum: '$amountPaid' },
-          totalBalance: { $sum: '$balance' },
+          numberOfBills: { $sum: 1 },
+          purchaseValue: { $sum: '$grandTotal' },
+          paidAmount: { $sum: '$amountPaid' },
+          outstandingAmount: { $sum: '$balance' },
+          lastPurchaseDate: { $max: '$billDate' }
       }},
-      { $sort: { totalPurchases: -1 } }
+      { $sort: { purchaseValue: -1 } }
     ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
+
+    let totalPurchases = 0;
+    let outstandingPayables = 0;
+
+    const transformed = agg.map((a: any) => {
+      totalPurchases += a.purchaseValue || 0;
+      outstandingPayables += a.outstandingAmount || 0;
+      return {
+        supplierName: a.supplierName || 'Unknown',
+        numberOfBills: a.numberOfBills,
+        purchaseValue: a.purchaseValue,
+        paidAmount: a.paidAmount,
+        outstandingAmount: a.outstandingAmount,
+        lastPurchaseDate: a.lastPurchaseDate
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalSuppliers: agg.length,
+          totalPurchases,
+          outstandingPayables,
+          averagePurchaseValue: agg.length ? totalPurchases / agg.length : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/purchases/gst
 export const getPurchasesGST = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { 
-      businessId, 
-      status: { $ne: 'cancelled' }, 
-      'supplierSnapshot.gstin': { $exists: true, $nin: [null, '', '—'] },
-      ...dateFilter 
-    };
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).sort({ billDate: -1 });
 
-    const rawBills = await PurchaseBill.find(match,
-      'billNumber billDate purchaseType supplierSnapshot placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal lineItems'
-    ).sort({ billDate: -1 }).lean();
+    let totalTaxablePurchases = 0;
+    let totalInputGST = 0;
+    let cgstTotal = 0;
+    let sgstTotal = 0;
+    let igstTotal = 0;
 
-    const bills: any[] = [];
-    rawBills.forEach((bill: any) => {
-      if (!bill.lineItems || bill.lineItems.length === 0) {
-        bills.push({
-          _id: bill._id,
-          billNumber: bill.billNumber,
-          billDate: bill.billDate,
-          supplierName: bill.supplierSnapshot?.name || '—',
-          gstin: bill.supplierSnapshot?.gstin || '—',
-          placeOfSupply: bill.placeOfSupply,
-          grandTotal: bill.grandTotal,
-          rate: 0,
-          taxableValue: bill.totalTaxableAmount || 0,
-          igst: bill.totalIGST || 0,
-          cgst: bill.totalCGST || 0,
-          sgst: bill.totalSGST || 0
-        });
-        return;
-      }
+    const transformed = bills.map((b: any) => {
+      totalTaxablePurchases += b.totalTaxableAmount || 0;
+      totalInputGST += b.totalGST || 0;
+      cgstTotal += b.totalCGST || 0;
+      sgstTotal += b.totalSGST || 0;
+      igstTotal += b.totalIGST || 0;
 
-      const rateGroups: Record<number, any> = {};
-      bill.lineItems.forEach((item: any) => {
-        const rate = item.gstRate || 0;
-        if (!rateGroups[rate]) {
-          rateGroups[rate] = { taxableValue: 0, cgst: 0, sgst: 0, igst: 0 };
-        }
-        rateGroups[rate].taxableValue += (item.taxableAmount || 0);
-        rateGroups[rate].cgst += (item.cgst || 0);
-        rateGroups[rate].sgst += (item.sgst || 0);
-        rateGroups[rate].igst += (item.igst || 0);
-      });
-
-      Object.keys(rateGroups).forEach((rateStr) => {
-        const rate = Number(rateStr);
-        const data = rateGroups[rate];
-        bills.push({
-          _id: `${bill._id}_${rate}`,
-          billNumber: bill.billNumber,
-          billDate: bill.billDate,
-          supplierName: bill.supplierSnapshot?.name || '—',
-          gstin: bill.supplierSnapshot?.gstin || '—',
-          placeOfSupply: bill.placeOfSupply,
-          grandTotal: bill.grandTotal,
-          rate: rate,
-          taxableValue: data.taxableValue,
-          igst: data.igst,
-          cgst: data.cgst,
-          sgst: data.sgst
-        });
-      });
+      return {
+        billNumber: b.billNumber,
+        billDate: b.billDate,
+        supplier: b.supplierSnapshot?.name || 'Unknown',
+        gstNumber: b.supplierSnapshot?.gstin || '-',
+        taxableValue: b.totalTaxableAmount || 0,
+        cgst: b.totalCGST || 0,
+        sgst: b.totalSGST || 0,
+        igst: b.totalIGST || 0,
+        gstTotal: b.totalGST || 0,
+        billTotal: b.grandTotal || 0
+      };
     });
 
-    const rateSummary = await PurchaseBill.aggregate([
-      { $match: match },
-      { $unwind: '$lineItems' },
-      { $group: {
-          _id: '$lineItems.gstRate',
-          taxableValue: { $sum: '$lineItems.taxableAmount' },
-          cgst: { $sum: '$lineItems.cgst' },
-          sgst: { $sum: '$lineItems.sgst' },
-          igst: { $sum: '$lineItems.igst' },
-          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
-      }},
-      { $sort: { _id: 1 } }
-    ]);
-    sendSuccess(res, { bills, rateSummary });
-  } catch (e: any) { sendError(res, e.message); }
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalTaxablePurchases,
+          totalInputGST,
+          cgstTotal,
+          sgstTotal,
+          igstTotal
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
 // =================== SUPPLIER REPORTS ===================
 
-// GET /api/v1/reports/suppliers/account-balances
 export const getSupplierAccountBalances = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const suppliers = await Supplier.find({ businessId, isActive: true },
-      'name mobile gstin currentBalance openingBalance balanceType creditLimit'
-    ).sort({ name: 1 }).lean();
+    const suppliers = await Supplier.find({ businessId }).sort({ currentBalance: -1 });
 
-    const result = suppliers.map((s: any) => ({
-      name: s.name,
-      mobile: s.mobile || '—',
-      gstin: s.gstin || '—',
-      openingBalance: s.openingBalance || 0,
-      currentBalance: s.currentBalance || 0,
-      balanceType: s.balanceType || 'Credit',
-      creditLimit: s.creditLimit || 0,
-    }));
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
+    let totalPayables = 0;
+    let debitBalances = 0;
+    let creditBalances = 0;
+
+    const transformed = suppliers.map((s: any) => {
+      let debit = 0;
+      let credit = 0;
+      if (s.balanceType === 'Debit') {
+        debit = s.currentBalance;
+        debitBalances += debit;
+      } else {
+        credit = s.currentBalance;
+        creditBalances += credit;
+      }
+      totalPayables += s.currentBalance;
+
+      return {
+        supplierCode: s._id.toString().slice(-6).toUpperCase(),
+        supplierName: s.name,
+        openingBalance: s.openingBalance || 0,
+        debit: debit,
+        credit: credit,
+        closingBalance: s.currentBalance || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalSuppliers: suppliers.length,
+          totalPayables,
+          debitBalances,
+          creditBalances
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/suppliers/payment-history
 export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to, supplierId } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'billDate');
-    const match: any = { businessId, ...dateFilter };
-    if (supplierId) match.supplierId = supplierId;
+    const bills = await PurchaseBill.find({ businessId, amountPaid: { $gt: 0 } }).sort({ paymentDate: -1, billDate: -1 });
 
-    const bills = await PurchaseBill.find(match,
-      'billNumber billDate supplierSnapshot amountPaid paymentMode balance grandTotal status'
-    ).sort({ billDate: -1 }).lean();
+    let totalPaymentsMade = 0;
 
-    const payments = bills.filter((b: any) => b.amountPaid > 0).map((b: any) => ({
-      supplier: b.supplierSnapshot?.name || '—',
-      billNumber: b.billNumber,
-      billDate: b.billDate,
-      paymentDate: b.billDate,
-      amountPaid: b.amountPaid,
-      mode: b.paymentMode || 'Cash',
-      billTotal: b.grandTotal,
-      balance: b.balance,
-      status: b.status,
-    }));
-    sendSuccess(res, payments);
-  } catch (e: any) { sendError(res, e.message); }
+    const transformed = bills.map((b: any) => {
+      totalPaymentsMade += b.amountPaid || 0;
+      return {
+        paymentDate: b.paymentDate || b.billDate,
+        supplierName: b.supplierSnapshot?.name || 'Unknown',
+        voucherNumber: b.txnId || '-',
+        paymentMethod: b.paymentMode || 'Cash',
+        amountPaid: b.amountPaid,
+        referenceNumber: b.billNumber,
+        remarks: b.remarks || '-'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalPaymentsMade,
+          numberOfPayments: transformed.length,
+          averagePaymentAmount: transformed.length ? totalPaymentsMade / transformed.length : 0,
+          recentPayments: transformed.slice(0, 5).reduce((acc, curr) => acc + curr.amountPaid, 0)
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
-
 // =================== EXPENSE REPORTS ===================
 
 // GET /api/v1/reports/expenses/search

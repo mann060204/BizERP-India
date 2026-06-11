@@ -1,102 +1,48 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
+import ReportLayout from '../../../../../components/reports/ReportLayout';
+import ReportHeader from '../../../../../components/reports/ReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 
-export default function PurchaseAgingPage() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>('all');
+export default function Page() {
+  const [summary, setSummary] = useState<any>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await reportsApi.getPurchaseAging();
-      setData(res.data?.data);
-    } finally { setLoading(false); }
-  }, []);
+  const columns: any[] = [
+    { key: 'billNumber', label: 'Bill Number' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'billDate', label: 'Bill Date', format: (v: any) => v ? new Date(v).toLocaleDateString() : '-' },
+    { key: 'dueDate', label: 'Due Date', format: (v: any) => v ? new Date(v).toLocaleDateString() : '-' },
+    { key: 'billAmount', label: 'Bill Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'paidAmount', label: 'Paid Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'outstandingAmount', label: 'Outstanding Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'daysOutstanding', label: 'Days Outstanding', align: 'center' },
+    { key: 'agingCategory', label: 'Aging Category' },
+  ];
 
-  useEffect(() => { load(); }, [load]);
+  const fetchData = async () => {
+    const res = await reportsApi.getPurchaseAging();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
+    return res.data?.data || [];
+  };
 
-  const summary: any[] = data?.summary || [];
-  const allItems: any[] = data?.allItems || [];
-  const displayItems = activeTab === 'all' ? allItems : (summary.find((s: any) => s.range === activeTab)?.items || []);
-  const totalBalance = allItems.reduce((s: number, i: any) => s + (i.balance || 0), 0);
+  const summaryCards = summary ? [
+    { label: 'Total Outstanding Payables', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalOutstandingPayables || 0), highlight: true },
+    { label: 'Overdue Bills', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.overdueBills || 0), highlight: true },
+    { label: 'Current Payables', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.currentPayables || 0) },
+    { label: 'Average Payment Days', value: `${summary.averagePaymentDays || 0} days` },
+  ] : [];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
-        <div className="flex items-center justify-between px-6 h-16 max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard/reports" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition"><ArrowLeft className="w-5 h-5" /></Link>
-            <div>
-              <span className="text-[10px] font-bold tracking-wider text-red-700 uppercase bg-red-50 px-2 py-0.5 rounded">Purchases Report</span>
-              <h1 className="text-lg font-bold text-slate-900 leading-tight mt-0.5">Purchase Aging</h1>
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-5 gap-4">
-          <div onClick={() => setActiveTab('all')} className={`glass rounded-2xl p-4 border cursor-pointer transition ${activeTab === 'all' ? 'border-slate-600 bg-slate-800 text-white' : 'border-slate-200 bg-white'}`}>
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1">All Outstanding</p>
-            <p className="text-xl font-bold">₹{totalBalance.toFixed(0)}</p>
-            <p className="text-xs opacity-60 mt-1">{allItems.length} bills</p>
-          </div>
-          {summary.map((s: any) => (
-            <div key={s.range} onClick={() => setActiveTab(s.range)}
-              className={`glass rounded-2xl p-4 border cursor-pointer transition ${activeTab === s.range ? 'border-red-500 bg-red-500 text-white' : 'border-slate-200 bg-white'}`}>
-              <p className="text-xs font-semibold uppercase tracking-wider opacity-70 mb-1">{s.range} Days</p>
-              <p className="text-xl font-bold">₹{(s.totalBalance || 0).toFixed(0)}</p>
-              <p className="text-xs opacity-60 mt-1">{s.count} bill(s)</p>
-            </div>
-          ))}
-        </div>
-        <div className="glass rounded-2xl border border-slate-200 overflow-hidden bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>{['Bill #', 'Date', 'Due Date', 'Supplier', 'Total', 'Paid', 'Balance', 'Days Overdue', 'Status'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                ))}</tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? <tr><td colSpan={9} className="px-4 py-10 text-center">Loading...</td></tr>
-                  : displayItems.length === 0 ? <tr><td colSpan={9} className="px-4 py-10 text-center text-slate-500">No outstanding purchase bills</td></tr>
-                  : displayItems.map((row: any, i: number) => (
-                    <tr key={i} className="hover:bg-slate-50 transition">
-                      <td className="px-4 py-3 font-mono text-xs">{row.billNumber}</td>
-                      <td className="px-4 py-3 text-xs text-slate-600">{new Date(row.billDate).toLocaleDateString('en-IN')}</td>
-                      <td className="px-4 py-3 text-xs text-slate-600">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-IN') : '—'}</td>
-                      <td className="px-4 py-3 font-medium">{row.supplier || row.supplierSnapshot?.name || '—'}</td>
-                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.grandTotal||0))}</td>
-                      <td className="px-4 py-3 text-right text-green-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.amountPaid||0))}</td>
-                      <td className="px-4 py-3 text-right font-bold text-red-600">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.balance||0))}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${(row.daysOverdue||0) > 60 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {row.daysOverdue || 0}d
-                        </span>
-                      </td>
-                      <td className="px-4 py-3"><span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{row.status}</span></td>
-                    </tr>
-                  ))}
-              </tbody>
-              {!loading && displayItems.length > 0 && (
-                <tfoot className="border-t-2 border-slate-200 bg-slate-50">
-                  <tr>
-                    <td colSpan={4} className="px-4 py-3 font-bold text-slate-700">Total ({displayItems.length})</td>
-                    <td className="px-4 py-3 text-right font-bold">₹{displayItems.reduce((s: number, r: any) => s + (r.grandTotal||0), 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-green-600">₹{displayItems.reduce((s: number, r: any) => s + (r.amountPaid||0), 0).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right font-bold text-red-600">₹{displayItems.reduce((s: number, r: any) => s + (r.balance||0), 0).toFixed(2)}</td>
-                    <td colSpan={2}></td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-        </div>
-      </main>
-    </div>
+    <ReportLayout
+      title="Purchase Aging"
+      subtitle="Track unpaid supplier bills and payables"
+      category="Purchases"
+      columns={columns}
+      fetchData={fetchData}
+      extraHeader={<ReportHeader summaryCards={summaryCards} />}
+    />
   );
 }

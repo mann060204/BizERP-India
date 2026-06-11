@@ -1,40 +1,46 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
-import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
+import ReportHeader from '../../../../../components/reports/ReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
 
-const now = new Date();
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
 export default function Page() {
-  const [from, setFrom] = useState(firstDay);
-  const [to, setTo] = useState(lastDay);
-  const [key, setKey] = useState(0);
+  const [summary, setSummary] = useState<any>(null);
 
   const columns: any[] = [
-    { key: 'billNumber', label: 'Bill #' },
-    { key: 'billDate', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'dueDate', label: 'Due Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'supplierSnapshot', label: 'Supplier', format: (v: any) => v?.name || '—' },
-    { key: 'purchaseType', label: 'Type', align: 'center' },
-    { key: 'paymentMode', label: 'Mode', align: 'center' },
-    { key: 'grandTotal', label: 'Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'amountPaid', label: 'Paid', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'status', label: 'Status', align: 'center' },
+    { key: 'billNumber', label: 'Bill Number' },
+    { key: 'billDate', label: 'Bill Date', format: (v: any) => v ? new Date(v).toLocaleDateString() : '-' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'taxableAmount', label: 'Taxable Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'gstAmount', label: 'GST Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'totalBillAmount', label: 'Total Bill Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'paymentStatus', label: 'Payment Status', align: 'center', format: (v: any) => <span className="capitalize">{v}</span> },
   ];
 
-  const fetchData = useCallback(async () => {
-    const res = await reportsApi.getPurchasesBillwise({ from, to });
+  const fetchData = async () => {
+    const res = await reportsApi.getPurchasesBillwise();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
     return res.data?.data || [];
-  }, [from, to]);
+  };
+
+  const summaryCards = summary ? [
+    { label: 'Total Purchase Bills', value: summary.totalPurchaseBills || 0 },
+    { label: 'Total Purchase Value', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalPurchaseValue || 0), highlight: true },
+    { label: 'Paid Bills', value: summary.paidBills || 0 },
+    { label: 'Unpaid Bills', value: summary.unpaidBills || 0, highlight: summary.unpaidBills > 0 },
+  ] : [];
 
   return (
-    <ReportLayout title="Billwise Purchases" subtitle={`All purchase bills • ${from} to ${to}`}
-      category="Purchases" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}`}
-      extraHeader={<DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />}
+    <ReportLayout
+      title="Billwise Purchase"
+      subtitle="Complete purchase bill analysis"
+      category="Purchases"
+      columns={columns}
+      fetchData={fetchData}
+      extraHeader={<ReportHeader summaryCards={summaryCards} />}
     />
   );
 }
