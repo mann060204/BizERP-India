@@ -11,9 +11,9 @@ export default function Page() {
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
     { key: 'category', label: 'Category' },
-    { key: 'currentStock', label: 'Current Stock', align: 'right', format: (v: any) => parseFloat((v || 0).toFixed(2)) },
-    { key: 'minStockLevel', label: 'Min. Stock', align: 'right' },
-    { key: 'reorderQuantity', label: 'Reorder Qty', align: 'right' },
+    { key: 'currentStock', label: 'Current Stock', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
+    { key: 'minStockLevel', label: 'Min. Stock', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
+    { key: 'reorderQuantity', label: 'Reorder Qty', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
     { key: 'stockStatus', label: 'Status' },
   ];
 

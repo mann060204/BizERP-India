@@ -10,7 +10,7 @@ export default function Page() {
   const columns: any[] = [
     { key: 'itemCode', label: 'Item Code' },
     { key: 'itemName', label: 'Item Name' },
-    { key: 'quantitySold', label: 'Quantity Sold', align: 'right' },
+    { key: 'quantitySold', label: 'Quantity Sold', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
     { key: 'revenue', label: 'Revenue', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'cost', label: 'Total Cost', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'grossProfit', label: 'Gross Profit', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },

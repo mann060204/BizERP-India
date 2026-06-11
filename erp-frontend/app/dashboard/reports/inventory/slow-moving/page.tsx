@@ -10,7 +10,7 @@ export default function Page() {
   const columns: any[] = [
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
-    { key: 'currentStock', label: 'Current Stock', align: 'right' },
+    { key: 'currentStock', label: 'Current Stock', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
     { key: 'lastSoldDate', label: 'Last Sold Date' },
     { key: 'daysSinceLastSale', label: 'Days Since Last Sale', align: 'right' },
     { key: 'stockValue', label: 'Stock Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },

@@ -11,9 +11,9 @@ export default function Page() {
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
     { key: 'unit', label: 'Unit' },
-    { key: 'openingStock', label: 'Opening Stock', align: 'right' },
-    { key: 'consumedQuantity', label: 'Consumed Qty', align: 'right' },
-    { key: 'currentStock', label: 'Current Stock', align: 'right' },
+    { key: 'openingStock', label: 'Opening Stock', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
+    { key: 'consumedQuantity', label: 'Consumed Qty', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
+    { key: 'currentStock', label: 'Current Stock', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
     { key: 'averageConsumption', label: 'Avg Consumption', align: 'right' },
     { key: 'remainingDays', label: 'Remaining Days', align: 'right' },
   ];

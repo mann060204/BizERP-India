@@ -12,10 +12,10 @@ export default function Page() {
     { key: 'name', label: 'Item Name' },
     { key: 'category', label: 'Category' },
     { key: 'unit', label: 'Unit' },
-    { key: 'openingStock', label: 'Opening Stock', align: 'right' },
-    { key: 'stockIn', label: 'Stock In', align: 'right' },
-    { key: 'stockOut', label: 'Stock Out', align: 'right' },
-    { key: 'closingStock', label: 'Closing Stock', align: 'right', format: (v: any) => parseFloat((v || 0).toFixed(2)) },
+    { key: 'openingStock', label: 'Opening Stock', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
+    { key: 'stockIn', label: 'Stock In', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
+    { key: 'stockOut', label: 'Stock Out', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
+    { key: 'closingStock', label: 'Closing Stock', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
     { key: 'inventoryValue', label: 'Inventory Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
   ];
 

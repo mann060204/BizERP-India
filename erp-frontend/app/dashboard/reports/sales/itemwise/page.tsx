@@ -11,7 +11,7 @@ export default function Page() {
     { key: 'itemCode', label: 'Item Code' },
     { key: 'itemName', label: 'Item Name' },
     { key: 'category', label: 'Category' },
-    { key: 'quantitySold', label: 'Quantity Sold', align: 'right' },
+    { key: 'quantitySold', label: 'Quantity Sold', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
     { key: 'salesValue', label: 'Sales Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'averagePrice', label: 'Average Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'contributionPercent', label: 'Contribution %', align: 'right', format: (v: any) => `${(v || 0).toFixed(2)}%` },

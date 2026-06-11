@@ -11,10 +11,10 @@ export default function Page() {
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
     { key: 'warehouse', label: 'Warehouse' },
-    { key: 'availableQuantity', label: 'Available Qty', align: 'right' },
-    { key: 'reservedQuantity', label: 'Reserved Qty', align: 'right' },
-    { key: 'onOrderQuantity', label: 'On Order', align: 'right' },
-    { key: 'netAvailableQuantity', label: 'Net Available', align: 'right' },
+    { key: 'availableQuantity', label: 'Available Qty', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
+    { key: 'reservedQuantity', label: 'Reserved Qty', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
+    { key: 'onOrderQuantity', label: 'On Order', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
+    { key: 'netAvailableQuantity', label: 'Net Available', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
   ];
 
   const fetchData = async () => {

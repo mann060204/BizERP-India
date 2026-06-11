@@ -15,7 +15,7 @@ export default function Page() {
     { key: 'unit', label: 'Unit' },
     { key: 'purchasePrice', label: 'Purchase Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'sellingPrice', label: 'Selling Price', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
-    { key: 'currentStock', label: 'Current Stock', align: 'right' },
+    { key: 'currentStock', label: 'Current Stock', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
     { key: 'status', label: 'Status' },
   ];
 

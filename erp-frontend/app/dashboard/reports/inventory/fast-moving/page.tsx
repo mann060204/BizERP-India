@@ -10,10 +10,10 @@ export default function Page() {
   const columns: any[] = [
     { key: 'itemCode', label: 'Code' },
     { key: 'name', label: 'Item Name' },
-    { key: 'quantitySold', label: 'Quantity Sold', align: 'right' },
+    { key: 'quantitySold', label: 'Quantity Sold', align: 'right', format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v },
     { key: 'salesValue', label: 'Sales Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
     { key: 'averageMonthlySales', label: 'Avg Monthly Sales', align: 'right' },
-    { key: 'stockTurnoverRatio', label: 'Stock Turnover Ratio', align: 'right' },
+    { key: 'stockTurnoverRatio', label: 'Stock Turnover Ratio', align: 'right' , format: (v: any) => typeof v === 'number' ? Number(v.toFixed(3)) : v},
   ];
 
   const fetchData = async () => {
