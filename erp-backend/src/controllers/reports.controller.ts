@@ -2213,180 +2213,255 @@ export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response)
 };
 // =================== EXPENSE REPORTS ===================
 
-// GET /api/v1/reports/expenses/search
 export const getExpensesSearch = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to, category, paymentMode } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'date');
-    const match: any = { businessId, ...dateFilter };
-    if (category) match.category = { $regex: category, $options: 'i' };
-    if (paymentMode) match.paymentMode = paymentMode;
+    
+    const expenses = await Expense.aggregate([
+      { $match: { businessId } },
+      { $lookup: { from: 'users', localField: 'createdBy', foreignField: '_id', as: 'creator' } },
+      { $unwind: { path: '$creator', preserveNullAndEmptyArrays: true } },
+      { $sort: { date: -1 } }
+    ]);
 
-    const expenses = await Expense.find(match,
-      'category date vendorName amount gstRate cgst sgst igst totalWithTax paymentMode notes'
-    ).sort({ date: -1 }).lean();
+    let totalExpenses = 0;
+    let highestExpense = 0;
 
-    const result = expenses.map((e: any) => ({
-      date: e.date,
-      category: e.category,
-      vendorName: e.vendorName || 'Self',
-      amount: e.amount || 0,
-      gstRate: e.gstRate || 0,
-      cgst: e.cgst || 0,
-      sgst: e.sgst || 0,
-      igst: e.igst || 0,
-      gstTotal: (e.cgst || 0) + (e.sgst || 0) + (e.igst || 0),
-      totalWithTax: e.totalWithTax || e.amount || 0,
-      paymentMode: e.paymentMode || 'Cash',
-      notes: e.notes || '—',
-    }));
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
+    const transformed = expenses.map((e: any) => {
+      totalExpenses += e.totalWithTax || 0;
+      if ((e.totalWithTax || 0) > highestExpense) highestExpense = e.totalWithTax;
+
+      return {
+        expenseDate: e.date,
+        voucherNumber: e._id.toString().slice(-6).toUpperCase(),
+        expenseCategory: e.category,
+        expenseAccount: e.category,
+        vendorSupplier: e.vendorName || '-',
+        paymentMethod: e.paymentMode || 'Cash',
+        amount: e.amount || 0,
+        taxAmount: (e.cgst || 0) + (e.sgst || 0) + (e.igst || 0),
+        totalAmount: e.totalWithTax || 0,
+        remarks: e.notes || '-',
+        createdBy: e.creator?.name || 'System'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalExpenses,
+          numberOfExpenseEntries: expenses.length,
+          averageExpenseAmount: expenses.length ? totalExpenses / expenses.length : 0,
+          highestExpense
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/expenses/indirect
 export const getIndirectExpenses = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to, 'date');
-    const match: any = { businessId, ...dateFilter };
-
-    const summary = await Expense.aggregate([
-      { $match: match },
+    
+    const agg = await Expense.aggregate([
+      { $match: { businessId } },
       { $group: {
           _id: '$category',
-          totalAmount: { $sum: '$amount' },
-          totalGST: { $sum: { $add: [{ $ifNull: ['$cgst', 0] }, { $ifNull: ['$sgst', 0] }, { $ifNull: ['$igst', 0] }] } },
-          totalWithTax: { $sum: '$totalWithTax' },
-          count: { $sum: 1 },
+          numberOfTransactions: { $sum: 1 },
+          totalAmount: { $sum: '$totalWithTax' },
+          taxAmount: { $sum: { $add: [{ $ifNull: ['$cgst', 0] }, { $ifNull: ['$sgst', 0] }, { $ifNull: ['$igst', 0] }] } }
       }},
-      { $sort: { totalWithTax: -1 } }
+      { $sort: { totalAmount: -1 } }
     ]);
 
-    const grandTotal = summary.reduce((s: number, c: any) => s + (c.totalWithTax || 0), 0);
-    sendSuccess(res, { summary, grandTotal });
-  } catch (e: any) { sendError(res, e.message); }
+    let totalIndirectExpenses = 0;
+    let highestAmount = 0;
+    let highestCategory = '-';
+
+    agg.forEach(a => {
+      totalIndirectExpenses += a.totalAmount;
+      if (a.totalAmount > highestAmount) {
+        highestAmount = a.totalAmount;
+        highestCategory = a._id;
+      }
+    });
+
+    const transformed = agg.map((a: any) => ({
+      expenseCategory: a._id || 'Uncategorized',
+      numberOfTransactions: a.numberOfTransactions,
+      totalAmount: a.totalAmount,
+      taxAmount: a.taxAmount,
+      averageExpense: a.numberOfTransactions ? a.totalAmount / a.numberOfTransactions : 0,
+      percentageOfTotalExpenses: totalIndirectExpenses ? (a.totalAmount / totalIndirectExpenses) * 100 : 0
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalIndirectExpenses,
+          monthlyAverage: totalIndirectExpenses / 12, // Approximate
+          highestExpenseCategory: highestCategory,
+          expenseGrowth: 0 // Requires complex MoM logic, keeping 0 for now
+        },
+        data: transformed
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
 // =================== EXTENDED GSTR ===================
 
-// GET /api/v1/reports/gstr/gstr1
 export const getGSTR1 = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, invoiceType: 'GST', ...dateFilter };
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
 
-    const invoices = await Invoice.find(match,
-      'invoiceNumber invoiceDate customerSnapshot totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal isInterState placeOfSupply'
-    ).sort({ invoiceDate: -1 }).lean();
+    let totalTaxableSales = 0;
+    let totalGSTCollected = 0;
+    let exportSalesValue = 0;
 
-    // B2B vs B2C split
-    const b2b = invoices.filter((i: any) => i.customerSnapshot?.gstin);
-    const b2c = invoices.filter((i: any) => !i.customerSnapshot?.gstin);
+    const b2b: any[] = [];
+    const b2cLarge: any[] = [];
+    const b2cSmall: any[] = [];
+    const exportsArr: any[] = [];
 
-    // HSN summary
-    const hsnSummary = await Invoice.aggregate([
-      { $match: match },
-      { $unwind: '$lineItems' },
-      { $group: {
-          _id: '$lineItems.hsnCode',
-          description: { $first: '$lineItems.productName' },
-          totalQty: { $sum: '$lineItems.quantity' },
-          totalTaxable: { $sum: '$lineItems.taxableAmount' },
-          totalCGST: { $sum: '$lineItems.cgst' },
-          totalSGST: { $sum: '$lineItems.sgst' },
-          totalIGST: { $sum: '$lineItems.igst' },
-          gstRate: { $first: '$lineItems.gstRate' },
-      }},
-      { $sort: { totalTaxable: -1 } }
-    ]);
+    invoices.forEach((inv: any) => {
+      totalTaxableSales += inv.totalTaxableAmount || 0;
+      totalGSTCollected += inv.totalGST || 0;
 
-    const totals = {
-      b2bCount: b2b.length,
-      b2cCount: b2c.length,
-      totalTaxable: invoices.reduce((s: number, i: any) => s + (i.totalTaxableAmount || 0), 0),
-      totalCGST: invoices.reduce((s: number, i: any) => s + (i.totalCGST || 0), 0),
-      totalSGST: invoices.reduce((s: number, i: any) => s + (i.totalSGST || 0), 0),
-      totalIGST: invoices.reduce((s: number, i: any) => s + (i.totalIGST || 0), 0),
-      totalGST: invoices.reduce((s: number, i: any) => s + (i.totalGST || 0), 0),
-      grandTotal: invoices.reduce((s: number, i: any) => s + (i.grandTotal || 0), 0),
-    };
+      const row = {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        customerName: inv.customerSnapshot?.name || 'Cash',
+        gstin: inv.customerSnapshot?.gstin || '',
+        placeOfSupply: inv.placeOfSupply || '',
+        state: inv.placeOfSupply || '',
+        taxableValue: inv.totalTaxableAmount || 0,
+        cgst: inv.totalCGST || 0,
+        sgst: inv.totalSGST || 0,
+        igst: inv.totalIGST || 0,
+        gstAmount: inv.totalGST || 0,
+        invoiceTotal: inv.grandTotal || 0,
+        exportType: inv.invoiceType === 'NON-GST' ? 'SEZ / Export' : '-'
+      };
 
-    sendSuccess(res, { invoices, b2b, b2c, hsnSummary, totals });
-  } catch (e: any) { sendError(res, e.message); }
+      if (inv.invoiceType === 'NON-GST') {
+        exportSalesValue += inv.totalTaxableAmount || 0;
+        exportsArr.push(row);
+      } else if (inv.customerSnapshot?.gstin) {
+        b2b.push(row);
+      } else if (inv.isInterState && inv.grandTotal > 250000) {
+        b2cLarge.push(row);
+      } else {
+        b2cSmall.push(row);
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalTaxableSales,
+          totalGSTCollected,
+          numberOfInvoices: invoices.length,
+          exportSalesValue
+        },
+        b2b,
+        b2cLarge,
+        b2cSmall,
+        exports: exportsArr
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
-// GET /api/v1/reports/gstr/gstr3b
 export const getGSTR3B = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const purchaseDateFilter = buildDateFilter(from, to, 'billDate');
-    const expenseDateFilter = buildDateFilter(from, to, 'date');
 
-    const [salesGst, purchaseGst, expenseGst, cancelledSales] = await Promise.all([
-      Invoice.aggregate([
-        { $match: { businessId, status: { $ne: 'cancelled' }, ...dateFilter } },
-        { $group: {
-            _id: null,
-            taxableValue: { $sum: '$totalTaxableAmount' },
-            cgst: { $sum: '$totalCGST' }, sgst: { $sum: '$totalSGST' }, igst: { $sum: '$totalIGST' },
-            totalTax: { $sum: '$totalGST' }, grandTotal: { $sum: '$grandTotal' }
-        }}
-      ]),
-      PurchaseBill.aggregate([
-        { $match: { businessId, status: { $ne: 'cancelled' }, ...purchaseDateFilter } },
-        { $group: {
-            _id: null,
-            taxableValue: { $sum: '$totalTaxableAmount' },
-            cgst: { $sum: '$totalCGST' }, sgst: { $sum: '$totalSGST' }, igst: { $sum: '$totalIGST' },
-            totalTax: { $sum: '$totalGST' }
-        }}
-      ]),
-      Expense.aggregate([
-        { $match: { businessId, gstRate: { $gt: 0 }, ...expenseDateFilter } },
-        { $group: {
-            _id: null,
-            taxableValue: { $sum: '$amount' },
-            cgst: { $sum: '$cgst' }, sgst: { $sum: '$sgst' }, igst: { $sum: '$igst' },
-            totalTax: { $sum: { $add: [{ $ifNull: ['$cgst', 0] }, { $ifNull: ['$sgst', 0] }, { $ifNull: ['$igst', 0] }] } }
-        }}
-      ]),
-      Invoice.countDocuments({ businessId, status: 'cancelled', ...dateFilter })
+    // 1. Output GST (Sales)
+    const sales = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $group: {
+          _id: '$invoiceType',
+          taxableValue: { $sum: '$totalTaxableAmount' },
+          igst: { $sum: '$totalIGST' },
+          cgst: { $sum: '$totalCGST' },
+          sgst: { $sum: '$totalSGST' },
+          grandTotal: { $sum: '$grandTotal' }
+      }}
     ]);
 
-    const outward = salesGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0, grandTotal: 0 };
-    const pGst = purchaseGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
-    const eGst = expenseGst[0] || { taxableValue: 0, cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
-    delete outward._id; delete pGst._id; delete eGst._id;
+    let totalOutputGST = 0;
+    let taxableTurnover = 0;
+    const outwardSupplies: any[] = [];
 
-    const itcClaimed = {
-      taxableValue: (pGst.taxableValue || 0) + (eGst.taxableValue || 0),
-      cgst: (pGst.cgst || 0) + (eGst.cgst || 0),
-      sgst: (pGst.sgst || 0) + (eGst.sgst || 0),
-      igst: (pGst.igst || 0) + (eGst.igst || 0),
-      totalTax: (pGst.totalTax || 0) + (eGst.totalTax || 0),
-    };
-
-    const netPayable = {
-      cgst: Math.max(0, (outward.cgst || 0) - itcClaimed.cgst),
-      sgst: Math.max(0, (outward.sgst || 0) - itcClaimed.sgst),
-      igst: Math.max(0, (outward.igst || 0) - itcClaimed.igst),
-    };
-    const totalNetPayable = netPayable.cgst + netPayable.sgst + netPayable.igst;
-
-    sendSuccess(res, {
-      outward, purchaseITC: pGst, expenseITC: eGst, itcClaimed, netPayable, totalNetPayable,
-      cancelledInvoiceCount: cancelledSales,
+    sales.forEach(s => {
+      taxableTurnover += s.taxableValue || 0;
+      totalOutputGST += (s.igst + s.cgst + s.sgst);
+      outwardSupplies.push({
+        supplyType: s._id === 'GST' ? 'Taxable Supplies' : (s._id === 'NON-GST' ? 'Zero Rated Supplies' : 'Exempt Supplies'),
+        taxableValue: s.taxableValue,
+        igst: s.igst,
+        cgst: s.cgst,
+        sgst: s.sgst
+      });
     });
-  } catch (e: any) { sendError(res, e.message); }
+
+    // 2. Input GST (Purchases + Expenses)
+    const purchases = await PurchaseBill.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $group: {
+          _id: null,
+          taxableValue: { $sum: '$totalTaxableAmount' },
+          igst: { $sum: '$totalIGST' },
+          cgst: { $sum: '$totalCGST' },
+          sgst: { $sum: '$totalSGST' }
+      }}
+    ]);
+
+    const expenses = await Expense.aggregate([
+      { $match: { businessId } },
+      { $group: {
+          _id: null,
+          taxableValue: { $sum: '$amount' },
+          igst: { $sum: '$igst' },
+          cgst: { $sum: '$cgst' },
+          sgst: { $sum: '$sgst' }
+      }}
+    ]);
+
+    let totalInputGST = 0;
+    const p = purchases[0] || { igst: 0, cgst: 0, sgst: 0 };
+    const e = expenses[0] || { igst: 0, cgst: 0, sgst: 0 };
+    
+    totalInputGST += (p.igst + p.cgst + p.sgst) + (e.igst + e.cgst + e.sgst);
+
+    const eligibleITC = [
+      { itcCategory: 'Purchases', igst: p.igst || 0, cgst: p.cgst || 0, sgst: p.sgst || 0 },
+      { itcCategory: 'Input Services', igst: e.igst || 0, cgst: e.cgst || 0, sgst: e.sgst || 0 }
+    ];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalOutputGST,
+          totalInputGST,
+          netGSTPayable: Math.max(0, totalOutputGST - totalInputGST),
+          taxableTurnover
+        },
+        outwardSupplies,
+        eligibleITC
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
 
+// ─── DASHBOARD ANALYTICS HELPERS ─────────────────────────────────────────────
 // ─── DASHBOARD ANALYTICS HELPERS ─────────────────────────────────────────────
 
 function getDashboardDateRange(req: any): { start: Date; end: Date; groupBy: string } {

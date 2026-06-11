@@ -1,45 +1,49 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
-import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
+import ReportHeader from '../../../../../components/reports/ReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
 
-const now = new Date(); const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]; const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
 export default function Page() {
-  const [from, setFrom] = useState(firstDay); const [to, setTo] = useState(lastDay); const [key, setKey] = useState(0);
-  const [category, setCategory] = useState('');
+  const [summary, setSummary] = useState<any>(null);
 
   const columns: any[] = [
-    { key: 'date', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'category', label: 'Category' },
-    { key: 'vendorName', label: 'Vendor' },
-    { key: 'amount', label: 'Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'gstRate', label: 'GST %', align: 'center', format: (v: any) => `${v||0}%` },
-    { key: 'gstTotal', label: 'GST Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalWithTax', label: 'Total (incl. GST)', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'paymentMode', label: 'Mode', align: 'center' },
-    { key: 'notes', label: 'Notes' },
+    { key: 'expenseDate', label: 'Expense Date', format: (v: any) => v ? new Date(v).toLocaleDateString() : '-' },
+    { key: 'voucherNumber', label: 'Voucher Number' },
+    { key: 'expenseCategory', label: 'Expense Category' },
+    { key: 'vendorSupplier', label: 'Vendor/Supplier' },
+    { key: 'paymentMethod', label: 'Payment Method', align: 'center' },
+    { key: 'amount', label: 'Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'taxAmount', label: 'Tax Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'remarks', label: 'Remarks' },
+    { key: 'createdBy', label: 'Created By' },
   ];
 
-  const fetchData = useCallback(async () => {
-    const res = await reportsApi.getExpensesSearch({ from, to, ...(category ? { category } : {}) });
+  const fetchData = async () => {
+    const res = await reportsApi.getExpensesSearch();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
     return res.data?.data || [];
-  }, [from, to, category]);
+  };
+
+  const summaryCards = summary ? [
+    { label: 'Total Expenses', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalExpenses || 0), highlight: true },
+    { label: 'Number Of Expense Entries', value: summary.numberOfExpenseEntries || 0 },
+    { label: 'Average Expense Amount', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.averageExpenseAmount || 0) },
+    { label: 'Highest Expense', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.highestExpense || 0) },
+  ] : [];
 
   return (
-    <ReportLayout title="Search Expenses" subtitle={`Filterable expense list • ${from} to ${to}`}
-      category="Expenses" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}-${category}`}
-      extraHeader={
-        <div className="flex flex-wrap items-center gap-3">
-          <DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-slate-500 font-medium">Category</label>
-            <input type="text" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Rent, Utilities..."
-              className="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-orange-300 transition w-40" />
-          </div>
-        </div>
-      }
+    <ReportLayout
+      title="Search Expenses"
+      subtitle="Searchable register of all business expenses"
+      category="Expenses"
+      columns={columns}
+      fetchData={fetchData}
+      extraHeader={<ReportHeader summaryCards={summaryCards} />}
     />
   );
 }

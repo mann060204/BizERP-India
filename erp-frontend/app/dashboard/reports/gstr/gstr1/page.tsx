@@ -1,169 +1,215 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { reportsApi } from '../../../../../lib/erp-api';
-import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
-import { ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Download, RefreshCw, FileText, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
-const now = new Date();
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
-type Section = 'invoices' | 'b2b' | 'b2c' | 'hsn';
+import ReportHeader from '../../../../../components/reports/ReportHeader';
+import { reportsApi } from '../../../../../lib/erp-api';
 
 export default function GSTR1Page() {
-  const [from, setFrom] = useState(firstDay);
-  const [to, setTo] = useState(lastDay);
   const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [section, setSection] = useState<Section>('invoices');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await reportsApi.getGSTR1({ from, to });
-      setData(res.data?.data);
-    } finally { setLoading(false); }
-  }, [from, to]);
-  useEffect(() => { load(); }, []);
+      const res = await reportsApi.getGSTR1();
+      setData(res.data?.data || null);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load GSTR-1');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const totals = data?.totals || {};
-  const invoices: any[] = data?.invoices || [];
-  const b2b: any[] = data?.b2b || [];
-  const b2c: any[] = data?.b2c || [];
-  const hsnSummary: any[] = data?.hsnSummary || [];
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const sections = [
-    { key: 'invoices', label: 'All Invoices', count: invoices.length },
-    { key: 'b2b', label: 'B2B', count: b2b.length },
-    { key: 'b2c', label: 'B2C', count: b2c.length },
-    { key: 'hsn', label: 'HSN Summary', count: hsnSummary.length },
-  ] as const;
+  const summary = data?.summary || {};
+  const summaryCards = [
+    { label: 'Total Taxable Sales', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalTaxableSales || 0), highlight: true },
+    { label: 'Total GST Collected', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalGSTCollected || 0), highlight: true },
+    { label: 'Number Of Invoices', value: summary.numberOfInvoices || 0 },
+    { label: 'Export Sales Value', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.exportSalesValue || 0) },
+  ];
+
+  const TableHeader = ({ title, count }: { title: string, count: number }) => (
+    <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between rounded-t-xl mt-6">
+      <h3 className="font-semibold text-slate-800">{title}</h3>
+      <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{count} records</span>
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8FAFC]">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="flex items-center justify-between px-6 h-16 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/reports" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition"><ArrowLeft className="w-5 h-5" /></Link>
+            <Link href="/dashboard/reports" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
             <div>
-              <span className="text-[10px] font-bold tracking-wider text-indigo-700 uppercase bg-indigo-50 px-2 py-0.5 rounded">GSTR Report</span>
-              <h1 className="text-lg font-bold text-slate-900 leading-tight mt-0.5">GSTR-1 Outward Supply Statement</h1>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                  GSTR Report
+                </span>
+              </div>
+              <h1 className="text-lg font-bold text-slate-900 leading-tight mt-0.5">GSTR-1</h1>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={loadData} className="erp-button-outline" disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button className="erp-button-outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </button>
           </div>
         </div>
       </header>
-      <div className="bg-white border-b border-slate-100 px-6 py-3 max-w-7xl mx-auto w-full">
-        <DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={load} loading={loading} />
+
+      <div className="bg-white border-b border-slate-100 px-6 py-3 max-w-7xl mx-auto w-full flex items-center gap-4">
+        <ReportHeader summaryCards={summaryCards} />
       </div>
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-5">
-        {/* KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Taxable', value: totals.totalTaxable },
-            { label: 'Total CGST', value: totals.totalCGST },
-            { label: 'Total SGST', value: totals.totalSGST },
-            { label: 'Total IGST', value: totals.totalIGST },
-          ].map(k => (
-            <div key={k.label} className="glass rounded-2xl p-5 border border-slate-200 bg-white">
-              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">{k.label}</p>
-              <p className="text-xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(k.value||0))}</p>
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
-            <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Total GST</p>
-            <p className="text-xl font-bold text-indigo-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totals.totalGST||0))}</p>
-          </div>
-          <div className="glass rounded-2xl p-5 border border-slate-200 bg-white">
-            <p className="text-xs text-slate-500 font-semibold uppercase mb-1">Grand Total</p>
-            <p className="text-xl font-bold text-slate-900">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(totals.grandTotal||0))}</p>
-          </div>
-          <div className="glass rounded-2xl p-5 border border-blue-100 bg-blue-50/40">
-            <p className="text-xs text-blue-600 font-semibold uppercase mb-1">B2B (With GSTIN)</p>
-            <p className="text-xl font-bold text-blue-700">{totals.b2bCount || 0} invoices</p>
-          </div>
-          <div className="glass rounded-2xl p-5 border border-green-100 bg-green-50/40">
-            <p className="text-xs text-green-600 font-semibold uppercase mb-1">B2C (No GSTIN)</p>
-            <p className="text-xl font-bold text-green-700">{totals.b2cCount || 0} invoices</p>
-          </div>
-        </div>
 
-        {/* Section tabs */}
-        <div className="flex gap-1 bg-white border border-slate-200 rounded-xl p-1 w-fit">
-          {sections.map(s => (
-            <button key={s.key} onClick={() => setSection(s.key as Section)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${section === s.key ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-              {s.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${section === s.key ? 'bg-indigo-500 text-white' : 'bg-slate-100'}`}>{s.count}</span>
-            </button>
-          ))}
-        </div>
+      <main className="flex-1 p-6 max-w-7xl mx-auto w-full">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mb-4" />
+            <p className="text-slate-500 font-medium">Computing GST Data...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <FileText className="w-12 h-12 text-red-300 mb-4" />
+            <p className="text-red-500 font-medium text-lg">Error loading GSTR-1</p>
+            <p className="text-slate-500 mt-1">{error}</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <p className="text-sm text-slate-600 mb-4">Detailed outward supply statement for GST filing.</p>
 
-        {/* Tables */}
-        <div className="glass rounded-2xl border border-slate-200 overflow-hidden bg-white">
-          <div className="overflow-x-auto">
-            {section !== 'hsn' ? (
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-100">
-                  <tr>{['Invoice #', 'Date', 'Customer', 'GSTIN', 'Place of Supply', 'Taxable', 'CGST', 'SGST', 'IGST', 'Total GST', 'Grand Total'].map(h => (
-                    <th key={h} className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {loading ? <tr><td colSpan={11} className="px-4 py-10 text-center">Loading...</td></tr>
-                    : (section === 'invoices' ? invoices : section === 'b2b' ? b2b : b2c).map((inv: any, i: number) => (
-                      <tr key={i} className="hover:bg-slate-50 transition">
-                        <td className="px-3 py-3 font-mono text-xs">{inv.invoiceNumber}</td>
-                        <td className="px-3 py-3 text-xs">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN') : '—'}</td>
-                        <td className="px-3 py-3 font-medium">{inv.customerSnapshot?.name || 'Cash'}</td>
-                        <td className="px-3 py-3 text-xs text-slate-500 font-mono">
-                          {inv.customerSnapshot?.gstin ? (
-                            <>
-                              {inv.customerSnapshot?.gstin}
-                              {inv.customerSnapshot?.gstin && <span className="block text-[10px] text-slate-400 mt-0.5">(SC: {inv.customerSnapshot.gstin.substring(0, 2)})</span>}
-                            </>
-                          ) : '—'}
-                        </td>
-                        <td className="px-3 py-3 text-xs">{inv.placeOfSupply || '—'}</td>
-                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalTaxableAmount||0))}</td>
-                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalCGST||0))}</td>
-                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalSGST||0))}</td>
-                        <td className="px-3 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalIGST||0))}</td>
-                        <td className="px-3 py-3 text-right font-medium text-indigo-700">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.totalGST||0))}</td>
-                        <td className="px-3 py-3 text-right font-bold">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(inv.grandTotal||0))}</td>
+            {/* B2B Supplies */}
+            <div className="glass rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+              <TableHeader title="B2B Supplies (Registered Customers)" count={data?.b2b?.length || 0} />
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50/50 text-slate-500 text-xs uppercase border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Invoice Number</th>
+                      <th className="px-4 py-2 font-medium">Date</th>
+                      <th className="px-4 py-2 font-medium">Customer Name</th>
+                      <th className="px-4 py-2 font-medium">GSTIN</th>
+                      <th className="px-4 py-2 font-medium">State</th>
+                      <th className="px-4 py-2 font-medium text-right">Taxable Value</th>
+                      <th className="px-4 py-2 font-medium text-right">GST Total</th>
+                      <th className="px-4 py-2 font-medium text-right">Invoice Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data?.b2b?.map((row: any, i: number) => (
+                      <tr key={i} className="hover:bg-slate-50">
+                        <td className="px-4 py-2">{row.invoiceNumber}</td>
+                        <td className="px-4 py-2">{new Date(row.invoiceDate).toLocaleDateString()}</td>
+                        <td className="px-4 py-2">{row.customerName}</td>
+                        <td className="px-4 py-2">{row.gstin}</td>
+                        <td className="px-4 py-2">{row.state}</td>
+                        <td className="px-4 py-2 text-right">₹{row.taxableValue.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">₹{row.gstAmount.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">₹{row.invoiceTotal.toFixed(2)}</td>
                       </tr>
                     ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="overflow-x-auto w-full">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-100">
-                  <tr>{['HSN Code', 'Description', 'GST Rate', 'Total Qty', 'Taxable Value', 'CGST', 'SGST', 'IGST'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {hsnSummary.map((row: any, i: number) => (
-                    <tr key={i} className="hover:bg-slate-50 transition">
-                      <td className="px-4 py-3 font-mono text-xs">{row._id || '—'}</td>
-                      <td className="px-4 py-3 text-slate-700">{row.description || '—'}</td>
-                      <td className="px-4 py-3 text-center">{row.gstRate || 0}%</td>
-                      <td className="px-4 py-3 text-right">{row.totalQty}</td>
-                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalTaxable||0))}</td>
-                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalCGST||0))}</td>
-                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalSGST||0))}</td>
-                      <td className="px-4 py-3 text-right">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(row.totalIGST||0))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                    {!data?.b2b?.length && <tr><td colSpan={8} className="px-4 py-4 text-center text-slate-400">No B2B Supplies</td></tr>}
+                  </tbody>
+                </table>
               </div>
-            )}
+            </div>
+
+            {/* B2C Large */}
+            <div className="glass rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+              <TableHeader title="B2C Large Supplies (Interstate > 2.5L)" count={data?.b2cLarge?.length || 0} />
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50/50 text-slate-500 text-xs uppercase border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Invoice Number</th>
+                      <th className="px-4 py-2 font-medium">State</th>
+                      <th className="px-4 py-2 font-medium text-right">Taxable Value</th>
+                      <th className="px-4 py-2 font-medium text-right">GST Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data?.b2cLarge?.map((row: any, i: number) => (
+                      <tr key={i} className="hover:bg-slate-50">
+                        <td className="px-4 py-2">{row.invoiceNumber}</td>
+                        <td className="px-4 py-2">{row.state}</td>
+                        <td className="px-4 py-2 text-right">₹{row.taxableValue.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">₹{row.gstAmount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {!data?.b2cLarge?.length && <tr><td colSpan={4} className="px-4 py-4 text-center text-slate-400">No B2C Large Supplies</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* B2C Small */}
+            <div className="glass rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+              <TableHeader title="B2C Small Supplies" count={data?.b2cSmall?.length || 0} />
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50/50 text-slate-500 text-xs uppercase border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">State</th>
+                      <th className="px-4 py-2 font-medium text-right">Taxable Value</th>
+                      <th className="px-4 py-2 font-medium text-right">GST Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data?.b2cSmall?.map((row: any, i: number) => (
+                      <tr key={i} className="hover:bg-slate-50">
+                        <td className="px-4 py-2">{row.state || 'Local'}</td>
+                        <td className="px-4 py-2 text-right">₹{row.taxableValue.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right">₹{row.gstAmount.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {!data?.b2cSmall?.length && <tr><td colSpan={3} className="px-4 py-4 text-center text-slate-400">No B2C Small Supplies</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Exports */}
+            <div className="glass rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+              <TableHeader title="Exports" count={data?.exports?.length || 0} />
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-slate-50/50 text-slate-500 text-xs uppercase border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">Invoice Number</th>
+                      <th className="px-4 py-2 font-medium">Export Type</th>
+                      <th className="px-4 py-2 font-medium text-right">Taxable Value</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data?.exports?.map((row: any, i: number) => (
+                      <tr key={i} className="hover:bg-slate-50">
+                        <td className="px-4 py-2">{row.invoiceNumber}</td>
+                        <td className="px-4 py-2">{row.exportType}</td>
+                        <td className="px-4 py-2 text-right">₹{row.taxableValue.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    {!data?.exports?.length && <tr><td colSpan={3} className="px-4 py-4 text-center text-slate-400">No Export Supplies</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
