@@ -29,9 +29,9 @@ const QUICK_ACTIONS = [
   { label: 'New Expense',      href: '/dashboard/expenses',       icon: Receipt,        color: 'text-rose-700',    bg: 'bg-rose-50',    desc: 'Record an expense' },
 ];
 
-const DONUT_COLORS = ['#BB4430', '#7EBDC2'];
-const TOP_COLORS   = ['#BB4430', '#7EBDC2', '#F3DFA2', '#231F20', '#EFE6DD'];
-const BOT_COLORS   = ['#EF4444', '#BB4430', '#7EBDC2', '#84cc16', '#94a3b8'];
+const DONUT_COLORS = ['var(--primary)', 'var(--accent)'];
+const TOP_COLORS   = ['var(--primary)', 'var(--accent)', 'var(--warning)', 'var(--text)', 'var(--bg-elevated)'];
+const BOT_COLORS   = ['var(--danger)', 'var(--primary)', 'var(--accent)', 'var(--success)', 'var(--text-muted)'];
 
 const fmt = (n: number) => {
   if (!n) return '₹0';
@@ -382,9 +382,9 @@ export default function DashboardPage() {
                       <YAxis fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" tickFormatter={v => fmt(v)} />
                       <Tooltip content={<CustomTip />} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                      <Line type="monotone" dataKey="sales" name="Sales" stroke="#BB4430" strokeWidth={1.5} dot={false} />
-                      <Line type="monotone" dataKey="purchases" name="Purchases" stroke="#7EBDC2" strokeWidth={1.5} dot={false} />
-                      <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#231F20" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="sales" name="Sales" stroke="var(--primary)" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="purchases" name="Purchases" stroke="var(--accent)" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="expenses" name="Expenses" stroke="var(--text)" strokeWidth={1.5} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -401,7 +401,7 @@ export default function DashboardPage() {
                       <XAxis type="number" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" />
                       <YAxis type="category" dataKey="name" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" width={80} />
                       <Tooltip content={<CustomTip />} />
-                      <Bar dataKey="stock" name="Stock" fill="#7EBDC2" radius={[0, 3, 3, 0]} />
+                      <Bar dataKey="stock" name="Stock" fill="var(--accent)" radius={[0, 3, 3, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -415,7 +415,7 @@ export default function DashboardPage() {
                       <XAxis type="number" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" />
                       <YAxis type="category" dataKey="name" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" width={80} />
                       <Tooltip content={<CustomTip />} />
-                      <Bar dataKey="stock" name="Stock" fill="#F3DFA2" radius={[0, 3, 3, 0]} />
+                      <Bar dataKey="stock" name="Stock" fill="var(--warning)" radius={[0, 3, 3, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -472,9 +472,9 @@ export default function DashboardPage() {
                           { name: 'Purchases', value: Math.max(0, stats.purchases || 0) },
                           { name: 'Expenses', value: Math.max(0, stats.expenses || 0) }
                         ]} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" nameKey="name" paddingAngle={4}>
-                          <Cell fill="#BB4430" />
-                          <Cell fill="#7EBDC2" />
-                          <Cell fill="#231F20" />
+                          <Cell fill="var(--primary)" />
+                          <Cell fill="var(--accent)" />
+                          <Cell fill="var(--text)" />
                         </Pie>
                         <Tooltip content={<CustomTip />} />
                         <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
@@ -647,7 +647,7 @@ export default function DashboardPage() {
             {/* Mini KPI card below QA */}
             <div className="mt-2 pt-3" style={{ borderTop: '0.5px solid var(--border)' }}>
               <h3 className="text-xs font-medium uppercase tracking-wider px-1 mb-2" style={{ color: 'var(--text-subtle)' }}>Today's Snapshot</h3>
-              <div className="rounded-xl p-4 text-white shadow-sm mb-3" style={{ background: 'linear-gradient(135deg, #BB4430, #7EBDC2)' }}>
+              <div className="rounded-xl p-4 text-white shadow-sm mb-3" style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
                 <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-0.5">Today's Sales</p>
                 <p className="text-white font-medium text-2xl">{renderAmount(stats.todaySales)}</p>
               </div>
