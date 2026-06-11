@@ -198,6 +198,54 @@
 }
 
 /* ─────────────────────────────────────────────
+   THEME: Summer 2026
+───────────────────────────────────────────── */
+[data-theme="summer"] {
+  --sidebar-bg: #3D2B1F;
+  --sidebar-bg2: #4E3828;
+  --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar-text: rgba(255,255,255,0.72);
+  --sidebar-text-active: #ffffff;
+  --sidebar-active-bg: #BA7517;
+  --sidebar-active-shadow: rgba(186,117,23,0.45);
+  --sidebar-hover-bg: rgba(255,255,255,0.07);
+  --sidebar-icon: rgba(255,255,255,0.55);
+  --sidebar-logo-bg: linear-gradient(135deg,#BA7517,#D4922A);
+
+  --primary: #BA7517;
+  --primary-hover: #9A6013;
+  --primary-light: #FFF8EE;
+  --primary-ring: rgba(186,117,23,0.25);
+
+  --accent: #D4922A;
+  --accent-hover: #BA7517;
+  --accent-light: #FFF8EE;
+
+  --success: #1D9E75;
+  --success-light: #D1FAE5;
+  --danger: #EF4444;
+  --danger-light: #FEE2E2;
+  --warning: #EF9F27;
+  --warning-light: #FEF3C7;
+
+  --bg: #FFF8EE;
+  --bg-card: #ffffff;
+  --bg-elevated: #FAEEDA;
+  --border: #E8D5B5;
+  --border-focus: #D4B896;
+
+  --text: #3D2B1F;
+  --text-muted: #7A5C3E;
+  --text-subtle: #BA9A72;
+
+  --topbar-bg: rgba(255,255,255,0.95);
+  --topbar-border: #E8D5B5;
+  --topbar-time-bg: #FAEEDA;
+  --topbar-time-text: #9A6013;
+  --topbar-time-border: #D4B896;
+}
+
+/* ─────────────────────────────────────────────
    BASE
 ───────────────────────────────────────────── */
 @layer base {

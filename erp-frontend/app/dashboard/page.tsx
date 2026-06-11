@@ -22,16 +22,16 @@ import {
 } from 'recharts';
 
 const QUICK_ACTIONS = [
-  { label: 'New Invoice',      href: '/dashboard/sales/new',      icon: FilePlus,       color: 'text-indigo-600',  bg: 'bg-indigo-50',  desc: 'Create GST invoice' },
-  { label: 'Add Purchase',     href: '/dashboard/purchases/new',  icon: PackagePlus,    color: 'text-blue-600',    bg: 'bg-blue-50',    desc: 'Record a purchase bill' },
-  { label: 'Add Customer',     href: '/dashboard/customers/new',  icon: UserPlus,       color: 'text-emerald-600', bg: 'bg-emerald-50', desc: 'Add new customer' },
-  { label: 'Stock Adjust',     href: '/dashboard/inventory',      icon: SlidersHorizontal, color: 'text-orange-600', bg: 'bg-orange-50', desc: 'Manage inventory' },
-  { label: 'New Expense',      href: '/dashboard/expenses',       icon: Receipt,        color: 'text-red-600',     bg: 'bg-red-50',     desc: 'Record an expense' },
+  { label: 'New Invoice',      href: '/dashboard/sales/new',      icon: FilePlus,       color: 'text-amber-700',   bg: 'bg-amber-50',   desc: 'Create GST invoice' },
+  { label: 'Add Purchase',     href: '/dashboard/purchases/new',  icon: PackagePlus,    color: 'text-sky-700',     bg: 'bg-sky-50',     desc: 'Record a purchase bill' },
+  { label: 'Add Customer',     href: '/dashboard/customers/new',  icon: UserPlus,       color: 'text-emerald-700', bg: 'bg-emerald-50', desc: 'Add new customer' },
+  { label: 'Stock Adjust',     href: '/dashboard/inventory',      icon: SlidersHorizontal, color: 'text-orange-700', bg: 'bg-orange-50', desc: 'Manage inventory' },
+  { label: 'New Expense',      href: '/dashboard/expenses',       icon: Receipt,        color: 'text-rose-700',    bg: 'bg-rose-50',    desc: 'Record an expense' },
 ];
 
-const DONUT_COLORS = ['#6366f1', '#f97316'];
-const TOP_COLORS   = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
-const BOT_COLORS   = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#94a3b8'];
+const DONUT_COLORS = ['#BA7517', '#D4922A'];
+const TOP_COLORS   = ['#BA7517', '#1D9E75', '#378ADD', '#D4922A', '#EF9F27'];
+const BOT_COLORS   = ['#EF4444', '#EF9F27', '#FAC775', '#84cc16', '#94a3b8'];
 
 const fmt = (n: number) => {
   if (!n) return '₹0';
@@ -63,7 +63,8 @@ function MiniFilter({ onChange, defaultPeriod = 'month' }: { onChange: (p: any) 
 
   const btn = (p: string, label: string) => (
     <button key={p} onClick={() => pick(p)}
-      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition ${active === p ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}>
+      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition ${active === p ? 'text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+      style={active === p ? { background: 'var(--primary)' } : undefined}>
       {label}
     </button>
   );
@@ -77,10 +78,10 @@ function MiniFilter({ onChange, defaultPeriod = 'month' }: { onChange: (p: any) 
         {btn('custom', '⋯')}
       </div>
       {showCustom && (
-        <div className="absolute right-0 top-7 z-50 bg-white border border-slate-200 shadow-xl rounded-xl p-3 flex flex-col gap-2 w-52">
-          <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs" />
-          <input type="date" value={to} onChange={e => setTo(e.target.value)} className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs" />
-          <button onClick={apply} className="w-full py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Apply</button>
+        <div className="absolute right-0 top-7 z-50 bg-white shadow-xl rounded-xl p-3 flex flex-col gap-2 w-52" style={{ border: '1px solid var(--border)' }}>
+          <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="w-full px-2 py-1.5 rounded-lg text-xs" style={{ border: '1px solid var(--border)' }} />
+          <input type="date" value={to} onChange={e => setTo(e.target.value)} className="w-full px-2 py-1.5 rounded-lg text-xs" style={{ border: '1px solid var(--border)' }} />
+          <button onClick={apply} className="w-full py-1.5 rounded-lg text-white text-xs font-semibold" style={{ background: 'var(--primary)' }}>Apply</button>
         </div>
       )}
     </div>
@@ -90,16 +91,17 @@ function MiniFilter({ onChange, defaultPeriod = 'month' }: { onChange: (p: any) 
 // ── Small Chart Card ────────────────────────────────────────────────────────
 function ChartCard({ title, icon, filter, loading, children, span = 1 }: any) {
   return (
-    <div className={`bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition ${span === 2 ? 'col-span-2' : ''}`}>
+    <div className={`rounded-2xl p-4 flex flex-col gap-3 transition ${span === 2 ? 'col-span-2' : ''}`}
+      style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: '14px' }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <span className="text-lg">{icon}</span>
-          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+          <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>{title}</h3>
         </div>
         {filter}
       </div>
       {loading
-        ? <div className="h-64 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
+        ? <div className="h-64 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--text-subtle)' }} /></div>
         : children}
     </div>
   );
@@ -108,8 +110,8 @@ function ChartCard({ title, icon, filter, loading, children, span = 1 }: any) {
 const CustomTip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-slate-200 p-2.5 rounded-xl shadow-lg text-xs">
-      <p className="font-semibold text-slate-600 mb-1">{label}</p>
+    <div className="p-2.5 rounded-xl shadow-lg text-xs" style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
+      <p className="font-medium mb-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
       {payload.map((e: any, i: number) => (
         <p key={i} style={{ color: e.color }} className="font-medium">
           {e.name}: {['Sales', 'Purchases', 'Expenses', 'Revenue'].includes(e.name) || e.name?.includes('Revenue') ? fmtFull(e.value) : (typeof e.value === 'number' ? e.value.toLocaleString('en-IN') : e.value)}
@@ -272,46 +274,46 @@ export default function DashboardPage() {
   };
 
   const ALL_KPI_CARDS = [
-    { label: 'Sales', type: 'sales', value: renderAmount(stats.sales), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Purchases', type: 'purchases', value: renderAmount(stats.purchases), icon: ShoppingCart, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Expenses', type: 'expenses', value: renderAmount(stats.expenses), icon: Receipt, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Received', type: 'received', value: renderAmount(stats.received), icon: Wallet, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Outstanding', type: 'outstanding', value: renderAmount(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Paid Out', type: 'paid', value: renderAmount(stats.paid), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Low Stock', type: 'lowStock', value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { label: 'Sales', type: 'sales', value: renderAmount(stats.sales), icon: TrendingUp, color: 'text-emerald-700', bg: 'bg-emerald-50' },
+    { label: 'Purchases', type: 'purchases', value: renderAmount(stats.purchases), icon: ShoppingCart, color: 'text-sky-700', bg: 'bg-sky-50' },
+    { label: 'Expenses', type: 'expenses', value: renderAmount(stats.expenses), icon: Receipt, color: 'text-amber-700', bg: 'bg-amber-50' },
+    { label: 'Received', type: 'received', value: renderAmount(stats.received), icon: Wallet, color: 'text-emerald-700', bg: 'bg-emerald-50' },
+    { label: 'Outstanding', type: 'outstanding', value: renderAmount(stats.salesOutstanding), icon: CreditCard, color: 'text-orange-700', bg: 'bg-orange-50' },
+    { label: 'Paid Out', type: 'paid', value: renderAmount(stats.paid), icon: TrendingDown, color: 'text-red-700', bg: 'bg-red-50' },
+    { label: 'Low Stock', type: 'lowStock', value: `${stats.lowStock}`, icon: AlertTriangle, color: 'text-amber-700', bg: 'bg-amber-50' },
   ];
 
   const orderedCards = kpiOrder.map(label => ALL_KPI_CARDS.find(c => c.label === label)).filter(Boolean);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       <Topbar title="Dashboard" />
 
       <main className="flex-1 p-5 overflow-auto">
         {/* Greeting & KPI Period */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Welcome back, {businessName || 'Admin'} 👋</h1>
-            <p className="text-slate-500 font-medium tracking-wide mt-1">Here is what's happening with your business.</p>
+            <h1 className="text-2xl font-medium tracking-tight" style={{ color: 'var(--text)' }}>Welcome back, {businessName || 'Admin'} 👋</h1>
+            <p className="font-normal tracking-wide mt-1" style={{ color: 'var(--text-muted)' }}>Here is what's happening with your business.</p>
           </div>
           <div className="flex items-center w-full md:w-auto md:flex-1 md:px-8 max-w-2xl">
             <ProductQuickSearch />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Metrics:</span>
-            <select value={kpiPeriod} onChange={e => setKpiPeriod(e.target.value)} className="bg-white border border-slate-200 shadow-sm text-sm font-bold text-slate-700 rounded-lg py-1.5 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer outline-none">
+            <span className="text-sm font-medium uppercase tracking-wider" style={{ color: 'var(--text-subtle)' }}>Metrics:</span>
+            <select value={kpiPeriod} onChange={e => setKpiPeriod(e.target.value)} className="shadow-sm text-sm font-medium rounded-lg py-1.5 px-3 cursor-pointer outline-none" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}>
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
               <option value="year">This Year</option>
             </select>
           </div>
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">
-            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Chart Size:</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+            <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-subtle)' }}>Chart Size:</span>
             <select 
               value={chartHeight}
               onChange={(e) => setChartHeight(e.target.value)}
-              className="text-sm border-none bg-transparent font-bold text-slate-800 outline-none cursor-pointer"
+              className="text-sm border-none bg-transparent font-medium outline-none cursor-pointer" style={{ color: 'var(--text)' }}
             >
               <option value="h-48">Small</option>
               <option value="h-64">Medium</option>
@@ -320,11 +322,12 @@ export default function DashboardPage() {
           </div>
           <button 
             onClick={() => setPrivacyMode(!privacyMode)}
-            className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm hover:opacity-80 transition"
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)' }}
             title={privacyMode ? "Show Figures" : "Hide Figures"}
           >
-            {privacyMode ? <EyeOff className="w-5 h-5 text-indigo-500" /> : <Eye className="w-5 h-5 text-slate-500" />}
-            <span className="text-xs font-bold uppercase tracking-wider hidden md:block">Privacy</span>
+            {privacyMode ? <EyeOff className="w-5 h-5" style={{ color: 'var(--primary)' }} /> : <Eye className="w-5 h-5" style={{ color: 'var(--text-subtle)' }} />}
+            <span className="text-xs font-medium uppercase tracking-wider hidden md:block">Privacy</span>
           </button>
         </div>
 
@@ -336,7 +339,7 @@ export default function DashboardPage() {
 
             {/* KPI Strip */}
             {kpiLoading
-              ? <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 text-slate-300 animate-spin" /></div>
+              ? <div className="h-20 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--text-subtle)' }} /></div>
               : (
                 <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3">
                   {orderedCards.map((card, index) => {
@@ -351,12 +354,13 @@ export default function DashboardPage() {
                       onDragEnd={handleKpiSort}
                       onDragOver={(e) => e.preventDefault()}
                       onClick={() => setSelectedKpi(card)}
-                      className="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-1.5 shadow-sm hover:shadow-md transition cursor-grab active:cursor-grabbing">
+                      className="rounded-xl p-3 flex flex-col gap-1.5 transition cursor-grab active:cursor-grabbing hover:opacity-90"
+                      style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: '12px' }}>
                       <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center pointer-events-none`}>
                         <Icon className={`w-4 h-4 ${color}`} />
                       </div>
-                      <p className="text-slate-900 text-xl font-bold pointer-events-none">{value}</p>
-                      <p className="text-slate-500 text-xs font-bold leading-tight tracking-wide pointer-events-none">{label}</p>
+                      <p className="text-xl font-medium pointer-events-none" style={{ color: 'var(--text)' }}>{value}</p>
+                      <p className="text-xs font-medium leading-tight tracking-wide pointer-events-none" style={{ color: 'var(--text-subtle)' }}>{label}</p>
                     </div>
                   )})}
                 </div>
@@ -367,20 +371,20 @@ export default function DashboardPage() {
 
               {/* Business Trend — full width */}
               {!privacyMode && (
-              <ChartCard span={2} title="Business Trend — Sales vs Purchases vs Expenses" icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
+              <ChartCard span={2} title="Business Trend — Sales vs Purchases vs Expenses" icon={<TrendingUp className="w-5 h-5" style={{ color: 'var(--primary)' }} />}
                 filter={<MiniFilter onChange={p => { setTrendLoading(true); dashboardApi.businessTrend(p).then(d => setTrendData(d.data || [])).finally(() => setTrendLoading(false)); }} />}
                 loading={trendLoading}>
                 <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={trendData} margin={{ top: 2, right: 4, left: -22, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="date" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" minTickGap={24} />
-                      <YAxis fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" tickFormatter={v => fmt(v)} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+                      <XAxis dataKey="date" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" minTickGap={24} />
+                      <YAxis fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" tickFormatter={v => fmt(v)} />
                       <Tooltip content={<CustomTip />} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
-                      <Line type="monotone" dataKey="sales" name="Sales" stroke="#6366f1" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="purchases" name="Purchases" stroke="#f97316" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#eab308" strokeWidth={2} dot={false} />
+                      <Line type="monotone" dataKey="sales" name="Sales" stroke="#1D9E75" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="purchases" name="Purchases" stroke="#378ADD" strokeWidth={1.5} dot={false} />
+                      <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#EF9F27" strokeWidth={1.5} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -394,24 +398,24 @@ export default function DashboardPage() {
                 <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.high.slice(0, chartHeight === 'h-48' ? 4 : 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
-                      <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
-                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
+                      <XAxis type="number" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" />
+                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" width={80} />
                       <Tooltip content={<CustomTip />} />
-                      <Bar dataKey="stock" name="Stock" fill="#6366f1" radius={[0, 3, 3, 0]} />
+                      <Bar dataKey="stock" name="Stock" fill="#85B7EB" radius={[0, 3, 3, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </ChartCard>
 
               {/* Low Volume Inventory */}
-              <ChartCard title="Low Volume Inventory" icon={<TrendingDown className="w-5 h-5 text-orange-500" />} filter={null} loading={inventoryLoading}>
+              <ChartCard title="Low Volume Inventory" icon={<TrendingDown className="w-5 h-5 text-amber-500" />} filter={null} loading={inventoryLoading}>
                 <div className={chartHeight}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={inventoryData.low.slice(0, chartHeight === 'h-48' ? 4 : 6)} layout="vertical" margin={{ top: 0, right: 4, left: 55, bottom: 0 }}>
-                      <XAxis type="number" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" />
-                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} stroke="#000" width={80} />
+                      <XAxis type="number" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" />
+                      <YAxis type="category" dataKey="name" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} stroke="#999" width={80} />
                       <Tooltip content={<CustomTip />} />
-                      <Bar dataKey="stock" name="Stock" fill="#f97316" radius={[0, 3, 3, 0]} />
+                      <Bar dataKey="stock" name="Stock" fill="#FAC775" radius={[0, 3, 3, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -419,7 +423,7 @@ export default function DashboardPage() {
 
               {/* Top 5 by Revenue */}
               {!privacyMode && (
-              <ChartCard title="Top 5 Items by Revenue" icon={<ArrowUpRight className="w-5 h-5 text-purple-500" />}
+              <ChartCard title="Top 5 Items by Revenue" icon={<ArrowUpRight className="w-5 h-5 text-emerald-600" />}
                 filter={<MiniFilter onChange={p => { setTopProfitLoading(true); dashboardApi.topItemsProfit(p).then(d => setTopProfit(d.data || [])).finally(() => setTopProfitLoading(false)); }} />}
                 loading={topProfitLoading}>
                 <div className={chartHeight}>
@@ -439,7 +443,7 @@ export default function DashboardPage() {
 
               {/* Bottom 5 by Revenue */}
               {!privacyMode && (
-              <ChartCard title="Bottom 5 Items by Revenue" icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+              <ChartCard title="Bottom 5 Items by Revenue" icon={<AlertTriangle className="w-5 h-5 text-amber-500" />}
                 filter={<MiniFilter onChange={p => { setBottomProfitLoading(true); dashboardApi.bottomItemsProfit(p).then(d => setBottomProfit(d.data || [])).finally(() => setBottomProfitLoading(false)); }} />}
                 loading={bottomProfitLoading}>
                 <div className={chartHeight}>
@@ -458,7 +462,7 @@ export default function DashboardPage() {
               )}
 
               {/* Cash Flow Overview */}
-              <ChartCard title="Cash Flow Overview" icon={<IndianRupee className="w-5 h-5 text-emerald-500" />}>
+              <ChartCard title="Cash Flow Overview" icon={<IndianRupee className="w-5 h-5" style={{ color: 'var(--success, #1D9E75)' }} />}>
                 <div className="flex items-center gap-3 h-64">
                   <div className="w-48 h-full flex-shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
@@ -468,9 +472,9 @@ export default function DashboardPage() {
                           { name: 'Purchases', value: Math.max(0, stats.purchases || 0) },
                           { name: 'Expenses', value: Math.max(0, stats.expenses || 0) }
                         ]} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value" nameKey="name" paddingAngle={4}>
-                          <Cell fill="#10B981" />
-                          <Cell fill="#F59E0B" />
-                          <Cell fill="#EF4444" />
+                          <Cell fill="#1D9E75" />
+                          <Cell fill="#378ADD" />
+                          <Cell fill="#EF9F27" />
                         </Pie>
                         <Tooltip content={<CustomTip />} />
                         <Legend iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
@@ -478,17 +482,17 @@ export default function DashboardPage() {
                     </ResponsiveContainer>
                   </div>
                   <div className="flex-1 space-y-3 pr-2 flex flex-col justify-center">
-                    <div className="border-b border-slate-100 pb-2">
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Income</p>
-                      <p className="text-sm font-bold text-emerald-600">{fmt(stats.sales || 0)}</p>
+                    <div className="pb-2" style={{ borderBottom: '0.5px solid var(--border)' }}>
+                      <p className="text-[10px] uppercase font-medium tracking-wider mb-0.5" style={{ color: 'var(--text-subtle)' }}>Total Income</p>
+                      <p className="text-sm font-medium text-emerald-700">{fmt(stats.sales || 0)}</p>
                     </div>
-                    <div className="border-b border-slate-100 pb-2">
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Purchases</p>
-                      <p className="text-sm font-bold text-amber-600">{fmt(stats.purchases || 0)}</p>
+                    <div className="pb-2" style={{ borderBottom: '0.5px solid var(--border)' }}>
+                      <p className="text-[10px] uppercase font-medium tracking-wider mb-0.5" style={{ color: 'var(--text-subtle)' }}>Total Purchases</p>
+                      <p className="text-sm font-medium text-sky-700">{fmt(stats.purchases || 0)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-0.5">Total Expenses</p>
-                      <p className="text-sm font-bold text-red-600">{fmt(stats.expenses || 0)}</p>
+                      <p className="text-[10px] uppercase font-medium tracking-wider mb-0.5" style={{ color: 'var(--text-subtle)' }}>Total Expenses</p>
+                      <p className="text-sm font-medium text-amber-700">{fmt(stats.expenses || 0)}</p>
                     </div>
                   </div>
                 </div>
@@ -515,9 +519,11 @@ export default function DashboardPage() {
               )}
 
               {/* Customer Pending */}
-              <ChartCard span={1} title="Customer Pending Payments" icon={<AlertCircle className="w-5 h-5 text-rose-500" />} filter={null} loading={pendingLoading}>
+              <ChartCard span={1} title="Customer Pending Payments" icon={<AlertCircle className="w-5 h-5 text-amber-500" />} filter={null} loading={pendingLoading}>
                 {pendingCustomers.length === 0
-                  ? <p className="text-xs text-emerald-600 font-medium py-2">All customers are settled — no pending dues! 🎉</p>
+                  ? <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--success-light)', border: '0.5px solid var(--success)' }}>
+                      <span className="text-xs font-medium" style={{ color: 'var(--success)' }}>✓ All customers are settled — no pending dues!</span>
+                    </div>
                   : (
                     <div className="overflow-x-auto overflow-y-auto max-h-96">
                       <table className="w-full text-xs">
@@ -551,9 +557,11 @@ export default function DashboardPage() {
               </ChartCard>
 
               {/* Supplier Pending */}
-              <ChartCard span={1} title="Supplier Pending Payments" icon={<AlertCircle className="w-5 h-5 text-orange-500" />} filter={null} loading={pendingLoading}>
+              <ChartCard span={1} title="Supplier Pending Payments" icon={<AlertCircle className="w-5 h-5 text-amber-500" />} filter={null} loading={pendingLoading}>
                 {pendingSuppliers.length === 0
-                  ? <p className="text-xs text-emerald-600 font-medium py-2">All suppliers are settled — no pending dues! 🎉</p>
+                  ? <div className="flex items-center gap-2 p-3 rounded-lg" style={{ background: 'var(--success-light)', border: '0.5px solid var(--success)' }}>
+                      <span className="text-xs font-medium" style={{ color: 'var(--success)' }}>✓ All suppliers are settled — no pending dues!</span>
+                    </div>
                   : (
                     <div className="overflow-x-auto overflow-y-auto max-h-96">
                       <table className="w-full text-xs">
@@ -591,7 +599,7 @@ export default function DashboardPage() {
 
           {/* RIGHT: Quick Actions sidebar */}
           <div className="w-full xl:w-52 flex-shrink-0 space-y-3 xl:sticky xl:top-5">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Quick Actions</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wider px-1" style={{ color: 'var(--text-subtle)' }}>Quick Actions</h3>
             {actions.map(({ label, href, icon: Icon, color, bg, desc }, index) => (
               <div key={label}
                 draggable
@@ -605,28 +613,30 @@ export default function DashboardPage() {
                     if ((actions[index] as any).action === 'PAY_IN') setPaymentModalMode('IN');
                     else if ((actions[index] as any).action === 'PAY_OUT') setPaymentModalMode('OUT');
                   }}
-                  className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing">
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing"
+                  style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
                     <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                       <Icon className={`w-4 h-4 ${color}`} />
                     </div>
                     <div className="min-w-0 pointer-events-none">
-                      <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
-                      <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
+                      <p className="text-sm font-medium transition" style={{ color: 'var(--text)' }}>{label}</p>
+                      <p className="text-xs truncate font-normal mt-0.5" style={{ color: 'var(--text-subtle)' }}>{desc}</p>
                     </div>
-                    <div className="ml-auto flex items-center text-slate-300 group-hover:text-indigo-400 transition">
+                    <div className="ml-auto flex items-center transition" style={{ color: 'var(--text-subtle)' }}>
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   </button>
                 ) : (
-                  <Link href={href as string} className="w-full flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing">
+                  <Link href={href as string} className="w-full flex items-center gap-3 p-3 rounded-xl hover:-translate-y-0.5 transition-all text-left group cursor-grab active:cursor-grabbing"
+                    style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
                     <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                       <Icon className={`w-4 h-4 ${color}`} />
                     </div>
                     <div className="min-w-0 pointer-events-none">
-                      <p className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{label}</p>
-                      <p className="text-xs text-slate-500 truncate font-medium mt-0.5">{desc}</p>
+                      <p className="text-sm font-medium transition" style={{ color: 'var(--text)' }}>{label}</p>
+                      <p className="text-xs truncate font-normal mt-0.5" style={{ color: 'var(--text-subtle)' }}>{desc}</p>
                     </div>
-                    <div className="ml-auto flex items-center text-slate-300 group-hover:text-indigo-400 transition">
+                    <div className="ml-auto flex items-center transition" style={{ color: 'var(--text-subtle)' }}>
                       <ChevronRight className="w-4 h-4" />
                     </div>
                   </Link>
@@ -635,66 +645,68 @@ export default function DashboardPage() {
             ))}
 
             {/* Mini KPI card below QA */}
-            <div className="mt-2 pt-3 border-t border-slate-200">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Today's Snapshot</h3>
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white shadow-sm mb-3">
-                <p className="text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Today's Sales</p>
-                <p className="text-white font-black text-2xl">{renderAmount(stats.todaySales)}</p>
+            <div className="mt-2 pt-3" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <h3 className="text-xs font-medium uppercase tracking-wider px-1 mb-2" style={{ color: 'var(--text-subtle)' }}>Today's Snapshot</h3>
+              <div className="rounded-xl p-4 text-white shadow-sm mb-3" style={{ background: 'linear-gradient(135deg, #BA7517, #D4922A)' }}>
+                <p className="text-amber-100 text-xs font-medium uppercase tracking-wider mb-0.5">Today's Sales</p>
+                <p className="text-white font-medium text-2xl">{renderAmount(stats.todaySales)}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button onClick={() => setPaymentModalMode('IN')} className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 hover:border-emerald-200 transition-colors group">
                   <div className="bg-emerald-100 p-1.5 rounded-lg group-hover:scale-105 transition-transform">
-                    <IndianRupee className="w-4 h-4 text-emerald-600" />
+                    <IndianRupee className="w-4 h-4 text-emerald-700" />
                   </div>
                   <div className="text-left">
-                    <span className="block text-xs font-bold text-emerald-800">Pay In</span>
-                    <span className="block text-[9px] font-bold text-emerald-600/70 uppercase">Customer</span>
+                    <span className="block text-xs font-medium text-emerald-800">Pay In</span>
+                    <span className="block text-[9px] font-medium text-emerald-600/70 uppercase">Customer</span>
                   </div>
                 </button>
                 <button onClick={() => setPaymentModalMode('OUT')} className="flex items-center gap-2 p-2.5 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-100 hover:border-rose-200 transition-colors group">
                   <div className="bg-rose-100 p-1.5 rounded-lg group-hover:scale-105 transition-transform">
-                    <CreditCard className="w-4 h-4 text-rose-600" />
+                    <CreditCard className="w-4 h-4 text-rose-700" />
                   </div>
                   <div className="text-left">
-                    <span className="block text-xs font-bold text-rose-800">Pay Out</span>
-                    <span className="block text-[9px] font-bold text-rose-600/70 uppercase">Supplier</span>
+                    <span className="block text-xs font-medium text-rose-800">Pay Out</span>
+                    <span className="block text-[9px] font-medium text-rose-600/70 uppercase">Supplier</span>
                   </div>
                 </button>
               </div>
             </div>
 
             {/* Bank & Cash Balances Widget */}
-            <div className="mt-2 pt-3 border-t border-slate-200">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mb-2">Fund Balances</h3>
+            <div className="mt-2 pt-3" style={{ borderTop: '0.5px solid var(--border)' }}>
+              <h3 className="text-xs font-medium uppercase tracking-wider px-1 mb-2" style={{ color: 'var(--text-subtle)' }}>Fund Balances</h3>
               <div className="space-y-2">
                 <div 
                     onClick={() => {
-                      if (cashAccount) setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-600', icon: IndianRupee, accountId: cashAccount._id });
+                      if (cashAccount) setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cashAccount._id });
                     }}
-                    className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm cursor-pointer hover:border-emerald-300 transition-colors">
+                    className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
+                    style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
                     <div className="flex items-center gap-2">
-                      <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600">
+                      <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-700">
                       <IndianRupee className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-bold text-slate-700">Cash in Hand</span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>Cash in Hand</span>
                   </div>
-                  <span className={`text-sm font-black ${cashInHand < 0 ? 'text-red-500' : 'text-emerald-600'}`}>{renderAmount(cashInHand)}</span>
+                  <span className={`text-sm font-medium ${cashInHand < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{renderAmount(cashInHand)}</span>
                 </div>
                 {banks.map(bank => (
                   <div key={bank._id} 
-                    onClick={() => setSelectedKpi({ type: 'bank', label: bank.name || bank.bankName, bg: 'bg-blue-100', color: 'text-blue-600', icon: Wallet, accountId: bank._id })}
-                    className="flex items-center justify-between bg-white border border-slate-200 rounded-lg p-2 shadow-sm cursor-pointer hover:border-blue-300 transition-colors">
+                    onClick={() => setSelectedKpi({ type: 'bank', label: bank.name || bank.bankName, bg: 'bg-sky-100', color: 'text-sky-700', icon: Wallet, accountId: bank._id })}
+                    className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
+                    style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
                     <div className="flex items-center gap-2">
-                      <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600">
+                      <div className="bg-sky-100 p-1.5 rounded-lg text-sky-700">
                         <Wallet className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-bold text-slate-700 truncate max-w-[100px]">{bank.bankName}</span>
-                        <span className="text-[9px] text-slate-500 truncate max-w-[100px]">A/C: {bank.accountNumber}</span>
+                        <span className="text-xs font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{bank.bankName}</span>
+                        <span className="text-[9px] truncate max-w-[100px]" style={{ color: 'var(--text-subtle)' }}>A/C: {bank.accountNumber}</span>
                       </div>
                     </div>
-                    <span className={`text-sm font-black ${bank.currentBalance < 0 ? 'text-red-500' : 'text-blue-600'}`}>{renderAmount(bank.currentBalance)}</span>
+                    <span className={`text-sm font-medium ${bank.currentBalance < 0 ? 'text-red-600' : 'text-sky-700'}`}>{renderAmount(bank.currentBalance)}</span>
                   </div>
                 ))}
               </div>

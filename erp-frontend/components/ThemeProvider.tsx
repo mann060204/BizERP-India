@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 
-export const THEMES = ['indigo', 'emerald', 'slate', 'rose'] as const;
+export const THEMES = ['indigo', 'emerald', 'slate', 'rose', 'summer'] as const;
 export type Theme = typeof THEMES[number];
 
 export function applyTheme(theme: Theme) {
