@@ -233,6 +233,18 @@ export const reportsApi = {
   getCategoryWiseSales: () => api.get('/reports/special/category-wise-sales'),
   getCategoryWiseMargin: () => api.get('/reports/special/category-wise-margin'),
   getCategoryWiseSupplierAnalysis: () => api.get('/reports/special/category-wise-supplier-analysis'),
+  getAbcAnalysis: () => api.get('/reports/special/abc-analysis'),
+  getInventoryTurnoverRatio: () => api.get('/reports/special/inventory-turnover-ratio'),
+  getGrossProfitPct: () => api.get('/reports/special/gross-profit-pct'),
+  getNetProfitPct: () => api.get('/reports/special/net-profit-pct'),
+  getCustomerLifetimeValue: () => api.get('/reports/special/customer-lifetime-value'),
+  getRepeatCustomerReport: () => api.get('/reports/special/repeat-customer-report'),
+  getTop100Products: () => api.get('/reports/special/top-100-products'),
+  getBottom100Products: () => api.get('/reports/special/bottom-100-products'),
+  getSeasonalAnalysis: () => api.get('/reports/special/seasonal-analysis'),
+  getDeadStockRecovery: () => api.get('/reports/special/dead-stock-recovery'),
+  getForecastPurchasePlanning: () => api.get('/reports/special/forecast-purchase-planning'),
+  getForecastSalesPlanning: () => api.get('/reports/special/forecast-sales-planning'),
 };
 
 // ─── Business / Settings ──────────────────────────────────────────────────────

@@ -121,6 +121,18 @@ router.get('/special/category-wise-profit-loss', specialReportsController.getCat
 router.get('/special/category-wise-sales', specialReportsController.getCategoryWiseSales as any);
 router.get('/special/category-wise-margin', specialReportsController.getCategoryWiseMargin as any);
 router.get('/special/category-wise-supplier-analysis', specialReportsController.getCategoryWiseSupplierAnalysis as any);
+router.get('/special/abc-analysis', specialReportsController.getAbcAnalysis as any);
+router.get('/special/inventory-turnover-ratio', specialReportsController.getInventoryTurnoverRatio as any);
+router.get('/special/gross-profit-pct', specialReportsController.getGrossProfitPct as any);
+router.get('/special/net-profit-pct', specialReportsController.getNetProfitPct as any);
+router.get('/special/customer-lifetime-value', specialReportsController.getCustomerLifetimeValue as any);
+router.get('/special/repeat-customer-report', specialReportsController.getRepeatCustomerReport as any);
+router.get('/special/top-100-products', specialReportsController.getTop100Products as any);
+router.get('/special/bottom-100-products', specialReportsController.getBottom100Products as any);
+router.get('/special/seasonal-analysis', specialReportsController.getSeasonalAnalysis as any);
+router.get('/special/dead-stock-recovery', specialReportsController.getDeadStockRecovery as any);
+router.get('/special/forecast-purchase-planning', specialReportsController.getForecastPurchasePlanning as any);
+router.get('/special/forecast-sales-planning', specialReportsController.getForecastSalesPlanning as any);
 
 export default router;
 

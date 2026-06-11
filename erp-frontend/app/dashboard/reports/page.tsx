@@ -202,6 +202,19 @@ const REPORTS = [
       { name: 'Category Wise Sales', desc: 'Sales volumes by Category', icon: Package, href: '/dashboard/reports/special/category-wise-sales' },
       { name: 'Category Wise Margin', desc: 'Sorted categories by margin %', icon: PieChart, href: '/dashboard/reports/special/category-wise-margin' },
       { name: 'Category Supplier Analysis', desc: 'Supplier dependency per category', icon: Truck, href: '/dashboard/reports/special/category-wise-supplier-analysis' },
+
+      { name: 'ABC Analysis', desc: 'Top Selling Products (A/B/C)', icon: PieChart, href: '/dashboard/reports/special/abc-analysis' },
+      { name: 'Inventory Turnover', desc: 'Efficiency of stock sales', icon: Timer, href: '/dashboard/reports/special/inventory-turnover-ratio' },
+      { name: 'Gross Profit %', margin: 'Item level gross profit', icon: Scale, href: '/dashboard/reports/special/gross-profit-pct' },
+      { name: 'Net Profit %', margin: 'Item level net profit', icon: Scale, href: '/dashboard/reports/special/net-profit-pct' },
+      { name: 'Customer Lifetime Value', desc: 'Historical CLV analysis', icon: UserCheck, href: '/dashboard/reports/special/customer-lifetime-value' },
+      { name: 'Repeat Customers', desc: 'Retention & purchase frequency', icon: Users, href: '/dashboard/reports/special/repeat-customer-report' },
+      { name: 'Top 100 Products', desc: 'Highest performing items', icon: TrendingUp, href: '/dashboard/reports/special/top-100-products' },
+      { name: 'Bottom 100 Products', desc: 'Lowest performing items', icon: ArrowDownCircle, href: '/dashboard/reports/special/bottom-100-products' },
+      { name: 'Seasonal Analysis', desc: 'Peak sales periods', icon: Activity, href: '/dashboard/reports/special/seasonal-analysis' },
+      { name: 'Dead Stock Recovery', desc: 'Liquidation recommendations', icon: AlertTriangle, href: '/dashboard/reports/special/dead-stock-recovery' },
+      { name: 'Forecast Purchase', desc: 'Predict reorder requirements', icon: ShoppingCart, href: '/dashboard/reports/special/forecast-purchase-planning' },
+      { name: 'Forecast Sales', desc: 'Predict future revenue', icon: TrendingUp, href: '/dashboard/reports/special/forecast-sales-planning' },
     ]
   },
 ];
