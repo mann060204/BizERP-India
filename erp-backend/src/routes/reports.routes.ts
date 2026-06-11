@@ -134,5 +134,25 @@ router.get('/special/dead-stock-recovery', specialReportsController.getDeadStock
 router.get('/special/forecast-purchase-planning', specialReportsController.getForecastPurchasePlanning as any);
 router.get('/special/forecast-sales-planning', specialReportsController.getForecastSalesPlanning as any);
 
+router.get('/special/city-wise-customer-report', specialReportsController.getCityWiseCustomerReport as any);
+router.get('/special/customer-ledger-report', specialReportsController.getCustomerLedgerReport as any);
+router.get('/special/customer-purchase-frequency', specialReportsController.getCustomerPurchaseFrequency as any);
+router.get('/special/top-50-customers', specialReportsController.getTop50Customers as any);
+router.get('/special/customer-wise-item-sales', specialReportsController.getCustomerWiseItemSales as any);
+router.get('/special/supplier-ledger-report', specialReportsController.getSupplierLedgerReport as any);
+router.get('/special/supplier-payment-history', specialReportsController.getSupplierPaymentHistory as any);
+router.get('/special/supplier-wise-purchase', specialReportsController.getSupplierWisePurchase as any);
+router.get('/special/supplier-rate-comparison', specialReportsController.getSupplierRateComparison as any);
+router.get('/special/supplier-item-history', specialReportsController.getSupplierItemHistory as any);
+router.get('/special/top-suppliers', specialReportsController.getTopSuppliers as any);
+router.get('/special/purchase-return-report', specialReportsController.getPurchaseReturnReport as any);
+router.get('/special/purchase-summary-report', specialReportsController.getPurchaseSummaryReport as any);
+router.get('/special/item-wise-profit', specialReportsController.getItemWiseProfit as any);
+router.get('/special/category-wise-profit', specialReportsController.getCategoryWiseProfit as any);
+router.get('/special/customer-wise-profit', specialReportsController.getCustomerWiseProfit as any);
+router.get('/special/supplier-wise-profit', specialReportsController.getSupplierWiseProfit as any);
+router.get('/special/invoice-wise-profit', specialReportsController.getInvoiceWiseProfit as any);
+router.get('/special/brand-wise-profit', specialReportsController.getBrandWiseProfit as any);
+
 export default router;
 

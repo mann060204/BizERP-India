@@ -245,6 +245,26 @@ export const reportsApi = {
   getDeadStockRecovery: () => api.get('/reports/special/dead-stock-recovery'),
   getForecastPurchasePlanning: () => api.get('/reports/special/forecast-purchase-planning'),
   getForecastSalesPlanning: () => api.get('/reports/special/forecast-sales-planning'),
+  
+  getCityWiseCustomerReport: () => api.get('/reports/special/city-wise-customer-report'),
+  getCustomerLedgerReport: () => api.get('/reports/special/customer-ledger-report'),
+  getCustomerPurchaseFrequency: () => api.get('/reports/special/customer-purchase-frequency'),
+  getTop50Customers: () => api.get('/reports/special/top-50-customers'),
+  getCustomerWiseItemSales: () => api.get('/reports/special/customer-wise-item-sales'),
+  getSupplierLedgerReport: () => api.get('/reports/special/supplier-ledger-report'),
+  getSupplierPaymentHistory: () => api.get('/reports/special/supplier-payment-history'),
+  getSupplierWisePurchase: () => api.get('/reports/special/supplier-wise-purchase'),
+  getSupplierRateComparison: () => api.get('/reports/special/supplier-rate-comparison'),
+  getSupplierItemHistory: () => api.get('/reports/special/supplier-item-history'),
+  getTopSuppliers: () => api.get('/reports/special/top-suppliers'),
+  getPurchaseReturnReport: () => api.get('/reports/special/purchase-return-report'),
+  getPurchaseSummaryReport: () => api.get('/reports/special/purchase-summary-report'),
+  getItemWiseProfit: () => api.get('/reports/special/item-wise-profit'),
+  getCategoryWiseProfit: () => api.get('/reports/special/category-wise-profit'),
+  getCustomerWiseProfit: () => api.get('/reports/special/customer-wise-profit'),
+  getSupplierWiseProfit: () => api.get('/reports/special/supplier-wise-profit'),
+  getInvoiceWiseProfit: () => api.get('/reports/special/invoice-wise-profit'),
+  getBrandWiseProfit: () => api.get('/reports/special/brand-wise-profit'),
 };
 
 // ─── Business / Settings ──────────────────────────────────────────────────────

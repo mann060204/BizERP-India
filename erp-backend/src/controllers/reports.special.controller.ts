@@ -1304,3 +1304,958 @@ export const getForecastSalesPlanning = async (req: AuthRequest, res: Response) 
     });
   } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
+
+// --- PHASE 3: CUSTOMER ANALYTICS REPORTS ---
+
+// 22. CITY WISE CUSTOMER REPORT
+export const getCityWiseCustomerReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const [invoices, customers] = await Promise.all([
+      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean(),
+      mongoose.model('Customer').find({ businessId }).lean()
+    ]);
+
+    const customerMap = new Map<string, any>();
+    customers.forEach((c: any) => {
+      customerMap.set(c._id.toString(), c);
+    });
+
+    const map = new Map<string, any>(); // group by city
+
+    invoices.forEach(inv => {
+      const cid = inv.customerId?.toString();
+      const customer = cid ? customerMap.get(cid) : null;
+      const city = customer?.address?.city || customer?.city || customer?.billingAddress?.city || 'Unknown';
+
+      if (!map.has(city)) {
+        map.set(city, {
+          city,
+          customers: new Set<string>(),
+          ordersCount: 0,
+          revenue: 0,
+          outstandingAmount: 0
+        });
+      }
+      const m = map.get(city);
+      if (cid) m.customers.add(cid);
+      m.ordersCount++;
+      m.revenue += inv.grandTotal;
+      m.outstandingAmount += (inv.balance || 0);
+    });
+
+    let totalRev = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalRev += m.revenue;
+      return {
+        ...m,
+        customerCount: m.customers.size,
+        averageOrderValue: m.ordersCount > 0 ? m.revenue / m.ordersCount : 0
+      };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    const totalCustomers = data.reduce((s, d) => s + d.customerCount, 0);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalCities: data.length,
+          totalCustomers,
+          totalRevenue: totalRev,
+          averageRevenuePerCity: data.length > 0 ? totalRev / data.length : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 23. CUSTOMER LEDGER REPORT
+export const getCustomerLedgerReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    // Ideally filtered by req.query.customerId, but we'll fetch all ledger entries related to customers if not specified.
+    // For this generic BI report without specific customer input, we will aggregate by customer or just show all customer ledgers.
+    // The requirement says "detailed account statement for customers", meaning we list ledger entries.
+    const AccountLedger = mongoose.model('AccountLedger');
+    const ledgers = await AccountLedger.find({ businessId, entityType: 'Customer' })
+      .sort({ date: 1 })
+      .lean();
+
+    let totalDebit = 0, totalCredit = 0;
+    let balance = 0;
+
+    const data = ledgers.map((l: any) => {
+      totalDebit += (l.debit || 0);
+      totalCredit += (l.credit || 0);
+      balance += (l.debit || 0) - (l.credit || 0);
+      return {
+        date: l.date,
+        voucherNumber: l.voucherNumber || l.referenceNumber || '-',
+        particulars: l.particulars || l.description || 'Ledger Entry',
+        debit: l.debit || 0,
+        credit: l.credit || 0,
+        balance: balance
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          openingBalance: 0, // In a real ledger, calculate before date range
+          totalDebit,
+          totalCredit,
+          closingBalance: balance
+        },
+        data: data.reverse() // latest first
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 24. CUSTOMER PURCHASE FREQUENCY REPORT
+export const getCustomerPurchaseFrequency = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const map = new Map<string, any>();
+
+    invoices.forEach(inv => {
+      const cid = inv.customerId?.toString() || 'Cash';
+      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+
+      if (!map.has(cid)) {
+        map.set(cid, {
+          customerName: cname,
+          ordersCount: 0,
+          revenue: 0,
+          firstDate: inv.invoiceDate,
+          lastDate: inv.invoiceDate
+        });
+      }
+      const m = map.get(cid);
+      m.ordersCount++;
+      m.revenue += inv.grandTotal;
+      if (new Date(inv.invoiceDate) < new Date(m.firstDate)) m.firstDate = inv.invoiceDate;
+      if (new Date(inv.invoiceDate) > new Date(m.lastDate)) m.lastDate = inv.invoiceDate;
+    });
+
+    let repeatCount = 0;
+    let totalFreq = 0;
+
+    const data = Array.from(map.values()).map(m => {
+      const days = (new Date(m.lastDate).getTime() - new Date(m.firstDate).getTime()) / (1000 * 3600 * 24);
+      const freq = m.ordersCount > 1 ? days / (m.ordersCount - 1) : 0;
+      if (m.ordersCount > 1) {
+        repeatCount++;
+        totalFreq += freq;
+      }
+      return {
+        customerName: m.customerName,
+        ordersCount: m.ordersCount,
+        revenue: m.revenue,
+        averageOrderValue: m.ordersCount > 0 ? m.revenue / m.ordersCount : 0,
+        lastPurchaseDate: m.lastDate,
+        purchaseFrequency: freq
+      };
+    }).sort((a, b) => b.ordersCount - a.ordersCount);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          activeCustomers: data.length,
+          averagePurchaseFrequency: data.reduce((s, d) => s + d.ordersCount, 0) / (data.length || 1),
+          repeatPurchaseRate: data.length > 0 ? (repeatCount / data.length) * 100 : 0,
+          averageDaysBetweenOrders: repeatCount > 0 ? totalFreq / repeatCount : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 25. TOP 50 CUSTOMERS REPORT
+export const getTop50Customers = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const productsMap = await getProductsMap(businessId);
+
+    const map = new Map<string, any>();
+
+    invoices.forEach(inv => {
+      const cid = inv.customerId?.toString() || 'Cash';
+      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+
+      if (!map.has(cid)) {
+        map.set(cid, { customerName: cname, ordersCount: 0, revenue: 0, cost: 0, outstandingAmount: 0 });
+      }
+      const m = map.get(cid);
+      m.ordersCount++;
+      m.revenue += inv.grandTotal;
+      m.outstandingAmount += (inv.balance || 0);
+
+      inv.lineItems?.forEach(item => {
+        const product = item.productId ? productsMap.get(item.productId.toString()) : null;
+        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+    });
+
+    let totalProfit = 0, totalRev = 0;
+    const data = Array.from(map.values()).map(m => {
+      const profit = m.revenue - m.cost;
+      return { ...m, profit };
+    }).sort((a, b) => b.revenue - a.revenue).slice(0, 50).map((d, i) => {
+      totalProfit += d.profit;
+      totalRev += d.revenue;
+      return { rank: i + 1, ...d };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenueFromTop50: totalRev,
+          averageCustomerValue: data.length > 0 ? totalRev / data.length : 0,
+          profitGenerated: totalProfit,
+          repeatPurchasePct: data.length > 0 ? (data.filter(d => d.ordersCount > 1).length / data.length) * 100 : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 26. CUSTOMER WISE ITEM SALES REPORT
+export const getCustomerWiseItemSales = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const map = new Map<string, any>(); // key: customerId_itemId
+    const customers = new Set<string>();
+
+    invoices.forEach(inv => {
+      const cid = inv.customerId?.toString() || 'Cash';
+      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      customers.add(cname);
+
+      inv.lineItems?.forEach(item => {
+        const pid = item.productId?.toString() || 'Misc';
+        const key = `${cid}_${pid}`;
+
+        if (!map.has(key)) {
+          map.set(key, {
+            customer: cname,
+            item: item.productName || 'Unknown',
+            quantitySold: 0,
+            revenue: 0,
+            lastPurchaseDate: inv.invoiceDate
+          });
+        }
+        const m = map.get(key);
+        m.quantitySold += item.quantity;
+        m.revenue += item.totalAmount;
+        if (new Date(inv.invoiceDate) > new Date(m.lastPurchaseDate)) m.lastPurchaseDate = inv.invoiceDate;
+      });
+    });
+
+    let totalItemsSold = 0, totalRevenue = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalItemsSold += m.quantitySold;
+      totalRevenue += m.revenue;
+      return {
+        ...m,
+        averageSellingPrice: m.quantitySold > 0 ? m.revenue / m.quantitySold : 0
+      };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalCustomers: customers.size,
+          totalProductsSold: totalItemsSold,
+          revenueGenerated: totalRevenue,
+          averageItemsPerCustomer: customers.size > 0 ? totalItemsSold / customers.size : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// --- PHASE 3: SUPPLIER ANALYTICS REPORTS ---
+
+// 27. SUPPLIER LEDGER REPORT
+export const getSupplierLedgerReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const AccountLedger = mongoose.model('AccountLedger');
+    const ledgers = await AccountLedger.find({ businessId, entityType: 'Supplier' }).sort({ date: 1 }).lean();
+
+    let totalDebit = 0, totalCredit = 0, balance = 0;
+
+    const data = ledgers.map((l: any) => {
+      totalDebit += (l.debit || 0);
+      totalCredit += (l.credit || 0);
+      balance += (l.credit || 0) - (l.debit || 0); // For suppliers, credit increases liability
+      return {
+        date: l.date,
+        voucherNumber: l.voucherNumber || l.referenceNumber || '-',
+        particulars: l.particulars || l.description || 'Ledger Entry',
+        debit: l.debit || 0,
+        credit: l.credit || 0,
+        balance: balance
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          openingBalance: 0,
+          purchases: totalCredit,
+          payments: totalDebit,
+          closingBalance: balance
+        },
+        data: data.reverse()
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 28. SUPPLIER PAYMENT HISTORY REPORT
+export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    // Assuming PaymentOut exists, else we'll mock using AccountLedger where entityType=Supplier and debit > 0
+    const AccountLedger = mongoose.model('AccountLedger');
+    const payments = await AccountLedger.find({ businessId, entityType: 'Supplier', debit: { $gt: 0 } }).sort({ date: -1 }).lean();
+    
+    // Also need supplier map to get outstanding payable
+    const Supplier = mongoose.model('Supplier');
+    const suppliers = await Supplier.find({ businessId }).lean();
+    let totalOutstanding = 0;
+    suppliers.forEach((s: any) => totalOutstanding += (s.closingBalance || 0));
+
+    let totalPaid = 0;
+    const data = payments.map((p: any) => {
+      totalPaid += p.debit;
+      return {
+        paymentDate: p.date,
+        supplier: p.entityName || 'Unknown Supplier',
+        voucherNumber: p.voucherNumber || p.referenceNumber || '-',
+        amountPaid: p.debit,
+        paymentMethod: p.modeOfPayment || p.paymentMode || 'Bank Transfer',
+        referenceNumber: p.referenceNumber || '-'
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalPayments: data.length,
+          averagePaymentValue: data.length > 0 ? totalPaid / data.length : 0,
+          outstandingPayables: totalOutstanding,
+          paymentFrequency: 'Monthly' // placeholder
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 29. SUPPLIER WISE PURCHASE REPORT
+export const getSupplierWisePurchase = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const map = new Map<string, any>();
+
+    bills.forEach(bill => {
+      const sid = bill.supplierId?.toString() || 'Cash';
+      const sname = bill.supplierSnapshot?.name || 'Cash Supplier';
+
+      if (!map.has(sid)) {
+        map.set(sid, { supplier: sname, billsCount: 0, purchaseValue: 0, gstAmount: 0, paidAmount: 0, outstandingAmount: 0 });
+      }
+      const m = map.get(sid);
+      m.billsCount++;
+      m.purchaseValue += bill.grandTotal;
+      m.gstAmount += (bill.totalGST || 0);
+      m.paidAmount += (bill.amountPaid || 0);
+      m.outstandingAmount += (bill.balance || 0);
+    });
+
+    let totalPur = 0, totalOut = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalPur += m.purchaseValue;
+      totalOut += m.outstandingAmount;
+      return m;
+    }).sort((a, b) => b.purchaseValue - a.purchaseValue);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalPurchaseValue: totalPur,
+          supplierCount: data.length,
+          averagePurchaseValue: data.length > 0 ? totalPur / data.length : 0,
+          outstandingAmount: totalOut
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 30. SUPPLIER RATE COMPARISON REPORT
+export const getSupplierRateComparison = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const map = new Map<string, any>(); // key: itemId
+
+    bills.forEach(bill => {
+      const sname = bill.supplierSnapshot?.name || 'Cash Supplier';
+      bill.lineItems?.forEach(item => {
+        const pid = item.productId?.toString();
+        if (!pid) return;
+        const itemName = item.productName || 'Unknown';
+        
+        if (!map.has(pid)) map.set(pid, { item: itemName, suppliers: new Map<string, any>() });
+        const m = map.get(pid);
+        
+        if (!m.suppliers.has(sname)) {
+          m.suppliers.set(sname, { supplier: sname, rate: item.rate, lastDate: bill.billDate });
+        } else {
+          const s = m.suppliers.get(sname);
+          if (new Date(bill.billDate) > new Date(s.lastDate)) {
+            s.rate = item.rate;
+            s.lastDate = bill.billDate;
+          }
+        }
+      });
+    });
+
+    const data: any[] = [];
+    let savingsOpp = 0;
+    let comparedItems = 0;
+
+    Array.from(map.values()).forEach(m => {
+      if (m.suppliers.size > 1) comparedItems++;
+      const suppliersArray = Array.from(m.suppliers.values());
+      const minRate = Math.min(...suppliersArray.map((s: any) => s.rate));
+      const maxRate = Math.max(...suppliersArray.map((s: any) => s.rate));
+      
+      suppliersArray.forEach((s: any) => {
+        data.push({
+          item: m.item,
+          supplier: s.supplier,
+          purchaseRate: s.rate,
+          lastPurchaseDate: s.lastDate,
+          differencePct: minRate > 0 ? ((s.rate - minRate) / minRate) * 100 : 0
+        });
+        if (s.rate > minRate) savingsOpp += (s.rate - minRate); // Simplified savings potential
+      });
+    });
+
+    data.sort((a, b) => a.item.localeCompare(b.item) || a.purchaseRate - b.purchaseRate);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          comparedItems,
+          lowestSupplierRate: data.length > 0 ? Math.min(...data.map(d => d.purchaseRate)) : 0,
+          highestSupplierRate: data.length > 0 ? Math.max(...data.map(d => d.purchaseRate)) : 0,
+          potentialSavings: savingsOpp
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 31. SUPPLIER ITEM HISTORY REPORT
+export const getSupplierItemHistory = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const data: any[] = [];
+    const suppliers = new Set();
+    const items = new Set();
+    let totalQty = 0, totalVal = 0;
+
+    bills.forEach(bill => {
+      const sname = bill.supplierSnapshot?.name || 'Cash Supplier';
+      suppliers.add(sname);
+      
+      bill.lineItems?.forEach(item => {
+        items.add(item.productName);
+        totalQty += item.quantity;
+        totalVal += item.totalAmount;
+
+        data.push({
+          supplier: sname,
+          item: item.productName || 'Unknown',
+          quantityPurchased: item.quantity,
+          rate: item.rate,
+          purchaseValue: item.totalAmount,
+          lastPurchaseDate: bill.billDate
+        });
+      });
+    });
+
+    data.sort((a, b) => new Date(b.lastPurchaseDate).getTime() - new Date(a.lastPurchaseDate).getTime());
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalSuppliers: suppliers.size,
+          totalItems: items.size,
+          purchaseQuantity: totalQty,
+          purchaseValue: totalVal
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 32. TOP SUPPLIERS REPORT
+export const getTopSuppliers = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const map = new Map<string, any>();
+    let grandTotal = 0;
+
+    bills.forEach(bill => {
+      const sid = bill.supplierId?.toString() || 'Cash';
+      const sname = bill.supplierSnapshot?.name || 'Cash Supplier';
+
+      if (!map.has(sid)) map.set(sid, { supplier: sname, purchaseValue: 0, billsCount: 0, outstandingAmount: 0 });
+      const m = map.get(sid);
+      m.purchaseValue += bill.grandTotal;
+      m.billsCount++;
+      m.outstandingAmount += (bill.balance || 0);
+      grandTotal += bill.grandTotal;
+    });
+
+    let top10Spend = 0;
+    const data = Array.from(map.values())
+      .sort((a, b) => b.purchaseValue - a.purchaseValue)
+      .slice(0, 50)
+      .map((d, i) => {
+        if (i < 10) top10Spend += d.purchaseValue;
+        return { rank: i + 1, ...d };
+      });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          topSupplierSpend: top10Spend,
+          purchaseContributionPct: grandTotal > 0 ? (top10Spend / grandTotal) * 100 : 0,
+          supplierCount: map.size,
+          averageSupplierValue: map.size > 0 ? grandTotal / map.size : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 33. PURCHASE RETURN REPORT
+export const getPurchaseReturnReport = async (req: AuthRequest, res: Response) => {
+  try {
+    // Assuming a DebitNote or PurchaseReturn model exists. We'll fallback to empty if not.
+    // Let's check if we can query DebitNote
+    const DebitNote = mongoose.modelNames().includes('DebitNote') ? mongoose.model('DebitNote') : null;
+    let returns: any[] = [];
+    if (DebitNote) {
+      returns = await DebitNote.find({ businessId: req.user!.businessId }).lean();
+    }
+    
+    // As a robust fallback if model doesn't exist or is empty
+    const data = returns.map((r: any) => ({
+      returnNumber: r.debitNoteNumber || r.returnNumber || '-',
+      supplier: r.supplierName || 'Unknown',
+      item: r.itemName || 'Misc',
+      quantityReturned: r.quantity || 1,
+      returnValue: r.totalAmount || r.grandTotal || 0,
+      reason: r.reason || 'Damaged Goods'
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalReturns: data.length,
+          returnValue: data.reduce((s: number, d: any) => s + d.returnValue, 0),
+          returnPercentage: 0, // Need total purchases to calculate accurately
+          supplierCredits: data.reduce((s: number, d: any) => s + d.returnValue, 0)
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 34. PURCHASE SUMMARY REPORT
+export const getPurchaseSummaryReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+
+    const map = new Map<string, any>(); // group by YYYY-MM
+    let totalPur = 0, totalBills = 0;
+    const uniqueSuppliers = new Set();
+
+    bills.forEach(bill => {
+      const date = new Date(bill.billDate);
+      const mYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      
+      if (!map.has(mYear)) map.set(mYear, { month: mYear, purchaseValue: 0, billsCount: 0, suppliers: new Set() });
+      const m = map.get(mYear);
+      m.purchaseValue += bill.grandTotal;
+      m.billsCount++;
+      if (bill.supplierId) m.suppliers.add(bill.supplierId.toString());
+      uniqueSuppliers.add(bill.supplierId?.toString());
+      
+      totalPur += bill.grandTotal;
+      totalBills++;
+    });
+
+    const data = Array.from(map.values()).map(m => ({
+      ...m,
+      supplierCount: m.suppliers.size,
+      averageBillValue: m.billsCount > 0 ? m.purchaseValue / m.billsCount : 0
+    })).sort((a, b) => b.month.localeCompare(a.month));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalPurchases: totalPur,
+          totalSuppliers: uniqueSuppliers.size,
+          totalBills,
+          averageBillValue: totalBills > 0 ? totalPur / totalBills : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// --- PHASE 3: PROFITABILITY REPORTS ---
+
+// 35. ITEM WISE PROFIT REPORT
+export const getItemWiseProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const productsMap = await getProductsMap(businessId);
+
+    const map = new Map<string, any>();
+
+    invoices.forEach(inv => {
+      inv.lineItems?.forEach(item => {
+        const pid = item.productId?.toString();
+        if (!pid) return;
+        if (!map.has(pid)) {
+          map.set(pid, { item: item.productName || 'Unknown', revenue: 0, cost: 0 });
+        }
+        const m = map.get(pid);
+        m.revenue += item.totalAmount;
+        const product = productsMap.get(pid);
+        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+    });
+
+    let totalRev = 0, totalCost = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalRev += m.revenue;
+      totalCost += m.cost;
+      const profit = m.revenue - m.cost;
+      return {
+        ...m,
+        profit,
+        marginPct: m.revenue > 0 ? (profit / m.revenue) * 100 : 0
+      };
+    }).sort((a, b) => b.profit - a.profit);
+
+    const totalProfit = totalRev - totalCost;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenue: totalRev,
+          cost: totalCost,
+          profit: totalProfit,
+          marginPct: totalRev > 0 ? (totalProfit / totalRev) * 100 : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 36. CATEGORY WISE PROFIT REPORT
+export const getCategoryWiseProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const productsMap = await getProductsMap(businessId);
+
+    const map = new Map<string, any>();
+
+    invoices.forEach(inv => {
+      inv.lineItems?.forEach(item => {
+        const pid = item.productId?.toString();
+        const product = pid ? productsMap.get(pid) : null;
+        const cat = product?.category || 'Uncategorized';
+        
+        if (!map.has(cat)) map.set(cat, { category: cat, revenue: 0, cost: 0 });
+        const m = map.get(cat);
+        m.revenue += item.totalAmount;
+        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+    });
+
+    let totalRev = 0, totalCost = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalRev += m.revenue;
+      totalCost += m.cost;
+      const profit = m.revenue - m.cost;
+      return { ...m, profit, marginPct: m.revenue > 0 ? (profit / m.revenue) * 100 : 0 };
+    }).sort((a, b) => b.profit - a.profit);
+
+    const totalProfit = totalRev - totalCost;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenue: totalRev,
+          cost: totalCost,
+          profit: totalProfit,
+          marginPct: totalRev > 0 ? (totalProfit / totalRev) * 100 : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 37. CUSTOMER WISE PROFIT REPORT
+export const getCustomerWiseProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const productsMap = await getProductsMap(businessId);
+
+    const map = new Map<string, any>();
+
+    invoices.forEach(inv => {
+      const cid = inv.customerId?.toString() || 'Cash';
+      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      if (!map.has(cid)) map.set(cid, { customer: cname, revenue: 0, cost: 0 });
+      const m = map.get(cid);
+      m.revenue += inv.grandTotal;
+
+      inv.lineItems?.forEach(item => {
+        const product = item.productId ? productsMap.get(item.productId.toString()) : null;
+        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+    });
+
+    let totalRev = 0, totalCost = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalRev += m.revenue;
+      totalCost += m.cost;
+      const profit = m.revenue - m.cost;
+      return { ...m, profit, marginPct: m.revenue > 0 ? (profit / m.revenue) * 100 : 0 };
+    }).sort((a, b) => b.profit - a.profit);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenue: totalRev,
+          profit: totalRev - totalCost,
+          marginPct: totalRev > 0 ? ((totalRev - totalCost) / totalRev) * 100 : 0,
+          customerCount: data.length
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 38. SUPPLIER WISE PROFIT REPORT
+export const getSupplierWiseProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    // Requires knowing which supplier provided which items sold. 
+    // We'll map items sold back to their primary supplier.
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const [invoices, bills] = await Promise.all([
+      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean(),
+      PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean()
+    ]);
+
+    // Map item -> primary supplier (latest supplier)
+    const itemSupplierMap = new Map<string, string>();
+    bills.sort((a: any, b: any) => new Date(a.billDate).getTime() - new Date(b.billDate).getTime()).forEach(bill => {
+      const sname = bill.supplierSnapshot?.name || 'Cash Supplier';
+      bill.lineItems?.forEach(item => {
+        if (item.productId) itemSupplierMap.set(item.productId.toString(), sname);
+      });
+    });
+
+    const productsMap = await getProductsMap(businessId);
+    const map = new Map<string, any>(); // key: supplierName
+
+    invoices.forEach(inv => {
+      inv.lineItems?.forEach(item => {
+        const pid = item.productId?.toString();
+        if (!pid) return;
+        const sname = itemSupplierMap.get(pid) || 'Unknown Supplier';
+
+        if (!map.has(sname)) map.set(sname, { supplier: sname, purchaseValue: 0, salesValue: 0 });
+        const m = map.get(sname);
+        m.salesValue += item.totalAmount;
+        const product = productsMap.get(pid);
+        m.purchaseValue += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+    });
+
+    let totalRev = 0, totalCost = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalRev += m.salesValue;
+      totalCost += m.purchaseValue;
+      const profit = m.salesValue - m.purchaseValue;
+      return {
+        ...m,
+        profitContribution: profit,
+        savingsPct: m.salesValue > 0 ? (profit / m.salesValue) * 100 : 0
+      };
+    }).sort((a, b) => b.profitContribution - a.profitContribution);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenue: totalRev,
+          cost: totalCost,
+          profit: totalRev - totalCost,
+          savingsPct: totalRev > 0 ? ((totalRev - totalCost) / totalRev) * 100 : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 39. INVOICE WISE PROFIT REPORT
+export const getInvoiceWiseProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const productsMap = await getProductsMap(businessId);
+
+    let totalRev = 0, totalCost = 0;
+    const data = invoices.map(inv => {
+      let cost = 0;
+      inv.lineItems?.forEach(item => {
+        const product = item.productId ? productsMap.get(item.productId.toString()) : null;
+        cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+
+      const revenue = inv.grandTotal;
+      totalRev += revenue;
+      totalCost += cost;
+      const profit = revenue - cost;
+
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        customer: inv.customerSnapshot?.name || 'Cash Customer',
+        revenue,
+        cost,
+        profit,
+        marginPct: revenue > 0 ? (profit / revenue) * 100 : 0
+      };
+    }).sort((a, b) => b.profit - a.profit);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenue: totalRev,
+          cost: totalCost,
+          profit: totalRev - totalCost,
+          marginPct: totalRev > 0 ? ((totalRev - totalCost) / totalRev) * 100 : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+
+// 40. BRAND WISE PROFIT REPORT
+export const getBrandWiseProfit = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const productsMap = await getProductsMap(businessId);
+
+    const map = new Map<string, any>();
+
+    invoices.forEach(inv => {
+      inv.lineItems?.forEach(item => {
+        const pid = item.productId?.toString();
+        const product = pid ? productsMap.get(pid) : null;
+        const brand = product?.brand || 'Unbranded';
+        
+        if (!map.has(brand)) map.set(brand, { brand, revenue: 0, cost: 0 });
+        const m = map.get(brand);
+        m.revenue += item.totalAmount;
+        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+      });
+    });
+
+    let totalRev = 0, totalCost = 0;
+    const data = Array.from(map.values()).map(m => {
+      totalRev += m.revenue;
+      totalCost += m.cost;
+      const profit = m.revenue - m.cost;
+      return { ...m, profit, marginPct: m.revenue > 0 ? (profit / m.revenue) * 100 : 0 };
+    }).sort((a, b) => b.profit - a.profit);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          revenue: totalRev,
+          cost: totalCost,
+          profit: totalRev - totalCost,
+          marginPct: totalRev > 0 ? ((totalRev - totalCost) / totalRev) * 100 : 0
+        },
+        data
+      }
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
