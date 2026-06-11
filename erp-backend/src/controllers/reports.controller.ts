@@ -734,6 +734,595 @@ export const getItemList = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// --- SALES REPORTS ---
+
+export const getSalesAging = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .populate('customerId', 'name')
+      .sort({ dueDate: 1 });
+      
+    let totalOutstanding = 0;
+    let overdueAmount = 0;
+    let currentReceivables = 0;
+    
+    const buckets = { current: 0, b30: 0, b60: 0, b90: 0, b90plus: 0 };
+    const bucketCounts = { current: 0, b30: 0, b60: 0, b90: 0, b90plus: 0 };
+
+    const transformed = invoices.filter((inv: any) => inv.balance > 0).map((inv: any) => {
+      const balance = inv.balance || 0;
+      totalOutstanding += balance;
+      
+      const now = new Date();
+      const due = inv.dueDate ? new Date(inv.dueDate) : new Date(inv.invoiceDate);
+      const diffTime = now.getTime() - due.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const daysOverdue = diffDays > 0 ? diffDays : 0;
+      
+      let bucketName = 'Current (0 Days)';
+      if (daysOverdue === 0) {
+        currentReceivables += balance;
+        buckets.current += balance;
+        bucketCounts.current++;
+      } else {
+        overdueAmount += balance;
+        if (daysOverdue <= 30) { bucketName = '1-30 Days'; buckets.b30 += balance; bucketCounts.b30++; }
+        else if (daysOverdue <= 60) { bucketName = '31-60 Days'; buckets.b60 += balance; bucketCounts.b60++; }
+        else if (daysOverdue <= 90) { bucketName = '61-90 Days'; buckets.b90 += balance; bucketCounts.b90++; }
+        else { bucketName = '90+ Days'; buckets.b90plus += balance; bucketCounts.b90plus++; }
+      }
+
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        customer: inv.customerSnapshot?.name || inv.customerId?.name || 'Unknown',
+        dueDate: due,
+        invoiceAmount: inv.grandTotal,
+        paidAmount: inv.amountReceived,
+        outstandingAmount: balance,
+        daysOverdue,
+        agingBucket: bucketName
+      };
+    });
+
+    const summaryData = [
+      { range: '1-30', totalBalance: buckets.b30, count: bucketCounts.b30 },
+      { range: '31-60', totalBalance: buckets.b60, count: bucketCounts.b60 },
+      { range: '61-90', totalBalance: buckets.b90, count: bucketCounts.b90 },
+      { range: '90+', totalBalance: buckets.b90plus, count: bucketCounts.b90plus }
+    ];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalOutstandingAmount: totalOutstanding,
+          overdueAmount,
+          currentReceivables,
+          averageCollectionDays: transformed.length > 0 ? Math.round(transformed.reduce((acc, curr) => acc + curr.daysOverdue, 0) / transformed.length) : 0
+        },
+        data: transformed,
+        summaryBuckets: summaryData
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getSalesItemwise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $unwind: '$lineItems' },
+      {
+        $group: {
+          _id: '$lineItems.productId',
+          productName: { $first: '$lineItems.productName' },
+          quantitySold: { $sum: '$lineItems.quantity' },
+          salesValue: { $sum: '$lineItems.totalAmount' }
+        }
+      },
+      { $sort: { salesValue: -1 } }
+    ]);
+    
+    let totalQuantitySold = 0;
+    let totalRevenue = 0;
+    
+    agg.forEach(a => {
+      totalQuantitySold += a.quantitySold;
+      totalRevenue += a.salesValue;
+    });
+
+    const transformed = agg.map((a: any) => ({
+      itemCode: a._id ? a._id.toString().slice(-6).toUpperCase() : '-',
+      itemName: a.productName || 'Unknown',
+      category: 'General',
+      quantitySold: a.quantitySold,
+      salesValue: a.salesValue,
+      averagePrice: a.quantitySold ? (a.salesValue / a.quantitySold) : 0,
+      contributionPercent: totalRevenue ? ((a.salesValue / totalRevenue) * 100) : 0
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalQuantitySold,
+          totalRevenue,
+          bestSellingItem: transformed[0]?.itemName || '-',
+          averageSellingPrice: totalQuantitySold ? (totalRevenue / totalQuantitySold) : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['draft'] } }).sort({ invoiceDate: -1 });
+    
+    let totalInvoices = invoices.length;
+    let totalSalesValue = 0;
+    let paidInvoices = 0;
+    let unpaidInvoices = 0;
+
+    const transformed = invoices.map((inv: any) => {
+      totalSalesValue += inv.grandTotal || 0;
+      if (inv.status === 'paid') paidInvoices++;
+      if (inv.status === 'overdue' || inv.status === 'partial' || (inv.balance > 0 && inv.status !== 'cancelled')) unpaidInvoices++;
+      
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        customer: inv.customerSnapshot?.name || 'Unknown',
+        invoiceAmount: inv.totalTaxableAmount || 0,
+        taxAmount: inv.totalGST || 0,
+        totalAmount: inv.grandTotal || 0,
+        paymentStatus: inv.status,
+        dueDate: inv.dueDate || inv.invoiceDate
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalInvoices,
+          totalSalesValue,
+          paidInvoices,
+          unpaidInvoices
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getInvoicewiseMargin = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $unwind: '$lineItems' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'lineItems.productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: '$_id',
+          invoiceNumber: { $first: '$invoiceNumber' },
+          invoiceDate: { $first: '$invoiceDate' },
+          customerName: { $first: '$customerSnapshot.name' },
+          revenue: { $first: '$totalTaxableAmount' },
+          totalCost: { $sum: { $multiply: ['$lineItems.quantity', { $ifNull: ['$product.purchasePrice', 0] }] } }
+        }
+      },
+      { $sort: { invoiceDate: -1 } }
+    ]);
+    
+    let totalRevenue = 0;
+    let totalCost = 0;
+
+    const transformed = agg.map((a: any) => {
+      const revenue = a.revenue || 0;
+      const cost = a.totalCost || 0;
+      const grossProfit = revenue - cost;
+      const marginPercent = revenue ? (grossProfit / revenue) * 100 : 0;
+      
+      totalRevenue += revenue;
+      totalCost += cost;
+
+      return {
+        invoiceNumber: a.invoiceNumber,
+        customer: a.customerName || 'Unknown',
+        revenue,
+        costValue: cost,
+        grossProfit,
+        marginPercent,
+        invoiceDate: a.invoiceDate
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalRevenue,
+          totalCost,
+          grossProfit: totalRevenue - totalCost,
+          averageMarginPercent: totalRevenue ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getItemwiseMargin = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $unwind: '$lineItems' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'lineItems.productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: '$lineItems.productId',
+          itemName: { $first: '$lineItems.productName' },
+          quantitySold: { $sum: '$lineItems.quantity' },
+          revenue: { $sum: '$lineItems.taxableAmount' },
+          totalCost: { $sum: { $multiply: ['$lineItems.quantity', { $ifNull: ['$product.purchasePrice', 0] }] } }
+        }
+      },
+      { $sort: { revenue: -1 } }
+    ]);
+
+    let totalRevenue = 0;
+    let totalCost = 0;
+
+    const transformed = agg.map((a: any) => {
+      const revenue = a.revenue || 0;
+      const cost = a.totalCost || 0;
+      const grossProfit = revenue - cost;
+      const marginPercent = revenue ? (grossProfit / revenue) * 100 : 0;
+      
+      totalRevenue += revenue;
+      totalCost += cost;
+
+      return {
+        itemCode: a._id ? a._id.toString().slice(-6).toUpperCase() : '-',
+        itemName: a.itemName || 'Unknown',
+        quantitySold: a.quantitySold,
+        revenue,
+        cost,
+        grossProfit,
+        marginPercent
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalRevenue,
+          totalProductCost: totalCost,
+          totalGrossProfit: totalRevenue - totalCost,
+          averageMarginPercent: totalRevenue ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getCustomerwiseMargin = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $unwind: '$lineItems' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'lineItems.productId',
+          foreignField: '_id',
+          as: 'product'
+        }
+      },
+      { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: { invoiceId: '$_id', customerId: '$customerId', customerName: '$customerSnapshot.name', revenue: '$totalTaxableAmount' },
+          totalCost: { $sum: { $multiply: ['$lineItems.quantity', { $ifNull: ['$product.purchasePrice', 0] }] } }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.customerId',
+          customerName: { $first: '$_id.customerName' },
+          invoiceCount: { $sum: 1 },
+          revenue: { $sum: '$_id.revenue' },
+          totalCost: { $sum: '$totalCost' }
+        }
+      },
+      { $sort: { revenue: -1 } }
+    ]);
+
+    let totalCustomers = agg.length;
+    let totalRevenue = 0;
+    let totalCost = 0;
+
+    const transformed = agg.map((a: any) => {
+      const revenue = a.revenue || 0;
+      const cost = a.totalCost || 0;
+      const grossProfit = revenue - cost;
+      
+      totalRevenue += revenue;
+      totalCost += cost;
+
+      return {
+        customerName: a.customerName || 'Cash Customer',
+        numberOfInvoices: a.invoiceCount,
+        revenue,
+        cost,
+        grossProfit,
+        marginPercent: revenue ? (grossProfit / revenue) * 100 : 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalCustomers,
+          totalRevenue,
+          totalProfit: totalRevenue - totalCost,
+          averageCustomerMargin: totalRevenue ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getSalesInvoicewiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['draft', 'cancelled'] } }).sort({ invoiceDate: -1 });
+
+    let totalTaxable = 0;
+    let totalGST = 0;
+    let totalNet = 0;
+
+    const transformed = invoices.map((inv: any) => {
+      totalTaxable += inv.totalTaxableAmount || 0;
+      totalGST += inv.totalGST || 0;
+      totalNet += inv.grandTotal || 0;
+
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        customer: inv.customerSnapshot?.name || 'Unknown',
+        taxableValue: inv.totalTaxableAmount || 0,
+        cgst: inv.totalCGST || 0,
+        sgst: inv.totalSGST || 0,
+        igst: inv.totalIGST || 0,
+        gstTotal: inv.totalGST || 0,
+        invoiceTotal: inv.grandTotal || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalInvoices: invoices.length,
+          taxableSales: totalTaxable,
+          totalGST,
+          netInvoiceValue: totalNet
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getSalesCustomerwiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      {
+        $group: {
+          _id: '$customerId',
+          customerName: { $first: '$customerSnapshot.name' },
+          numberOfOrders: { $sum: 1 },
+          revenue: { $sum: '$grandTotal' },
+          outstanding: { $sum: '$balance' },
+          lastPurchaseDate: { $max: '$invoiceDate' }
+        }
+      },
+      { $sort: { revenue: -1 } }
+    ]);
+
+    let totalRevenue = 0;
+    let totalOutstanding = 0;
+
+    const transformed = agg.map((a: any) => {
+      totalRevenue += a.revenue || 0;
+      totalOutstanding += a.outstanding || 0;
+      return {
+        customerName: a.customerName || 'Cash Customer',
+        numberOfOrders: a.numberOfOrders,
+        revenue: a.revenue,
+        outstanding: a.outstanding,
+        lastPurchaseDate: a.lastPurchaseDate,
+        averageInvoiceValue: a.numberOfOrders ? a.revenue / a.numberOfOrders : 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalCustomers: agg.length,
+          totalRevenue,
+          outstandingAmount: totalOutstanding,
+          averageOrderValue: agg.length ? totalRevenue / agg.length : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getSalesItemwiseSummary = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const agg = await Invoice.aggregate([
+      { $match: { businessId, status: { $nin: ['cancelled', 'draft'] } } },
+      { $unwind: '$lineItems' },
+      {
+        $group: {
+          _id: '$lineItems.productId',
+          itemName: { $first: '$lineItems.productName' },
+          quantitySold: { $sum: '$lineItems.quantity' },
+          revenue: { $sum: '$lineItems.totalAmount' },
+          taxableValue: { $sum: '$lineItems.taxableAmount' },
+          gstAmount: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } }
+        }
+      },
+      { $sort: { revenue: -1 } }
+    ]);
+
+    let totalQuantitySold = 0;
+    let totalRevenue = 0;
+
+    const transformed = agg.map((a: any) => {
+      totalQuantitySold += a.quantitySold || 0;
+      totalRevenue += a.revenue || 0;
+      return {
+        itemCode: a._id ? a._id.toString().slice(-6).toUpperCase() : '-',
+        itemName: a.itemName || 'Unknown',
+        quantitySold: a.quantitySold,
+        revenue: a.revenue,
+        taxableValue: a.taxableValue,
+        gstAmount: a.gstAmount,
+        netSalesValue: a.revenue
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalProductsSold: agg.length,
+          totalQuantitySold,
+          revenueGenerated: totalRevenue,
+          averageSellingPrice: totalQuantitySold ? totalRevenue / totalQuantitySold : 0
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getSalesGST = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['draft', 'cancelled'] } }).sort({ invoiceDate: -1 });
+
+    let taxableSales = 0;
+    let cgstTotal = 0;
+    let sgstTotal = 0;
+    let igstTotal = 0;
+
+    const transformed = invoices.map((inv: any) => {
+      taxableSales += inv.totalTaxableAmount || 0;
+      cgstTotal += inv.totalCGST || 0;
+      sgstTotal += inv.totalSGST || 0;
+      igstTotal += inv.totalIGST || 0;
+
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        customer: inv.customerSnapshot?.name || 'Unknown',
+        gstNumber: inv.customerSnapshot?.gstin || '-',
+        taxableValue: inv.totalTaxableAmount || 0,
+        cgst: inv.totalCGST || 0,
+        sgst: inv.totalSGST || 0,
+        igst: inv.totalIGST || 0,
+        invoiceTotal: inv.grandTotal || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          totalTaxableSales: taxableSales,
+          totalGSTCollected: cgstTotal + sgstTotal + igstTotal,
+          cgstTotal,
+          sgstTotal,
+          igstTotal
+        },
+        data: transformed
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getActiveRecurringInvoices = async (req: AuthRequest, res: Response) => {
+  try {
+    // Mocked since schema doesn't support Recurring Invoices yet
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          activeRecurringInvoices: 0,
+          monthlyRecurringRevenue: 0,
+          nextBillingAmount: 0,
+          upcomingRenewals: 0
+        },
+        data: []
+      }
+    });
+  } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+// Helper: safe date range from query
+const buildDateFilter = (from?: string, to?: string, field = 'invoiceDate') => {
+  const filter: any = {};
+  if (from || to) {
+    filter[field] = {};
+    if (from) {
+      const [y, m, d] = from.split('-');
+      filter[field].$gte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0);
+    }
+    if (to) {
+      const [y, m, d] = to.split('-');
+      filter[field].$lte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 23, 59, 59, 999);
+    }
+  }
+  return filter;
+};
+
 // --- FINANCIAL REPORTS ---
 
 // Helper to get date range
@@ -1032,343 +1621,6 @@ export const getDashboardCharts = async (req: AuthRequest, res: Response): Promi
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
-// =================== SALES REPORTS ===================
-
-// Helper: safe date range from query
-const buildDateFilter = (from?: string, to?: string, field = 'invoiceDate') => {
-  const filter: any = {};
-  if (from || to) {
-    filter[field] = {};
-    if (from) {
-      const [y, m, d] = from.split('-');
-      filter[field].$gte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 0, 0, 0);
-    }
-    if (to) {
-      const [y, m, d] = to.split('-');
-      filter[field].$lte = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 23, 59, 59, 999);
-    }
-  }
-  return filter;
-};
-
-// GET /api/v1/reports/sales/aging
-export const getSalesAging = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const today = new Date();
-    const invoices = await Invoice.find({
-      businessId,
-      status: { $in: ['sent', 'partial', 'overdue'] },
-      balance: { $gt: 0 }
-    }, 'invoiceNumber invoiceDate dueDate customerSnapshot grandTotal amountReceived balance status').lean();
-
-    const buckets: Record<string, any[]> = { '0-30': [], '31-60': [], '61-90': [], '90+': [] };
-    invoices.forEach((inv: any) => {
-      const due = inv.dueDate ? new Date(inv.dueDate) : new Date(inv.invoiceDate);
-      const days = Math.floor((today.getTime() - due.getTime()) / 86400000);
-      const row = {
-        invoiceNumber: inv.invoiceNumber,
-        invoiceDate: inv.invoiceDate,
-        dueDate: inv.dueDate || inv.invoiceDate,
-        customer: inv.customerSnapshot?.name || 'Cash',
-        grandTotal: inv.grandTotal,
-        amountReceived: inv.amountReceived,
-        balance: inv.balance,
-        daysOverdue: Math.max(0, days),
-        status: inv.status,
-      };
-      if (days <= 30) buckets['0-30'].push(row);
-      else if (days <= 60) buckets['31-60'].push(row);
-      else if (days <= 90) buckets['61-90'].push(row);
-      else buckets['90+'].push(row);
-    });
-
-    const summary = Object.entries(buckets).map(([range, items]) => ({
-      range,
-      count: items.length,
-      totalBalance: items.reduce((s, i) => s + i.balance, 0),
-      items
-    }));
-    sendSuccess(res, { summary, allItems: invoices });
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/itemwise
-export const getSalesItemwise = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await Invoice.aggregate([
-      { $match: match },
-      { $unwind: '$lineItems' },
-      { $group: {
-          _id: '$lineItems.productId',
-          productName: { $first: '$lineItems.productName' },
-          totalQty: { $sum: '$lineItems.quantity' },
-          totalTaxable: { $sum: '$lineItems.taxableAmount' },
-          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
-          totalAmount: { $sum: '$lineItems.totalAmount' },
-          totalDiscount: { $sum: '$lineItems.discountAmount' },
-          invoiceCount: { $addToSet: '$_id' }
-      }},
-      { $project: {
-          productName: 1, totalQty: 1, totalTaxable: 1, totalGST: 1, totalAmount: 1, totalDiscount: 1,
-          invoiceCount: { $size: '$invoiceCount' }
-      }},
-      { $sort: { totalAmount: -1 } }
-    ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/invoicewise
-export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to, status } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, ...dateFilter };
-    if (status) match.status = status;
-    else match.status = { $ne: 'cancelled' };
-
-    const invoices = await Invoice.find(match,
-      'invoiceNumber invoiceDate invoiceType customerSnapshot grandTotal totalTaxableAmount totalGST amountReceived balance status paymentMode dueDate'
-    ).sort({ invoiceDate: -1 }).lean();
-    sendSuccess(res, invoices);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/invoicewise-margin
-export const getInvoicewiseMargin = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const invoices = await Invoice.find(match,
-      'invoiceNumber invoiceDate customerSnapshot grandTotal totalTaxableAmount totalGST lineItems'
-    ).lean();
-
-    const result = invoices.map((inv: any) => {
-      // Estimate cost from lineItems using rate as purchase proxy isn't ideal;
-      // cost is approximated as taxableAmount * (purchasePrice/sellingPrice) — 
-      // for now use totalTaxableAmount as revenue base and calculate margin on grand total
-      const revenue = inv.grandTotal || 0;
-      const taxable = inv.totalTaxableAmount || 0;
-      const gst = inv.totalGST || 0;
-      return {
-        invoiceNumber: inv.invoiceNumber,
-        invoiceDate: inv.invoiceDate,
-        customer: inv.customerSnapshot?.name || 'Cash',
-        taxableValue: taxable,
-        gstAmount: gst,
-        grandTotal: revenue,
-        itemCount: inv.lineItems?.length || 0,
-      };
-    });
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/itemwise-margin
-export const getItemwiseMargin = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await Invoice.aggregate([
-      { $match: match },
-      { $unwind: '$lineItems' },
-      { $lookup: {
-          from: 'products',
-          localField: 'lineItems.productId',
-          foreignField: '_id',
-          as: 'product'
-      }},
-      { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } },
-      { $group: {
-          _id: '$lineItems.productId',
-          productName: { $first: '$lineItems.productName' },
-          totalQtySold: { $sum: '$lineItems.quantity' },
-          totalSaleAmount: { $sum: '$lineItems.totalAmount' },
-          totalTaxable: { $sum: '$lineItems.taxableAmount' },
-          avgSaleRate: { $avg: '$lineItems.rate' },
-          purchasePrice: { $first: '$product.purchasePrice' },
-      }},
-      { $project: {
-          productName: 1,
-          totalQtySold: 1,
-          totalSaleAmount: 1,
-          totalTaxable: 1,
-          avgSaleRate: 1,
-          purchasePrice: { $ifNull: ['$purchasePrice', 0] },
-          estimatedCost: { $multiply: [{ $ifNull: ['$purchasePrice', 0] }, '$totalQtySold'] },
-          grossProfit: {
-            $subtract: ['$totalTaxable', { $multiply: [{ $ifNull: ['$purchasePrice', 0] }, '$totalQtySold'] }]
-          },
-      }},
-      { $sort: { grossProfit: -1 } }
-    ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/customerwise-margin
-export const getCustomerwiseMargin = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await Invoice.aggregate([
-      { $match: match },
-      { $group: {
-          _id: '$customerId',
-          customerName: { $first: '$customerSnapshot.name' },
-          invoiceCount: { $sum: 1 },
-          totalRevenue: { $sum: '$grandTotal' },
-          totalTaxable: { $sum: '$totalTaxableAmount' },
-          totalGST: { $sum: '$totalGST' },
-          totalReceived: { $sum: '$amountReceived' },
-          totalBalance: { $sum: '$balance' },
-      }},
-      { $sort: { totalRevenue: -1 } }
-    ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/invoicewise-summary
-export const getSalesInvoicewiseSummary = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const invoices = await Invoice.find(match,
-      'invoiceNumber invoiceDate customerSnapshot totalTaxableAmount totalCGST totalSGST totalIGST totalGST totalDiscount grandTotal amountReceived balance status'
-    ).sort({ invoiceDate: -1 }).lean();
-    sendSuccess(res, invoices);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/customerwise-summary
-export const getSalesCustomerwiseSummary = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await Invoice.aggregate([
-      { $match: match },
-      { $group: {
-          _id: '$customerId',
-          customerName: { $first: '$customerSnapshot.name' },
-          invoiceCount: { $sum: 1 },
-          totalSales: { $sum: '$grandTotal' },
-          totalTaxable: { $sum: '$totalTaxableAmount' },
-          totalGST: { $sum: '$totalGST' },
-          totalDiscount: { $sum: '$totalDiscount' },
-          totalReceived: { $sum: '$amountReceived' },
-          totalBalance: { $sum: '$balance' },
-      }},
-      { $sort: { totalSales: -1 } }
-    ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/itemwise-summary
-export const getSalesItemwiseSummary = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const result = await Invoice.aggregate([
-      { $match: match },
-      { $unwind: '$lineItems' },
-      { $group: {
-          _id: '$lineItems.productId',
-          productName: { $first: '$lineItems.productName' },
-          hsnCode: { $first: '$lineItems.hsnCode' },
-          totalQty: { $sum: '$lineItems.quantity' },
-          totalTaxable: { $sum: '$lineItems.taxableAmount' },
-          totalCGST: { $sum: '$lineItems.cgst' },
-          totalSGST: { $sum: '$lineItems.sgst' },
-          totalIGST: { $sum: '$lineItems.igst' },
-          totalAmount: { $sum: '$lineItems.totalAmount' },
-          totalDiscount: { $sum: '$lineItems.discountAmount' },
-      }},
-      { $addFields: { totalGST: { $add: ['$totalCGST', '$totalSGST', '$totalIGST'] } } },
-      { $sort: { totalAmount: -1 } }
-    ]);
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/gst
-export const getSalesGST = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const { from, to } = req.query as any;
-    const dateFilter = buildDateFilter(from, to);
-    const match: any = { businessId, status: { $ne: 'cancelled' }, ...dateFilter };
-
-    const invoices = await Invoice.find(match,
-      'invoiceNumber invoiceDate invoiceType customerSnapshot gstin placeOfSupply isInterState totalTaxableAmount totalCGST totalSGST totalIGST totalGST grandTotal'
-    ).sort({ invoiceDate: -1 }).lean();
-
-    // Group by GST rate
-    const rateSummary = await Invoice.aggregate([
-      { $match: match },
-      { $unwind: '$lineItems' },
-      { $group: {
-          _id: '$lineItems.gstRate',
-          taxableValue: { $sum: '$lineItems.taxableAmount' },
-          cgst: { $sum: '$lineItems.cgst' },
-          sgst: { $sum: '$lineItems.sgst' },
-          igst: { $sum: '$lineItems.igst' },
-          totalGST: { $sum: { $add: ['$lineItems.cgst', '$lineItems.sgst', '$lineItems.igst'] } },
-      }},
-      { $sort: { _id: 1 } }
-    ]);
-
-    sendSuccess(res, { invoices, rateSummary });
-  } catch (e: any) { sendError(res, e.message); }
-};
-
-// GET /api/v1/reports/sales/recurring
-export const getActiveRecurringInvoices = async (req: AuthRequest, res: Response) => {
-  try {
-    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({
-      businessId,
-      status: { $in: ['sent', 'partial', 'overdue'] },
-      balance: { $gt: 0 }
-    }, 'invoiceNumber invoiceDate dueDate customerSnapshot grandTotal amountReceived balance status paymentMode'
-    ).sort({ dueDate: 1, invoiceDate: 1 }).lean();
-
-    const today = new Date();
-    const result = invoices.map((inv: any) => ({
-      ...inv,
-      daysOverdue: inv.dueDate
-        ? Math.max(0, Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / 86400000))
-        : 0,
-    }));
-    sendSuccess(res, result);
-  } catch (e: any) { sendError(res, e.message); }
-};
 
 // =================== CUSTOMER REPORTS ===================
 

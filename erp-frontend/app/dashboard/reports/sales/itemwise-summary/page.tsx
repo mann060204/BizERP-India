@@ -1,40 +1,46 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
-import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
+import SalesReportHeader from '../../../../../components/reports/SalesReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
 
-const now = new Date();
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
 export default function Page() {
-  const [from, setFrom] = useState(firstDay);
-  const [to, setTo] = useState(lastDay);
-  const [key, setKey] = useState(0);
+  const [summary, setSummary] = useState<any>(null);
 
   const columns: any[] = [
-    { key: 'productName', label: 'Item Name' },
-    { key: 'hsnCode', label: 'HSN Code' },
-    { key: 'totalQty', label: 'Total Qty', align: 'right' },
-    { key: 'totalTaxable', label: 'Taxable', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalCGST', label: 'CGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalSGST', label: 'SGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalIGST', label: 'IGST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalGST', label: 'Total GST', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalDiscount', label: 'Discount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
+    { key: 'itemCode', label: 'Item Code' },
+    { key: 'itemName', label: 'Item Name' },
+    { key: 'quantitySold', label: 'Quantity Sold', align: 'right' },
+    { key: 'revenue', label: 'Revenue', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'taxableValue', label: 'Taxable Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'gstAmount', label: 'GST Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'netSalesValue', label: 'Net Sales Value', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
   ];
 
-  const fetchData = useCallback(async () => {
-    const res = await reportsApi.getSalesItemwiseSummary({ from, to });
+  const fetchData = async () => {
+    const res = await reportsApi.getSalesItemwiseSummary();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
     return res.data?.data || [];
-  }, [from, to]);
+  };
+
+  const summaryCards = summary ? [
+    { label: 'Total Products Sold', value: summary.totalProductsSold },
+    { label: 'Total Quantity Sold', value: summary.totalQuantitySold },
+    { label: 'Revenue Generated', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.revenueGenerated || 0), highlight: true },
+    { label: 'Average Selling Price', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.averageSellingPrice || 0) },
+  ] : [];
 
   return (
-    <ReportLayout title="Itemwise Sale Summary" subtitle={`Sales and GST breakdown per item • ${from} to ${to}`}
-      category="Sales" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}`}
-      extraHeader={<DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} onRefresh={() => setKey(k => k + 1)} />}
+    <ReportLayout
+      title="Itemwise Summary"
+      subtitle="Consolidated item sales report"
+      category="Sales"
+      columns={columns}
+      fetchData={fetchData}
+      extraHeader={<SalesReportHeader summaryCards={summaryCards} />}
     />
   );
 }

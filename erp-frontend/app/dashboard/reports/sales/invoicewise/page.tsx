@@ -1,64 +1,47 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import ReportLayout from '../../../../../components/reports/ReportLayout';
-import DateRangeFilter from '../../../../../components/reports/DateRangeFilter';
+import SalesReportHeader from '../../../../../components/reports/SalesReportHeader';
 import { reportsApi } from '../../../../../lib/erp-api';
 
-const now = new Date();
-const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
-const statusOptions = [
-  { value: '', label: 'All Status' },
-  { value: 'sent', label: 'Sent' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'partial', label: 'Partial' },
-  { value: 'overdue', label: 'Overdue' },
-];
-
-const statusColors: Record<string, string> = {
-  paid: 'bg-green-100 text-green-700',
-  sent: 'bg-blue-100 text-blue-700',
-  partial: 'bg-yellow-100 text-yellow-700',
-  overdue: 'bg-red-100 text-red-700',
-  draft: 'bg-slate-100 text-slate-600',
-  cancelled: 'bg-red-200 text-red-800',
-};
-
 export default function Page() {
-  const [from, setFrom] = useState(firstDay);
-  const [to, setTo] = useState(lastDay);
-  const [status, setStatus] = useState('');
-  const [key, setKey] = useState(0);
+  const [summary, setSummary] = useState<any>(null);
 
   const columns: any[] = [
-    { key: 'invoiceNumber', label: 'Invoice #' },
-    { key: 'invoiceDate', label: 'Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'dueDate', label: 'Due Date', format: (v: any) => v ? new Date(v).toLocaleDateString('en-IN') : '—' },
-    { key: 'customerSnapshot', label: 'Customer', format: (v: any) => v?.name || 'Cash' },
-    { key: 'invoiceType', label: 'Type', align: 'center' },
-    { key: 'paymentMode', label: 'Mode', align: 'center' },
-    { key: 'grandTotal', label: 'Total', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'amountReceived', label: 'Received', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'balance', label: 'Balance', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(v||0)) },
-    { key: 'status', label: 'Status', align: 'center', format: (v: any) => (
-      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[v] || 'bg-slate-100 text-slate-600'}`}>{v}</span>
-    )},
+    { key: 'invoiceNumber', label: 'Invoice Number' },
+    { key: 'invoiceDate', label: 'Invoice Date', format: (v: any) => v ? new Date(v).toLocaleDateString() : '-' },
+    { key: 'customer', label: 'Customer' },
+    { key: 'invoiceAmount', label: 'Taxable Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'taxAmount', label: 'Tax Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'totalAmount', label: 'Total Amount', align: 'right', format: (v: any) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format((v || 0)) },
+    { key: 'paymentStatus', label: 'Status', align: 'center', format: (v: any) => <span className="capitalize">{v}</span> },
+    { key: 'dueDate', label: 'Due Date', format: (v: any) => v ? new Date(v).toLocaleDateString() : '-' },
   ];
 
-  const fetchData = useCallback(async () => {
-    const res = await reportsApi.getSalesInvoicewise({ from, to, ...(status ? { status } : {}) });
+  const fetchData = async () => {
+    const res = await reportsApi.getSalesInvoicewise();
+    if (res.data?.data?.summary) {
+      setSummary(res.data.data.summary);
+      return res.data.data.data || [];
+    }
     return res.data?.data || [];
-  }, [from, to, status]);
+  };
+
+  const summaryCards = summary ? [
+    { label: 'Total Invoices', value: summary.totalInvoices },
+    { label: 'Total Sales Value', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(summary.totalSalesValue || 0), highlight: true },
+    { label: 'Paid Invoices', value: summary.paidInvoices },
+    { label: 'Unpaid Invoices', value: summary.unpaidInvoices, highlight: summary.unpaidInvoices > 0 },
+  ] : [];
 
   return (
-    <ReportLayout title="Invoicewise Sales" subtitle={`All invoices • ${from} to ${to}`}
-      category="Sales" columns={columns} fetchData={fetchData} key={`${key}-${from}-${to}-${status}`}
-      extraHeader={
-        <DateRangeFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo}
-          onRefresh={() => setKey(k => k + 1)} showStatus status={status} onStatusChange={setStatus}
-          statusOptions={statusOptions} />
-      }
+    <ReportLayout
+      title="Invoicewise Sales"
+      subtitle="Complete sales invoice analysis"
+      category="Sales"
+      columns={columns}
+      fetchData={fetchData}
+      extraHeader={<SalesReportHeader summaryCards={summaryCards} />}
     />
   );
 }
