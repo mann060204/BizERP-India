@@ -61,6 +61,10 @@ export interface IInvoice extends Document {
   soldBy?: string;
   txnId?: string;
   isReverseCharge: boolean;
+  irn?: string;
+  irnDate?: Date;
+  ewbNumber?: string;
+  ewbStatus?: 'Active' | 'Expired' | 'Cancelled';
   paymentHistory?: {
     amount: number;
     mode: string;
@@ -146,6 +150,10 @@ const InvoiceSchema = new Schema<IInvoice>(
     soldBy: String,
     txnId: String,
     isReverseCharge: { type: Boolean, default: false },
+    irn: { type: String, trim: true },
+    irnDate: { type: Date },
+    ewbNumber: { type: String, trim: true },
+    ewbStatus: { type: String, enum: ['Active', 'Expired', 'Cancelled'] },
     paymentHistory: [{
       amount: { type: Number, required: true },
       mode: { type: String, enum: ['Cash', 'Bank', 'Bank Transfer', 'UPI', 'Cheque', 'Credit', 'NEFT', 'RTGS'], required: true },

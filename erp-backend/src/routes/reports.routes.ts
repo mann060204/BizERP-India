@@ -1,13 +1,12 @@
 import express from 'express';
 import * as reportsController from '../controllers/reports.controller';
+import * as advancedReportsController from '../controllers/reports.advanced.controller';
+import * as specialReportsController from '../controllers/reports.special.controller';
 import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 router.use(protect);
 router.use(checkLockedFY);
-
-// --- CORE REPORTS ---
-router.get('/dashboard-charts', reportsController.getDashboardCharts as any);
 router.get('/pnl', reportsController.getProfitAndLoss as any);
 router.get('/gstr', reportsController.getGstReport as any);
 router.get('/daybook', reportsController.getDaybook as any);
@@ -78,6 +77,50 @@ router.get('/dashboard/stock-movement', reportsController.getDashboardStockMovem
 router.get('/dashboard/top-customers', reportsController.getDashboardTopCustomers as any);
 router.get('/dashboard/customer-pending', reportsController.getDashboardCustomerPending as any);
 router.get('/dashboard/supplier-pending', reportsController.getDashboardSupplierPending as any);
+
+// --- ADVANCED FINANCIAL REPORTS ---
+router.get('/advanced/trial-balance', advancedReportsController.getTrialBalance as any);
+router.get('/advanced/general-ledger', advancedReportsController.getGeneralLedger as any);
+router.get('/advanced/bank-book', advancedReportsController.getBankBook as any);
+router.get('/advanced/bank-reconciliation', advancedReportsController.getBankReconciliation as any);
+router.get('/advanced/cash-flow', advancedReportsController.getCashFlowStatement as any);
+router.get('/advanced/outstanding-receivables', advancedReportsController.getOutstandingReceivables as any);
+router.get('/advanced/outstanding-payables', advancedReportsController.getOutstandingPayables as any);
+
+// --- ADVANCED INVENTORY REPORTS ---
+router.get('/advanced/inventory-valuation', advancedReportsController.getInventoryValuation as any);
+router.get('/advanced/stock-movement', advancedReportsController.getStockMovement as any);
+router.get('/advanced/warehouse-stock', advancedReportsController.getWarehouseWiseStock as any);
+router.get('/advanced/expiry-items', advancedReportsController.getExpiryItems as any);
+router.get('/advanced/dead-stock-advanced', advancedReportsController.getDeadStock as any);
+
+// --- ADVANCED SALES & PURCHASE REPORTS ---
+router.get('/advanced/salesperson-performance', advancedReportsController.getSalespersonPerformance as any);
+router.get('/advanced/sales-trend', advancedReportsController.getSalesTrend as any);
+router.get('/advanced/top-customers-advanced', advancedReportsController.getTopCustomersAdvanced as any);
+router.get('/advanced/top-selling-products', advancedReportsController.getTopSellingProducts as any);
+router.get('/advanced/supplier-performance', advancedReportsController.getSupplierPerformance as any);
+router.get('/advanced/purchase-trend', advancedReportsController.getPurchaseTrend as any);
+
+// --- COMPLIANCE & MANAGEMENT REPORTS ---
+router.get('/advanced/gst-audit', advancedReportsController.getGSTAudit as any);
+router.get('/advanced/e-invoice-register', advancedReportsController.getEInvoiceRegister as any);
+router.get('/advanced/eway-bill-register', advancedReportsController.getEwayBillRegister as any);
+router.get('/advanced/business-dashboard-advanced', advancedReportsController.getBusinessDashboardAdvanced as any);
+router.get('/advanced/profitability-analysis', advancedReportsController.getProfitabilityAnalysis as any);
+router.get('/advanced/budget-vs-actual', advancedReportsController.getBudgetVsActual as any);
+router.get('/advanced/audit-trail', advancedReportsController.getAuditTrail as any);
+
+// --- SPECIAL REPORTS ---
+router.get('/special/inventory-wise-customer-summary', specialReportsController.getInventoryWiseCustomerSummary as any);
+router.get('/special/inventory-wise-supplier-summary', specialReportsController.getInventoryWiseSupplierSummary as any);
+router.get('/special/supplier-wise-bill-summary', specialReportsController.getSupplierWiseBillSummary as any);
+router.get('/special/group-wise-profit-loss', specialReportsController.getGroupWiseProfitAndLoss as any);
+router.get('/special/category-wise-summary', specialReportsController.getCategoryWiseSummary as any);
+router.get('/special/category-wise-profit-loss', specialReportsController.getCategoryWiseProfitAndLoss as any);
+router.get('/special/category-wise-sales', specialReportsController.getCategoryWiseSales as any);
+router.get('/special/category-wise-margin', specialReportsController.getCategoryWiseMargin as any);
+router.get('/special/category-wise-supplier-analysis', specialReportsController.getCategoryWiseSupplierAnalysis as any);
 
 export default router;
 

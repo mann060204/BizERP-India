@@ -12,6 +12,8 @@ export interface IAccountLedger extends Document {
   referenceType?: string; // e.g. 'Opening', 'Adjustment', 'Invoice', 'Purchase'
   referenceId?: string;
   closingBalance?: number; // snapshot of balance after this transaction (optional, good for UI)
+  reconciled?: boolean;
+  reconciledDate?: Date;
 }
 
 const accountLedgerSchema = new Schema(
@@ -26,7 +28,9 @@ const accountLedgerSchema = new Schema(
     credit: { type: Number, default: 0 },
     referenceType: { type: String },
     referenceId: { type: String },
-    closingBalance: { type: Number }
+    closingBalance: { type: Number },
+    reconciled: { type: Boolean, default: false },
+    reconciledDate: { type: Date }
   },
   { timestamps: true }
 );

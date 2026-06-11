@@ -189,6 +189,50 @@ export const reportsApi = {
   // --- Extended GSTR ---
   getGSTR1: (params?: any) => api.get('/reports/gstr/gstr1', { params }),
   getGSTR3B: (params?: any) => api.get('/reports/gstr/gstr3b', { params }),
+
+  // --- ADVANCED FINANCIAL REPORTS ---
+  getTrialBalance: () => api.get('/reports/advanced/trial-balance'),
+  getGeneralLedger: () => api.get('/reports/advanced/general-ledger'),
+  getBankBook: () => api.get('/reports/advanced/bank-book'),
+  getBankReconciliation: () => api.get('/reports/advanced/bank-reconciliation'),
+  getCashFlowStatement: () => api.get('/reports/advanced/cash-flow'),
+  getOutstandingReceivables: (params?: any) => api.get('/reports/advanced/outstanding-receivables', { params }),
+  getOutstandingPayables: (params?: any) => api.get('/reports/advanced/outstanding-payables', { params }),
+
+  // --- ADVANCED INVENTORY REPORTS ---
+  getInventoryValuation: () => api.get('/reports/advanced/inventory-valuation'),
+  getStockMovement: () => api.get('/reports/advanced/stock-movement'),
+  getWarehouseWiseStock: () => api.get('/reports/advanced/warehouse-stock'),
+  getExpiryItems: () => api.get('/reports/advanced/expiry-items'),
+  getDeadStockAdvanced: () => api.get('/reports/advanced/dead-stock-advanced'),
+
+  // --- ADVANCED SALES & PURCHASE REPORTS ---
+  getSalespersonPerformance: () => api.get('/reports/advanced/salesperson-performance'),
+  getSalesTrend: () => api.get('/reports/advanced/sales-trend'),
+  getTopCustomersAdvanced: () => api.get('/reports/advanced/top-customers-advanced'),
+  getTopSellingProducts: () => api.get('/reports/advanced/top-selling-products'),
+  getSupplierPerformance: () => api.get('/reports/advanced/supplier-performance'),
+  getPurchaseTrend: () => api.get('/reports/advanced/purchase-trend'),
+
+  // --- COMPLIANCE & MANAGEMENT REPORTS ---
+  getGSTAudit: () => api.get('/reports/advanced/gst-audit'),
+  getEInvoiceRegister: () => api.get('/reports/advanced/e-invoice-register'),
+  getEwayBillRegister: () => api.get('/reports/advanced/eway-bill-register'),
+  getBusinessDashboardAdvanced: () => api.get('/reports/advanced/business-dashboard-advanced'),
+  getProfitabilityAnalysis: () => api.get('/reports/advanced/profitability-analysis'),
+  getBudgetVsActual: () => api.get('/reports/advanced/budget-vs-actual'),
+  getAuditTrail: () => api.get('/reports/advanced/audit-trail'),
+
+  // --- SPECIAL REPORTS ---
+  getInventoryWiseCustomerSummary: () => api.get('/reports/special/inventory-wise-customer-summary'),
+  getInventoryWiseSupplierSummary: () => api.get('/reports/special/inventory-wise-supplier-summary'),
+  getSupplierWiseBillSummary: () => api.get('/reports/special/supplier-wise-bill-summary'),
+  getGroupWiseProfitAndLoss: () => api.get('/reports/special/group-wise-profit-loss'),
+  getCategoryWiseSummary: () => api.get('/reports/special/category-wise-summary'),
+  getCategoryWiseProfitAndLoss: () => api.get('/reports/special/category-wise-profit-loss'),
+  getCategoryWiseSales: () => api.get('/reports/special/category-wise-sales'),
+  getCategoryWiseMargin: () => api.get('/reports/special/category-wise-margin'),
+  getCategoryWiseSupplierAnalysis: () => api.get('/reports/special/category-wise-supplier-analysis'),
 };
 
 // ─── Business / Settings ──────────────────────────────────────────────────────
