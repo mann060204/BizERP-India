@@ -19,6 +19,14 @@ const categoryColors: Record<string, string> = {
   Suppliers: 'text-yellow-600',
   Expenses: 'text-rose-600',
   'GST / Tax': 'text-indigo-600',
+
+  'Financials (Advanced)': 'text-teal-700',
+  'Advanced Inventory': 'text-fuchsia-600',
+  'Advanced Sales': 'text-emerald-700',
+  'Advanced Purchases': 'text-rose-700',
+  'Compliance': 'text-slate-700',
+  'Management': 'text-sky-700',
+  'Special Reports': 'text-amber-700',
 };
 
 const categoryBadges: Record<string, string> = {
@@ -30,6 +38,14 @@ const categoryBadges: Record<string, string> = {
   Suppliers: 'bg-yellow-50 border-yellow-100',
   Expenses: 'bg-rose-50 border-rose-100',
   'GST / Tax': 'bg-indigo-50 border-indigo-100',
+
+  'Financials (Advanced)': 'bg-teal-50 border-teal-100',
+  'Advanced Inventory': 'bg-fuchsia-50 border-fuchsia-100',
+  'Advanced Sales': 'bg-emerald-50 border-emerald-100',
+  'Advanced Purchases': 'bg-rose-50 border-rose-100',
+  'Compliance': 'bg-slate-50 border-slate-100',
+  'Management': 'bg-sky-50 border-sky-100',
+  'Special Reports': 'bg-amber-50 border-amber-100',
 };
 
 const REPORTS = [
@@ -116,6 +132,76 @@ const REPORTS = [
     items: [
       { name: 'GSTR-1', desc: 'Detailed outward supply statement', icon: FileText, href: '/dashboard/reports/gstr/gstr1' },
       { name: 'GSTR-3B', desc: 'GST summary with ITC reconciliation', icon: Calculator, href: '/dashboard/reports/gstr/gstr3b' },
+    ]
+  },
+
+  {
+    category: 'Financials (Advanced)',
+    items: [
+      { name: 'Trial Balance', desc: 'Validates debits vs credits', icon: Scale, href: '/dashboard/reports/financial/trial-balance' },
+      { name: 'General Ledger', desc: 'Deep dive into account transactions', icon: BookOpen, href: '/dashboard/reports/financial/general-ledger' },
+      { name: 'Bank Book', desc: 'Ledger view for Bank & Cash accounts', icon: Wallet, href: '/dashboard/reports/financial/bank-book' },
+      { name: 'Bank Reconciliation', desc: 'Compare system vs bank statements', icon: CheckSquare, href: '/dashboard/reports/financial/bank-reconciliation' },
+      { name: 'Cash Flow', desc: 'Operations, Investing, Financing cash movements', icon: Activity, href: '/dashboard/reports/financial/cash-flow' },
+      { name: 'Outstanding Receivables', desc: 'Customer invoices aging', icon: Timer, href: '/dashboard/reports/financial/outstanding-receivables' },
+      { name: 'Outstanding Payables', desc: 'Supplier bills aging', icon: Timer, href: '/dashboard/reports/financial/outstanding-payables' },
+    ]
+  },
+  {
+    category: 'Advanced Inventory',
+    items: [
+      { name: 'Inventory Valuation', desc: 'Calculates total stock value', icon: DollarSign, href: '/dashboard/reports/advanced-inventory/inventory-valuation' },
+      { name: 'Stock Movement', desc: 'Historical log of stock in/out', icon: History, href: '/dashboard/reports/advanced-inventory/stock-movement' },
+      { name: 'Warehouse Wise Stock', desc: 'Inventory by physical location', icon: Package, href: '/dashboard/reports/advanced-inventory/warehouse-stock' },
+      { name: 'Expiry Items', desc: 'Monitor expiring batches', icon: AlertTriangle, href: '/dashboard/reports/advanced-inventory/expiry-items' },
+      { name: 'Dead Stock Analysis', desc: 'Identify unsold capital', icon: Archive, href: '/dashboard/reports/advanced-inventory/dead-stock-advanced' },
+    ]
+  },
+  {
+    category: 'Advanced Sales',
+    items: [
+      { name: 'Salesperson Performance', desc: 'Evaluate team members', icon: Users, href: '/dashboard/reports/advanced-sales/salesperson-performance' },
+      { name: 'Sales Trend', desc: 'Month-over-month growth analytics', icon: TrendingUp, href: '/dashboard/reports/advanced-sales/sales-trend' },
+      { name: 'Top Customers', desc: 'High-value repeat buyers', icon: UserCheck, href: '/dashboard/reports/advanced-sales/top-customers-advanced' },
+      { name: 'Top Selling Products', desc: 'Margin and volume analysis', icon: PieChart, href: '/dashboard/reports/advanced-sales/top-selling-products' },
+    ]
+  },
+  {
+    category: 'Advanced Purchases',
+    items: [
+      { name: 'Supplier Performance', desc: 'Evaluate vendors on delivery & volume', icon: Truck, href: '/dashboard/reports/advanced-purchases/supplier-performance' },
+      { name: 'Purchase Trend', desc: 'Month-over-month purchasing analytics', icon: TrendingUp, href: '/dashboard/reports/advanced-purchases/purchase-trend' },
+    ]
+  },
+  {
+    category: 'Compliance',
+    items: [
+      { name: 'GST Audit', desc: 'Reconcile Output vs Input GST', icon: FileStack, href: '/dashboard/reports/compliance/gst-audit' },
+      { name: 'E-Invoice Register', desc: 'Tracker for IRN generation', icon: FileText, href: '/dashboard/reports/compliance/e-invoice-register' },
+      { name: 'E-Way Bill Register', desc: 'Tracker for E-Way Bills', icon: Truck, href: '/dashboard/reports/compliance/eway-bill-register' },
+    ]
+  },
+  {
+    category: 'Management',
+    items: [
+      { name: 'Business Dashboard', desc: 'Single-screen management overview', icon: BarChart3, href: '/dashboard/reports/management/business-dashboard-advanced' },
+      { name: 'Profitability Analysis', desc: 'Margin analysis comparing revenue/costs', icon: PieChart, href: '/dashboard/reports/management/profitability-analysis' },
+      { name: 'Budget vs Actual', desc: 'Account expenditures vs budgets', icon: Scale, href: '/dashboard/reports/management/budget-vs-actual' },
+      { name: 'Audit Trail', desc: 'System security and changes log', icon: History, href: '/dashboard/reports/management/audit-trail' },
+    ]
+  },
+  {
+    category: 'Special Reports',
+    items: [
+      { name: 'Inv. Wise Customer', desc: 'Customers who bought specific items', icon: Users, href: '/dashboard/reports/special/inventory-wise-customer-summary' },
+      { name: 'Inv. Wise Supplier', desc: 'Suppliers providing specific items', icon: Truck, href: '/dashboard/reports/special/inventory-wise-supplier-summary' },
+      { name: 'Supplier Wise Bill', desc: 'Bills grouped by supplier', icon: ClipboardList, href: '/dashboard/reports/special/supplier-wise-bill-summary' },
+      { name: 'Group Wise P&L', desc: 'Gross profit by Item Group', icon: BarChart2, href: '/dashboard/reports/special/group-wise-profit-loss' },
+      { name: 'Category Wise Summary', desc: 'High-level business snapshot per category', icon: Layers, href: '/dashboard/reports/special/category-wise-summary' },
+      { name: 'Category Wise P&L', desc: 'Gross profit by Category', icon: BarChart2, href: '/dashboard/reports/special/category-wise-profit-loss' },
+      { name: 'Category Wise Sales', desc: 'Sales volumes by Category', icon: Package, href: '/dashboard/reports/special/category-wise-sales' },
+      { name: 'Category Wise Margin', desc: 'Sorted categories by margin %', icon: PieChart, href: '/dashboard/reports/special/category-wise-margin' },
+      { name: 'Category Supplier Analysis', desc: 'Supplier dependency per category', icon: Truck, href: '/dashboard/reports/special/category-wise-supplier-analysis' },
     ]
   },
 ];
