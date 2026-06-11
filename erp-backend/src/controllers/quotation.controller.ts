@@ -192,6 +192,7 @@ export const convertToInvoice = async (req: Request, res: Response) => {
       })),
       subtotal: quotation.subtotal,
       totalDiscount: quotation.totalDiscount,
+      discountAmount: quotation.discountAmount,
       totalTaxableAmount: quotation.totalTaxableAmount,
       totalCGST: quotation.totalCGST,
       totalSGST: quotation.totalSGST,

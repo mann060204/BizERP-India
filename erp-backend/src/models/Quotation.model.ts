@@ -35,6 +35,7 @@ export interface IQuotation extends Document {
   lineItems: ILineItem[];
   subtotal: number;
   totalDiscount: number;
+  discountAmount?: number;
   totalTaxableAmount: number;
   totalCGST: number;
   totalSGST: number;
@@ -99,6 +100,7 @@ const InvoiceSchema = new Schema<IQuotation>(
     lineItems: [LineItemSchema],
     subtotal: { type: Number, default: 0 },
     totalDiscount: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
     totalTaxableAmount: { type: Number, default: 0 },
     totalCGST: { type: Number, default: 0 },
     totalSGST: { type: Number, default: 0 },

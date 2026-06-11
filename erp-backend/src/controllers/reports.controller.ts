@@ -1744,37 +1744,63 @@ export const getDashboardBusinessTrend = async (req: AuthRequest, res: Response)
     const { start, end, groupBy } = getDashboardDateRange(req);
     const mongoose = require('mongoose');
 
-    const dateFmt = groupBy === 'month' ? '%b %Y' : groupBy === 'week' ? 'W%V-%G' : '%d %b';
+    const dateFmt = groupBy === 'month' ? '%Y-%m' : groupBy === 'week' ? '%Y-%m-%d' : '%Y-%m-%d';
 
     const salesAgg = await Invoice.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
       { $group: { _id: { $dateToString: { format: dateFmt, date: '$invoiceDate' } }, sales: { $sum: '$grandTotal' } } },
-      { $sort: { '_id': 1 } }
     ]);
 
     const purchasesAgg = await PurchaseBill.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), billDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' } } },
       { $group: { _id: { $dateToString: { format: dateFmt, date: '$billDate' } }, purchases: { $sum: '$grandTotal' } } },
-      { $sort: { '_id': 1 } }
     ]);
 
     const expensesAgg = await Expense.aggregate([
       { $match: { businessId: new mongoose.Types.ObjectId(businessId), date: { $gte: start, $lte: end } } },
       { $group: { _id: { $dateToString: { format: dateFmt, date: '$date' } }, expenses: { $sum: '$totalWithTax' } } },
-      { $sort: { '_id': 1 } }
     ]);
 
     const map: Record<string, any> = {};
-    for (const s of salesAgg) { map[s._id] = { date: s._id, sales: s.sales, purchases: 0, expenses: 0 }; }
+
+    const formatDisplayDate = (dStr: string) => {
+      const d = new Date(dStr);
+      if (groupBy === 'month') {
+        return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      } else if (groupBy === 'week') {
+        const getWeek = (date: Date) => {
+          const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+          const dayNum = d.getUTCDay() || 7;
+          d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+          const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+          return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
+        };
+        return `W${getWeek(d)}-${d.getFullYear()}`;
+      } else {
+        return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+      }
+    };
+
+    for (const s of salesAgg) { 
+      const disp = formatDisplayDate(s._id);
+      if (!map[disp]) map[disp] = { date: disp, sales: 0, purchases: 0, expenses: 0, sortKey: s._id };
+      map[disp].sales += s.sales; 
+    }
     for (const p of purchasesAgg) {
-      if (!map[p._id]) map[p._id] = { date: p._id, sales: 0, purchases: 0, expenses: 0 };
-      map[p._id].purchases = p.purchases;
+      const disp = formatDisplayDate(p._id);
+      if (!map[disp]) map[disp] = { date: disp, sales: 0, purchases: 0, expenses: 0, sortKey: p._id };
+      map[disp].purchases += p.purchases;
     }
     for (const e of expensesAgg) {
-      if (!map[e._id]) map[e._id] = { date: e._id, sales: 0, purchases: 0, expenses: 0 };
-      map[e._id].expenses = e.expenses;
+      const disp = formatDisplayDate(e._id);
+      if (!map[disp]) map[disp] = { date: disp, sales: 0, purchases: 0, expenses: 0, sortKey: e._id };
+      map[disp].expenses += e.expenses;
     }
-    const data = Object.values(map).sort((a: any, b: any) => a.date.localeCompare(b.date));
+    
+    const data = Object.values(map)
+      .sort((a: any, b: any) => a.sortKey.localeCompare(b.sortKey))
+      .map(({ sortKey, ...rest }) => rest);
+      
     sendSuccess(res, data);
   } catch (e: any) { sendError(res, e.message); }
 };

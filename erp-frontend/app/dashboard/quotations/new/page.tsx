@@ -94,6 +94,8 @@ export default function NewQuotationPage() {
 
   const [shippingCharge, setShippingCharge] = useState(0);
   const [shippingGstRate, setShippingGstRate] = useState(0);
+  const [globalDiscountType, setGlobalDiscountType] = useState('%');
+  const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
   
   const totalAmountReceived = 0;
   const combinedPaymentMode = paymentMode2 && amountReceived2 > 0 ? `${paymentMode1} & ${paymentMode2}` : paymentMode1;
@@ -330,7 +332,8 @@ export default function NewQuotationPage() {
   const totalSGST = lineItems.reduce((s, i) => s + i.sgst, 0) + shipSGST;
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   
-  const preRoundTotal = totalTaxable + totalCGST + totalSGST + totalIGST + shippingCharge;
+  const globalDiscountAmount = globalDiscountType === '%' ? round2((totalTaxable * globalDiscountValue) / 100) : globalDiscountValue;
+  const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
@@ -361,6 +364,7 @@ export default function NewQuotationPage() {
         roundOff,
         subtotal,
         totalDiscount,
+        discountAmount: globalDiscountAmount,
         totalTaxableAmount: totalTaxable,
         totalCGST,
         totalSGST,
@@ -823,10 +827,22 @@ export default function NewQuotationPage() {
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-                {totalDiscount > 0 && (
-                  <div className="flex justify-between text-red-400">
-                    <span>Discount</span>
-                    <span>-₹{totalDiscount.toFixed(2)}</span>
+                
+                <div className="flex justify-between items-center mt-1">
+                  <span className="erp-label">Discount</span>
+                  <div className="flex gap-0 w-32">
+                  <input type="number" value={globalDiscountValue === 0 ? '' : globalDiscountValue} onChange={e => setGlobalDiscountValue(parseFloat(e.target.value) || 0)} className="erp-input w-full rounded-r-none border-r-0 pl-2" placeholder="0.00" />
+                  <select value={globalDiscountType} onChange={e => setGlobalDiscountType(e.target.value)} className="erp-input w-16 rounded-l-none bg-gray-50 text-gray-700 px-1 font-bold text-center border-l-0">
+                    <option value="%">%</option>
+                    <option value="₹">₹</option>
+                  </select>
+                  </div>
+                </div>
+
+                {(totalDiscount + globalDiscountAmount) > 0 && (
+                  <div className="flex justify-between text-red-400 font-bold border-t border-slate-100 pt-1 mt-1">
+                    <span>Total Discount</span>
+                    <span>-₹{(totalDiscount + globalDiscountAmount).toFixed(2)}</span>
                   </div>
                 )}
                 

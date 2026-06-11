@@ -128,7 +128,6 @@ export default function DashboardPage() {
   const [businessName, setBusinessName] = useState('My Business');
   const [chartHeight, setChartHeight] = useState('h-64');
   const [privacyMode, setPrivacyMode] = useState(false);
-  const [showUpdate, setShowUpdate] = useState(true);
 
   const [banks, setBanks] = useState<any[]>([]);
   const [cashInHand, setCashInHand] = useState(0);
@@ -289,20 +288,6 @@ export default function DashboardPage() {
       <Topbar title="Dashboard" />
 
       <main className="flex-1 p-5 overflow-auto">
-        {showUpdate && (
-          <div className="mb-4 bg-indigo-600 text-white p-3 rounded-xl flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-              <span className="bg-indigo-800 p-1.5 rounded-lg"><Package className="w-5 h-5 text-indigo-100" /></span>
-              <div>
-                <p className="text-sm font-bold">New Update is Live! 🎉</p>
-                <p className="text-xs text-indigo-100">We've fixed the Purchase Return validation issues and improved UI text consistency across the application.</p>
-              </div>
-            </div>
-            <button onClick={() => setShowUpdate(false)} className="text-indigo-200 hover:text-white transition">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        )}
         {/* Greeting & KPI Period */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>

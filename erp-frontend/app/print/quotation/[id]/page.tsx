@@ -241,7 +241,7 @@ export default function PrintableQuotationPage() {
                  </>
                )}
                <div className="flex justify-between border-b border-gray-300 px-2 py-1">
-                 <span>Discount :</span><span className="text-red-600">-{quotation.totalDiscount.toFixed(2)}</span>
+                 <span>Discount :</span><span className="text-red-600">-{((quotation.totalDiscount || 0) + (quotation.discountAmount || 0)).toFixed(2)}</span>
                </div>
                {quotation.shippingCharge > 0 && (
                  <div className="flex justify-between border-b border-gray-300 px-2 py-1">
