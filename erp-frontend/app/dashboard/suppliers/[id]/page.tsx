@@ -338,7 +338,7 @@ const COUNTRY_CODES: Record<string, string> = {
                     {photo ? (
                       <img src={photo} alt="Supplier" className="w-full h-full object-cover" />
                     ) : (
-                      <UserIcon className="w-24 h-24 text-action-500 mt-8" />
+                      <UserIcon className="w-24 h-24 text-primary mt-8" />
                     )}
                   </div>
                 )}
@@ -351,7 +351,7 @@ const COUNTRY_CODES: Record<string, string> = {
                 <div className="flex justify-center gap-3 px-2 mt-2">
                   {!cameraError && (
                     <>
-<button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-action-600 py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
+<button onClick={capturePhoto} className="flex-1 flex items-center justify-center gap-1 text-xs text-slate-900 bg-[#1e3a8a] hover:bg-primary-hover py-1.5 rounded border border-[#1e3a8a] transition font-semibold">
                       <Camera className="w-4 h-4" /> Capture
                     </button>
                       <button onClick={() => startCamera(facingMode === 'user' ? 'environment' : 'user')} className="px-3 flex items-center justify-center text-slate-600 bg-white hover:bg-slate-50 py-1.5 rounded border border-slate-200 transition" title="Flip Camera">
@@ -540,7 +540,7 @@ const COUNTRY_CODES: Record<string, string> = {
                          {isReadOnly ? 'Back' : 'Cancel'}
                        </button>
                        {!isReadOnly && (
-                         <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-action-600 text-white px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50 pointer-events-auto">
+                         <button onClick={handleSave} disabled={saving} className="bg-[#1e3a8a] hover:bg-primary-hover text-white px-8 py-2 rounded flex items-center gap-2 text-sm font-semibold shadow-md transition disabled:opacity-50 pointer-events-auto">
                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
                          </button>
                        )}
@@ -784,7 +784,7 @@ const COUNTRY_CODES: Record<string, string> = {
                  <div className="flex flex-col h-full items-center justify-center text-slate-600 gap-3">
                     <div className="text-4xl">📝</div>
                     <p className="text-sm">No purchase orders generated.</p>
-                    <button className="mt-2 text-action-500 hover:text-blue-400 text-xs font-semibold underline">Create Purchase Order</button>
+                    <button className="mt-2 text-primary hover:text-blue-400 text-xs font-semibold underline">Create Purchase Order</button>
                  </div>
                )}
 
@@ -845,7 +845,7 @@ const COUNTRY_CODES: Record<string, string> = {
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
               <button onClick={() => setShowPaymentModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button>
-              <button onClick={handlePaymentSubmit} className="px-4 py-2 text-sm font-medium text-white bg-action-600 hover:bg-action-700 rounded-lg transition shadow-sm">Record Payment</button>
+              <button onClick={handlePaymentSubmit} className="px-4 py-2 text-sm font-medium text-white bg-primary-hover hover:bg-action-700 rounded-lg transition shadow-sm">Record Payment</button>
             </div>
           </div>
         </div>
@@ -870,16 +870,16 @@ const COUNTRY_CODES: Record<string, string> = {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-slate-700">Date</label>
-                  <input type="date" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={adjustmentForm.date} onChange={e=>setAdjustmentForm({...adjustmentForm, date: e.target.value})} />
+                  <input type="date" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary" value={adjustmentForm.date} onChange={e=>setAdjustmentForm({...adjustmentForm, date: e.target.value})} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-slate-700">Amount</label>
-                  <input type="number" placeholder="0.00" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={adjustmentForm.amount} onChange={e=>setAdjustmentForm({...adjustmentForm, amount: e.target.value})} />
+                  <input type="number" placeholder="0.00" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary" value={adjustmentForm.amount} onChange={e=>setAdjustmentForm({...adjustmentForm, amount: e.target.value})} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Particulars / Notes</label>
-                <input placeholder="E.g., Opening Balance Correction" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={adjustmentForm.description} onChange={e=>setAdjustmentForm({...adjustmentForm, description: e.target.value})} />
+                <input placeholder="E.g., Opening Balance Correction" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary" value={adjustmentForm.description} onChange={e=>setAdjustmentForm({...adjustmentForm, description: e.target.value})} />
               </div>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
@@ -902,16 +902,16 @@ const COUNTRY_CODES: Record<string, string> = {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-slate-700">Date</label>
-                  <input type="date" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={editForm.date} onChange={e=>setEditForm({...editForm, date: e.target.value})} />
+                  <input type="date" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary" value={editForm.date} onChange={e=>setEditForm({...editForm, date: e.target.value})} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-slate-700">Amount</label>
-                  <input type="number" placeholder="0.00" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={editForm.amount} onChange={e=>setEditForm({...editForm, amount: e.target.value})} />
+                  <input type="number" placeholder="0.00" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary" value={editForm.amount} onChange={e=>setEditForm({...editForm, amount: e.target.value})} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Particulars / Notes</label>
-                <input placeholder="Description" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500" value={editForm.description} onChange={e=>setEditForm({...editForm, description: e.target.value})} />
+                <input placeholder="Description" className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary" value={editForm.description} onChange={e=>setEditForm({...editForm, description: e.target.value})} />
               </div>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">

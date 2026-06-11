@@ -258,7 +258,7 @@ export default function AccountsPage() {
         
         {/* Left Pane - Account List */}
         <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-4">
-          <button onClick={handleOpenAddAccount} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg w-full">
+          <button onClick={handleOpenAddAccount} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg w-full">
             <Landmark className="w-4 h-4" /> Add {type} Account
           </button>
           
@@ -277,7 +277,7 @@ export default function AccountsPage() {
                     <button 
                       key={acc._id} 
                       onClick={() => { setSelectedAccount(acc); setFromDate(''); setToDate(''); }}
-                      className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition ${selectedAccount?._id === acc._id ? 'bg-blue-50/50 border-l-4 border-action-500' : 'border-l-4 border-transparent'}`}
+                      className={`w-full text-left px-4 py-3 hover:bg-slate-50 transition ${selectedAccount?._id === acc._id ? 'bg-blue-50/50 border-l-4 border-primary' : 'border-l-4 border-transparent'}`}
                     >
                       <div className="font-semibold text-slate-900 text-sm truncate flex items-center gap-2">
                         {acc.name}
@@ -434,28 +434,28 @@ export default function AccountsPage() {
             <form onSubmit={handleCreateAccount} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Account Name <span className="text-red-500">*</span></label>
-                <input required value={accName} onChange={e => setAccName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. State Bank of India" />
+                <input required value={accName} onChange={e => setAccName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="e.g. State Bank of India" />
               </div>
               {(type === 'Bank' || type === 'Loan') && (
                 <>
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Bank Name</label>
-                    <input value={bankName} onChange={e => setBankName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
+                    <input value={bankName} onChange={e => setBankName(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="Optional" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Account Number</label>
-                    <input value={accNo} onChange={e => setAccNo(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="Optional" />
+                    <input value={accNo} onChange={e => setAccNo(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="Optional" />
                   </div>
                 </>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Opening Balance</label>
-                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
+                  <input type="number" step="0.01" value={openingBal} onChange={e => setOpeningBal(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Type</label>
-                  <select value={balType} onChange={e => setBalType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
+                  <select value={balType} onChange={e => setBalType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm">
                     <option value="Dr">Debit (Dr)</option>
                     <option value="Cr">Credit (Cr)</option>
                   </select>
@@ -465,22 +465,22 @@ export default function AccountsPage() {
               {type === 'Bank' && (
                 <div className="flex gap-4 pt-2 border-t border-slate-100">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={isDefaultUpi} onChange={e => setIsDefaultUpi(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
+                    <input type="checkbox" checked={isDefaultUpi} onChange={e => setIsDefaultUpi(e.target.checked)} className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary" />
                     <span className="text-sm font-semibold text-slate-700">Default for UPI</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={isDefaultNeft} onChange={e => setIsDefaultNeft(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
+                    <input type="checkbox" checked={isDefaultNeft} onChange={e => setIsDefaultNeft(e.target.checked)} className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary" />
                     <span className="text-sm font-semibold text-slate-700">Default NEFT/Bank Txn</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={isDefaultCheque} onChange={e => setIsDefaultCheque(e.target.checked)} className="w-4 h-4 text-action-500 rounded border-slate-300 focus:ring-action-500" />
+                    <input type="checkbox" checked={isDefaultCheque} onChange={e => setIsDefaultCheque(e.target.checked)} className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary" />
                     <span className="text-sm font-semibold text-slate-700">Default for Cheque</span>
                   </label>
                 </div>
               )}
               
               <div className="pt-2">
-                <button type="submit" className="w-full py-2.5 bg-action-500 hover:bg-action-600 text-white font-semibold rounded-xl transition shadow-lg shadow-action-500/30">Save Account</button>
+                <button type="submit" className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl transition shadow-lg shadow-action-500/30">Save Account</button>
               </div>
             </form>
           </div>
@@ -497,20 +497,20 @@ export default function AccountsPage() {
             <form onSubmit={handleCreateTransaction} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Date <span className="text-red-500">*</span></label>
-                <input type="date" required value={txnDate} onChange={e => setTxnDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" />
+                <input type="date" required value={txnDate} onChange={e => setTxnDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Description <span className="text-red-500">*</span></label>
-                <input required value={txnDesc} onChange={e => setTxnDesc(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. Bank charges, Manual correction" />
+                <input required value={txnDesc} onChange={e => setTxnDesc(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="e.g. Bank charges, Manual correction" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Amount (₹) <span className="text-red-500">*</span></label>
-                  <input type="number" step="0.01" required min="0.01" value={txnAmt} onChange={e => setTxnAmt(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
+                  <input type="number" step="0.01" required min="0.01" value={txnAmt} onChange={e => setTxnAmt(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="0.00" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Entry Type</label>
-                  <select value={txnType} onChange={e => setTxnType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
+                  <select value={txnType} onChange={e => setTxnType(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm">
                     <option value="Debit">Debit (+)</option>
                     <option value="Credit">Credit (-)</option>
                   </select>
@@ -540,7 +540,7 @@ export default function AccountsPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">To Account <span className="text-red-500">*</span></label>
-                <select required value={transferToId} onChange={e => setTransferToId(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm">
+                <select required value={transferToId} onChange={e => setTransferToId(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm">
                   <option value="" disabled>Select Destination Account</option>
                   {allAccounts.filter(a => a._id !== selectedAccount._id).map(a => (
                     <option key={a._id} value={a._id}>{a.name} ({a.type})</option>
@@ -550,16 +550,16 @@ export default function AccountsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Date <span className="text-red-500">*</span></label>
-                  <input type="date" required value={transferDate} onChange={e => setTransferDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" />
+                  <input type="date" required value={transferDate} onChange={e => setTransferDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Amount (₹) <span className="text-red-500">*</span></label>
-                  <input type="number" step="0.01" required min="0.01" value={transferAmt} onChange={e => setTransferAmt(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="0.00" />
+                  <input type="number" step="0.01" required min="0.01" value={transferAmt} onChange={e => setTransferAmt(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="0.00" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Description</label>
-                <input value={transferDesc} onChange={e => setTransferDesc(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition text-sm" placeholder="e.g. Fund transfer" />
+                <input value={transferDesc} onChange={e => setTransferDesc(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-sm" placeholder="e.g. Fund transfer" />
               </div>
               <div className="pt-2">
                 <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-600/30">Complete Transfer</button>

@@ -52,14 +52,14 @@ export default function BatchAlertsPage() {
                 placeholder="Search Product or Batch..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500 w-64"
+                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary w-64"
               />
             </div>
             
             <select 
               value={filterType} 
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500"
+              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary"
             >
               <option value="ALL">All Alerts</option>
               <option value="EXPIRED">Expired</option>

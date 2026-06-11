@@ -119,10 +119,10 @@ Thank you for your business!`;
                 placeholder="Search quotation no, customer..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-400 w-64 text-slate-900"
+                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary w-64 text-slate-900"
               />
             </div>
-            <Link href="/dashboard/quotations/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
+            <Link href="/dashboard/quotations/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
               <Plus className="w-4 h-4" /> New Quotation
             </Link>
           </div>
@@ -132,7 +132,7 @@ Thank you for your business!`;
         <div className="flex gap-2 flex-wrap">
           {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
             <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-primary text-white hover:bg-primary-hover border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
               {label}
             </button>
           ))}
@@ -146,7 +146,7 @@ Thank you for your business!`;
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No quotations yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Create your first GST quotation to get started</p>
-            <Link href="/dashboard/quotations/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
+            <Link href="/dashboard/quotations/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Create Quotation
             </Link>
           </div>
@@ -193,7 +193,7 @@ Thank you for your business!`;
                             </Link>
                             {inv.status !== 'Cancelled' && (
                               <>
-                                <Link href={`/dashboard/quotations/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-white hover:bg-action-500 transition tooltip" title="Edit Quotation">
+                                <Link href={`/dashboard/quotations/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-white hover:bg-primary transition tooltip" title="Edit Quotation">
                                   <Edit3 className="w-4 h-4" />
                                 </Link>
                                 <button onClick={() => handleConvertToInvoice(inv._id)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-white hover:bg-indigo-500 transition tooltip" title="Convert to Invoice">

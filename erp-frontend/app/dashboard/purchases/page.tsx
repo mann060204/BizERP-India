@@ -98,7 +98,7 @@ export default function PurchasesPage() {
                 { header: 'Status', render: (p) => STATUS_CONFIG[p.status]?.label || p.status }
               ]}
             />
-            <Link href="/dashboard/purchases/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+            <Link href="/dashboard/purchases/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
               <Plus className="w-4 h-4" /> Add Purchase Bill
             </Link>
           </div>
@@ -109,7 +109,7 @@ export default function PurchasesPage() {
           <div className="flex gap-2 flex-wrap">
             {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
               <button key={val} onClick={() => setStatusFilter(val)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-primary text-white hover:bg-primary-hover border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
                 {label}
               </button>
             ))}
@@ -121,7 +121,7 @@ export default function PurchasesPage() {
               placeholder="Search Supplier, Address, Bill No..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-500/20 focus:border-action-500 transition-all shadow-sm"
+              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function PurchasesPage() {
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No purchases yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Record your first purchase bill to update stock</p>
-            <Link href="/dashboard/purchases/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
+            <Link href="/dashboard/purchases/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Add Purchase Bill
             </Link>
           </div>

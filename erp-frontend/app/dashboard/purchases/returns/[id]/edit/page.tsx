@@ -382,9 +382,9 @@ export default function EditpurchaseReturnPage() {
                  <label className="erp-label block">Supplier Name <span className="text-red-500">*</span></label>
                  <div className="flex gap-2">
                    {supplierId && supplierSnapshot && (
-                     <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
+                     <span onClick={() => setShowEditSupplierModal(true)} className="text-[10px] text-primary hover:text-blue-400 cursor-pointer underline flex items-center"><Edit className="w-3 h-3 mr-0.5" /> Edit</span>
                    )}
-                   <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add</span>
+                   <span onClick={() => setShowQuickAddSupplierModal(true)} className="text-[10px] text-primary hover:text-blue-400 cursor-pointer underline flex items-center"><Plus className="w-3 h-3 mr-0.5" /> Add</span>
                  </div>
               </div>
               <div className="relative">
@@ -470,7 +470,7 @@ export default function EditpurchaseReturnPage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                    <label className="erp-label block">Item Name <span className="text-red-500">*</span></label>
-                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
+                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-primary hover:text-blue-400 cursor-pointer underline">Add Item</span>
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">
@@ -763,7 +763,7 @@ export default function EditpurchaseReturnPage() {
                    {batchInput.expiryDate ? (
                      <input type="date" value={batchInput.expiryDate} onChange={e => setBatchInput({...batchInput, expiryDate: e.target.value})} className="erp-input w-full text-[10px] p-0.5" />
                    ) : (
-                     <button onClick={() => setBatchInput({...batchInput, expiryDate: new Date().toISOString().split('T')[0]})} className="w-full bg-slate-200 hover:bg-slate-300 text-action-600 font-bold text-[10px] py-1 rounded transition">Set Expiry Date</button>
+                     <button onClick={() => setBatchInput({...batchInput, expiryDate: new Date().toISOString().split('T')[0]})} className="w-full bg-slate-200 hover:bg-slate-300 text-primary-hover font-bold text-[10px] py-1 rounded transition">Set Expiry Date</button>
                    )}
                  </div>
               </div>

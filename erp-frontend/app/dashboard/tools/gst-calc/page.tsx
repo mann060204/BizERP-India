@@ -44,10 +44,10 @@ export default function GstCalculatorPage() {
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">Calculation Mode</label>
               <div className="flex rounded-lg overflow-hidden border border-slate-200">
-                <button onClick={() => setMode('exclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'exclusive' ? 'bg-action-500 text-white hover:bg-action-600' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'}`}>
+                <button onClick={() => setMode('exclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'exclusive' ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'}`}>
                   Add GST (Exclusive)
                 </button>
-                <button onClick={() => setMode('inclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'inclusive' ? 'bg-action-500 text-white hover:bg-action-600' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'}`}>
+                <button onClick={() => setMode('inclusive')} className={`flex-1 py-3 text-sm font-medium transition ${mode === 'inclusive' ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'}`}>
                   Remove GST (Inclusive)
                 </button>
               </div>

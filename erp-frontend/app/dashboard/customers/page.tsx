@@ -65,7 +65,7 @@ export default function CustomersPage() {
                 { header: 'Balance', render: (c) => formatAccountingBalance(c.currentBalance || 0, 'customer').text }
               ]}
             />
-            <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+            <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
               <Plus className="w-4 h-4" /> Add Customer
             </Link>
           </div>
@@ -86,7 +86,7 @@ export default function CustomersPage() {
             <Users className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No customers yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Add your first customer to get started</p>
-            <Link href="/dashboard/customers/new" className="inline-block px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">Add Customer</Link>
+            <Link href="/dashboard/customers/new" className="inline-block px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover text-sm font-semibold hover:opacity-90 transition">Add Customer</Link>
           </div>
         ) : (
           <div className="glass rounded-2xl overflow-hidden">

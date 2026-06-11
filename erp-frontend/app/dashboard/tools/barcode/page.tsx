@@ -74,7 +74,7 @@ export default function BarcodeGeneratorPage() {
 
           <div className="md:col-span-3 flex justify-end">
             <button onClick={handlePrint} disabled={!selectedProduct}
-              className="px-6 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold flex items-center gap-2 hover:opacity-90 disabled:opacity-50 transition shadow-lg shadow-white/10/30">
+              className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold flex items-center gap-2 hover:opacity-90 disabled:opacity-50 transition shadow-lg shadow-white/10/30">
               <Printer className="w-4 h-4" /> Print Barcodes
             </button>
           </div>

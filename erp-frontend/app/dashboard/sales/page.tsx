@@ -118,10 +118,10 @@ Thank you for your business!`;
                 placeholder="Search by Bill No, Name, Mobile..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-action-400 w-72 text-slate-900"
+                className="pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary w-72 text-slate-900"
               />
             </div>
-            <Link href="/dashboard/sales/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
+            <Link href="/dashboard/sales/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30 whitespace-nowrap">
               <Plus className="w-4 h-4" /> New Invoice
             </Link>
           </div>
@@ -135,8 +135,8 @@ Thank you for your business!`;
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                 activeTab === tab 
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                  : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'bg-primary text-white shadow-md' 
+                  : 'bg-[var(--bg-card)] text-[var(--text-muted)] border border-[var(--border)] hover:border-[var(--border-focus)]'
               }`}
             >
               {tab}
@@ -152,7 +152,7 @@ Thank you for your business!`;
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No invoices yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Create your first GST invoice to get started</p>
-            <Link href="/dashboard/sales/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
+            <Link href="/dashboard/sales/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Create Invoice
             </Link>
           </div>
@@ -199,7 +199,7 @@ Thank you for your business!`;
                               <Printer className="w-4 h-4" />
                             </Link>
                             {inv.status !== 'cancelled' && (
-                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-white hover:bg-action-500 transition tooltip" title="Edit Invoice">
+                              <Link href={`/dashboard/sales/${inv._id}/edit`} className="p-1.5 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-white hover:bg-primary transition tooltip" title="Edit Invoice">
                                 <Edit3 className="w-4 h-4" />
                               </Link>
                             )}

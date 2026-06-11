@@ -83,7 +83,7 @@ export default function SuppliersPage() {
                 { header: 'Balance', render: (s) => formatAccountingBalance(s.currentBalance || 0, 'supplier').text }
               ]}
             />
-            <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 hover:bg-action-500 text-white font-semibold text-sm transition shadow-lg shadow-blue-600/20">
+            <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-semibold text-sm transition shadow-lg shadow-primary/20">
               + Add Supplier
             </button>
           </div>
@@ -96,13 +96,13 @@ export default function SuppliersPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-action-500 animate-spin" /></div>
+          <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
         ) : suppliers.length === 0 ? (
           <div className="bg-white rounded-2xl p-16 text-center border border-slate-200">
-            <Truck className="w-14 h-14 text-action-500/50 mx-auto mb-4" />
+            <Truck className="w-14 h-14 text-primary/50 mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No suppliers yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Add your first supplier to get started</p>
-            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-action-500 text-white text-sm font-semibold hover:bg-action-500 transition">Add Supplier</button>
+            <button onClick={openCreate} className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary transition">Add Supplier</button>
           </div>
         ) : (
           <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
@@ -136,7 +136,7 @@ export default function SuppliersPage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => router.push(`/dashboard/suppliers/${s._id}?mode=view`)} className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-600 hover:text-blue-700 transition" title="View Profile"><Info className="w-4 h-4" /></button>
-                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] hover:bg-action-600 text-slate-600 hover:text-slate-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] hover:bg-primary-hover text-slate-600 hover:text-slate-900 hover:text-gray-900 transition"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(s._id, s.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>

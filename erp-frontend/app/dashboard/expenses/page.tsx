@@ -128,7 +128,7 @@ export default function ExpensesPage() {
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+          <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Record Expense
           </button>
         </div>
@@ -165,7 +165,7 @@ export default function ExpensesPage() {
                       <td className="px-5 py-4 text-slate-600">{e.paymentMode}</td>
                       <td className="px-5 py-4 font-bold text-red-400">₹{(e.totalWithTax || e.amount || 0).toFixed(2)}</td>
                       <td className="px-5 py-4 flex items-center gap-1">
-                        <button onClick={() => openEdit(e)} className="p-1.5 rounded-lg hover:bg-action-500/10 text-slate-600 hover:text-action-500 transition opacity-0 group-hover:opacity-100"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => openEdit(e)} className="p-1.5 rounded-lg hover:bg-primary/10 text-slate-600 hover:text-primary transition opacity-0 group-hover:opacity-100"><Edit className="w-4 h-4" /></button>
                         <button onClick={() => handleDelete(e._id)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
                       </td>
                     </tr>
@@ -245,7 +245,7 @@ export default function ExpensesPage() {
                     <div className="flex rounded-lg overflow-hidden border border-slate-200">
                       {[{ label: 'Intra (C+S)', v: false }, { label: 'Inter (I)', v: true }].map(({ label, v }) => (
                         <button key={label} type="button" onClick={() => setForm({ ...form, isInterState: v })} disabled={form.gstRate === 0}
-                          className={`flex-1 py-2 text-xs font-medium transition ${form.isInterState === v ? 'bg-action-500 text-white hover:bg-action-600' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'} disabled:opacity-50`}>
+                          className={`flex-1 py-2 text-xs font-medium transition ${form.isInterState === v ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-[#F1F5F9] text-slate-600 hover:text-slate-900'} disabled:opacity-50`}>
                           {label}
                         </button>
                       ))}
@@ -262,7 +262,7 @@ export default function ExpensesPage() {
             </div>
             <div className="flex gap-3 p-6 border-t border-slate-200">
               <button onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2">
+              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editingId ? 'Update' : 'Record'} Expense
               </button>
             </div>

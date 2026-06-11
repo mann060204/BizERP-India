@@ -105,12 +105,12 @@ export default function BankMasterPage() {
       <main className="flex-1 p-6 max-w-6xl mx-auto w-full space-y-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-             <Landmark className="w-6 h-6 text-action-500" />
+             <Landmark className="w-6 h-6 text-primary" />
              <h1 className="text-xl font-bold text-slate-900">Bank Accounts</h1>
           </div>
           <button 
             onClick={openNewModal}
-            className="bg-action-600 hover:bg-action-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition shadow-sm"
+            className="bg-primary-hover hover:bg-action-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition shadow-sm"
           >
             <Plus className="w-4 h-4" /> Add Bank
           </button>
@@ -170,7 +170,7 @@ export default function BankMasterPage() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-action-500" />
+                <Landmark className="w-5 h-5 text-primary" />
                 {editingBank ? 'Edit Bank Account' : 'Add Bank Account'}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">✕</button>
@@ -179,38 +179,38 @@ export default function BankMasterPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">Bank Name <span className="text-red-500">*</span></label>
-                <input required type="text" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition" placeholder="e.g. HDFC Bank" />
+                <input required type="text" value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="e.g. HDFC Bank" />
               </div>
               
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">Account Name <span className="text-red-500">*</span></label>
-                <input required type="text" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition" placeholder="e.g. BizERP Current A/c" />
+                <input required type="text" value={formData.accountName} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="e.g. BizERP Current A/c" />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">Account Number <span className="text-red-500">*</span></label>
-                <input required type="text" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition font-mono" placeholder="e.g. 50200012345678" />
+                <input required type="text" value={formData.accountNumber} onChange={e => setFormData({...formData, accountNumber: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition font-mono" placeholder="e.g. 50200012345678" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">IFSC Code</label>
-                  <input type="text" value={formData.ifsc} onChange={e => setFormData({...formData, ifsc: e.target.value.toUpperCase()})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition font-mono uppercase" placeholder="e.g. HDFC0001234" />
+                  <input type="text" value={formData.ifsc} onChange={e => setFormData({...formData, ifsc: e.target.value.toUpperCase()})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition font-mono uppercase" placeholder="e.g. HDFC0001234" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">Branch</label>
-                  <input type="text" value={formData.branch} onChange={e => setFormData({...formData, branch: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition" placeholder="Branch Name" />
+                  <input type="text" value={formData.branch} onChange={e => setFormData({...formData, branch: e.target.value})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition" placeholder="Branch Name" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wide">Opening Balance (₹)</label>
-                <input type="number" step="0.01" value={formData.openingBalance || ''} onChange={e => setFormData({...formData, openingBalance: parseFloat(e.target.value) || 0})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 transition font-medium" />
+                <input type="number" step="0.01" value={formData.openingBalance || ''} onChange={e => setFormData({...formData, openingBalance: parseFloat(e.target.value) || 0})} className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition font-medium" />
               </div>
               
               <div className="pt-4 flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
-                <button type="submit" className="px-5 py-2.5 text-sm font-semibold bg-action-600 hover:bg-action-700 text-white rounded-xl transition shadow-sm">{editingBank ? 'Save Changes' : 'Add Bank'}</button>
+                <button type="submit" className="px-5 py-2.5 text-sm font-semibold bg-primary-hover hover:bg-action-700 text-white rounded-xl transition shadow-sm">{editingBank ? 'Save Changes' : 'Add Bank'}</button>
               </div>
             </form>
           </div>

@@ -553,7 +553,7 @@ export default function NewPurchasePage() {
               <div>
                 <div className="flex justify-between items-center mb-1">
                    <label className="erp-label block">Item Name <span className="text-red-500">*</span></label>
-                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-action-500 hover:text-blue-400 cursor-pointer underline">Add Item</span>
+                   <span onClick={() => setShowQuickAddModal(true)} className="text-[10px] text-primary hover:text-blue-400 cursor-pointer underline">Add Item</span>
                 </div>
                 <div className="relative">
                   <div className="flex w-full relative">

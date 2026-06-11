@@ -192,7 +192,7 @@ export default function BulkImportPage() {
             </div>
 
             {/* Formatting Info */}
-            <div className="glass rounded-2xl p-6 border border-slate-200 bg-action-500/5">
+            <div className="glass rounded-2xl p-6 border border-slate-200 bg-primary/5">
               <div className="flex items-start gap-3">
                 <Info className="w-5 h-5 text-blue-400 mt-0.5" />
                 <div>
@@ -259,7 +259,7 @@ export default function BulkImportPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-slate-900 font-semibold text-sm uppercase tracking-wider">Data Preview (Top 3)</h3>
                   <button onClick={processImport} disabled={loading}
-                    className="px-6 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold flex items-center gap-2 hover:opacity-90 disabled:opacity-50 transition shadow-lg shadow-white/10/30">
+                    className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold flex items-center gap-2 hover:opacity-90 disabled:opacity-50 transition shadow-lg shadow-white/10/30">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     Import {data.length} Records
                   </button>

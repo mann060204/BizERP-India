@@ -95,7 +95,7 @@ export default function InventoryPage() {
           <div className="flex rounded-xl overflow-hidden border border-slate-200">
             {[{ id: 'all', label: 'All Items' }, { id: 'low', label: 'Low Stock' }].map(f => (
               <button key={f.id} onClick={() => setFilter(f.id as any)}
-                className={`px-4 py-2 text-sm font-medium transition ${filter === f.id ? 'bg-action-500 text-white hover:bg-action-600' : 'bg-white text-slate-600 hover:text-slate-900'}`}>
+                className={`px-4 py-2 text-sm font-medium transition ${filter === f.id ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-white text-slate-600 hover:text-slate-900'}`}>
                 {f.label}
               </button>
             ))}

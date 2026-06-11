@@ -215,16 +215,16 @@ export default function SettingsPage() {
             <p className="text-slate-600 text-sm mt-0.5">Manage your business and application preferences</p>
           </div>
           {activeTab === 'business' && (
-            <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
+            <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
             </button>
           )}
         </div>
 
         <div className="flex gap-6 border-b border-slate-200 overflow-x-auto whitespace-nowrap hide-scrollbar">
-          <button onClick={() => setActiveTab('business')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'business' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Business Profile</button>
-          <button onClick={() => setActiveTab('sequences')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'sequences' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Document Sequences</button>
-          <button onClick={() => setActiveTab('application')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'application' ? 'border-action-500 text-action-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Application Settings</button>
+          <button onClick={() => setActiveTab('business')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'business' ? 'border-primary text-primary-hover' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Business Profile</button>
+          <button onClick={() => setActiveTab('sequences')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'sequences' ? 'border-primary text-primary-hover' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Document Sequences</button>
+          <button onClick={() => setActiveTab('application')} className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'application' ? 'border-primary text-primary-hover' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Application Settings</button>
         </div>
 
         {activeTab === 'business' ? (
@@ -349,19 +349,19 @@ export default function SettingsPage() {
               </div>
 
               {/* Inventory Settings */}
-              <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4 shadow-lg shadow-action-500/5 ring-1 ring-action-500/10 relative overflow-hidden">
+              <div className="glass rounded-2xl p-6 border border-slate-200 space-y-4 shadow-lg shadow-action-500/5 ring-1 ring-primary/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                  <Package className="w-24 h-24 text-action-600" />
+                  <Package className="w-24 h-24 text-primary-hover" />
                 </div>
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 relative z-10">
-                  <Package className="w-5 h-5 text-action-600" />
+                  <Package className="w-5 h-5 text-primary-hover" />
                   <h3 className="font-semibold text-slate-900">Inventory Tracking</h3>
                 </div>
                 <div className="grid grid-cols-1 gap-4 relative z-10">
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1.5">Batch Delivery Algorithm</label>
                     <select value={form.inventorySequencing || 'FIFO'} onChange={e => setForm({ ...form, inventorySequencing: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-action-500 focus:ring-1 focus:ring-action-500 text-sm transition font-medium shadow-sm">
+                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm transition font-medium shadow-sm">
                       <option value="FIFO">FIFO (First In, First Out)</option>
                       <option value="FEFO">FEFO (First Expiring, First Out)</option>
                       <option value="LIFO">LIFO (Last In, First Out)</option>

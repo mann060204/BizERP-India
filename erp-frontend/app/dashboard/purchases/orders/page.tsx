@@ -78,7 +78,7 @@ export default function PurchaseOrdersPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-900">All Purchase Orders</h2>
-          <Link href="/dashboard/purchases/orders/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
+          <Link href="/dashboard/purchases/orders/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">
             <Plus className="w-4 h-4" /> Add Purchase Order
           </Link>
         </div>
@@ -87,7 +87,7 @@ export default function PurchaseOrdersPage() {
         <div className="flex gap-2 flex-wrap">
           {[['', 'All'], ...Object.entries(STATUS_CONFIG).map(([k, v]) => [k, v.label])].map(([val, label]) => (
             <button key={val} onClick={() => setStatusFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-action-500 text-white hover:bg-action-600 border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${statusFilter === val ? 'bg-primary text-white hover:bg-primary-hover border-transparent' : 'border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4]'}`}>
               {label}
             </button>
           ))}
@@ -101,7 +101,7 @@ export default function PurchaseOrdersPage() {
             <FileText className="w-14 h-14 text-[#1A1A1A] mx-auto mb-4" />
             <p className="text-slate-900 font-semibold text-lg">No purchase orders yet</p>
             <p className="text-slate-600 text-sm mt-1 mb-6">Create a purchase order to send to your supplier.</p>
-            <Link href="/dashboard/purchases/orders/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 text-sm font-semibold hover:opacity-90 transition">
+            <Link href="/dashboard/purchases/orders/new" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover text-sm font-semibold hover:opacity-90 transition">
               <Plus className="w-4 h-4" /> Add Purchase Order
             </Link>
           </div>
@@ -134,7 +134,7 @@ export default function PurchaseOrdersPage() {
                         <td className="px-5 py-4">
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
                             {ord.status !== 'Billed' && ord.status !== 'Cancelled' && (
-                              <button onClick={() => handleConvertToBill(ord._id, ord.orderNumber)} className="px-2 py-1 rounded-lg text-xs text-action-600 bg-action-50 hover:bg-action-100 transition">Convert to Bill</button>
+                              <button onClick={() => handleConvertToBill(ord._id, ord.orderNumber)} className="px-2 py-1 rounded-lg text-xs text-primary-hover bg-action-50 hover:bg-action-100 transition">Convert to Bill</button>
                             )}
                             <Link href={`/dashboard/purchases/orders/${ord._id}/edit`} className="px-2 py-1 rounded-lg text-xs text-blue-500 hover:bg-blue-100 transition">Edit</Link>
                             {ord.status !== 'Cancelled' && (

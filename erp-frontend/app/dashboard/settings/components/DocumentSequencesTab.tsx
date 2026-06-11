@@ -85,7 +85,7 @@ export default function DocumentSequencesTab({
         <button 
           onClick={handleSave} 
           disabled={saving} 
-          className="px-5 py-2.5 rounded-xl bg-action-500 text-white hover:bg-action-600 font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60"
+          className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Sequences
         </button>
@@ -138,7 +138,7 @@ export default function DocumentSequencesTab({
                     type="text" 
                     value={config.format}
                     onChange={(e) => handleChange(doc.key, 'format', e.target.value.toUpperCase())}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-action-500 text-sm font-mono transition"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-primary text-sm font-mono transition"
                   />
                 </div>
                 <div>
@@ -148,7 +148,7 @@ export default function DocumentSequencesTab({
                     min="1"
                     value={config.nextNumber}
                     onChange={(e) => handleChange(doc.key, 'nextNumber', parseInt(e.target.value) || 1)}
-                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-action-500 text-sm font-mono transition"
+                    className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-primary text-sm font-mono transition"
                   />
                 </div>
               </div>

@@ -9,7 +9,7 @@ export default function MasterDashboard() {
       description: 'Manage your entire product catalog and service offerings.',
       icon: Package,
       color: 'text-blue-400',
-      bg: 'bg-action-500/10',
+      bg: 'bg-primary/10',
       actions: [
         { label: 'Add Product', href: '/dashboard/masters/items?action=add-product', icon: PlusCircle },
         { label: 'Add Service', href: '/dashboard/masters/items?action=add-service', icon: PlusCircle },
@@ -32,7 +32,7 @@ export default function MasterDashboard() {
       description: 'Define your product groups and link specific brands to each group.',
       icon: Layers,
       color: 'text-blue-400',
-      bg: 'bg-action-500/10',
+      bg: 'bg-primary/10',
       actions: [
         { label: 'Manage Categories', href: '/dashboard/masters/categories', icon: Database },
       ]

@@ -57,14 +57,14 @@ export default function BatchAuditTrailPage() {
                 placeholder="Search Product, Batch, or Doc No..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500 w-72"
+                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary w-72"
               />
             </div>
             
             <select 
               value={filterType} 
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-action-500"
+              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary"
             >
               <option value="ALL">All Actions</option>
               <option value="STOCK_IN">Stock In</option>

@@ -98,7 +98,7 @@ export default function UnitMasterPage() {
       <div className="flex flex-col h-screen bg-slate-50">
         <Topbar title="Unit Master" />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-action-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       </div>
     );
@@ -113,7 +113,7 @@ export default function UnitMasterPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-                <Scale className="w-8 h-8 text-action-500" />
+                <Scale className="w-8 h-8 text-primary" />
                 Unit Master
               </h2>
               <p className="text-slate-600 mt-2">Manage units of measurement for your items (Nos, Kg, Ltr, etc.)</p>
@@ -121,7 +121,7 @@ export default function UnitMasterPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 bg-action-500 text-white font-medium rounded-xl hover:bg-action-600 transition flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary-hover transition flex items-center gap-2 disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Save Changes
@@ -168,7 +168,7 @@ export default function UnitMasterPage() {
                       <>
                         <span className="font-bold text-slate-900">{unit}</span>
                         <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                          <button onClick={() => startEdit(idx, unit)} className="p-1.5 text-slate-600 hover:text-blue-400 hover:bg-action-500/10 rounded-lg mr-1 transition">
+                          <button onClick={() => startEdit(idx, unit)} className="p-1.5 text-slate-600 hover:text-blue-400 hover:bg-primary/10 rounded-lg mr-1 transition">
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button onClick={() => removeUnit(idx)} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">

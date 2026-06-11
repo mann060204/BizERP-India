@@ -710,7 +710,7 @@ export default function EditInvoicePage() {
                   </button>
                 </div>
                 {selectedCustomer && (
-                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-action-100 text-action-600'}`}>
+                   <span className={`absolute right-1 top-1 text-[9px] px-1.5 py-1 rounded font-bold uppercase tracking-wider ${selectedCustomer.priceCategory === 'Wholesale' ? 'bg-purple-100 text-purple-700' : 'bg-action-100 text-primary-hover'}`}>
                       {selectedCustomer.priceCategory === 'Wholesale' ? 'Wholesaler' : 'Retailer'}
                    </span>
                 )}
@@ -786,7 +786,7 @@ export default function EditInvoicePage() {
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
-                    <button onClick={() => setShowAdvancedSearch(true)} className="text-action-500 hover:text-blue-400 bg-action-500/10 p-1 rounded transition" title="Advanced Search">
+                    <button onClick={() => setShowAdvancedSearch(true)} className="text-primary hover:text-blue-400 bg-primary/10 p-1 rounded transition" title="Advanced Search">
                       <Search className="w-4 h-4" />
                     </button>
                     <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
@@ -884,7 +884,7 @@ export default function EditInvoicePage() {
                      
                      {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-slate-900' },
                        { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-600' },
-                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-action-500' },
+                       { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-primary' },
                        { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-600' },
                        ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-600', isLast: true }] : [])
                      ].map((opt, i) => opt.price ? (
@@ -1014,7 +1014,7 @@ export default function EditInvoicePage() {
                       ₹{item.totalAmount.toFixed(2)}
                     </div>
                     <div className="col-span-1 erp-grid-cell flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                      <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-action-500/10 rounded">
+                      <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-primary/10 rounded">
                         <Pencil className="w-3 h-3" />
                       </button>
                       <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
