@@ -14,7 +14,7 @@ const THEME_CONFIG = [
   { key: 'emerald', label: 'Forest Emerald', desc: 'Forest green sidebar · Teal accent', sidebar: '#064e3b', active: '#059669', accent: '#0d9488' },
   { key: 'slate',   label: 'Charcoal Slate', desc: 'Charcoal sidebar · Royal blue accent', sidebar: '#0f172a', active: '#2563eb', accent: '#0ea5e9' },
   { key: 'rose',    label: 'Crimson Rose', desc: 'Deep rose sidebar · Pink accent', sidebar: '#4c0519', active: '#e11d48', accent: '#f43f5e' },
-  { key: 'summer',  label: 'Summer 2026 ☀️', desc: 'Warm brown sidebar · Saffron accent', sidebar: '#3D2B1F', active: '#BA7517', accent: '#D4922A' },
+  { key: 'summer',  label: 'Summer 2026 ☀️', desc: 'Charcoal sidebar · Terracotta accent', sidebar: '#231F20', active: '#BB4430', accent: '#7EBDC2' },
 ] as const;
 
 

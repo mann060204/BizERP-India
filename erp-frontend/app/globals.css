@@ -201,48 +201,48 @@
    THEME: Summer 2026
 ───────────────────────────────────────────── */
 [data-theme="summer"] {
-  --sidebar-bg: #3D2B1F;
-  --sidebar-bg2: #4E3828;
+  --sidebar-bg: #231F20;
+  --sidebar-bg2: #2A2526;
   --sidebar-border: rgba(255,255,255,0.08);
   --sidebar-text: rgba(255,255,255,0.72);
   --sidebar-text-active: #ffffff;
-  --sidebar-active-bg: #BA7517;
-  --sidebar-active-shadow: rgba(186,117,23,0.45);
+  --sidebar-active-bg: #BB4430;
+  --sidebar-active-shadow: rgba(187,68,48,0.45);
   --sidebar-hover-bg: rgba(255,255,255,0.07);
   --sidebar-icon: rgba(255,255,255,0.55);
-  --sidebar-logo-bg: linear-gradient(135deg,#BA7517,#D4922A);
+  --sidebar-logo-bg: linear-gradient(135deg,#BB4430,#7EBDC2);
 
-  --primary: #BA7517;
-  --primary-hover: #9A6013;
-  --primary-light: #FFF8EE;
-  --primary-ring: rgba(186,117,23,0.25);
+  --primary: #BB4430;
+  --primary-hover: #9D3625;
+  --primary-light: #F3DFA2;
+  --primary-ring: rgba(187,68,48,0.25);
 
-  --accent: #D4922A;
-  --accent-hover: #BA7517;
-  --accent-light: #FFF8EE;
+  --accent: #7EBDC2;
+  --accent-hover: #619C9F;
+  --accent-light: #EFE6DD;
 
-  --success: #1D9E75;
-  --success-light: #D1FAE5;
-  --danger: #EF4444;
-  --danger-light: #FEE2E2;
-  --warning: #EF9F27;
-  --warning-light: #FEF3C7;
+  --success: #7EBDC2;
+  --success-light: rgba(126,189,194,0.2);
+  --danger: #BB4430;
+  --danger-light: rgba(187,68,48,0.2);
+  --warning: #F3DFA2;
+  --warning-light: rgba(243,223,162,0.2);
 
-  --bg: #FFF8EE;
+  --bg: #EFE6DD;
   --bg-card: #ffffff;
-  --bg-elevated: #FAEEDA;
-  --border: #E8D5B5;
-  --border-focus: #D4B896;
+  --bg-elevated: #F3DFA2;
+  --border: #D8CEBC;
+  --border-focus: #7EBDC2;
 
-  --text: #3D2B1F;
-  --text-muted: #7A5C3E;
-  --text-subtle: #BA9A72;
+  --text: #231F20;
+  --text-muted: #4A4445;
+  --text-subtle: #746B6C;
 
   --topbar-bg: rgba(255,255,255,0.95);
-  --topbar-border: #E8D5B5;
-  --topbar-time-bg: #FAEEDA;
-  --topbar-time-text: #9A6013;
-  --topbar-time-border: #D4B896;
+  --topbar-border: #D8CEBC;
+  --topbar-time-bg: #F3DFA2;
+  --topbar-time-text: #BB4430;
+  --topbar-time-border: #E2CD91;
 }
 
 /* ─────────────────────────────────────────────
