@@ -109,6 +109,7 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
             <div key={label}>
               <Link
                 href={subItems ? '#' : href}
+                prefetch={false}
                 onClick={(e) => {
                   if (subItems) toggleSubmenu(label, e);
                   else setMobileOpen(false);
@@ -137,6 +138,7 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
                     <Link
                       key={sub.href}
                       href={sub.href}
+                      prefetch={false}
                       onClick={() => setMobileOpen(false)}
                       className={`sidebar-sub-link block px-3 py-2 rounded-lg text-[12px] font-medium transition-all
                         ${pathname === sub.href ? 'active' : ''}`}
