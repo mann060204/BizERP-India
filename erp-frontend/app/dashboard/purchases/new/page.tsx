@@ -332,16 +332,25 @@ export default function NewPurchasePage() {
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     
     // Strict batch validation
+    const productRequiredQty: Record<string, { name: string, qty: number }> = {};
     for (const item of lineItems) {
        if (item.productId) {
-         const itemBatches = batches.filter(b => b.productId === item.productId);
-         if (itemBatches.length > 0) {
-            const totalBatchQty = itemBatches.reduce((sum, b) => sum + (b.quantity || 0), 0);
-            if (totalBatchQty !== item.quantity) {
-               toast.error(`Batch quantities for ${item.productName} must equal ${item.quantity}. Currently allocated: ${totalBatchQty}`);
-               return;
-            }
+         if (!productRequiredQty[item.productId]) {
+            productRequiredQty[item.productId] = { name: item.productName, qty: 0 };
          }
+         productRequiredQty[item.productId].qty += item.quantity;
+       }
+    }
+
+    for (const productId of Object.keys(productRequiredQty)) {
+       const itemBatches = batches.filter(b => b.productId === productId);
+       if (itemBatches.length > 0) {
+          const totalBatchQty = itemBatches.reduce((sum, b) => sum + (b.quantity || 0), 0);
+          const requiredQty = productRequiredQty[productId].qty;
+          if (totalBatchQty !== requiredQty) {
+             toast.error(`Batch quantities for ${productRequiredQty[productId].name} must equal ${requiredQty}. Currently allocated: ${totalBatchQty}`);
+             return;
+          }
        }
     }
 
