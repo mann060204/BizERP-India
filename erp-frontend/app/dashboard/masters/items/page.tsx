@@ -4,9 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Topbar from '../../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../../lib/erp-api';
-import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings, ExternalLink, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import CategoryMasterModal from '../../../../components/masters/CategoryMasterModal';
 
 interface Product {
   _id: string; name: string; printName?: string; category?: string; group?: string; subGroup?: string; brand?: string;
@@ -94,7 +93,6 @@ export default function MastersPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
@@ -137,7 +135,6 @@ export default function MastersPage() {
     }
   }, [searchParams]);
 
-  const openCreate = async () => { await fetchSettings(); setEditing(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = async (p: Product) => {
     await fetchSettings();
     setEditing(p);
@@ -163,12 +160,12 @@ export default function MastersPage() {
     setShowModal(true);
   };
 
-  const handleAddGroup = async () => {
-    setShowCategoryModal(true);
+  const handleAddGroup = () => {
+    window.open('/dashboard/masters/categories', '_blank');
   };
 
-  const handleAddBrand = async () => {
-    setShowCategoryModal(true);
+  const handleAddBrand = () => {
+    window.open('/dashboard/masters/categories', '_blank');
   };
 
   const handleSave = async () => {
@@ -316,7 +313,13 @@ export default function MastersPage() {
                   <div className="space-y-6">
                     {/* Product Details Section */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
-                      <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Product Details</h4>
+                      <div className="flex items-center justify-between mb-4 border-b border-slate-300 pb-2">
+                        <h4 className="text-sm font-semibold text-slate-900">Product Details</h4>
+                        <button type="button" onClick={fetchSettings} className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-hover bg-primary/5 hover:bg-primary/10 px-2.5 py-1.5 rounded-lg transition" title="Refresh Categories">
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Refresh Categories</span>
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(() => {
                           const availableCategories = productCategories.map(c => c.name);
@@ -557,14 +560,6 @@ export default function MastersPage() {
             </div>
           </div>
         </div>
-      )}
-      {showCategoryModal && (
-        <CategoryMasterModal 
-          onClose={() => setShowCategoryModal(false)} 
-          onSaveSuccess={() => {
-            fetchSettings();
-          }} 
-        />
       )}
     </div>
   );

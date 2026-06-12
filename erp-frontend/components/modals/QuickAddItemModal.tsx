@@ -1,9 +1,8 @@
 // @ts-nocheck
 import React, { useState, useEffect, useCallback } from 'react';
 import { productsApi, businessApi } from '../../lib/erp-api';
-import { X, Loader2, Save, Layers, Plus } from 'lucide-react';
+import { X, Loader2, Save, Layers, Plus, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import CategoryMasterModal from '../masters/CategoryMasterModal';
 const GST_RATES = [0, 5, 12, 18, 28];
 const UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
 
@@ -92,14 +91,12 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
     fetchSettings();
   }, [fetchSettings]);
 
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-
-  const handleAddGroup = async () => {
-    setShowCategoryModal(true);
+  const handleAddGroup = () => {
+    window.open('/dashboard/masters/categories', '_blank');
   };
 
-  const handleAddBrand = async () => {
-    setShowCategoryModal(true);
+  const handleAddBrand = () => {
+    window.open('/dashboard/masters/categories', '_blank');
   };
 
   const handleSave = async () => {
@@ -138,7 +135,13 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                   <div className="space-y-6">
                     {/* Product Details Section */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
-                      <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Product Details</h4>
+                      <div className="flex items-center justify-between mb-4 border-b border-slate-300 pb-2">
+                        <h4 className="text-sm font-semibold text-slate-900">Product Details</h4>
+                        <button type="button" onClick={fetchSettings} className="flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition" title="Refresh Categories">
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Refresh Categories</span>
+                        </button>
+                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         {(() => {
                           const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
@@ -363,14 +366,6 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
             </div>
           </div>
         </div>
-      )}
-      {showCategoryModal && (
-        <CategoryMasterModal 
-          onClose={() => setShowCategoryModal(false)} 
-          onSaveSuccess={() => {
-            fetchSettings();
-          }} 
-        />
       )}
     </>
   );
