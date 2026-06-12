@@ -25,6 +25,7 @@ const QUICK_ACTIONS = [
   { label: 'New Invoice',      href: '/dashboard/sales/new',      icon: FilePlus,       color: 'text-amber-700',   bg: 'bg-amber-50',   desc: 'Create GST invoice' },
   { label: 'Add Purchase',     href: '/dashboard/purchases/new',  icon: PackagePlus,    color: 'text-sky-700',     bg: 'bg-sky-50',     desc: 'Record a purchase bill' },
   { label: 'Add Customer',     href: '/dashboard/customers/new',  icon: UserPlus,       color: 'text-emerald-700', bg: 'bg-emerald-50', desc: 'Add new customer' },
+  { label: 'Add Product',      href: '/dashboard/masters/items?action=add-product', icon: Package, color: 'text-purple-700', bg: 'bg-purple-50', desc: 'Add new product or service' },
   { label: 'Stock Adjust',     href: '/dashboard/inventory',      icon: SlidersHorizontal, color: 'text-orange-700', bg: 'bg-orange-50', desc: 'Manage inventory' },
   { label: 'New Expense',      href: '/dashboard/expenses',       icon: Receipt,        color: 'text-rose-700',    bg: 'bg-rose-50',    desc: 'Record an expense' },
 ];

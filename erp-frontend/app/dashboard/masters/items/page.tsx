@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import CategoryMasterModal from '../../../../components/masters/CategoryMasterModal';
 
 interface Product {
-  _id: string; name: string; printName?: string; group?: string; brand?: string;
+  _id: string; name: string; printName?: string; category?: string; group?: string; subGroup?: string; brand?: string;
   type: string; sku?: string; hsnCode?: string; unit: string; secondaryUnit?: string;
   sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number;
   purchasePrice: number; minSalePrice?: number; mrp?: number; conversionRate?: number;
@@ -24,8 +24,8 @@ const GST_RATES = [0, 5, 12, 18, 28];
 const FALLBACK_UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
 
 const emptyForm = {
-  name: '', printName: '', group: '', brand: '', type: 'product', sku: '', hsnCode: '',
-  category: '', unit: 'Nos', secondaryUnit: '', conversionRate: 1,
+  name: '', printName: '', category: '', group: '', subGroup: '', brand: '', type: 'product', sku: '', hsnCode: '',
+  unit: 'Nos', secondaryUnit: '', conversionRate: 1,
   purchasePrice: 0, sellingPrice: 0, sellingPrice2: 0, sellingPrice3: 0, minSalePrice: 0, mrp: 0,
   openingStock: 0, openingStockValue: 0, reorderLevel: 5, lowLevelLimit: 0,
   gstRate: 0, cessRate: 0, igstRate: 0, saleDiscount: 0, saleDiscountType: 'percentage',
@@ -97,7 +97,7 @@ export default function MastersPage() {
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
-  const [productCategories, setProductCategories] = useState<{name: string, brands: string[]}[]>([]);
+  const [productCategories, setProductCategories] = useState<any[]>([]);
   const [units, setUnits] = useState<string[]>(FALLBACK_UNITS);
 
   const fetchSettings = useCallback(async () => {
@@ -141,9 +141,9 @@ export default function MastersPage() {
     await fetchSettings();
     setEditing(p);
     setForm({
-      name: p.name || '', printName: p.printName || '', group: p.group || '', brand: p.brand || '',
+      name: p.name || '', printName: p.printName || '', category: p.category || '', group: p.group || '', subGroup: p.subGroup || '', brand: p.brand || '',
       type: p.type || 'product', sku: p.sku || '', hsnCode: p.hsnCode || '',
-      category: p.category || '', unit: p.unit || 'Nos', secondaryUnit: p.secondaryUnit || '',
+      unit: p.unit || 'Nos', secondaryUnit: p.secondaryUnit || '',
       conversionRate: p.conversionRate || 1,
       purchasePrice: p.purchasePrice || 0, sellingPrice: p.sellingPrice || 0,
       sellingPrice2: p.sellingPrice2 || 0, sellingPrice3: p.sellingPrice3 || 0,
@@ -310,13 +310,28 @@ export default function MastersPage() {
                       <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Product Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {(() => {
-                          const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
-                          const currentCat = productCategories.find(c => c.name === form.group);
-                          const availableBrands = currentCat ? currentCat.brands : (productCategories.length > 0 && form.group ? [] : productBrands);
+                          const availableCategories = productCategories.map(c => c.name);
+                          const currentCat = productCategories.find(c => c.name === form.category);
+                          const availableGroups = currentCat ? currentCat.groups.map((g: any) => g.name) : [];
+                          
+                          const currentGroup = currentCat?.groups?.find((g: any) => g.name === form.group);
+                          const availableSubGroups = currentGroup ? currentGroup.subGroups.map((sg: any) => sg.name) : [];
+                          
+                          const currentSubGroup = currentGroup?.subGroups?.find((sg: any) => sg.name === form.subGroup);
+                          const availableBrands = currentSubGroup ? currentSubGroup.brands : [];
+
                           return (
                             <>
-                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} onQuickAdd={handleAddGroup} setForm={(newForm: any) => {
-                                 if (newForm.group !== form.group) newForm.brand = '';
+                              <Select label="Category" keyName="category" options={['', ...availableCategories]} form={form} onQuickAdd={handleAddGroup} setForm={(newForm: any) => {
+                                 if (newForm.category !== form.category) { newForm.group = ''; newForm.subGroup = ''; newForm.brand = ''; }
+                                 setForm(newForm);
+                              }} />
+                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
+                                 if (newForm.group !== form.group) { newForm.subGroup = ''; newForm.brand = ''; }
+                                 setForm(newForm);
+                              }} />
+                              <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} setForm={(newForm: any) => {
+                                 if (newForm.subGroup !== form.subGroup) { newForm.brand = ''; }
                                  setForm(newForm);
                               }} />
                               <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={handleAddBrand} setForm={setForm} />

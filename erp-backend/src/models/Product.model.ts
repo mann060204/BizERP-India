@@ -5,6 +5,7 @@ export interface IProduct extends Document {
   name: string;
   printName?: string;
   group?: string;
+  subGroup?: string;
   brand?: string;
   sku?: string;
   hsnCode?: string;
@@ -52,6 +53,7 @@ const ProductSchema = new Schema<IProduct>(
     name: { type: String, required: true, trim: true },
     printName: { type: String, trim: true },
     group: { type: String, trim: true },
+    subGroup: { type: String, trim: true },
     brand: { type: String, trim: true },
     sku: { type: String, trim: true },
     hsnCode: { type: String, trim: true },

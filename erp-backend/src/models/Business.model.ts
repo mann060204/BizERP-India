@@ -46,7 +46,13 @@ export interface IBusiness extends Document {
   productBrands: string[];
   productCategories: {
     name: string;
-    brands: string[];
+    groups: {
+      name: string;
+      subGroups: {
+        name: string;
+        brands: string[];
+      }[];
+    }[];
   }[];
   units: string[];
   expenseCategories: string[];
@@ -132,7 +138,13 @@ const BusinessSchema = new Schema<IBusiness>(
     productCategories: {
       type: [{
         name: { type: String, required: true },
-        brands: [String]
+        groups: [{
+          name: { type: String, required: true },
+          subGroups: [{
+            name: { type: String, required: true },
+            brands: [String]
+          }]
+        }]
       }],
       default: []
     },
