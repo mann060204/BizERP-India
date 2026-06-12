@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Topbar from '../../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../../lib/erp-api';
 import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings } from 'lucide-react';
@@ -199,6 +200,14 @@ export default function MastersPage() {
           <div>
             <h2 className="text-xl font-bold text-slate-900">Items & Services</h2>
             <p className="text-slate-600 text-sm mt-0.5">{products.length} item{products.length !== 1 ? 's' : ''} in master</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard/masters/items/bulk" className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition flex items-center gap-2 shadow-sm">
+              <Layers className="w-4 h-4" /> Bulk Entry
+            </Link>
+            <button onClick={() => { setForm({ ...emptyForm, category: productCategories[0]?.name || '' }); setEditing(null); setShowModal(true); }} className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm transition flex items-center gap-2 shadow-lg shadow-primary/20">
+              <Plus className="w-4 h-4" /> Add Item
+            </button>
           </div>
         </div>
 
