@@ -134,6 +134,19 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
+                        {(() => {
+                          const availableCategories = productCategories.map((c: any) => c.name);
+                          const currentCat = productCategories.find((c: any) => c.name === form.category);
+                          const availableBrands = currentCat ? (currentCat.brands || []).map((b: any) => b.name) : [];
+                          
+                          const currentBrand = (currentCat?.brands || []).find((b: any) => b.name === form.brand);
+                          const availableGroups = currentBrand ? (currentBrand.groups || []).map((g: any) => g.name) : [];
+                          
+                          const currentGroup = (currentBrand?.groups || []).find((g: any) => g.name === form.group);
+                          const availableSubGroups = currentGroup ? (currentGroup.subGroups || []) : [];
+
+                          return (
+                            <>
                               <Select label="Category" keyName="category" options={['', ...availableCategories]} form={form} onQuickAdd={() => setQuickCategoryMode('category')} setForm={(newForm: any) => {
                                  if (newForm.category !== form.category) { newForm.brand = ''; newForm.group = ''; newForm.subGroup = ''; }
                                  setForm(newForm);
@@ -147,6 +160,9 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                                  setForm(newForm);
                               }} />
                               <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} onQuickAdd={() => setQuickCategoryMode('subgroup')} setForm={setForm} />
+                            </>
+                          );
+                        })()}
                         <Input label="Item Code / SKU" keyName="sku" form={form} setForm={setForm} />
                         <Input label="Product Name" keyName="name" required form={form} setForm={setForm} />
                         <div className="col-span-2">
