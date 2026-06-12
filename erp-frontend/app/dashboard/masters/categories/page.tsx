@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Topbar from '../../../../components/layout/Topbar';
 import { businessApi } from '../../../../lib/erp-api';
-import { Loader2, Save, X, Layers, Plus, Tag, ChevronDown, ChevronRight, Edit3, Check } from 'lucide-react';
+import { Loader2, Save, X, Plus, ChevronRight, Edit2, Check, Layers } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -26,14 +26,20 @@ export default function CategoryMasterPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [expandedBrand, setExpandedBrand] = useState<string | null>(null);
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+  // Selection state
+  const [selectedCat, setSelectedCat] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [newBrandInputs, setNewBrandInputs] = useState<Record<string, string>>({});
-  const [newGroupInputs, setNewGroupInputs] = useState<Record<string, string>>({});
-  const [newSubGroupInputs, setNewSubGroupInputs] = useState<Record<string, string>>({});
+  // New item inputs
+  const [newCat, setNewCat] = useState('');
+  const [newBrand, setNewBrand] = useState('');
+  const [newGroup, setNewGroup] = useState('');
+  const [newSubGroup, setNewSubGroup] = useState('');
+
+  // Editing state
+  const [editingPath, setEditingPath] = useState<{ type: string, oldName: string, catName?: string, brandName?: string, groupName?: string } | null>(null);
+  const [editValue, setEditValue] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -64,158 +70,163 @@ export default function CategoryMasterPage() {
         ...data.business,
         productCategories: categories
       });
-      toast.success('Categories updated successfully');
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to update categories'); }
+      toast.success('Taxonomy saved successfully');
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to save'); }
     finally { setSaving(false); }
   };
 
-  // Add Level 1: Category
+  // Add Handlers
   const addCategory = () => {
-    const name = newCategoryName.trim();
-    if (name && !categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      setCategories([...categories, { name, brands: [] }]);
-      setNewCategoryName('');
-      setExpandedCategory(name);
-    } else if (name) {
-      toast.error('Category already exists');
+    const name = newCat.trim();
+    if (!name) return;
+    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      toast.error('Category already exists'); return;
     }
+    setCategories([...categories, { name, brands: [] }]);
+    setNewCat('');
+    setSelectedCat(name);
+    setSelectedBrand(null);
+    setSelectedGroup(null);
   };
 
-  const removeCategory = (catName: string) => {
-    setCategories(categories.filter(c => c.name !== catName));
-  };
-
-  // Add Level 2: Brand
-  const addBrand = (catName: string) => {
-    const brandName = (newBrandInputs[catName] || '').trim();
-    if (!brandName) return;
-    
-    setCategories(categories.map(cat => {
-      if (cat.name === catName) {
-        if (!cat.brands.some(b => b.name.toLowerCase() === brandName.toLowerCase())) {
-          return { ...cat, brands: [...cat.brands, { name: brandName, groups: [] }] };
-        } else {
-          toast.error('Brand already exists in this category');
+  const addBrand = () => {
+    const name = newBrand.trim();
+    if (!name || !selectedCat) return;
+    setCategories(categories.map(c => {
+      if (c.name === selectedCat) {
+        if (c.brands.some(b => b.name.toLowerCase() === name.toLowerCase())) {
+          toast.error('Brand already exists'); return c;
         }
+        return { ...c, brands: [...c.brands, { name, groups: [] }] };
       }
-      return cat;
+      return c;
     }));
-    setNewBrandInputs({ ...newBrandInputs, [catName]: '' });
-    setExpandedBrand(`${catName}-${brandName}`);
+    setNewBrand('');
+    setSelectedBrand(name);
+    setSelectedGroup(null);
   };
 
-  const removeBrand = (catName: string, brandName: string) => {
-    setCategories(categories.map(cat => {
-      if (cat.name === catName) {
-        return { ...cat, brands: cat.brands.filter(b => b.name !== brandName) };
+  const addGroup = () => {
+    const name = newGroup.trim();
+    if (!name || !selectedCat || !selectedBrand) return;
+    setCategories(categories.map(c => {
+      if (c.name === selectedCat) {
+        return { ...c, brands: c.brands.map(b => {
+          if (b.name === selectedBrand) {
+            if (b.groups.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+              toast.error('Group already exists'); return b;
+            }
+            return { ...b, groups: [...b.groups, { name, subGroups: [] }] };
+          }
+          return b;
+        })};
       }
-      return cat;
+      return c;
     }));
+    setNewGroup('');
+    setSelectedGroup(name);
   };
 
-  // Add Level 3: Group
-  const addGroup = (catName: string, brandName: string) => {
-    const key = `${catName}-${brandName}`;
-    const groupName = (newGroupInputs[key] || '').trim();
-    if (!groupName) return;
-
-    setCategories(categories.map(cat => {
-      if (cat.name === catName) {
-        return {
-          ...cat,
-          brands: cat.brands.map(b => {
-            if (b.name === brandName) {
-              if (!b.groups.some(g => g.name.toLowerCase() === groupName.toLowerCase())) {
-                return { ...b, groups: [...b.groups, { name: groupName, subGroups: [] }] };
-              } else {
-                toast.error('Group already exists');
+  const addSubGroup = () => {
+    const name = newSubGroup.trim();
+    if (!name || !selectedCat || !selectedBrand || !selectedGroup) return;
+    setCategories(categories.map(c => {
+      if (c.name === selectedCat) {
+        return { ...c, brands: c.brands.map(b => {
+          if (b.name === selectedBrand) {
+            return { ...b, groups: b.groups.map(g => {
+              if (g.name === selectedGroup) {
+                if (g.subGroups.some(sg => sg.toLowerCase() === name.toLowerCase())) {
+                  toast.error('SubGroup already exists'); return g;
+                }
+                return { ...g, subGroups: [...g.subGroups, name] };
               }
-            }
-            return b;
-          })
-        };
+              return g;
+            })};
+          }
+          return b;
+        })};
       }
-      return cat;
+      return c;
     }));
-    setNewGroupInputs({ ...newGroupInputs, [key]: '' });
-    setExpandedGroup(`${catName}-${brandName}-${groupName}`);
+    setNewSubGroup('');
   };
 
-  const removeGroup = (catName: string, brandName: string, groupName: string) => {
-    setCategories(categories.map(cat => {
-      if (cat.name === catName) {
-        return {
-          ...cat,
-          brands: cat.brands.map(b => {
-            if (b.name === brandName) {
-              return { ...b, groups: b.groups.filter(g => g.name !== groupName) };
-            }
-            return b;
-          })
-        };
-      }
-      return cat;
-    }));
+  // Delete Handlers
+  const deleteCategory = (name: string) => {
+    setCategories(categories.filter(c => c.name !== name));
+    if (selectedCat === name) { setSelectedCat(null); setSelectedBrand(null); setSelectedGroup(null); }
   };
 
-  // Add Level 4: SubGroup
-  const addSubGroup = (catName: string, brandName: string, groupName: string) => {
-    const key = `${catName}-${brandName}-${groupName}`;
-    const subGroupName = (newSubGroupInputs[key] || '').trim();
-    if (!subGroupName) return;
-
-    setCategories(categories.map(cat => {
-      if (cat.name === catName) {
-        return {
-          ...cat,
-          brands: cat.brands.map(b => {
-            if (b.name === brandName) {
-              return {
-                ...b,
-                groups: b.groups.map(g => {
-                  if (g.name === groupName) {
-                    if (!g.subGroups.some(sg => sg.toLowerCase() === subGroupName.toLowerCase())) {
-                      return { ...g, subGroups: [...g.subGroups, subGroupName] };
-                    } else {
-                      toast.error('SubGroup already exists in this Group');
-                    }
-                  }
-                  return g;
-                })
-              };
-            }
-            return b;
-          })
-        };
-      }
-      return cat;
-    }));
-    setNewSubGroupInputs({ ...newSubGroupInputs, [key]: '' });
+  const deleteBrand = (cName: string, bName: string) => {
+    setCategories(categories.map(c => c.name === cName ? { ...c, brands: c.brands.filter(b => b.name !== bName) } : c));
+    if (selectedBrand === bName) { setSelectedBrand(null); setSelectedGroup(null); }
   };
 
-  const removeSubGroup = (catName: string, brandName: string, groupName: string, subGroupName: string) => {
-    setCategories(categories.map(cat => {
-      if (cat.name === catName) {
-        return {
-          ...cat,
-          brands: cat.brands.map(b => {
-            if (b.name === brandName) {
-              return {
-                ...b,
-                groups: b.groups.map(g => {
-                  if (g.name === groupName) {
-                    return { ...g, subGroups: g.subGroups.filter(sg => sg !== subGroupName) };
-                  }
-                  return g;
-                })
-              };
-            }
-            return b;
-          })
-        };
-      }
-      return cat;
-    }));
+  const deleteGroup = (cName: string, bName: string, gName: string) => {
+    setCategories(categories.map(c => c.name === cName ? { ...c, brands: c.brands.map(b => b.name === bName ? { ...b, groups: b.groups.filter(g => g.name !== gName) } : b) } : c));
+    if (selectedGroup === gName) { setSelectedGroup(null); }
+  };
+
+  const deleteSubGroup = (cName: string, bName: string, gName: string, sgName: string) => {
+    setCategories(categories.map(c => c.name === cName ? { ...c, brands: c.brands.map(b => b.name === bName ? { ...b, groups: b.groups.map(g => g.name === gName ? { ...g, subGroups: g.subGroups.filter(sg => sg !== sgName) } : g) } : b) } : c));
+  };
+
+  // Edit Handlers
+  const startEdit = (type: string, oldName: string, cName?: string, bName?: string, gName?: string) => {
+    setEditingPath({ type, oldName, catName: cName, brandName: bName, groupName: gName });
+    setEditValue(oldName);
+  };
+
+  const commitEdit = () => {
+    if (!editingPath || !editValue.trim()) return;
+    const { type, oldName, catName, brandName, groupName } = editingPath;
+    const newN = editValue.trim();
+    if (newN === oldName) { setEditingPath(null); return; }
+
+    if (type === 'cat') {
+      if (categories.some(c => c.name.toLowerCase() === newN.toLowerCase())) { toast.error('Name exists'); return; }
+      setCategories(categories.map(c => c.name === oldName ? { ...c, name: newN } : c));
+      if (selectedCat === oldName) setSelectedCat(newN);
+    } else if (type === 'brand') {
+      setCategories(categories.map(c => c.name === catName ? { ...c, brands: c.brands.map(b => b.name === oldName ? { ...b, name: newN } : b) } : c));
+      if (selectedBrand === oldName) setSelectedBrand(newN);
+    } else if (type === 'group') {
+      setCategories(categories.map(c => c.name === catName ? { ...c, brands: c.brands.map(b => b.name === brandName ? { ...b, groups: b.groups.map(g => g.name === oldName ? { ...g, name: newN } : g) } : b) } : c));
+      if (selectedGroup === oldName) setSelectedGroup(newN);
+    } else if (type === 'subgroup') {
+      setCategories(categories.map(c => c.name === catName ? { ...c, brands: c.brands.map(b => b.name === brandName ? { ...b, groups: b.groups.map(g => g.name === groupName ? { ...g, subGroups: g.subGroups.map(sg => sg === oldName ? newN : sg) } : g) } : b) } : c));
+    }
+    setEditingPath(null);
+  };
+
+  // Derived state
+  const currentCatObj = categories.find(c => c.name === selectedCat);
+  const currentBrandObj = currentCatObj?.brands.find(b => b.name === selectedBrand);
+  const currentGroupObj = currentBrandObj?.groups.find(g => g.name === selectedGroup);
+
+  const ListItem = ({ name, isSelected, onClick, onEdit, onDelete, isEditing, setEditValue, editValue, commitEdit }: any) => {
+    return (
+      <div 
+        onClick={() => !isEditing && onClick()}
+        className={`group flex items-center justify-between p-3 cursor-pointer border-b border-slate-100 transition-all ${isSelected ? 'bg-primary/5 border-l-2 border-l-primary' : 'hover:bg-slate-50 border-l-2 border-l-transparent'} `}
+      >
+        {isEditing ? (
+          <div className="flex items-center gap-2 w-full">
+            <input autoFocus value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && commitEdit()} onBlur={commitEdit} className="flex-1 px-2 py-1 text-sm bg-white border border-primary rounded focus:outline-none" />
+          </div>
+        ) : (
+          <>
+            <span className={`text-sm font-medium truncate ${isSelected ? 'text-primary font-semibold' : 'text-slate-700'}`}>{name}</span>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+              <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1 text-slate-400 hover:text-primary transition rounded"><Edit2 className="w-3.5 h-3.5" /></button>
+              <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 text-slate-400 hover:text-red-500 transition rounded"><X className="w-4 h-4" /></button>
+              <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-primary' : 'text-slate-300'}`} />
+            </div>
+          </>
+        )}
+      </div>
+    );
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-slate-700 animate-spin" /></div>;
@@ -223,184 +234,149 @@ export default function CategoryMasterPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Topbar title="Category Master" />
-      <main className="flex-1 p-6 space-y-6 max-w-5xl mx-auto w-full">
-        <div className="flex items-center gap-4 text-sm font-medium text-slate-600 mb-4">
+      <main className="flex-1 p-6 space-y-6 w-full">
+        <div className="flex items-center gap-4 text-sm font-medium text-slate-600 mb-4 max-w-7xl mx-auto">
           <Link href="/dashboard/masters" className="hover:text-slate-900 transition">Master Dashboard</Link>
           <span>/</span>
-          <span className="text-slate-900">Category Master</span>
+          <span className="text-slate-900">Taxonomy System</span>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">Product Categories (4-Level)</h2>
-            <p className="text-slate-600 text-sm mt-0.5">Define your taxonomy: Category &gt; Brand &gt; Group &gt; SubGroup</p>
+            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Layers className="w-4 h-4 text-primary" />
+              </div>
+              Taxonomy Structure
+            </h2>
+            <p className="text-slate-500 text-sm mt-1">Manage Categories, Brands, Groups, and SubGroups hierarchically.</p>
           </div>
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-white/10/30 disabled:opacity-60">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Changes
+          <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm transition flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-60">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Master
           </button>
         </div>
 
-        <div className="glass rounded-2xl p-6 border border-slate-200 space-y-6">
-          <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Layers className="w-5 h-5 text-blue-400" />
+        {/* Miller Columns Container */}
+        <div className="glass rounded-2xl border border-slate-200 overflow-hidden max-w-7xl mx-auto flex h-[600px] shadow-sm">
+          
+          {/* Column 1: Categories */}
+          <div className="flex-1 flex flex-col border-r border-slate-200 bg-white min-w-[200px]">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 font-semibold text-slate-800 text-sm uppercase tracking-wider flex justify-between items-center">
+              Category
+              <span className="bg-slate-200 text-slate-600 text-[10px] px-2 py-0.5 rounded-full">{categories.length}</span>
             </div>
-            <div>
-              <h3 className="font-semibold text-slate-900">Categories</h3>
-              <p className="text-slate-600 text-xs mt-0.5">Create top-level categories (e.g. Electronics, Furniture)</p>
-            </div>
-          </div>
-
-          <div className="flex gap-2 max-w-md">
-            <input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCategory(); } }} 
-              className="flex-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" placeholder="Add new category..." />
-            <button type="button" onClick={addCategory} className="px-4 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-xl text-sm font-semibold transition flex items-center justify-center shadow-lg shadow-primary/20"><Plus className="w-5 h-5" /></button>
-          </div>
-
-          <div className="space-y-4 pt-4">
-            {categories.length === 0 && (
-              <div className="text-center p-8 border border-dashed border-slate-300 rounded-xl text-slate-600">
-                No categories defined yet. Create a category to get started.
+            <div className="p-2 border-b border-slate-100 bg-white">
+              <div className="flex items-center bg-slate-50 rounded-lg border border-slate-200 overflow-hidden focus-within:border-primary transition">
+                <input value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCategory()} placeholder="New Category..." className="w-full bg-transparent px-3 py-2 text-sm focus:outline-none" />
+                <button onClick={addCategory} className="p-2 text-slate-400 hover:text-primary"><Plus className="w-4 h-4" /></button>
               </div>
-            )}
-            
-            {categories.map((cat) => {
-              const isCatExpanded = expandedCategory === cat.name;
-              
-              return (
-                <div key={cat.name} className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                  {/* Category Header */}
-                  <div 
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition group"
-                    onClick={() => setExpandedCategory(isCatExpanded ? null : cat.name)}
-                  >
-                    <div className="flex items-center gap-3">
-                      {isCatExpanded ? <ChevronDown className="w-5 h-5 text-slate-600" /> : <ChevronRight className="w-5 h-5 text-slate-600" />}
-                      <span className="font-bold text-slate-900 text-lg">{cat.name}</span>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{cat.brands.length} Brands</span>
-                    </div>
-                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition">
-                      <button onClick={(e) => { e.stopPropagation(); removeCategory(cat.name); }} className="p-1.5 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition" title="Delete Category">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Level 2: Brands */}
-                  {isCatExpanded && (
-                    <div className="p-4 pt-0 border-t border-slate-200 bg-slate-50">
-                      
-                      <div className="mt-3 mb-4 flex gap-2 max-w-sm">
-                        <input 
-                          value={newBrandInputs[cat.name] || ''} 
-                          onChange={e => setNewBrandInputs({...newBrandInputs, [cat.name]: e.target.value})} 
-                          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBrand(cat.name); } }} 
-                          className="flex-1 px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-primary text-sm transition" 
-                          placeholder={`Add brand to ${cat.name}...`} 
-                        />
-                        <button type="button" onClick={() => addBrand(cat.name)} className="px-3 py-2 bg-white border border-slate-300 hover:bg-slate-100 text-slate-900 rounded-lg text-sm font-semibold transition">Add Brand</button>
-                      </div>
-
-                      <div className="space-y-3 pl-4 border-l-2 border-slate-200 ml-2">
-                        {cat.brands.map(brand => {
-                          const brandKey = `${cat.name}-${brand.name}`;
-                          const isBrandExpanded = expandedBrand === brandKey;
-                          
-                          return (
-                            <div key={brandKey} className="border border-slate-200 rounded-lg bg-white shadow-sm overflow-hidden">
-                              {/* Brand Header */}
-                              <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 transition group/brand"
-                                onClick={() => setExpandedBrand(isBrandExpanded ? null : brandKey)}>
-                                <div className="flex items-center gap-2">
-                                  {isBrandExpanded ? <ChevronDown className="w-4 h-4 text-slate-500" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}
-                                  <span className="font-semibold text-slate-800 text-base">{brand.name}</span>
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">{brand.groups.length} Groups</span>
-                                </div>
-                                <button onClick={(e) => { e.stopPropagation(); removeBrand(cat.name, brand.name); }} className="p-1 opacity-0 group-hover/brand:opacity-100 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition">
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-
-                              {/* Level 3: Groups */}
-                              {isBrandExpanded && (
-                                <div className="p-3 pt-0 border-t border-slate-100 bg-slate-50/50">
-                                  <div className="mt-2 mb-3 flex gap-2 max-w-xs">
-                                    <input 
-                                      value={newGroupInputs[brandKey] || ''} 
-                                      onChange={e => setNewGroupInputs({...newGroupInputs, [brandKey]: e.target.value})} 
-                                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addGroup(cat.name, brand.name); } }} 
-                                      className="flex-1 px-2.5 py-1.5 rounded bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-primary text-xs transition" 
-                                      placeholder={`Add group...`} 
-                                    />
-                                    <button type="button" onClick={() => addGroup(cat.name, brand.name)} className="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-xs font-semibold transition">Add</button>
-                                  </div>
-
-                                  <div className="space-y-2 pl-3 border-l-2 border-slate-200 ml-1">
-                                    {brand.groups.map(group => {
-                                      const groupKey = `${brandKey}-${group.name}`;
-                                      const isGroupExpanded = expandedGroup === groupKey;
-
-                                      return (
-                                        <div key={groupKey} className="border border-slate-200 rounded-md bg-white">
-                                          {/* Group Header */}
-                                          <div className="flex items-center justify-between p-2 cursor-pointer hover:bg-slate-50 transition group/grp"
-                                            onClick={() => setExpandedGroup(isGroupExpanded ? null : groupKey)}>
-                                            <div className="flex items-center gap-1.5">
-                                              {isGroupExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
-                                              <span className="font-medium text-slate-700 text-sm">{group.name}</span>
-                                              <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded">{group.subGroups.length} SubGroups</span>
-                                            </div>
-                                            <button onClick={(e) => { e.stopPropagation(); removeGroup(cat.name, brand.name, group.name); }} className="p-0.5 opacity-0 group-hover/grp:opacity-100 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition">
-                                              <X className="w-3 h-3" />
-                                            </button>
-                                          </div>
-
-                                          {/* Level 4: SubGroups */}
-                                          {isGroupExpanded && (
-                                            <div className="p-2 pt-0 border-t border-slate-100 bg-white">
-                                              <div className="flex flex-wrap gap-1.5 mb-2 mt-2">
-                                                {group.subGroups.map((subGroup, idx) => (
-                                                  <div key={idx} className="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-xs text-slate-700 group/subGroup">
-                                                    <span>{subGroup}</span>
-                                                    <button onClick={() => removeSubGroup(cat.name, brand.name, group.name, subGroup)} className="text-slate-400 hover:text-red-500">
-                                                      <X className="w-3 h-3" />
-                                                    </button>
-                                                  </div>
-                                                ))}
-                                                {group.subGroups.length === 0 && <span className="text-[10px] text-slate-400 italic">No subgroups</span>}
-                                              </div>
-                                              <div className="flex gap-1 max-w-[200px]">
-                                                <input 
-                                                  value={newSubGroupInputs[groupKey] || ''} 
-                                                  onChange={e => setNewSubGroupInputs({...newSubGroupInputs, [groupKey]: e.target.value})} 
-                                                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSubGroup(cat.name, brand.name, group.name); } }} 
-                                                  className="flex-1 px-2 py-1 rounded bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none text-[10px]" 
-                                                  placeholder={`Add subgroup...`} 
-                                                />
-                                                <button type="button" onClick={() => addSubGroup(cat.name, brand.name, group.name)} className="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px] font-semibold">Add</button>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                    {brand.groups.length === 0 && <div className="text-xs text-slate-400 italic py-1">No groups added.</div>}
-                                  </div>
-
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                        {cat.brands.length === 0 && <div className="text-sm text-slate-400 italic py-2">No brands added.</div>}
-                      </div>
-
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            </div>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+              {categories.map(c => (
+                <ListItem 
+                  key={c.name} name={c.name} isSelected={selectedCat === c.name} 
+                  onClick={() => { setSelectedCat(c.name); setSelectedBrand(null); setSelectedGroup(null); }}
+                  onEdit={() => startEdit('cat', c.name)} onDelete={() => deleteCategory(c.name)}
+                  isEditing={editingPath?.type === 'cat' && editingPath.oldName === c.name}
+                  setEditValue={setEditValue} editValue={editValue} commitEdit={commitEdit}
+                />
+              ))}
+            </div>
           </div>
+
+          {/* Column 2: Brands */}
+          <div className="flex-1 flex flex-col border-r border-slate-200 bg-[#FAFAFA] min-w-[200px]">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 font-semibold text-slate-800 text-sm uppercase tracking-wider flex justify-between items-center">
+              Brand
+              {currentCatObj && <span className="bg-slate-200 text-slate-600 text-[10px] px-2 py-0.5 rounded-full">{currentCatObj.brands.length}</span>}
+            </div>
+            {selectedCat ? (
+              <>
+                <div className="p-2 border-b border-slate-100 bg-[#FAFAFA]">
+                  <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden focus-within:border-primary transition">
+                    <input value={newBrand} onChange={e => setNewBrand(e.target.value)} onKeyDown={e => e.key === 'Enter' && addBrand()} placeholder={`New Brand in ${selectedCat}...`} className="w-full bg-transparent px-3 py-2 text-sm focus:outline-none" />
+                    <button onClick={addBrand} className="p-2 text-slate-400 hover:text-primary"><Plus className="w-4 h-4" /></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                  {currentCatObj?.brands.map(b => (
+                    <ListItem 
+                      key={b.name} name={b.name} isSelected={selectedBrand === b.name} 
+                      onClick={() => { setSelectedBrand(b.name); setSelectedGroup(null); }}
+                      onEdit={() => startEdit('brand', b.name, selectedCat)} onDelete={() => deleteBrand(selectedCat, b.name)}
+                      isEditing={editingPath?.type === 'brand' && editingPath.oldName === b.name && editingPath.catName === selectedCat}
+                      setEditValue={setEditValue} editValue={editValue} commitEdit={commitEdit}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs text-center p-6">Select a category to view brands</div>
+            )}
+          </div>
+
+          {/* Column 3: Groups */}
+          <div className="flex-1 flex flex-col border-r border-slate-200 bg-[#F5F5F5] min-w-[200px]">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 font-semibold text-slate-800 text-sm uppercase tracking-wider flex justify-between items-center">
+              Group
+              {currentBrandObj && <span className="bg-slate-200 text-slate-600 text-[10px] px-2 py-0.5 rounded-full">{currentBrandObj.groups.length}</span>}
+            </div>
+            {selectedBrand ? (
+              <>
+                <div className="p-2 border-b border-slate-100 bg-[#F5F5F5]">
+                  <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden focus-within:border-primary transition">
+                    <input value={newGroup} onChange={e => setNewGroup(e.target.value)} onKeyDown={e => e.key === 'Enter' && addGroup()} placeholder={`New Group in ${selectedBrand}...`} className="w-full bg-transparent px-3 py-2 text-sm focus:outline-none" />
+                    <button onClick={addGroup} className="p-2 text-slate-400 hover:text-primary"><Plus className="w-4 h-4" /></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                  {currentBrandObj?.groups.map(g => (
+                    <ListItem 
+                      key={g.name} name={g.name} isSelected={selectedGroup === g.name} 
+                      onClick={() => setSelectedGroup(g.name)}
+                      onEdit={() => startEdit('group', g.name, selectedCat!, selectedBrand)} onDelete={() => deleteGroup(selectedCat!, selectedBrand, g.name)}
+                      isEditing={editingPath?.type === 'group' && editingPath.oldName === g.name && editingPath.catName === selectedCat && editingPath.brandName === selectedBrand}
+                      setEditValue={setEditValue} editValue={editValue} commitEdit={commitEdit}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs text-center p-6">Select a brand to view groups</div>
+            )}
+          </div>
+
+          {/* Column 4: SubGroups */}
+          <div className="flex-1 flex flex-col bg-[#F0F0F0] min-w-[200px]">
+            <div className="p-3 bg-slate-50 border-b border-slate-200 font-semibold text-slate-800 text-sm uppercase tracking-wider flex justify-between items-center">
+              SubGroup
+              {currentGroupObj && <span className="bg-slate-200 text-slate-600 text-[10px] px-2 py-0.5 rounded-full">{currentGroupObj.subGroups.length}</span>}
+            </div>
+            {selectedGroup ? (
+              <>
+                <div className="p-2 border-b border-slate-100 bg-[#F0F0F0]">
+                  <div className="flex items-center bg-white rounded-lg border border-slate-200 overflow-hidden focus-within:border-primary transition">
+                    <input value={newSubGroup} onChange={e => setNewSubGroup(e.target.value)} onKeyDown={e => e.key === 'Enter' && addSubGroup()} placeholder={`New SubGroup in ${selectedGroup}...`} className="w-full bg-transparent px-3 py-2 text-sm focus:outline-none" />
+                    <button onClick={addSubGroup} className="p-2 text-slate-400 hover:text-primary"><Plus className="w-4 h-4" /></button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                  {currentGroupObj?.subGroups.map(sg => (
+                    <ListItem 
+                      key={sg} name={sg} isSelected={false} 
+                      onClick={() => {}}
+                      onEdit={() => startEdit('subgroup', sg, selectedCat!, selectedBrand!, selectedGroup)} onDelete={() => deleteSubGroup(selectedCat!, selectedBrand!, selectedGroup, sg)}
+                      isEditing={editingPath?.type === 'subgroup' && editingPath.oldName === sg && editingPath.catName === selectedCat && editingPath.brandName === selectedBrand && editingPath.groupName === selectedGroup}
+                      setEditValue={setEditValue} editValue={editValue} commitEdit={commitEdit}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-slate-400 text-xs text-center p-6">Select a group to view subgroups</div>
+            )}
+          </div>
+
         </div>
 
       </main>
