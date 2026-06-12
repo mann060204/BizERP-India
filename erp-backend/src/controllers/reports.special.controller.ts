@@ -1375,11 +1375,9 @@ export const getCityWiseCustomerReport = async (req: AuthRequest, res: Response)
 export const getCustomerLedgerReport = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    // Ideally filtered by req.query.customerId, but we'll fetch all ledger entries related to customers if not specified.
-    // For this generic BI report without specific customer input, we will aggregate by customer or just show all customer ledgers.
-    // The requirement says "detailed account statement for customers", meaning we list ledger entries.
     const AccountLedger = mongoose.model('AccountLedger');
-    const ledgers = await AccountLedger.find({ businessId, entityType: 'Customer' })
+    // Fix: Query by customerId existence, not entityType
+    const ledgers = await AccountLedger.find({ businessId, customerId: { $exists: true, $ne: null } })
       .sort({ date: 1 })
       .lean();
 
@@ -1392,8 +1390,10 @@ export const getCustomerLedgerReport = async (req: AuthRequest, res: Response) =
       balance += (l.debit || 0) - (l.credit || 0);
       return {
         date: l.date,
-        voucherNumber: l.voucherNumber || l.referenceNumber || '-',
-        particulars: l.particulars || l.description || 'Ledger Entry',
+        voucherNumber: l.voucherNo || l.referenceId || '-',
+        voucherType: l.voucherType || l.referenceType || '-',
+        particulars: l.description || 'Ledger Entry',
+        partyName: l.partyName || '',
         debit: l.debit || 0,
         credit: l.credit || 0,
         balance: balance
@@ -1404,7 +1404,7 @@ export const getCustomerLedgerReport = async (req: AuthRequest, res: Response) =
       success: true,
       data: {
         summary: {
-          openingBalance: 0, // In a real ledger, calculate before date range
+          openingBalance: 0,
           totalDebit,
           totalCredit,
           closingBalance: balance
@@ -1596,7 +1596,8 @@ export const getSupplierLedgerReport = async (req: AuthRequest, res: Response) =
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     const AccountLedger = mongoose.model('AccountLedger');
-    const ledgers = await AccountLedger.find({ businessId, entityType: 'Supplier' }).sort({ date: 1 }).lean();
+    // Fix: Query by supplierId existence, not entityType
+    const ledgers = await AccountLedger.find({ businessId, supplierId: { $exists: true, $ne: null } }).sort({ date: 1 }).lean();
 
     let totalDebit = 0, totalCredit = 0, balance = 0;
 
@@ -1606,12 +1607,30 @@ export const getSupplierLedgerReport = async (req: AuthRequest, res: Response) =
       balance += (l.credit || 0) - (l.debit || 0); // For suppliers, credit increases liability
       return {
         date: l.date,
-        voucherNumber: l.voucherNumber || l.referenceNumber || '-',
-        particulars: l.particulars || l.description || 'Ledger Entry',
+        voucherNumber: l.voucherNo || l.referenceId || '-',
+        voucherType: l.voucherType || l.referenceType || '-',
+        particulars: l.description || 'Ledger Entry',
+        partyName: l.partyName || '',
         debit: l.debit || 0,
         credit: l.credit || 0,
         balance: balance
       };
+    });
+
+    // Calculate aging buckets from purchase bills
+    const PurchaseBill = mongoose.model('PurchaseBill');
+    const unpaidBills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'paid'] }, balance: { $gt: 0 } }).lean();
+    const now = new Date();
+    const aging = { current: 0, days_1_30: 0, days_31_60: 0, days_61_90: 0, days_90_plus: 0 };
+    unpaidBills.forEach((bill: any) => {
+      const dueDate = bill.dueDate ? new Date(bill.dueDate) : new Date(bill.billDate);
+      const overdueDays = Math.max(0, Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const amt = bill.balance || 0;
+      if (overdueDays <= 0) aging.current += amt;
+      else if (overdueDays <= 30) aging.days_1_30 += amt;
+      else if (overdueDays <= 60) aging.days_31_60 += amt;
+      else if (overdueDays <= 90) aging.days_61_90 += amt;
+      else aging.days_90_plus += amt;
     });
 
     res.status(200).json({
@@ -1621,7 +1640,8 @@ export const getSupplierLedgerReport = async (req: AuthRequest, res: Response) =
           openingBalance: 0,
           purchases: totalCredit,
           payments: totalDebit,
-          closingBalance: balance
+          closingBalance: balance,
+          aging
         },
         data: data.reverse()
       }
@@ -1633,26 +1653,26 @@ export const getSupplierLedgerReport = async (req: AuthRequest, res: Response) =
 export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    // Assuming PaymentOut exists, else we'll mock using AccountLedger where entityType=Supplier and debit > 0
     const AccountLedger = mongoose.model('AccountLedger');
-    const payments = await AccountLedger.find({ businessId, entityType: 'Supplier', debit: { $gt: 0 } }).sort({ date: -1 }).lean();
+    // Fix: Query by supplierId existence, not entityType
+    const payments = await AccountLedger.find({ businessId, supplierId: { $exists: true, $ne: null }, debit: { $gt: 0 } }).sort({ date: -1 }).lean();
     
     // Also need supplier map to get outstanding payable
     const Supplier = mongoose.model('Supplier');
     const suppliers = await Supplier.find({ businessId }).lean();
     let totalOutstanding = 0;
-    suppliers.forEach((s: any) => totalOutstanding += (s.closingBalance || 0));
+    suppliers.forEach((s: any) => totalOutstanding += Math.abs(s.currentBalance || 0));
 
     let totalPaid = 0;
     const data = payments.map((p: any) => {
       totalPaid += p.debit;
       return {
         paymentDate: p.date,
-        supplier: p.entityName || 'Unknown Supplier',
-        voucherNumber: p.voucherNumber || p.referenceNumber || '-',
+        supplier: p.partyName || 'Unknown Supplier',
+        voucherNumber: p.voucherNo || p.referenceId || '-',
         amountPaid: p.debit,
-        paymentMethod: p.modeOfPayment || p.paymentMode || 'Bank Transfer',
-        referenceNumber: p.referenceNumber || '-'
+        paymentMethod: p.referenceType || 'Payment',
+        referenceNumber: p.referenceId || '-'
       };
     });
 
@@ -1663,7 +1683,7 @@ export const getSupplierPaymentHistory = async (req: AuthRequest, res: Response)
           totalPayments: data.length,
           averagePaymentValue: data.length > 0 ? totalPaid / data.length : 0,
           outstandingPayables: totalOutstanding,
-          paymentFrequency: 'Monthly' // placeholder
+          paymentFrequency: 'Monthly'
         },
         data
       }

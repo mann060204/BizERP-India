@@ -6,6 +6,7 @@ import Batch from '../models/Batch.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 import { generateSequenceNumber } from '../utils/sequenceGenerator';
+import { AccountingService } from '../services/accounting.service';
 
 const getNextPurchaseReturnNumber = async (businessId: string): Promise<string> => {
   const docKey = 'PURCHASE_RETURN';
@@ -112,7 +113,7 @@ export const createPurchaseReturn = async (req: AuthRequest, res: Response): Pro
       businessId,
       returnNumber,
       returnType: returnType || 'GST',
-      returnDate: new Date(),
+      returnDate: req.body.returnDate ? new Date(req.body.returnDate) : new Date(),
       originalBillNumber,
       shippingAddress: shippingAddress || undefined,
       supplierId: supplierId || undefined,
@@ -138,6 +139,9 @@ export const createPurchaseReturn = async (req: AuthRequest, res: Response): Pro
       soldBy,
       createdBy: req.user!.userId,
     });
+
+    // Record in ledger
+    await AccountingService.recordPurchaseReturn(pr);
 
     res.status(201).json({ message: 'Purchase Return created', purchaseReturn: pr });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
@@ -233,6 +237,10 @@ export const updatePurchaseReturn = async (req: AuthRequest, res: Response): Pro
       { new: true }
     );
 
+    // Sync Ledger: reverse old + record new
+    await AccountingService.reversePurchaseReturn(existingPR);
+    if (updatedPR) await AccountingService.recordPurchaseReturn(updatedPR);
+
     res.json({ message: 'Purchase Return updated', purchaseReturn: updatedPR });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -300,6 +308,10 @@ export const cancelPurchaseReturn = async (req: AuthRequest, res: Response): Pro
     
     pr.status = 'cancelled' as any;
     await pr.save();
+
+    // Reverse ledger
+    await AccountingService.reversePurchaseReturn(pr);
+
     res.json({ message: 'Purchase Return cancelled successfully' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

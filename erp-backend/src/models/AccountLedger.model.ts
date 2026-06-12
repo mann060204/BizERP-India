@@ -14,6 +14,9 @@ export interface IAccountLedger extends Document {
   closingBalance?: number; // snapshot of balance after this transaction (optional, good for UI)
   reconciled?: boolean;
   reconciledDate?: Date;
+  voucherType?: string; // Purchase | Sale | PurchaseReturn | SalesReturn | Payment | Receipt | Expense | JournalEntry | Adjustment | Opening | Transfer
+  voucherNo?: string; // human-readable voucher number
+  partyName?: string; // denormalized party name for fast querying in daily transaction ledger
 }
 
 const accountLedgerSchema = new Schema(
@@ -30,11 +33,17 @@ const accountLedgerSchema = new Schema(
     referenceId: { type: String },
     closingBalance: { type: Number },
     reconciled: { type: Boolean, default: false },
-    reconciledDate: { type: Date }
+    reconciledDate: { type: Date },
+    voucherType: { type: String, enum: ['Purchase', 'Sale', 'PurchaseReturn', 'SalesReturn', 'Payment', 'Receipt', 'Expense', 'JournalEntry', 'Adjustment', 'Opening', 'Transfer'], default: null },
+    voucherNo: { type: String },
+    partyName: { type: String }
   },
   { timestamps: true }
 );
 
 accountLedgerSchema.index({ businessId: 1, accountId: 1, date: -1 });
+accountLedgerSchema.index({ businessId: 1, supplierId: 1, date: -1 });
+accountLedgerSchema.index({ businessId: 1, customerId: 1, date: -1 });
+accountLedgerSchema.index({ businessId: 1, date: -1, voucherType: 1 });
 
 export default mongoose.models.AccountLedger || mongoose.model<IAccountLedger>('AccountLedger', accountLedgerSchema);

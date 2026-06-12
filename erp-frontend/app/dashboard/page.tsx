@@ -13,7 +13,8 @@ import {
   TrendingUp, TrendingDown, CreditCard, Wallet, AlertTriangle,
   ArrowUpRight, ShoppingCart, Loader2, FilePlus, PackagePlus,
   UserPlus, SlidersHorizontal, BarChart2, Package, Users,
-  AlertCircle, Receipt, FileText, Wrench, ChevronRight, IndianRupee, Eye, EyeOff, X
+  AlertCircle, Receipt, FileText, Wrench, ChevronRight, IndianRupee, Eye, EyeOff, X,
+  RefreshCw, Activity
 } from 'lucide-react';
 import { banksApi, accountsApi, reportsApi } from '../../lib/erp-api';
 import {
@@ -205,6 +206,27 @@ export default function DashboardPage() {
   const [pendingSuppliers, setPendingSuppliers] = useState<any[]>([]);
   const [pendingLoading, setPendingLoading] = useState(true);
 
+  // Today's Activity — auto-refresh state
+  const [todayActivity, setTodayActivity] = useState<any>(null);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const [activityPeriod, setActivityPeriod] = useState('today');
+  const [activityLastRefresh, setActivityLastRefresh] = useState<Date>(new Date());
+
+  const fetchActivity = useCallback((period: string) => {
+    setActivityLoading(true);
+    dashboardApi.todayActivity({ period }).then(res => {
+      setTodayActivity(res.data || null);
+      setActivityLastRefresh(new Date());
+    }).catch(() => setTodayActivity(null)).finally(() => setActivityLoading(false));
+  }, []);
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    fetchActivity(activityPeriod);
+    const interval = setInterval(() => fetchActivity(activityPeriod), 60000);
+    return () => clearInterval(interval);
+  }, [activityPeriod, fetchActivity]);
+
   useEffect(() => {
     
 
@@ -366,6 +388,61 @@ export default function DashboardPage() {
                   )})}
                 </div>
               )}
+
+            {/* Today's Activity Widget */}
+            <div className="rounded-2xl p-4 flex flex-col gap-3 transition" style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: '14px' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                    <Activity className="w-4 h-4 text-violet-700" />
+                  </div>
+                  <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>Today's Activity</h3>
+                  <div className="flex items-center gap-1 ml-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[9px] font-medium" style={{ color: 'var(--text-subtle)' }}>LIVE</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px]" style={{ color: 'var(--text-subtle)' }}>
+                    Updated {activityLastRefresh.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <select value={activityPeriod} onChange={e => setActivityPeriod(e.target.value)}
+                    className="text-[10px] font-semibold rounded px-1.5 py-0.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                  </select>
+                  <button onClick={() => fetchActivity(activityPeriod)} className="p-1 rounded hover:bg-slate-100 transition">
+                    <RefreshCw className={`w-3.5 h-3.5 ${activityLoading ? 'animate-spin' : ''}`} style={{ color: 'var(--text-subtle)' }} />
+                  </button>
+                </div>
+              </div>
+              {activityLoading && !todayActivity
+                ? <div className="h-16 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--text-subtle)' }} /></div>
+                : todayActivity ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-2">
+                    {[
+                      { label: 'Sales', value: todayActivity.sales?.total, count: todayActivity.sales?.count, color: 'text-emerald-700', bg: 'bg-emerald-50' },
+                      { label: 'Purchases', value: todayActivity.purchases?.total, count: todayActivity.purchases?.count, color: 'text-sky-700', bg: 'bg-sky-50' },
+                      { label: 'Expenses', value: todayActivity.expenses?.total, count: todayActivity.expenses?.count, color: 'text-amber-700', bg: 'bg-amber-50' },
+                      { label: 'Received', value: todayActivity.paymentsReceived?.total, count: todayActivity.paymentsReceived?.count, color: 'text-emerald-700', bg: 'bg-emerald-50' },
+                      { label: 'Paid Out', value: todayActivity.paymentsMade?.total, count: todayActivity.paymentsMade?.count, color: 'text-rose-700', bg: 'bg-rose-50' },
+                      { label: 'Returns', value: (todayActivity.salesReturns?.total || 0) + (todayActivity.purchaseReturns?.total || 0), count: (todayActivity.salesReturns?.count || 0) + (todayActivity.purchaseReturns?.count || 0), color: 'text-orange-700', bg: 'bg-orange-50' },
+                      { label: 'Net Profit', value: todayActivity.profit, count: null, color: todayActivity.profit >= 0 ? 'text-emerald-700' : 'text-rose-700', bg: todayActivity.profit >= 0 ? 'bg-emerald-50' : 'bg-rose-50' },
+                    ].map(item => (
+                      <div key={item.label} className={`rounded-lg p-2.5 ${item.bg}`}>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wider ${item.color} opacity-70`}>{item.label}</p>
+                        <p className={`text-base font-medium ${item.color}`}>{renderAmount(item.value || 0)}</p>
+                        {item.count !== null && <p className="text-[9px] font-medium" style={{ color: 'var(--text-subtle)' }}>{item.count || 0} txn{(item.count || 0) !== 1 ? 's' : ''}</p>}
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="text-xs" style={{ color: 'var(--text-subtle)' }}>No data available</p>
+              }
+            </div>
 
             {/* Chart Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

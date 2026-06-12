@@ -6,6 +6,7 @@ import Batch from '../models/Batch.model';
 import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 import { generateSequenceNumber } from '../utils/sequenceGenerator';
+import { AccountingService } from '../services/accounting.service';
 
 const getNextSalesReturnNumber = async (businessId: string): Promise<string> => {
   const docKey = 'SALE_RETURN';
@@ -112,7 +113,7 @@ export const createSalesReturn = async (req: AuthRequest, res: Response): Promis
       businessId,
       returnNumber,
       returnType: returnType || 'GST',
-      returnDate: new Date(),
+      returnDate: req.body.returnDate ? new Date(req.body.returnDate) : new Date(),
       originalInvoiceNumber,
       shippingAddress: shippingAddress || undefined,
       customerId: customerId || undefined,
@@ -138,6 +139,9 @@ export const createSalesReturn = async (req: AuthRequest, res: Response): Promis
       soldBy,
       createdBy: req.user!.userId,
     });
+
+    // Record in ledger
+    await AccountingService.recordSalesReturn(sr);
 
     res.status(201).json({ message: 'Sales Return created', salesReturn: sr });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
@@ -233,6 +237,10 @@ export const updateSalesReturn = async (req: AuthRequest, res: Response): Promis
       { new: true }
     );
 
+    // Sync Ledger: reverse old + record new
+    await AccountingService.reverseSalesReturn(existingSR);
+    if (updatedSR) await AccountingService.recordSalesReturn(updatedSR);
+
     res.json({ message: 'Sales Return updated', salesReturn: updatedSR });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -304,6 +312,10 @@ export const cancelSalesReturn = async (req: AuthRequest, res: Response): Promis
     
     sr.status = 'cancelled' as any;
     await sr.save();
+
+    // Reverse ledger
+    await AccountingService.reverseSalesReturn(sr);
+
     res.json({ message: 'Sales Return cancelled successfully' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };

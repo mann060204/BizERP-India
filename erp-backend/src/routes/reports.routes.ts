@@ -2,6 +2,8 @@ import express from 'express';
 import * as reportsController from '../controllers/reports.controller';
 import * as advancedReportsController from '../controllers/reports.advanced.controller';
 import * as specialReportsController from '../controllers/reports.special.controller';
+import * as todayActivityController from '../controllers/todayActivity.controller';
+import * as reconciliationController from '../controllers/reconciliation.controller';
 import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = express.Router();
@@ -77,6 +79,11 @@ router.get('/dashboard/stock-movement', reportsController.getDashboardStockMovem
 router.get('/dashboard/top-customers', reportsController.getDashboardTopCustomers as any);
 router.get('/dashboard/customer-pending', reportsController.getDashboardCustomerPending as any);
 router.get('/dashboard/supplier-pending', reportsController.getDashboardSupplierPending as any);
+router.get('/dashboard/today-activity', todayActivityController.getTodayActivity as any);
+router.get('/dashboard/daily-transactions', todayActivityController.getDailyTransactions as any);
+
+// --- RECONCILIATION / SYSTEM HEALTH ---
+router.get('/admin/reconciliation', reconciliationController.getReconciliation as any);
 
 // --- ADVANCED FINANCIAL REPORTS ---
 router.get('/advanced/trial-balance', advancedReportsController.getTrialBalance as any);

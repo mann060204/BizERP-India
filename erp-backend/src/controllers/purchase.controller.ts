@@ -98,10 +98,14 @@ export const createPurchase = async (req: AuthRequest, res: Response): Promise<v
     let batchesArray = batches || [];
     
     for (const item of lineItems) {
-      if (item.productId) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { currentStock: item.quantity },
-        });
+      if (item.productId && item.quantity > 0) {
+        try {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: item.quantity },
+          });
+        } catch (stockErr) {
+          console.error(`Failed to update stock for product ${item.productId}:`, stockErr);
+        }
       }
     }
 
@@ -420,12 +424,59 @@ export const updatePurchaseStatus = async (req: AuthRequest, res: Response): Pro
 // DELETE /api/v1/purchases/:id  (soft cancel)
 export const cancelPurchase = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const purchase = await PurchaseBill.findOneAndUpdate(
-      { _id: req.params['id'], businessId: req.user!.businessId },
-      { status: 'cancelled' },
-      { new: true }
-    );
+    const businessId = req.user!.businessId;
+    const purchase = await PurchaseBill.findOne({ _id: req.params['id'], businessId });
     if (!purchase) { res.status(404).json({ message: 'Purchase bill not found' }); return; }
+    
+    if (purchase.status === 'cancelled') {
+      res.status(400).json({ message: 'Purchase bill is already cancelled' }); return;
+    }
+
+    // Reverse stock for all line items (purchase added stock, so we remove it)
+    for (const item of purchase.lineItems) {
+      if (item.productId) {
+        try {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: -item.quantity },
+          });
+        } catch (stockErr) {
+          console.error(`Failed to reverse stock for product ${item.productId}:`, stockErr);
+        }
+      }
+    }
+
+    // Reverse batch stock
+    const hasBatchQuantities = (purchase.batches || []).some((b: any) => b.quantity > 0);
+    if (hasBatchQuantities) {
+      for (const batch of (purchase.batches || [])) {
+        if (batch.productId && batch.batchNo && batch.quantity) {
+          try {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: batch.productId, batchNo: batch.batchNo },
+              { $inc: { currentStock: -batch.quantity } }
+            );
+          } catch (batchErr) {
+            console.error(`Failed to reverse batch stock for ${batch.batchNo}:`, batchErr);
+          }
+        }
+      }
+    } else {
+      for (const item of purchase.lineItems) {
+        if (item.productId && item.batchNo) {
+          try {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: item.batchNo },
+              { $inc: { currentStock: -item.quantity } }
+            );
+          } catch (batchErr) {
+            console.error(`Failed to reverse batch stock for ${item.batchNo}:`, batchErr);
+          }
+        }
+      }
+    }
+
+    purchase.status = 'cancelled' as any;
+    await purchase.save();
 
     // Sync Ledger
     await AccountingService.reversePurchaseBill(purchase);

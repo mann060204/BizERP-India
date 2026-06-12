@@ -165,31 +165,35 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
 
     // Deduct stock for product items
     for (const item of lineItems) {
-      if (item.productId) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { currentStock: -item.quantity },
-        });
+      if (item.productId && item.quantity > 0) {
+        try {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: -item.quantity },
+          });
 
-        if (item.batchNo) {
-          const updatedBatch = await Batch.findOneAndUpdate(
-            { businessId, productId: item.productId, batchNo: item.batchNo },
-            { $inc: { currentStock: -item.quantity } },
-            { new: true }
-          );
+          if (item.batchNo) {
+            const updatedBatch = await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: item.batchNo },
+              { $inc: { currentStock: -item.quantity } },
+              { new: true }
+            );
 
-          if (updatedBatch) {
-            await BatchLog.create({
-              businessId,
-              batchId: updatedBatch._id,
-              productId: item.productId,
-              action: 'STOCK_OUT',
-              quantityChanged: -item.quantity,
-              currentStock: updatedBatch.currentStock,
-              documentType: 'Invoice',
-              documentNumber: invoiceNumber,
-              userId: req.user!.userId,
-            });
+            if (updatedBatch) {
+              await BatchLog.create({
+                businessId,
+                batchId: updatedBatch._id,
+                productId: item.productId,
+                action: 'STOCK_OUT',
+                quantityChanged: -item.quantity,
+                currentStock: updatedBatch.currentStock,
+                documentType: 'Invoice',
+                documentNumber: invoiceNumber,
+                userId: req.user!.userId,
+              });
+            }
           }
+        } catch (stockErr) {
+          console.error(`Failed to deduct stock for product ${item.productId}:`, stockErr);
         }
       }
     }
@@ -404,12 +408,35 @@ export const updateInvoiceStatus = async (req: AuthRequest, res: Response): Prom
 // DELETE /api/v1/invoices/:id  (soft cancel)
 export const cancelInvoice = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const invoice = await Invoice.findOneAndUpdate(
-      { _id: req.params['id'], businessId: req.user!.businessId },
-      { status: 'cancelled' },
-      { new: true }
-    );
+    const businessId = req.user!.businessId;
+    const invoice = await Invoice.findOne({ _id: req.params['id'], businessId });
     if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
+
+    if (invoice.status === 'cancelled') {
+      res.status(400).json({ message: 'Invoice is already cancelled' }); return;
+    }
+
+    // Reverse stock for all line items (invoice deducted stock, so we add it back)
+    for (const item of invoice.lineItems) {
+      if (item.productId) {
+        try {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { currentStock: item.quantity },
+          });
+          if (item.batchNo) {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: item.batchNo },
+              { $inc: { currentStock: item.quantity } }
+            );
+          }
+        } catch (stockErr) {
+          console.error(`Failed to reverse stock for product ${item.productId}:`, stockErr);
+        }
+      }
+    }
+
+    invoice.status = 'cancelled' as any;
+    await invoice.save();
     
     // Sync Ledger
     await AccountingService.reverseInvoice(invoice);

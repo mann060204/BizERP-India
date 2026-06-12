@@ -64,7 +64,8 @@ export class AccountingService {
   }
 
   /**
-   * Helper to update Cash or specific Bank balance based on payment received or made
+   * Helper to update Cash or specific Bank balance based on payment received or made.
+   * CRITICAL FIX: Now accepts explicit `txnDate` parameter instead of using new Date().
    */
   static async updateCashOrBankBalance(
     businessId: string, 
@@ -74,10 +75,12 @@ export class AccountingService {
     isReceiving: boolean = true,
     description: string = 'Payment',
     referenceType: string = 'Payment',
-    referenceId?: string
+    referenceId?: string,
+    txnDate?: Date
   ) {
     if (!amount) return;
     const change = isReceiving ? amount : -amount;
+    const ledgerDate = txnDate || new Date();
     
     if (paymentMode.toLowerCase() === 'cash') {
       await Business.findByIdAndUpdate(businessId, { $inc: { cashInHand: change } });
@@ -92,17 +95,19 @@ export class AccountingService {
         }
         await account.save();
 
-        // Create Ledger Entry
+        // Create Ledger Entry with the ACTUAL transaction date
         await AccountLedger.create({
           businessId,
           accountId: bankId,
-          date: new Date(),
+          date: ledgerDate,
           description,
           debit: isReceiving ? amount : 0,
           credit: !isReceiving ? amount : 0,
           referenceType,
           referenceId,
-          closingBalance: account.currentBalance
+          closingBalance: account.currentBalance,
+          voucherType: referenceType === 'Payment' ? 'Payment' : 'Receipt',
+          voucherNo: referenceId || undefined
         });
       }
     }
@@ -113,51 +118,64 @@ export class AccountingService {
    */
   static async recordSalesInvoice(invoice: any) {
     if (!invoice.customerId) return;
+    const invoiceDate = invoice.invoiceDate ? new Date(invoice.invoiceDate) : new Date();
 
     // 1. Debit Customer for Invoice Amount
     await AccountLedger.create({
       businessId: invoice.businessId,
       customerId: invoice.customerId,
-      date: invoice.invoiceDate || new Date(),
+      date: invoiceDate,
       description: `Sales Invoice #${invoice.invoiceNumber}`,
       debit: invoice.grandTotal,
       credit: 0,
       referenceType: 'Invoice',
-      referenceId: invoice._id.toString()
+      referenceId: invoice._id.toString(),
+      voucherType: 'Sale',
+      voucherNo: invoice.invoiceNumber,
+      partyName: invoice.customerSnapshot?.name || ''
     });
 
     // 2. If payment was received instantly, Credit Customer
     if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {
       for (const payment of invoice.paymentHistory) {
+        const payDate = payment.date ? new Date(payment.date) : invoiceDate;
         await AccountLedger.create({
           businessId: invoice.businessId,
           customerId: invoice.customerId,
-          date: payment.date || invoice.invoiceDate || new Date(),
+          date: payDate,
           description: `Payment Received (Inv #${invoice.invoiceNumber}) - ${payment.mode} ${payment.txnId ? '(Txn: ' + payment.txnId + ')' : ''}`,
           debit: 0,
           credit: payment.amount,
           referenceType: 'Payment',
-          referenceId: invoice._id.toString()
+          referenceId: invoice._id.toString(),
+          voucherType: 'Receipt',
+          voucherNo: invoice.invoiceNumber,
+          partyName: invoice.customerSnapshot?.name || ''
         });
         await this.updateCashOrBankBalance(
           invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, true,
-          `Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+          `Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString(),
+          payDate
         );
       }
     } else if (invoice.amountReceived > 0) {
       await AccountLedger.create({
         businessId: invoice.businessId,
         customerId: invoice.customerId,
-        date: invoice.invoiceDate || new Date(),
+        date: invoiceDate,
         description: `Payment Received (Inv #${invoice.invoiceNumber}) - ${invoice.paymentMode}`,
         debit: 0,
         credit: invoice.amountReceived,
         referenceType: 'Payment',
-        referenceId: invoice._id.toString()
+        referenceId: invoice._id.toString(),
+        voucherType: 'Receipt',
+        voucherNo: invoice.invoiceNumber,
+        partyName: invoice.customerSnapshot?.name || ''
       });
       await this.updateCashOrBankBalance(
         invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, true,
-        `Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+        `Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString(),
+        invoiceDate
       );
     }
 
@@ -176,17 +194,20 @@ export class AccountingService {
     });
     
     // Reverse Cash/Bank
+    const invoiceDate = invoice.invoiceDate ? new Date(invoice.invoiceDate) : new Date();
     if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {
       for (const payment of invoice.paymentHistory) {
         await this.updateCashOrBankBalance(
           invoice.businessId.toString(), payment.amount, payment.mode, payment.bankId, false,
-          `Reversal: Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+          `Reversal: Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString(),
+          payment.date ? new Date(payment.date) : invoiceDate
         );
       }
     } else if (invoice.amountReceived > 0) {
       await this.updateCashOrBankBalance(
         invoice.businessId.toString(), invoice.amountReceived, invoice.paymentMode || 'Cash', invoice.paymentBankId, false,
-        `Reversal: Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString()
+        `Reversal: Payment Received (Inv #${invoice.invoiceNumber})`, 'Payment', invoice._id.toString(),
+        invoiceDate
       );
     }
     
@@ -198,34 +219,43 @@ export class AccountingService {
    */
   static async recordPurchaseBill(bill: any) {
     if (!bill.supplierId) return;
+    const billDate = bill.billDate ? new Date(bill.billDate) : new Date();
 
     // 1. Credit Supplier for Bill Amount (we owe them)
     await AccountLedger.create({
       businessId: bill.businessId,
       supplierId: bill.supplierId,
-      date: bill.billDate || new Date(),
+      date: billDate,
       description: `Purchase Bill #${bill.billNumber}`,
       debit: 0,
       credit: bill.grandTotal,
       referenceType: 'Purchase',
-      referenceId: bill._id.toString()
+      referenceId: bill._id.toString(),
+      voucherType: 'Purchase',
+      voucherNo: bill.billNumber,
+      partyName: bill.supplierSnapshot?.name || ''
     });
 
     // 2. If we paid instantly, Debit Supplier (reduces our liability)
     if (bill.amountPaid > 0) {
+      const payDate = bill.paymentDate ? new Date(bill.paymentDate) : billDate;
       await AccountLedger.create({
         businessId: bill.businessId,
         supplierId: bill.supplierId,
-        date: bill.billDate || new Date(),
+        date: payDate,
         description: `Payment Made (Bill #${bill.billNumber}) - ${bill.paymentMode}`,
         debit: bill.amountPaid,
         credit: 0,
         referenceType: 'Payment',
-        referenceId: bill._id.toString()
+        referenceId: bill._id.toString(),
+        voucherType: 'Payment',
+        voucherNo: bill.billNumber,
+        partyName: bill.supplierSnapshot?.name || ''
       });
       await this.updateCashOrBankBalance(
         bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, false,
-        `Payment Made (Bill #${bill.billNumber})`, 'Payment', bill._id.toString()
+        `Payment Made (Bill #${bill.billNumber})`, 'Payment', bill._id.toString(),
+        payDate
       );
     }
 
@@ -243,11 +273,13 @@ export class AccountingService {
       referenceType: { $in: ['Purchase', 'Payment'] }
     });
     
+    const billDate = bill.billDate ? new Date(bill.billDate) : new Date();
     // Reverse Cash/Bank (For purchase, we originally paid, so to reverse we add the cash back)
     if (bill.amountPaid > 0) {
       await this.updateCashOrBankBalance(
         bill.businessId.toString(), bill.amountPaid, bill.paymentMode || 'Cash', bill.paymentBankId, true,
-        `Reversal: Payment Made (Bill #${bill.billNumber})`, 'Payment', bill._id.toString()
+        `Reversal: Payment Made (Bill #${bill.billNumber})`, 'Payment', bill._id.toString(),
+        bill.paymentDate ? new Date(bill.paymentDate) : billDate
       );
     }
     
@@ -255,9 +287,139 @@ export class AccountingService {
   }
 
   /**
+   * Records a Purchase Return (Debit Note) into the Supplier's Ledger.
+   * A purchase return REDUCES our liability to the supplier (Debit Supplier).
+   */
+  static async recordPurchaseReturn(returnDoc: any) {
+    if (!returnDoc.supplierId) return;
+    const returnDate = returnDoc.returnDate ? new Date(returnDoc.returnDate) : new Date();
+
+    await AccountLedger.create({
+      businessId: returnDoc.businessId,
+      supplierId: returnDoc.supplierId,
+      date: returnDate,
+      description: `Purchase Return (Debit Note) #${returnDoc.returnNumber}`,
+      debit: returnDoc.grandTotal,
+      credit: 0,
+      referenceType: 'PurchaseReturn',
+      referenceId: returnDoc._id.toString(),
+      voucherType: 'PurchaseReturn',
+      voucherNo: returnDoc.returnNumber,
+      partyName: returnDoc.supplierSnapshot?.name || ''
+    });
+
+    await this.updateSupplierBalance(returnDoc.supplierId, returnDoc.businessId.toString());
+  }
+
+  /**
+   * Reverses a Purchase Return from the Supplier's Ledger
+   */
+  static async reversePurchaseReturn(returnDoc: any) {
+    if (!returnDoc.supplierId) return;
+    await AccountLedger.deleteMany({
+      businessId: returnDoc.businessId,
+      referenceId: returnDoc._id.toString(),
+      referenceType: 'PurchaseReturn'
+    });
+    await this.updateSupplierBalance(returnDoc.supplierId, returnDoc.businessId.toString());
+  }
+
+  /**
+   * Records a Sales Return (Credit Note) into the Customer's Ledger.
+   * A sales return REDUCES what the customer owes us (Credit Customer).
+   */
+  static async recordSalesReturn(returnDoc: any) {
+    if (!returnDoc.customerId) return;
+    const returnDate = returnDoc.returnDate ? new Date(returnDoc.returnDate) : new Date();
+
+    await AccountLedger.create({
+      businessId: returnDoc.businessId,
+      customerId: returnDoc.customerId,
+      date: returnDate,
+      description: `Sales Return (Credit Note) #${returnDoc.returnNumber}`,
+      debit: 0,
+      credit: returnDoc.grandTotal,
+      referenceType: 'SalesReturn',
+      referenceId: returnDoc._id.toString(),
+      voucherType: 'SalesReturn',
+      voucherNo: returnDoc.returnNumber,
+      partyName: returnDoc.customerSnapshot?.name || ''
+    });
+
+    await this.updateCustomerBalance(returnDoc.customerId, returnDoc.businessId.toString());
+  }
+
+  /**
+   * Reverses a Sales Return from the Customer's Ledger
+   */
+  static async reverseSalesReturn(returnDoc: any) {
+    if (!returnDoc.customerId) return;
+    await AccountLedger.deleteMany({
+      businessId: returnDoc.businessId,
+      referenceId: returnDoc._id.toString(),
+      referenceType: 'SalesReturn'
+    });
+    await this.updateCustomerBalance(returnDoc.customerId, returnDoc.businessId.toString());
+  }
+
+  /**
+   * Records an Expense into the General Ledger.
+   * Creates a ledger entry and updates cash/bank balance.
+   */
+  static async recordExpense(expense: any) {
+    const expenseDate = expense.date ? new Date(expense.date) : new Date();
+
+    // Create a general ledger entry for the expense
+    await AccountLedger.create({
+      businessId: expense.businessId,
+      accountId: expense.accountId || undefined,
+      date: expenseDate,
+      description: `Expense: ${expense.category || 'General'} - ${expense.description || expense.notes || ''}`.trim(),
+      debit: expense.amount,
+      credit: 0,
+      referenceType: 'Expense',
+      referenceId: expense._id.toString(),
+      voucherType: 'Expense',
+      voucherNo: expense.voucherNo || expense._id.toString().slice(-6),
+      partyName: expense.paidTo || expense.vendorName || ''
+    });
+
+    // Update cash or bank
+    if (expense.amount > 0) {
+      await this.updateCashOrBankBalance(
+        expense.businessId.toString(), expense.amount, expense.paymentMode || 'Cash', expense.bankId, false,
+        `Expense: ${expense.category || 'General'}`, 'Expense', expense._id.toString(),
+        expenseDate
+      );
+    }
+  }
+
+  /**
+   * Reverses an Expense from the General Ledger
+   */
+  static async reverseExpense(expense: any) {
+    await AccountLedger.deleteMany({
+      businessId: expense.businessId,
+      referenceId: expense._id.toString(),
+      referenceType: 'Expense'
+    });
+
+    // Reverse cash or bank
+    const expenseDate = expense.date ? new Date(expense.date) : new Date();
+    if (expense.amount > 0) {
+      await this.updateCashOrBankBalance(
+        expense.businessId.toString(), expense.amount, expense.paymentMode || 'Cash', expense.bankId, true,
+        `Reversal: Expense ${expense.category || ''}`, 'Expense', expense._id.toString(),
+        expenseDate
+      );
+    }
+  }
+
+  /**
    * Records a generic Payment Received from a Customer
    */
   static async recordCustomerPayment(businessId: string, customerId: string, amount: number, paymentMode: string, date: Date, referenceNo: string, notes: string, bankId?: string) {
+    const customerDoc = await Customer.findOne({ _id: customerId, businessId });
     await AccountLedger.create({
       businessId,
       customerId,
@@ -266,9 +428,15 @@ export class AccountingService {
       debit: 0,
       credit: amount, // Credit customer because they paid us
       referenceType: 'Payment',
-      referenceId: referenceNo
+      referenceId: referenceNo,
+      voucherType: 'Receipt',
+      voucherNo: referenceNo || undefined,
+      partyName: customerDoc?.name || ''
     });
-    await this.updateCashOrBankBalance(businessId, amount, paymentMode || 'Cash', bankId, true);
+    await this.updateCashOrBankBalance(businessId, amount, paymentMode || 'Cash', bankId, true,
+      `Payment Received from ${customerDoc?.name || 'Customer'}`, 'Payment', referenceNo,
+      date
+    );
     return await this.updateCustomerBalance(customerId, businessId);
   }
 
@@ -276,6 +444,7 @@ export class AccountingService {
    * Records a generic Payment Made to a Supplier
    */
   static async recordSupplierPayment(businessId: string, supplierId: string, amount: number, paymentMode: string, date: Date, referenceNo: string, notes: string, bankId?: string) {
+    const supplierDoc = await Supplier.findOne({ _id: supplierId, businessId });
     await AccountLedger.create({
       businessId,
       supplierId,
@@ -284,9 +453,15 @@ export class AccountingService {
       debit: amount, // Debit supplier because we paid them
       credit: 0,
       referenceType: 'Payment',
-      referenceId: referenceNo
+      referenceId: referenceNo,
+      voucherType: 'Payment',
+      voucherNo: referenceNo || undefined,
+      partyName: supplierDoc?.name || ''
     });
-    await this.updateCashOrBankBalance(businessId, amount, paymentMode || 'Cash', bankId, false);
+    await this.updateCashOrBankBalance(businessId, amount, paymentMode || 'Cash', bankId, false,
+      `Payment Made to ${supplierDoc?.name || 'Supplier'}`, 'Payment', referenceNo,
+      date
+    );
     return await this.updateSupplierBalance(supplierId, businessId);
   }
 
@@ -305,7 +480,8 @@ export class AccountingService {
       debit: type === 'Debit' ? amount : 0,
       credit: type === 'Credit' ? amount : 0,
       referenceType: 'Adjustment',
-      referenceId: ''
+      referenceId: '',
+      voucherType: 'Adjustment'
     });
 
     if (entityType === 'Customer') {

@@ -351,5 +351,8 @@ export const dashboardApi = {
   topCustomers: (params?: any) => api.get('/reports/dashboard/top-customers', { params }).then(res => res.data),
   customerPending: () => api.get('/reports/dashboard/customer-pending').then(res => res.data),
   supplierPending: () => api.get('/reports/dashboard/supplier-pending').then(res => res.data),
+  todayActivity: (params?: any) => api.get('/reports/dashboard/today-activity', { params }).then(res => res.data),
+  dailyTransactions: (params?: any) => api.get('/reports/dashboard/daily-transactions', { params }).then(res => res.data),
+  reconciliation: () => api.get('/reports/admin/reconciliation').then(res => res.data),
 };
 
