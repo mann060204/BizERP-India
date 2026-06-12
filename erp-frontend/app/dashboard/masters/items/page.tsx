@@ -312,13 +312,13 @@ export default function MastersPage() {
                         {(() => {
                           const availableCategories = productCategories.map(c => c.name);
                           const currentCat = productCategories.find(c => c.name === form.category);
-                          const availableGroups = currentCat ? currentCat.groups.map((g: any) => g.name) : [];
+                          const availableGroups = currentCat ? (currentCat.groups || []).map((g: any) => g.name) : [];
                           
-                          const currentGroup = currentCat?.groups?.find((g: any) => g.name === form.group);
-                          const availableSubGroups = currentGroup ? currentGroup.subGroups.map((sg: any) => sg.name) : [];
+                          const currentGroup = (currentCat?.groups || []).find((g: any) => g.name === form.group);
+                          const availableSubGroups = currentGroup ? (currentGroup.subGroups || []).map((sg: any) => sg.name) : [];
                           
-                          const currentSubGroup = currentGroup?.subGroups?.find((sg: any) => sg.name === form.subGroup);
-                          const availableBrands = currentSubGroup ? currentSubGroup.brands : [];
+                          const currentSubGroup = (currentGroup?.subGroups || []).find((sg: any) => sg.name === form.subGroup);
+                          const availableBrands = currentSubGroup ? (currentSubGroup.brands || []) : [];
 
                           return (
                             <>

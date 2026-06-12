@@ -43,7 +43,13 @@ export default function CategoryMasterPage() {
         const raw = data.business?.productCategories || [];
         setCategories(raw.map((c: any) => ({
           name: c.name,
-          groups: c.groups || [] // Fallback if data is old
+          groups: (c.groups || []).map((g: any) => ({
+            name: g.name,
+            subGroups: (g.subGroups || []).map((sg: any) => ({
+              name: sg.name,
+              brands: sg.brands || []
+            }))
+          }))
         })));
       } catch { toast.error('Failed to load categories'); }
       finally { setLoading(false); }
