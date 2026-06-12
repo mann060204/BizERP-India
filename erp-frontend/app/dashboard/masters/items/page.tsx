@@ -312,29 +312,29 @@ export default function MastersPage() {
                         {(() => {
                           const availableCategories = productCategories.map(c => c.name);
                           const currentCat = productCategories.find(c => c.name === form.category);
-                          const availableGroups = currentCat ? (currentCat.groups || []).map((g: any) => g.name) : [];
+                          const availableBrands = currentCat ? (currentCat.brands || []).map((b: any) => b.name) : [];
                           
-                          const currentGroup = (currentCat?.groups || []).find((g: any) => g.name === form.group);
-                          const availableSubGroups = currentGroup ? (currentGroup.subGroups || []).map((sg: any) => sg.name) : [];
+                          const currentBrand = (currentCat?.brands || []).find((b: any) => b.name === form.brand);
+                          const availableGroups = currentBrand ? (currentBrand.groups || []).map((g: any) => g.name) : [];
                           
-                          const currentSubGroup = (currentGroup?.subGroups || []).find((sg: any) => sg.name === form.subGroup);
-                          const availableBrands = currentSubGroup ? (currentSubGroup.brands || []) : [];
+                          const currentGroup = (currentBrand?.groups || []).find((g: any) => g.name === form.group);
+                          const availableSubGroups = currentGroup ? (currentGroup.subGroups || []) : [];
 
                           return (
                             <>
                               <Select label="Category" keyName="category" options={['', ...availableCategories]} form={form} onQuickAdd={handleAddGroup} setForm={(newForm: any) => {
-                                 if (newForm.category !== form.category) { newForm.group = ''; newForm.subGroup = ''; newForm.brand = ''; }
+                                 if (newForm.category !== form.category) { newForm.brand = ''; newForm.group = ''; newForm.subGroup = ''; }
+                                 setForm(newForm);
+                              }} />
+                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={handleAddBrand} setForm={(newForm: any) => {
+                                 if (newForm.brand !== form.brand) { newForm.group = ''; newForm.subGroup = ''; }
                                  setForm(newForm);
                               }} />
                               <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
-                                 if (newForm.group !== form.group) { newForm.subGroup = ''; newForm.brand = ''; }
+                                 if (newForm.group !== form.group) { newForm.subGroup = ''; }
                                  setForm(newForm);
                               }} />
-                              <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} setForm={(newForm: any) => {
-                                 if (newForm.subGroup !== form.subGroup) { newForm.brand = ''; }
-                                 setForm(newForm);
-                              }} />
-                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={handleAddBrand} setForm={setForm} />
+                              <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} setForm={setForm} />
                             </>
                           );
                         })()}

@@ -46,11 +46,11 @@ export interface IBusiness extends Document {
   productBrands: string[];
   productCategories: {
     name: string;
-    groups: {
+    brands: {
       name: string;
-      subGroups: {
+      groups: {
         name: string;
-        brands: string[];
+        subGroups: string[];
       }[];
     }[];
   }[];
@@ -138,11 +138,11 @@ const BusinessSchema = new Schema<IBusiness>(
     productCategories: {
       type: [{
         name: { type: String, required: true },
-        groups: [{
+        brands: [{
           name: { type: String, required: true },
-          subGroups: [{
+          groups: [{
             name: { type: String, required: true },
-            brands: [String]
+            subGroups: [String]
           }]
         }]
       }],
