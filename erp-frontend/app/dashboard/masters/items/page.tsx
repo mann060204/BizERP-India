@@ -6,6 +6,7 @@ import Topbar from '../../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../../lib/erp-api';
 import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings, ExternalLink, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QuickCategoryModal from '../../../../components/modals/QuickCategoryModal';
 
 interface Product {
   _id: string; name: string; printName?: string; category?: string; group?: string; subGroup?: string; brand?: string;
@@ -15,7 +16,7 @@ interface Product {
   gstRate: number; cessRate?: number; igstRate?: number; saleDiscount?: number; saleDiscountType?: 'percentage' | 'amount';
   currentStock: number; reorderLevel: number; openingStock: number; openingStockValue?: number;
   lowLevelLimit?: number; location?: string; batchNo?: string; description?: string;
-  productType?: string; category?: string;
+  productType?: string;
   printDescription?: boolean; printBatchNo?: boolean; oneClickSale?: boolean;
   enableTracking?: boolean; printExpiryDate?: boolean; notForSale?: boolean;
 }
@@ -93,6 +94,7 @@ export default function MastersPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
+  const [quickCategoryMode, setQuickCategoryMode] = useState<'category' | 'brand' | 'group' | 'subgroup' | null>(null);
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
@@ -158,14 +160,6 @@ export default function MastersPage() {
       secSalePriceType: 'fixed', secSalePrice: 0, secMrp: 0, secMinSalePrice: 0, isDefaultSecondaryUnit: false,
     });
     setShowModal(true);
-  };
-
-  const handleAddGroup = () => {
-    window.open('/dashboard/masters/categories', '_blank');
-  };
-
-  const handleAddBrand = () => {
-    window.open('/dashboard/masters/categories', '_blank');
   };
 
   const handleSave = async () => {
@@ -334,19 +328,19 @@ export default function MastersPage() {
 
                           return (
                             <>
-                              <Select label="Category" keyName="category" options={['', ...availableCategories]} form={form} onQuickAdd={handleAddGroup} setForm={(newForm: any) => {
+                              <Select label="Category" keyName="category" options={['', ...availableCategories]} form={form} onQuickAdd={() => setQuickCategoryMode('category')} setForm={(newForm: any) => {
                                  if (newForm.category !== form.category) { newForm.brand = ''; newForm.group = ''; newForm.subGroup = ''; }
                                  setForm(newForm);
                               }} />
-                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={handleAddBrand} setForm={(newForm: any) => {
+                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={() => setQuickCategoryMode('brand')} setForm={(newForm: any) => {
                                  if (newForm.brand !== form.brand) { newForm.group = ''; newForm.subGroup = ''; }
                                  setForm(newForm);
                               }} />
-                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} setForm={(newForm: any) => {
+                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} onQuickAdd={() => setQuickCategoryMode('group')} setForm={(newForm: any) => {
                                  if (newForm.group !== form.group) { newForm.subGroup = ''; }
                                  setForm(newForm);
                               }} />
-                              <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} setForm={setForm} />
+                              <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} onQuickAdd={() => setQuickCategoryMode('subgroup')} setForm={setForm} />
                             </>
                           );
                         })()}
@@ -560,6 +554,20 @@ export default function MastersPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {quickCategoryMode && (
+        <QuickCategoryModal 
+          mode={quickCategoryMode}
+          parentContext={{ category: form.category, brand: form.brand, group: form.group }}
+          onClose={() => setQuickCategoryMode(null)}
+          onSuccess={async (newName) => {
+            await fetchSettings();
+            let stateKey = quickCategoryMode;
+            if (stateKey === 'subgroup') stateKey = 'subGroup' as any;
+            setForm((prev: any) => ({ ...prev, [stateKey]: newName }));
+          }}
+        />
       )}
     </div>
   );

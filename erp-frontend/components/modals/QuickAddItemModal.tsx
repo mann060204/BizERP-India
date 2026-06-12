@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { productsApi, businessApi } from '../../lib/erp-api';
 import { X, Loader2, Save, Layers, Plus, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import QuickCategoryModal from './QuickCategoryModal';
 const GST_RATES = [0, 5, 12, 18, 28];
 const UNITS = ['Nos', 'Bags', 'Bale', 'Bundles', 'Buckles', 'Billion of units', 'Box', 'Bottles', 'Bunches', 'Cans', 'Cubic meters', 'Cubic centimeters', 'Centimeters', 'Cartons', 'Dozens', 'Drums', 'Feet', 'Grams', 'Gross', 'Gallons', 'Hours', 'Job', 'Kilograms', 'Kilometers', 'Liters', 'Meters', 'Metric ton', 'Milligrams', 'Milliliters', 'Numbers', 'Packs', 'Pieces', 'Pairs', 'Quintals', 'Rolls', 'Sets', 'Square feet', 'Square meters', 'Tablets', 'Ten gross', 'Thousands', 'Tons', 'Tubes', 'US gallons', 'Yards'];
 
@@ -87,17 +88,7 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
     }
   }, []);
 
-  useEffect(() => { 
-    fetchSettings();
-  }, [fetchSettings]);
-
-  const handleAddGroup = () => {
-    window.open('/dashboard/masters/categories', '_blank');
-  };
-
-  const handleAddBrand = () => {
-    window.open('/dashboard/masters/categories', '_blank');
-  };
+  const [quickCategoryMode, setQuickCategoryMode] = useState<'category' | 'brand' | 'group' | 'subgroup' | null>(null);
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Item name is required'); return; }
@@ -143,20 +134,19 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        {(() => {
-                          const availableGroups = productCategories.length > 0 ? productCategories.map(c => c.name) : productGroups;
-                          const currentCat = productCategories.find(c => c.name === form.group);
-                          const availableBrands = currentCat ? currentCat.brands : (productCategories.length > 0 && form.group ? [] : productBrands);
-                          return (
-                            <>
-                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} onQuickAdd={handleAddGroup} setForm={(newForm: any) => {
-                                 if (newForm.group !== form.group) newForm.brand = '';
+                              <Select label="Category" keyName="category" options={['', ...availableCategories]} form={form} onQuickAdd={() => setQuickCategoryMode('category')} setForm={(newForm: any) => {
+                                 if (newForm.category !== form.category) { newForm.brand = ''; newForm.group = ''; newForm.subGroup = ''; }
                                  setForm(newForm);
                               }} />
-                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={handleAddBrand} setForm={setForm} />
-                            </>
-                          );
-                        })()}
+                              <Select label="Brand" keyName="brand" options={['', ...availableBrands]} form={form} onQuickAdd={() => setQuickCategoryMode('brand')} setForm={(newForm: any) => {
+                                 if (newForm.brand !== form.brand) { newForm.group = ''; newForm.subGroup = ''; }
+                                 setForm(newForm);
+                              }} />
+                              <Select label="Group" keyName="group" options={['', ...availableGroups]} form={form} onQuickAdd={() => setQuickCategoryMode('group')} setForm={(newForm: any) => {
+                                 if (newForm.group !== form.group) { newForm.subGroup = ''; }
+                                 setForm(newForm);
+                              }} />
+                              <Select label="SubGroup" keyName="subGroup" options={['', ...availableSubGroups]} form={form} onQuickAdd={() => setQuickCategoryMode('subgroup')} setForm={setForm} />
                         <Input label="Item Code / SKU" keyName="sku" form={form} setForm={setForm} />
                         <Input label="Product Name" keyName="name" required form={form} setForm={setForm} />
                         <div className="col-span-2">
@@ -366,6 +356,20 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
             </div>
           </div>
         </div>
+      )}
+
+      {quickCategoryMode && (
+        <QuickCategoryModal 
+          mode={quickCategoryMode}
+          parentContext={{ category: form.category, brand: form.brand, group: form.group }}
+          onClose={() => setQuickCategoryMode(null)}
+          onSuccess={async (newName) => {
+            await fetchSettings();
+            let stateKey = quickCategoryMode;
+            if (stateKey === 'subgroup') stateKey = 'subGroup' as any;
+            setForm((prev: any) => ({ ...prev, [stateKey]: newName }));
+          }}
+        />
       )}
     </>
   );

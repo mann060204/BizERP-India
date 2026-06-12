@@ -173,21 +173,21 @@ export default function BulkAddItemsPage() {
               <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Brand</label>
               <select value={common.brand} onChange={e => setCommon({ ...common, brand: e.target.value, group: '', subGroup: '' })} className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:border-primary focus:outline-none">
                 <option value="">Select...</option>
-                {availableBrands.map(b => <option key={b} value={b}>{b}</option>)}
+                {availableBrands.map((b: any) => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">Group</label>
               <select value={common.group} onChange={e => setCommon({ ...common, group: e.target.value, subGroup: '' })} className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:border-primary focus:outline-none">
                 <option value="">Select...</option>
-                {availableGroups.map(g => <option key={g} value={g}>{g}</option>)}
+                {availableGroups.map((g: any) => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase">SubGroup</label>
               <select value={common.subGroup} onChange={e => setCommon({ ...common, subGroup: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-sm focus:border-primary focus:outline-none">
                 <option value="">Select...</option>
-                {availableSubGroups.map(sg => <option key={sg} value={sg}>{sg}</option>)}
+                {availableSubGroups.map((sg: any) => <option key={sg} value={sg}>{sg}</option>)}
               </select>
             </div>
 
