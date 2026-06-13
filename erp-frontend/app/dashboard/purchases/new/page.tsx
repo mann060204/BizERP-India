@@ -12,7 +12,7 @@ import QuickAddSupplierModal from '../../../../components/modals/QuickAddSupplie
 import { banksApi, accountsApi } from '../../../../lib/erp-api';
 
 interface Supplier { _id: string; name: string; mobile?: string; gstin?: string; address?: string; currentBalance?: number; openingBalance?: number; }
-interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number; }
+interface Product { _id: string; name: string; purchasePrice: number; gstRate: number; hsnCode?: string; unit: string; mrp?: number;  description?: string; printDescription?: boolean; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
   quantity: number; unit: string; rate: number; mrp: number; discount: number; discountAmount?: number; discountType?: 'percentage' | 'amount'; gstRate: number; cess: number;
@@ -228,7 +228,8 @@ export default function NewPurchasePage() {
       rate: p.purchasePrice,
       mrp: p.mrp || p.purchasePrice,
       gstRate: p.gstRate,
-      unit: p.unit
+      unit: p.unit,
+      description: p.printDescription ? (p.description || '') : ''
     }));
     setItemSearch(p.name);
     setShowItemDD(false);
