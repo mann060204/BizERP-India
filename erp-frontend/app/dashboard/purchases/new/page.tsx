@@ -760,10 +760,10 @@ export default function NewPurchasePage() {
                 </div>
 
                 {lastPrices.length > 0 && (
-                  <div className="mt-2 w-full p-2 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-800">
-                    <p className="font-bold mb-1 border-b border-blue-200 pb-1">Last Purchases</p>
+                  <div className="mt-2 w-full p-2 bg-yellow-50 border border-yellow-100 rounded text-[10px] text-red-600 font-bold">
+                    <p className="font-bold mb-1 border-b border-yellow-200 pb-1">Last Purchases</p>
                     {lastPrices.slice(0,3).map((lp, idx) => (
-                      <div key={idx} className="flex justify-between border-b border-blue-200/50 last:border-0 py-0.5">
+                      <div key={idx} className="flex justify-between border-b border-yellow-200/50 last:border-0 py-0.5">
                         <span>{new Date(lp.date).toLocaleDateString('en-GB')}</span>
                         <span className="font-medium text-xs">₹{lp.rate}</span>
                       </div>
