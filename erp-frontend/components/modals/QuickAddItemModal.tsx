@@ -88,6 +88,10 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
     }
   }, []);
 
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   const [quickCategoryMode, setQuickCategoryMode] = useState<'category' | 'brand' | 'group' | 'subgroup' | null>(null);
 
   const handleSave = async () => {
