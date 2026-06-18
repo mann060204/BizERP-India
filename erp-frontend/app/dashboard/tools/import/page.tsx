@@ -19,7 +19,37 @@ export default function BulkImportPage() {
     let headers = '';
     let filename = '';
     if (importType === 'products') {
-      headers = 'Name,Print Name,SKU,Category,Group,Brand,Unit,Secondary Unit,Conversion Rate,Selling Price,Purchase Price,MRP,Sale Discount,Discount Type,GST %,HSN Code,Location,Reorder Level,Low Level Limit,Stock,Batch No,Batch Stock,Batch Sale Price,Batch MRP,Mfg Date,Expiry Date\n"Sample Item","Sample P-Name","SKU001","General","Main Group","Brand X","Nos","Box","10","100","80","120","5","percentage","18","1234","Rack A","5","0","50","BATCH-001","50","100","120","2025-01-01","2026-12-31"';
+      const cols = [
+        'Category','Brand','Group','SubGroup',
+        'Item Code / SKU','Product Name','Print Name',
+        'Purchase Price (Rs)','MRP (Rs)',
+        'Sale Price 1 (Retail) (Rs)','Sale Price 2 (Wholesale) (Rs)','Sale Price 3 (Rs)','Min. Sale Price (Rs)',
+        'Sale Discount','Sale Discount Type',
+        'Unit','Secondary Unit','Conversion Rate',
+        'Opening Stock','Opening Stock Value (Rs)','Current Stock',
+        'Reorder Level','Low Level Limit',
+        'HSN / SAC Code','GST Rate (%)','Cess Rate (%)','IGST Rate (%)',
+        'Product Type','Location/Rack','Batch No.',
+        'Product Description',
+        'Print Description','One Click Sale','Enable Tracking','Print Batch No','Print Expiry Date','Not For Sale',
+        'Batch No (Detail)','Batch Stock','Batch Sale Price','Batch MRP','Mfg Date','Expiry Date',
+      ];
+      const sample = [
+        'Grocery','Brand X','Main Group','Sub Group 1',
+        'SKU001','Basmati Rice','Basmati Rice',
+        '90','130',
+        '120','110','105','100',
+        '5','percentage',
+        'Nos','Box','10',
+        '50','4500','50',
+        '5','2',
+        '100630','5','0','0',
+        'General','Rack A','BATCH-01',
+        'Premium quality basmati rice',
+        'FALSE','FALSE','FALSE','FALSE','FALSE','FALSE',
+        'BATCH-01','50','120','130','2025-01-01','2027-12-31',
+      ];
+      headers = cols.map(h => `"${h}"`).join(',') + '\n' + sample.map(v => `"${v}"`).join(',');
       filename = 'full_inventory_import_template.csv';
     } else if (importType === 'suppliers') {
       headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Opening Balance,Street,City,State,Pincode\n"Supplier ABC","9876543211","supplier@example.com","27AADCB2230M1Z3","ABCDE1234G","ABC Enterprises","0","123 Industrial St","Pune","Maharashtra","411001"';
@@ -71,43 +101,71 @@ export default function BulkImportPage() {
 
     try {
       if (importType === 'products') {
-        // Detect if this is a full inventory export (with batch columns)
-        const firstRow = data[0] || {};
-        const hasFullInventoryFormat = 'Batch No' in firstRow || 'Batch Stock' in firstRow ||
-          'Location' in firstRow || 'Reorder Level' in firstRow || 'Mfg Date' in firstRow;
+        // Map every row using ALL 43-column headers from Full Export
+        const mapped = data.map((item: any) => {
+          const bool = (v: any) => String(v || '').toUpperCase() === 'TRUE';
+          const num  = (v: any, def = 0) => parseFloat(String(v || '').replace(/[^\d.]/g, '')) || def;
+          return {
+            name:             item['Product Name'] || item.Name || item.name || '',
+            printName:        item['Print Name']   || item.printName   || '',
+            sku:              item['Item Code / SKU'] || item.SKU || item.sku || '',
+            category:         item.Category        || item.category    || '',
+            brand:            item.Brand           || item.brand       || '',
+            group:            item.Group           || item.group       || '',
+            subGroup:         item.SubGroup        || item.subGroup    || '',
+            unit:             item.Unit            || item.unit        || 'Nos',
+            secondaryUnit:    item['Secondary Unit']    || item.secondaryUnit    || '',
+            conversionRate:   num(item['Conversion Rate'] || item.conversionRate, 1),
+            purchasePrice:    num(item['Purchase Price (Rs)']  || item['Purchase Price'] || item.purchasePrice),
+            mrp:              num(item['MRP (Rs)']  || item.MRP  || item.mrp),
+            sellingPrice:     num(item['Sale Price 1 (Retail) (Rs)']  || item['Selling Price'] || item.sellingPrice),
+            sellingPrice2:    num(item['Sale Price 2 (Wholesale) (Rs)'] || item.sellingPrice2),
+            sellingPrice3:    num(item['Sale Price 3 (Rs)']             || item.sellingPrice3),
+            minSalePrice:     num(item['Min. Sale Price (Rs)']          || item.minSalePrice),
+            saleDiscount:     num(item['Sale Discount'] || item.saleDiscount),
+            saleDiscountType: (item['Sale Discount Type'] || item['Discount Type'] || 'percentage').toLowerCase(),
+            openingStock:     num(item['Opening Stock'] || item.openingStock || item.Stock),
+            openingStockValue:num(item['Opening Stock Value (Rs)'] || item.openingStockValue),
+            reorderLevel:     num(item['Reorder Level'] || item.reorderLevel, 5),
+            lowLevelLimit:    num(item['Low Level Limit'] || item.lowLevelLimit),
+            hsnCode:          item['HSN / SAC Code'] || item['HSN Code'] || item.hsnCode || '',
+            gstRate:          num(item['GST Rate (%)'] || item['GST %'] || item.gstRate),
+            cessRate:         num(item['Cess Rate (%)'] || item.cessRate),
+            igstRate:         num(item['IGST Rate (%)'] || item.igstRate),
+            productType:      item['Product Type']  || item.productType  || 'General',
+            location:         item['Location/Rack'] || item.Location     || item.location || '',
+            batchNo:          item['Batch No.']     || item['Batch No']  || item.batchNo  || '',
+            description:      item['Product Description'] || item.description || '',
+            printDescription: bool(item['Print Description'] || item.printDescription),
+            oneClickSale:     bool(item['One Click Sale']   || item.oneClickSale),
+            enableTracking:   bool(item['Enable Tracking']  || item.enableTracking),
+            printBatchNo:     bool(item['Print Batch No']   || item.printBatchNo),
+            printExpiryDate:  bool(item['Print Expiry Date']|| item.printExpiryDate),
+            notForSale:       bool(item['Not For Sale']     || item.notForSale),
+            // Batch detail columns
+            batchDetail: {
+              batchNo:      item['Batch No (Detail)'] || item['Batch No'] || '',
+              currentStock: num(item['Batch Stock']),
+              salePrice:    num(item['Batch Sale Price']),
+              mrp:          num(item['Batch MRP']),
+              manufacturingDate: item['Mfg Date'] || '',
+              expiryDate:        item['Expiry Date'] || '',
+            },
+            isActive: true,
+          };
+        }).filter((p: any) => p.name.trim() !== '');
 
-        if (hasFullInventoryFormat) {
-          // Use the dedicated full inventory bulk-import endpoint
+        // Try full inventory import first, fall back to simple bulk create
+        try {
           const res = await inventoryApi.bulkImport({ records: data });
           toast.success(res.data.message);
           if (res.data.errors?.length > 0) {
             console.warn('Import errors:', res.data.errors);
             toast(`${res.data.errors.length} rows had errors — check console`, { icon: '⚠️' });
           }
-        } else {
-          // Legacy simple product import
-          const payload = {
-            products: data.map(item => ({
-              name: item.name || item.Name,
-              printName: item.printName || item['Print Name'] || '',
-              sku: item.sku || item.SKU || '',
-              category: item.category || item.Category || 'General',
-              group: item.group || item.Group || '',
-              brand: item.brand || item.Brand || '',
-              unit: item.unit || item.Unit || 'Nos',
-              secondaryUnit: item.secondaryUnit || item['Secondary Unit'] || '',
-              conversionRate: parseFloat(item.conversionRate || item['Conversion Rate'] || '1'),
-              sellingPrice: parseFloat(item.sellingPrice || item['Selling Price'] || '0'),
-              purchasePrice: parseFloat(item.purchasePrice || item['Purchase Price'] || '0'),
-              mrp: parseFloat(item.mrp || item.MRP || '0'),
-              saleDiscount: parseFloat(item.saleDiscount || item['Sale Discount'] || '0'),
-              saleDiscountType: (item.saleDiscountType || item['Discount Type'] || 'percentage').toLowerCase(),
-              gstRate: parseFloat(item.gstRate || item['GST %'] || '18'),
-              hsnCode: item.hsnCode || item['HSN Code'] || '',
-              openingStock: parseFloat(item.openingStock || item.Stock || '0'),
-              isActive: true
-            }))
-          };
+        } catch {
+          // Fallback: create products without batch details
+          const payload = { products: mapped };
           const res = await productsApi.bulkCreate(payload);
           toast.success(res.data.message);
         }
@@ -216,11 +274,17 @@ export default function BulkImportPage() {
                   <p className="text-slate-600 text-xs leading-relaxed mb-3">Ensure your CSV contains column headers in the first row. The system will automatically attempt to match common header names.</p>
                   
                   {importType === 'products' ? (
-                  <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, Print Name, SKU, Category, Group, Brand, Unit, Secondary Unit, Conversion Rate, <span className="text-emerald-400">Selling Price</span>, Purchase Price, MRP, Sale Discount, Discount Type, GST %, HSN Code, Location, Reorder Level, Low Level Limit, Stock<br/>
-                      <span className="text-blue-400 mt-1 block">+ Batch columns (optional):</span>
-                      Batch No, Batch Stock, Batch Sale Price, Batch MRP, Mfg Date, Expiry Date
+                  <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                      <p className="text-slate-700 font-semibold mb-1">Expected Headers (43 columns):</p>
+                      <p><span className="text-violet-500">Classification:</span> Category, Brand, Group, <span className="text-emerald-500">SubGroup</span></p>
+                      <p><span className="text-violet-500">Identity:</span> Item Code / SKU, <span className="text-emerald-500">Product Name</span>, Print Name</p>
+                      <p><span className="text-violet-500">Pricing:</span> Purchase Price (Rs), MRP (Rs), <span className="text-emerald-500">Sale Price 1 (Retail) (Rs)</span>, Sale Price 2 (Wholesale) (Rs), Sale Price 3 (Rs), Min. Sale Price (Rs), Sale Discount, Sale Discount Type</p>
+                      <p><span className="text-violet-500">Unit &amp; Stock:</span> Unit, Secondary Unit, Conversion Rate, Opening Stock, Opening Stock Value (Rs), Current Stock, Reorder Level, Low Level Limit</p>
+                      <p><span className="text-violet-500">GST:</span> HSN / SAC Code, GST Rate (%), Cess Rate (%), IGST Rate (%)</p>
+                      <p><span className="text-violet-500">Other:</span> Product Type, Location/Rack, Batch No., Product Description</p>
+                      <p><span className="text-violet-500">Settings:</span> Print Description, One Click Sale, Enable Tracking, Print Batch No, Print Expiry Date, Not For Sale</p>
+                      <p className="text-blue-500 mt-1">+ Batch Detail (optional): Batch No (Detail), Batch Stock, Batch Sale Price, Batch MRP, Mfg Date, Expiry Date</p>
+                      <p className="text-amber-600 mt-1">💡 Tip: Use &quot;Full Export (with Batches)&quot; from Inventory page — the file can be re-uploaded directly here!</p>
                     </div>
                   ) : importType === 'suppliers' ? (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
