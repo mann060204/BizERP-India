@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Topbar from '../../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../../lib/erp-api';
-import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings, ExternalLink, RefreshCw } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings, ExternalLink, RefreshCw, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickCategoryModal from '../../../../components/modals/QuickCategoryModal';
 
@@ -180,6 +180,77 @@ export default function MastersPage() {
     catch { toast.error('Failed to delete'); }
   };
 
+  const exportProducts = async () => {
+    try {
+      const { data } = await productsApi.list({ limit: 10000 });
+      const prods: Product[] = data.products;
+
+      const headers = [
+        'Category', 'Brand', 'Group', 'SubGroup',
+        'Item Code / SKU', 'Product Name', 'Print Name',
+        'Purchase Price (Rs)', 'MRP (Rs)',
+        'Sale Price 1 (Retail) (Rs)', 'Sale Price 2 (Wholesale) (Rs)', 'Sale Price 3 (Rs)', 'Min. Sale Price (Rs)',
+        'Unit', 'Secondary Unit', 'Opening Stock', 'Opening Stock Value (Rs)',
+        'HSN / SAC Code', 'GST Rate (%)',
+        'Sale Discount', 'Sale Discount Type',
+        'Low Level Limit', 'Product Type', 'Location/Rack', 'Batch No.',
+        'Product Description',
+        'Print Description', 'One Click Sale', 'Enable Tracking', 'Print Batch No', 'Print Expiry Date'
+      ];
+
+      const escape = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+
+      const rowsData = prods.map(p => [
+        escape(p.category || ''),
+        escape(p.brand || ''),
+        escape(p.group || ''),
+        escape(p.subGroup || ''),
+        escape(p.sku || ''),
+        escape(p.name || ''),
+        escape(p.printName || ''),
+        escape(p.purchasePrice || 0),
+        escape(p.mrp || 0),
+        escape(p.sellingPrice || 0),
+        escape(p.sellingPrice2 || 0),
+        escape(p.sellingPrice3 || 0),
+        escape(p.minSalePrice || 0),
+        escape(p.unit || ''),
+        escape(p.secondaryUnit || ''),
+        escape(p.openingStock || 0),
+        escape(p.openingStockValue || 0),
+        escape(p.hsnCode || ''),
+        escape(p.gstRate ?? 0),
+        escape(p.saleDiscount || 0),
+        escape(p.saleDiscountType || 'percentage'),
+        escape(p.lowLevelLimit || 0),
+        escape(p.productType || 'General'),
+        escape(p.location || ''),
+        escape(p.batchNo || ''),
+        escape(p.description || ''),
+        escape(p.printDescription ? 'TRUE' : 'FALSE'),
+        escape(p.oneClickSale ? 'TRUE' : 'FALSE'),
+        escape(p.enableTracking ? 'TRUE' : 'FALSE'),
+        escape(p.printBatchNo ? 'TRUE' : 'FALSE'),
+        escape(p.printExpiryDate ? 'TRUE' : 'FALSE'),
+      ].join(','));
+
+      const csvContent = [headers.map(h => `"${h}"`).join(','), ...rowsData].join('\n');
+      const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `products_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${prods.length} products successfully`);
+    } catch {
+      toast.error('Failed to export products');
+    }
+  };
+
 
 
   return (
@@ -193,6 +264,9 @@ export default function MastersPage() {
             <p className="text-slate-600 text-sm mt-0.5">{products.length} item{products.length !== 1 ? 's' : ''} in master</p>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={exportProducts} className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition flex items-center gap-2 shadow-sm">
+              <Download className="w-4 h-4" /> Full Export (with Batch)
+            </button>
             <Link href="/dashboard/masters/items/bulk" className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-sm transition flex items-center gap-2 shadow-sm">
               <Layers className="w-4 h-4" /> Bulk Entry
             </Link>

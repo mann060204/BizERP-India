@@ -1,19 +1,40 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../../components/layout/Topbar';
 import { businessApi, productsApi, suppliersApi } from '../../../../../lib/erp-api';
-import { Loader2, Save, Plus, Trash2, ArrowLeft, Layers } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, ArrowLeft, Layers, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 const GST_RATES = [0, 5, 12, 18, 28];
 const FALLBACK_UNITS = ['Nos', 'Bags', 'Bale', 'Box', 'Bottles', 'Cartons', 'Dozens', 'Grams', 'Kilograms', 'Liters', 'Meters', 'Packs', 'Pieces', 'Pairs', 'Rolls', 'Sets'];
 
+// Parses a single CSV line, correctly handling quoted fields with embedded commas/quotes
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else { inQuotes = !inQuotes; }
+    } else if (line[i] === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += line[i];
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
 export default function BulkAddItemsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   // Profile data for dropdowns
   const [productCategories, setProductCategories] = useState<any[]>([]);
@@ -124,7 +145,128 @@ export default function BulkAddItemsPage() {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-slate-700 animate-spin" /></div>;
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset input so same file can be re-imported
+    e.target.value = '';
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = (evt.target?.result as string).replace(/\r/g, '');
+        const lines = text.split('\n').filter(l => l.trim());
+        if (lines.length < 2) { toast.error('CSV file has no data rows'); return; }
+
+        const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+        const dataLines = lines.slice(1);
+
+        // Helper: get value by header name
+        const col = (row: string[], name: string) => {
+          const i = headers.indexOf(name.toLowerCase().trim());
+          return i >= 0 ? row[i] || '' : '';
+        };
+        const numCol = (row: string[], name: string) => Number(col(row, name)) || 0;
+        const boolCol = (row: string[], name: string) => col(row, name).toUpperCase() === 'TRUE';
+
+        const parsedRows = dataLines.map(l => parseCSVLine(l));
+
+        // Set common fields from the first data row
+        const first = parsedRows[0];
+        setCommon(prev => ({
+          ...prev,
+          category: col(first, 'category') || prev.category,
+          brand: col(first, 'brand') || prev.brand,
+          group: col(first, 'group') || prev.group,
+          subGroup: col(first, 'subgroup') || prev.subGroup,
+          gstRate: numCol(first, 'gst rate (%)') || prev.gstRate,
+          hsnCode: col(first, 'hsn / sac code') || prev.hsnCode,
+          unit: col(first, 'unit') || prev.unit,
+        }));
+
+        const importedRows = parsedRows
+          .map((row, i) => ({
+            id: Date.now() + i,
+            name: col(row, 'product name'),
+            sku: col(row, 'item code / sku'),
+            purchasePrice: numCol(row, 'purchase price (rs)'),
+            sellingPrice: numCol(row, 'sale price 1 (retail) (rs)'),
+            sellingPrice2: numCol(row, 'sale price 2 (wholesale) (rs)'),
+            sellingPrice3: numCol(row, 'sale price 3 (rs)'),
+            mrp: numCol(row, 'mrp (rs)'),
+            openingStock: numCol(row, 'opening stock'),
+            reorderLevel: numCol(row, 'low level limit') || 5,
+            location: col(row, 'location/rack'),
+            batchNo: col(row, 'batch no.'),
+            // Extra fields carried for save payload
+            printName: col(row, 'print name'),
+            minSalePrice: numCol(row, 'min. sale price (rs)'),
+            openingStockValue: numCol(row, 'opening stock value (rs)'),
+            saleDiscount: numCol(row, 'sale discount'),
+            saleDiscountType: col(row, 'sale discount type') || 'percentage',
+            productType: col(row, 'product type') || 'General',
+            description: col(row, 'product description'),
+            printDescription: boolCol(row, 'print description'),
+            oneClickSale: boolCol(row, 'one click sale'),
+            enableTracking: boolCol(row, 'enable tracking'),
+            printBatchNo: boolCol(row, 'print batch no'),
+            printExpiryDate: boolCol(row, 'print expiry date'),
+          }))
+          .filter(r => r.name.trim() !== '');
+
+        if (importedRows.length === 0) { toast.error('No valid product rows found in CSV'); return; }
+        setRows(importedRows);
+        toast.success(`Imported ${importedRows.length} items from CSV. Review and click "Save All Items".`);
+      } catch {
+        toast.error('Failed to parse CSV. Make sure it was exported from this system.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Also enrich the save payload to include all imported fields
+  const handleSaveEnriched = async () => {
+    const validRows = rows.filter((r: any) => r.name?.trim() !== '');
+    if (validRows.length === 0) { toast.error('Please enter at least one item name'); return; }
+    setSaving(true);
+    try {
+      const payload = validRows.map((r: any) => ({
+        ...common,
+        name: r.name,
+        printName: r.printName || '',
+        sku: r.sku || '',
+        purchasePrice: Number(r.purchasePrice) || 0,
+        sellingPrice: Number(r.sellingPrice) || 0,
+        sellingPrice2: Number(r.sellingPrice2) || 0,
+        sellingPrice3: Number(r.sellingPrice3) || 0,
+        mrp: Number(r.mrp) || 0,
+        minSalePrice: Number(r.minSalePrice) || 0,
+        openingStock: Number(r.openingStock) || 0,
+        openingStockValue: Number(r.openingStockValue) || 0,
+        currentStock: Number(r.openingStock) || 0,
+        reorderLevel: Number(r.reorderLevel) || 0,
+        location: r.location || '',
+        batchNo: r.batchNo || '',
+        saleDiscount: Number(r.saleDiscount) || 0,
+        saleDiscountType: r.saleDiscountType || 'percentage',
+        productType: r.productType || 'General',
+        description: r.description || '',
+        printDescription: r.printDescription || false,
+        oneClickSale: r.oneClickSale || false,
+        enableTracking: r.enableTracking || false,
+        printBatchNo: r.printBatchNo || false,
+        printExpiryDate: r.printExpiryDate || false,
+        type: 'product',
+      }));
+      await productsApi.bulkCreate({ products: payload });
+      toast.success(`${payload.length} items saved successfully!`);
+      router.push('/dashboard/masters/items');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to bulk create items');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Derive cascading dropdowns
   const availableCategories = productCategories.map(c => c.name);
@@ -151,9 +293,25 @@ export default function BulkAddItemsPage() {
               <p className="text-slate-500 text-sm mt-0.5">Quickly add multiple items sharing the same category and taxonomy.</p>
             </div>
           </div>
-          <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm transition flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-60">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save All Items
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Hidden CSV file input */}
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleImportCSV}
+            />
+            <button
+              onClick={() => csvInputRef.current?.click()}
+              className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition flex items-center gap-2 shadow-sm"
+            >
+              <Upload className="w-4 h-4" /> Import CSV
+            </button>
+            <button onClick={handleSaveEnriched} disabled={saving} className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm transition flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-60">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save All Items
+            </button>
+          </div>
         </div>
 
         {/* Top Section: Common Fields */}
