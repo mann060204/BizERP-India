@@ -227,6 +227,10 @@ export default function BulkAddItemsPage() {
         enableTracking: !!r.enableTracking,
         printBatchNo: !!r.printBatchNo,
         printExpiryDate: !!r.printExpiryDate,
+        cessRate: Number(r.cessRate) || 0,
+        igstRate: Number(r.igstRate) || 0,
+        conversionRate: Number(r.conversionRate) || 1,
+        notForSale: !!r.notForSale,
         type: 'product',
       }));
       await productsApi.bulkCreate({ products: payload });
@@ -257,7 +261,7 @@ export default function BulkAddItemsPage() {
         const numCol = (row: string[], name: string) => col(row, name) || '';
         const boolCol = (row: string[], name: string) => col(row, name).toUpperCase() === 'TRUE';
 
-        const importedRows = lines.slice(1)
+         const importedRows = lines.slice(1)
           .map(l => parseCSVLine(l))
           .map((row, i) => ({
             id: Date.now() + i,
@@ -278,12 +282,15 @@ export default function BulkAddItemsPage() {
             saleDiscountType: col(row, 'sale discount type') || 'percentage',
             unit: col(row, 'unit') || 'Nos',
             secondaryUnit: col(row, 'secondary unit'),
+            conversionRate: numCol(row, 'conversion rate') || '1',
             openingStock: numCol(row, 'opening stock'),
             openingStockValue: numCol(row, 'opening stock value (rs)'),
-            reorderLevel: numCol(row, 'low level limit') || '5',
+            reorderLevel: numCol(row, 'reorder level') || '5',
             lowLevelLimit: numCol(row, 'low level limit'),
             hsnCode: col(row, 'hsn / sac code'),
             gstRate: numCol(row, 'gst rate (%)') || '0',
+            cessRate: numCol(row, 'cess rate (%)') || '0',
+            igstRate: numCol(row, 'igst rate (%)') || '0',
             productType: col(row, 'product type') || 'General',
             location: col(row, 'location/rack'),
             batchNo: col(row, 'batch no.'),
@@ -293,6 +300,7 @@ export default function BulkAddItemsPage() {
             enableTracking: boolCol(row, 'enable tracking'),
             printBatchNo: boolCol(row, 'print batch no'),
             printExpiryDate: boolCol(row, 'print expiry date'),
+            notForSale: boolCol(row, 'not for sale'),
           }))
           .filter(r => r.name.trim() !== '');
 

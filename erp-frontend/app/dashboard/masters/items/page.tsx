@@ -190,12 +190,14 @@ export default function MastersPage() {
         'Item Code / SKU', 'Product Name', 'Print Name',
         'Purchase Price (Rs)', 'MRP (Rs)',
         'Sale Price 1 (Retail) (Rs)', 'Sale Price 2 (Wholesale) (Rs)', 'Sale Price 3 (Rs)', 'Min. Sale Price (Rs)',
-        'Unit', 'Secondary Unit', 'Opening Stock', 'Opening Stock Value (Rs)',
-        'HSN / SAC Code', 'GST Rate (%)',
         'Sale Discount', 'Sale Discount Type',
-        'Low Level Limit', 'Product Type', 'Location/Rack', 'Batch No.',
+        'Unit', 'Secondary Unit', 'Conversion Rate',
+        'Opening Stock', 'Opening Stock Value (Rs)', 'Current Stock',
+        'Reorder Level', 'Low Level Limit',
+        'HSN / SAC Code', 'GST Rate (%)', 'Cess Rate (%)', 'IGST Rate (%)',
+        'Product Type', 'Location/Rack', 'Batch No.',
         'Product Description',
-        'Print Description', 'One Click Sale', 'Enable Tracking', 'Print Batch No', 'Print Expiry Date'
+        'Print Description', 'One Click Sale', 'Enable Tracking', 'Print Batch No', 'Print Expiry Date', 'Not For Sale'
       ];
 
       const escape = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
@@ -214,15 +216,20 @@ export default function MastersPage() {
         escape(p.sellingPrice2 || 0),
         escape(p.sellingPrice3 || 0),
         escape(p.minSalePrice || 0),
-        escape(p.unit || ''),
-        escape(p.secondaryUnit || ''),
-        escape(p.openingStock || 0),
-        escape(p.openingStockValue || 0),
-        escape(p.hsnCode || ''),
-        escape(p.gstRate ?? 0),
         escape(p.saleDiscount || 0),
         escape(p.saleDiscountType || 'percentage'),
+        escape(p.unit || ''),
+        escape(p.secondaryUnit || ''),
+        escape(p.conversionRate || 1),
+        escape(p.openingStock || 0),
+        escape(p.openingStockValue || 0),
+        escape(p.currentStock || 0),
+        escape(p.reorderLevel || 0),
         escape(p.lowLevelLimit || 0),
+        escape(p.hsnCode || ''),
+        escape(p.gstRate ?? 0),
+        escape(p.cessRate || 0),
+        escape(p.igstRate || 0),
         escape(p.productType || 'General'),
         escape(p.location || ''),
         escape(p.batchNo || ''),
@@ -232,6 +239,7 @@ export default function MastersPage() {
         escape(p.enableTracking ? 'TRUE' : 'FALSE'),
         escape(p.printBatchNo ? 'TRUE' : 'FALSE'),
         escape(p.printExpiryDate ? 'TRUE' : 'FALSE'),
+        escape(p.notForSale ? 'TRUE' : 'FALSE'),
       ].join(','));
 
       const csvContent = [headers.map(h => `"${h}"`).join(','), ...rowsData].join('\n');
@@ -245,7 +253,7 @@ export default function MastersPage() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast.success(`Exported ${prods.length} products successfully`);
+      toast.success(`Exported ${prods.length} products (${headers.length} fields each)`);
     } catch {
       toast.error('Failed to export products');
     }
