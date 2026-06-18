@@ -5,7 +5,6 @@ import { inventoryApi, productsApi } from '../../../lib/erp-api';
 import { Search, Database, AlertCircle, TrendingDown, TrendingUp, Settings2, Loader2, X, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
-import * as XLSX from 'xlsx';
 
 interface Product { _id: string; name: string; printName?: string; sku?: string; category?: string; group?: string; brand?: string; location?: string; unit: string; secondaryUnit?: string; conversionRate?: number; currentStock: number; reorderLevel: number; lowLevelLimit?: number; purchasePrice: number; sellingPrice?: number; mrp?: number; saleDiscount?: number; saleDiscountType?: string; gstRate?: number; hsnCode?: string; availableBatches?: BatchInfo[]; }
 interface BatchInfo { batchNo: string; currentStock: number; mrp?: number; salePrice?: number; manufacturingDate?: string; expiryDate?: string; }
@@ -120,10 +119,29 @@ export default function InventoryPage() {
         }
       }
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
-      XLSX.writeFile(wb, `Full_Inventory_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+      // Convert rows to CSV
+      const headers = Object.keys(rows[0] || {});
+      const csvLines = [
+        headers.join(','),
+        ...rows.map(row =>
+          headers.map(h => {
+            const val = String(row[h] ?? '');
+            return val.includes(',') || val.includes('"') || val.includes('\n')
+              ? `"${val.replace(/"/g, '""')}"`
+              : val;
+          }).join(',')
+        )
+      ];
+      const csvContent = csvLines.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Full_Inventory_Export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       toast.success(`Exported ${rows.length} rows (${products.length} products)`, { id: toastId });
     } catch (e: any) {
       toast.error('Export failed: ' + (e.message || 'Unknown error'), { id: toastId });
