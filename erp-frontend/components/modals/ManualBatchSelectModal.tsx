@@ -37,16 +37,17 @@ export default function ManualBatchSelectModal({
 }: ManualBatchSelectModalProps) {
   const [selections, setSelections] = useState<{ [batchNo: string]: number }>({});
 
+  // Reset selections whenever the product or requested quantity changes (prevents stale values carrying over)
+  useEffect(() => {
+    setSelections({});
+  }, [requestedQuantity, availableBatches]);
+
   // Close on Escape key
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
-  
-  // Auto-fill initially if we want to save user time (optional, user requested keeping auto-assign, but this is manual select modal)
-  // We'll leave it empty for true manual selection, or pre-fill the first one if total is small.
-  // Actually, user wants a popup to manually select what to sell, so empty by default is safest.
 
   const handleQtyChange = (batchNo: string, qty: string) => {
     const val = parseFloat(qty) || 0;
@@ -59,7 +60,8 @@ export default function ManualBatchSelectModal({
   const totalSelected = Object.values(selections).reduce((a, b) => a + b, 0);
 
   const handleSave = () => {
-    if (totalSelected !== requestedQuantity) {
+    // Use small epsilon to handle floating-point rounding (e.g. 1.0000000000001 === 1)
+    if (Math.abs(totalSelected - requestedQuantity) > 0.001) {
       toast.error(`Total selected quantity (${totalSelected}) must equal requested quantity (${requestedQuantity})`);
       return;
     }
@@ -157,7 +159,7 @@ export default function ManualBatchSelectModal({
           </button>
           <button 
             onClick={handleSave} 
-            disabled={totalSelected !== requestedQuantity}
+            disabled={Math.abs(totalSelected - requestedQuantity) > 0.001}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white rounded transition flex items-center gap-2 font-medium text-sm"
           >
             <Save className="w-4 h-4" /> Confirm Selection
