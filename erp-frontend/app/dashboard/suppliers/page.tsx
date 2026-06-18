@@ -77,10 +77,13 @@ export default function SuppliersPage() {
                 { header: 'Mobile', key: 'mobile' },
                 { header: 'Email', key: 'email' },
                 { header: 'GSTIN', key: 'gstin' },
-                { header: 'PAN', key: 'pan' },
+                { header: 'PAN No', key: 'pan' },
+                { header: 'Trade Name', key: 'tradeName' },
+                { header: 'Opening Balance', key: 'openingBalance' },
+                { header: 'Street', render: (s) => s.address?.street || '' },
                 { header: 'City', render: (s) => s.address?.city || '' },
                 { header: 'State', render: (s) => s.address?.state || '' },
-                { header: 'Balance', render: (s) => formatAccountingBalance(s.currentBalance || 0, 'supplier').text }
+                { header: 'Pincode', render: (s) => s.address?.pinCode || s.address?.pincode || '' }
               ]}
             />
             <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary text-white font-semibold text-sm transition shadow-lg shadow-primary/20">

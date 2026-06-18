@@ -2,12 +2,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
 import { inventoryApi, productsApi } from '../../../lib/erp-api';
-import { Search, Database, AlertCircle, TrendingDown, TrendingUp, Settings2, Loader2, X } from 'lucide-react';
+import { Search, Database, AlertCircle, TrendingDown, TrendingUp, Settings2, Loader2, X, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
+import * as XLSX from 'xlsx';
 
-interface Product { _id: string; name: string; sku?: string; category?: string; location?: string; unit: string; currentStock: number; reorderLevel: number; purchasePrice: number; }
-interface BatchInfo { batchNo: string; currentStock: number; mrp?: number; salePrice?: number; }
+interface Product { _id: string; name: string; printName?: string; sku?: string; category?: string; group?: string; brand?: string; location?: string; unit: string; secondaryUnit?: string; conversionRate?: number; currentStock: number; reorderLevel: number; lowLevelLimit?: number; purchasePrice: number; sellingPrice?: number; mrp?: number; saleDiscount?: number; saleDiscountType?: string; gstRate?: number; hsnCode?: string; availableBatches?: BatchInfo[]; }
+interface BatchInfo { batchNo: string; currentStock: number; mrp?: number; salePrice?: number; manufacturingDate?: string; expiryDate?: string; }
 
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<Product[]>([]);
@@ -62,6 +63,75 @@ export default function InventoryPage() {
     finally { setSaving(false); }
   };
 
+  const [exportingFull, setExportingFull] = useState(false);
+  const fullExportWithBatches = async () => {
+    setExportingFull(true);
+    const toastId = toast.loading('Preparing full inventory export...');
+    try {
+      const { data } = await productsApi.list({ limit: 1000, type: 'product' });
+      const products: Product[] = data.products || [];
+      const rows: any[] = [];
+
+      for (const p of products) {
+        const batches: BatchInfo[] = p.availableBatches || [];
+        const baseRow = {
+          'Name': p.name || '',
+          'Print Name': p.printName || '',
+          'SKU': p.sku || '',
+          'Category': p.category || '',
+          'Group': p.group || '',
+          'Brand': p.brand || '',
+          'Unit': p.unit || '',
+          'Secondary Unit': p.secondaryUnit || '',
+          'Conversion Rate': p.conversionRate || 1,
+          'Selling Price': p.sellingPrice || 0,
+          'Purchase Price': p.purchasePrice || 0,
+          'MRP': p.mrp || 0,
+          'Sale Discount': p.saleDiscount || 0,
+          'Discount Type': p.saleDiscountType || 'percentage',
+          'GST %': p.gstRate || 0,
+          'HSN Code': p.hsnCode || '',
+          'Location': p.location || '',
+          'Reorder Level': p.reorderLevel || 0,
+          'Low Level Limit': p.lowLevelLimit || 0,
+          'Stock': p.currentStock || 0,
+          'Batch No': '',
+          'Batch Stock': '',
+          'Batch Sale Price': '',
+          'Batch MRP': '',
+          'Mfg Date': '',
+          'Expiry Date': '',
+        };
+
+        if (batches.length > 0) {
+          for (const b of batches) {
+            rows.push({
+              ...baseRow,
+              'Batch No': b.batchNo || '',
+              'Batch Stock': b.currentStock || 0,
+              'Batch Sale Price': b.salePrice || '',
+              'Batch MRP': b.mrp || '',
+              'Mfg Date': b.manufacturingDate ? new Date(b.manufacturingDate).toISOString().split('T')[0] : '',
+              'Expiry Date': b.expiryDate ? new Date(b.expiryDate).toISOString().split('T')[0] : '',
+            });
+          }
+        } else {
+          rows.push(baseRow);
+        }
+      }
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+      XLSX.writeFile(wb, `Full_Inventory_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success(`Exported ${rows.length} rows (${products.length} products)`, { id: toastId });
+    } catch (e: any) {
+      toast.error('Export failed: ' + (e.message || 'Unknown error'), { id: toastId });
+    } finally {
+      setExportingFull(false);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Topbar title="Inventory Management" />
@@ -100,19 +170,38 @@ export default function InventoryPage() {
               </button>
             ))}
           </div>
-          <ExportDropdown 
-            data={inventory}
-            filename={`Inventory_Export_${filter}`}
-            columns={[
-              { header: 'Product Name', key: 'name' },
-              { header: 'SKU', key: 'sku' },
-              { header: 'Category', key: 'category' },
-              { header: 'Current Stock', render: (p) => `${parseFloat((p.currentStock || 0).toFixed(2))} ${p.unit}` },
-              { header: 'Reorder Level', key: 'reorderLevel' },
-              { header: 'Purchase Price', render: (p) => (p.purchasePrice || 0).toFixed(2) },
-              { header: 'Stock Value', render: (p) => (p.currentStock * p.purchasePrice).toFixed(2) }
-            ]}
-          />
+            <ExportDropdown 
+              data={inventory}
+              filename={`Inventory_Export_${filter}`}
+              columns={[
+                { header: 'Name', key: 'name' },
+                { header: 'Print Name', key: 'printName' },
+                { header: 'SKU', key: 'sku' },
+                { header: 'Category', key: 'category' },
+                { header: 'Group', key: 'group' },
+                { header: 'Brand', key: 'brand' },
+                { header: 'Unit', key: 'unit' },
+                { header: 'Secondary Unit', key: 'secondaryUnit' },
+                { header: 'Conversion Rate', key: 'conversionRate' },
+                { header: 'Selling Price', key: 'sellingPrice' },
+                { header: 'Purchase Price', key: 'purchasePrice' },
+                { header: 'MRP', key: 'mrp' },
+                { header: 'Sale Discount', key: 'saleDiscount' },
+                { header: 'Discount Type', key: 'saleDiscountType' },
+                { header: 'GST %', key: 'gstRate' },
+                { header: 'HSN Code', key: 'hsnCode' },
+                { header: 'Stock', render: (p) => p.currentStock || 0 }
+              ]}
+            />
+            <button
+              onClick={fullExportWithBatches}
+              disabled={exportingFull}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-semibold text-sm transition shadow-sm disabled:opacity-60 whitespace-nowrap"
+              title="Export ALL product data including batches. Re-upload this file via Bulk Import."
+            >
+              {exportingFull ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+              Full Export (with Batches)
+            </button>
         </div>
 
         {/* Table */}

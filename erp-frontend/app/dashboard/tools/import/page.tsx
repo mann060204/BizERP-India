@@ -4,7 +4,7 @@ import Topbar from '../../../../components/layout/Topbar';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Info, Download } from 'lucide-react';
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
-import { productsApi, customersApi, suppliersApi } from '../../../../lib/erp-api';
+import { productsApi, customersApi, suppliersApi, inventoryApi } from '../../../../lib/erp-api';
 
 type ImportType = 'products' | 'customers' | 'suppliers';
 
@@ -19,8 +19,8 @@ export default function BulkImportPage() {
     let headers = '';
     let filename = '';
     if (importType === 'products') {
-      headers = 'Name,Print Name,SKU,Category,Group,Brand,Unit,Secondary Unit,Conversion Rate,Purchase Price,Selling Price,MRP,Sale Discount,Discount Type,GST %,HSN Code,Stock\n"Sample Item","Sample P-Name","SKU001","General","Main Group","Brand X","Nos","Box","10","80","100","120","5","percentage","18","1234","50"';
-      filename = 'products_import_template.csv';
+      headers = 'Name,Print Name,SKU,Category,Group,Brand,Unit,Secondary Unit,Conversion Rate,Selling Price,Purchase Price,MRP,Sale Discount,Discount Type,GST %,HSN Code,Location,Reorder Level,Low Level Limit,Stock,Batch No,Batch Stock,Batch Sale Price,Batch MRP,Mfg Date,Expiry Date\n"Sample Item","Sample P-Name","SKU001","General","Main Group","Brand X","Nos","Box","10","100","80","120","5","percentage","18","1234","Rack A","5","0","50","BATCH-001","50","100","120","2025-01-01","2026-12-31"';
+      filename = 'full_inventory_import_template.csv';
     } else if (importType === 'suppliers') {
       headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Opening Balance,Street,City,State,Pincode\n"Supplier ABC","9876543211","supplier@example.com","27AADCB2230M1Z3","ABCDE1234G","ABC Enterprises","0","123 Industrial St","Pune","Maharashtra","411001"';
       filename = 'suppliers_import_template.csv';
@@ -71,30 +71,46 @@ export default function BulkImportPage() {
 
     try {
       if (importType === 'products') {
-        const payload = {
-          products: data.map(item => ({
-            name: item.name || item.Name,
-            printName: item.printName || item['Print Name'] || '',
-            sku: item.sku || item.SKU || '',
-            category: item.category || item.Category || 'General',
-            group: item.group || item.Group || '',
-            brand: item.brand || item.Brand || '',
-            unit: item.unit || item.Unit || 'Nos',
-            secondaryUnit: item.secondaryUnit || item['Secondary Unit'] || '',
-            conversionRate: parseFloat(item.conversionRate || item['Conversion Rate'] || '1'),
-            sellingPrice: parseFloat(item.sellingPrice || item['Selling Price'] || '0'),
-            purchasePrice: parseFloat(item.purchasePrice || item['Purchase Price'] || '0'),
-            mrp: parseFloat(item.mrp || item.MRP || '0'),
-            saleDiscount: parseFloat(item.saleDiscount || item['Sale Discount'] || '0'),
-            saleDiscountType: (item.saleDiscountType || item['Discount Type'] || 'percentage').toLowerCase(),
-            gstRate: parseFloat(item.gstRate || item['GST %'] || '18'),
-            hsnCode: item.hsnCode || item['HSN Code'] || '',
-            openingStock: parseFloat(item.openingStock || item.Stock || '0'),
-            isActive: true
-          }))
-        };
-        const res = await productsApi.bulkCreate(payload);
-        toast.success(res.data.message);
+        // Detect if this is a full inventory export (with batch columns)
+        const firstRow = data[0] || {};
+        const hasFullInventoryFormat = 'Batch No' in firstRow || 'Batch Stock' in firstRow ||
+          'Location' in firstRow || 'Reorder Level' in firstRow || 'Mfg Date' in firstRow;
+
+        if (hasFullInventoryFormat) {
+          // Use the dedicated full inventory bulk-import endpoint
+          const res = await inventoryApi.bulkImport({ records: data });
+          toast.success(res.data.message);
+          if (res.data.errors?.length > 0) {
+            console.warn('Import errors:', res.data.errors);
+            toast(`${res.data.errors.length} rows had errors — check console`, { icon: '⚠️' });
+          }
+        } else {
+          // Legacy simple product import
+          const payload = {
+            products: data.map(item => ({
+              name: item.name || item.Name,
+              printName: item.printName || item['Print Name'] || '',
+              sku: item.sku || item.SKU || '',
+              category: item.category || item.Category || 'General',
+              group: item.group || item.Group || '',
+              brand: item.brand || item.Brand || '',
+              unit: item.unit || item.Unit || 'Nos',
+              secondaryUnit: item.secondaryUnit || item['Secondary Unit'] || '',
+              conversionRate: parseFloat(item.conversionRate || item['Conversion Rate'] || '1'),
+              sellingPrice: parseFloat(item.sellingPrice || item['Selling Price'] || '0'),
+              purchasePrice: parseFloat(item.purchasePrice || item['Purchase Price'] || '0'),
+              mrp: parseFloat(item.mrp || item.MRP || '0'),
+              saleDiscount: parseFloat(item.saleDiscount || item['Sale Discount'] || '0'),
+              saleDiscountType: (item.saleDiscountType || item['Discount Type'] || 'percentage').toLowerCase(),
+              gstRate: parseFloat(item.gstRate || item['GST %'] || '18'),
+              hsnCode: item.hsnCode || item['HSN Code'] || '',
+              openingStock: parseFloat(item.openingStock || item.Stock || '0'),
+              isActive: true
+            }))
+          };
+          const res = await productsApi.bulkCreate(payload);
+          toast.success(res.data.message);
+        }
       } else if (importType === 'suppliers') {
         const payload = {
           suppliers: data.map(item => ({
@@ -200,9 +216,11 @@ export default function BulkImportPage() {
                   <p className="text-slate-600 text-xs leading-relaxed mb-3">Ensure your CSV contains column headers in the first row. The system will automatically attempt to match common header names.</p>
                   
                   {importType === 'products' ? (
-                    <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
                       Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, Print Name, SKU, Category, Group, Brand, Unit, Secondary Unit, Conversion Rate, <span className="text-emerald-400">Selling Price</span>, Purchase Price, MRP, Sale Discount, Discount Type, GST %, HSN Code, Stock
+                      <span className="text-emerald-400">Name</span>, Print Name, SKU, Category, Group, Brand, Unit, Secondary Unit, Conversion Rate, <span className="text-emerald-400">Selling Price</span>, Purchase Price, MRP, Sale Discount, Discount Type, GST %, HSN Code, Location, Reorder Level, Low Level Limit, Stock<br/>
+                      <span className="text-blue-400 mt-1 block">+ Batch columns (optional):</span>
+                      Batch No, Batch Stock, Batch Sale Price, Batch MRP, Mfg Date, Expiry Date
                     </div>
                   ) : importType === 'suppliers' ? (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">

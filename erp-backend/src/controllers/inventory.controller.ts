@@ -5,6 +5,7 @@ import InventoryAdjustment from '../models/InventoryAdjustment.model';
 import Batch from '../models/Batch.model';
 import BatchLog from '../models/BatchLog.model';
 import Business from '../models/Business.model';
+import mongoose from 'mongoose';
 
 // GET /api/v1/inventory
 export const getInventoryLevels = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -362,5 +363,137 @@ export const saveBatch = async (req: AuthRequest, res: Response): Promise<void> 
     }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// POST /api/v1/inventory/bulk-import
+export const bulkImportInventory = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { records } = req.body;
+    if (!Array.isArray(records) || records.length === 0) {
+      res.status(400).json({ message: 'records array is required' });
+      return;
+    }
+
+    const businessId = req.user!.businessId;
+    let createdProducts = 0;
+    let updatedProducts = 0;
+    let createdBatches = 0;
+    let updatedBatches = 0;
+    const errors: string[] = [];
+
+    for (const row of records) {
+      try {
+        // --- Find or create product ---
+        const sku = (row.SKU || row.sku || '').trim();
+        const name = (row.Name || row.name || '').trim();
+        if (!name) { errors.push(`Skipped row: Name is required`); continue; }
+
+        let product: any = null;
+        if (sku) {
+          product = await Product.findOne({ businessId, sku, isActive: true });
+        }
+        if (!product) {
+          product = await Product.findOne({ businessId, name, isActive: true });
+        }
+
+        const productData: any = {
+          name,
+          printName: row['Print Name'] || row.printName || '',
+          sku: sku || undefined,
+          category: row.Category || row.category || '',
+          group: row.Group || row.group || '',
+          brand: row.Brand || row.brand || '',
+          unit: row.Unit || row.unit || 'Nos',
+          secondaryUnit: row['Secondary Unit'] || row.secondaryUnit || '',
+          conversionRate: parseFloat(row['Conversion Rate'] || row.conversionRate || '1') || 1,
+          sellingPrice: parseFloat(row['Selling Price'] || row.sellingPrice || '0') || 0,
+          purchasePrice: parseFloat(row['Purchase Price'] || row.purchasePrice || '0') || 0,
+          mrp: parseFloat(row['MRP'] || row.mrp || '0') || 0,
+          saleDiscount: parseFloat(row['Sale Discount'] || row.saleDiscount || '0') || 0,
+          saleDiscountType: (row['Discount Type'] || row.saleDiscountType || 'percentage').toLowerCase(),
+          gstRate: parseFloat(row['GST %'] || row.gstRate || '0') || 0,
+          hsnCode: row['HSN Code'] || row.hsnCode || '',
+          location: row['Location'] || row.location || '',
+          reorderLevel: parseFloat(row['Reorder Level'] || row.reorderLevel || '5') || 5,
+          lowLevelLimit: parseFloat(row['Low Level Limit'] || row.lowLevelLimit || '0') || 0,
+        };
+
+        const batchNo = (row['Batch No'] || row.batchNo || row['Batch Number'] || '').trim();
+        const batchStock = parseFloat(row['Batch Stock'] || row.batchStock || '0') || 0;
+        const hasValidBatch = batchNo.length > 0;
+
+        if (!product) {
+          // Create new product
+          const openingStock = hasValidBatch ? 0 : (parseFloat(row['Stock'] || row.openingStock || '0') || 0);
+          const newProduct = await Product.create({
+            ...productData,
+            businessId,
+            type: 'product',
+            openingStock,
+            currentStock: openingStock,
+            isActive: true,
+          });
+          product = newProduct;
+          createdProducts++;
+        } else {
+          // Update existing product fields (except stock — handled via batches or separately)
+          await Product.findByIdAndUpdate(product._id, productData);
+          updatedProducts++;
+        }
+
+        // --- Handle batch ---
+        if (hasValidBatch) {
+          const batchUpdate: any = {
+            $set: {
+              salePrice: parseFloat(row['Batch Sale Price'] || row['Selling Price'] || row.sellingPrice || '0') || 0,
+              mrp: parseFloat(row['Batch MRP'] || row['MRP'] || row.mrp || '0') || 0,
+              isActive: true,
+            }
+          };
+          const mfgDate = row['Mfg Date'] || row['Manufacturing Date'] || row.manufacturingDate || '';
+          const expDate = row['Expiry Date'] || row.expiryDate || '';
+          if (mfgDate) batchUpdate.$set.manufacturingDate = new Date(mfgDate);
+          if (expDate) batchUpdate.$set.expiryDate = new Date(expDate);
+
+          const existingBatch = await Batch.findOne({ businessId, productId: product._id, batchNo });
+          if (existingBatch) {
+            const diff = batchStock - existingBatch.currentStock;
+            if (diff !== 0) batchUpdate.$inc = { currentStock: diff };
+            await Batch.findByIdAndUpdate(existingBatch._id, batchUpdate, { new: true });
+            if (diff !== 0) {
+              await Product.findByIdAndUpdate(product._id, { $inc: { currentStock: diff } });
+            }
+            updatedBatches++;
+          } else {
+            await Batch.create({
+              businessId,
+              productId: product._id,
+              batchNo,
+              currentStock: batchStock,
+              salePrice: parseFloat(row['Batch Sale Price'] || row['Selling Price'] || row.sellingPrice || '0') || 0,
+              mrp: parseFloat(row['Batch MRP'] || row['MRP'] || row.mrp || '0') || 0,
+              manufacturingDate: mfgDate ? new Date(mfgDate) : undefined,
+              expiryDate: expDate ? new Date(expDate) : undefined,
+              isActive: true,
+            });
+            if (batchStock > 0) {
+              await Product.findByIdAndUpdate(product._id, { $inc: { currentStock: batchStock } });
+            }
+            createdBatches++;
+          }
+        }
+      } catch (rowErr: any) {
+        errors.push(`Row error (${row.Name || row.name || 'unknown'}): ${rowErr.message}`);
+      }
+    }
+
+    res.status(200).json({
+      message: `Import complete. ${createdProducts} products created, ${updatedProducts} updated, ${createdBatches} batches created, ${updatedBatches} batches updated.`,
+      createdProducts, updatedProducts, createdBatches, updatedBatches,
+      errors: errors.slice(0, 20),
+    });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
   }
 };

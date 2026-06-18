@@ -60,9 +60,14 @@ export default function CustomersPage() {
                 { header: 'Mobile', key: 'mobile' },
                 { header: 'Email', key: 'email' },
                 { header: 'GSTIN', key: 'gstin' },
+                { header: 'PAN No', key: 'panNo' },
+                { header: 'Trade Name', key: 'tradeName' },
+                { header: 'Credit Limit', key: 'creditLimit' },
+                { header: 'Opening Balance', key: 'openingBalance' },
+                { header: 'Street', render: (c) => c.billingAddress?.street || '' },
                 { header: 'City', render: (c) => c.billingAddress?.city || '' },
                 { header: 'State', render: (c) => c.billingAddress?.state || '' },
-                { header: 'Balance', render: (c) => formatAccountingBalance(c.currentBalance || 0, 'customer').text }
+                { header: 'Pincode', render: (c) => c.billingAddress?.pincode || '' }
               ]}
             />
             <Link href="/dashboard/customers/new" className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-white/10/30">

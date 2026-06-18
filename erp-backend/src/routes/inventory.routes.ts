@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getInventoryLevels, adjustInventory, getAdjustments, autoSequenceBatches, getBatchAlerts, getBatchLogs, listBatches, saveBatch } from '../controllers/inventory.controller';
+import { getInventoryLevels, adjustInventory, getAdjustments, autoSequenceBatches, getBatchAlerts, getBatchLogs, listBatches, saveBatch, bulkImportInventory } from '../controllers/inventory.controller';
 import { protect, checkLockedFY } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -14,5 +14,6 @@ router.get('/batch-alerts', getBatchAlerts);
 router.get('/batch-logs', getBatchLogs);
 router.get('/batches', listBatches);
 router.post('/batches', saveBatch);
+router.post('/bulk-import', bulkImportInventory);
 
 export default router;
