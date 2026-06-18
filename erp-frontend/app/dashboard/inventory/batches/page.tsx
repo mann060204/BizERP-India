@@ -57,7 +57,7 @@ export default function BatchNumbersPage() {
     setLoadingBatches(true);
     try {
       const { data } = await inventoryApi.listBatches({ search: batchSearch });
-      setBatches(data.batches || []);
+      setBatches((data.batches || []).filter((b: any) => b.currentStock > 0));
     } catch { toast.error('Failed to load batches'); }
     finally { setLoadingBatches(false); }
   }, [batchSearch]);
