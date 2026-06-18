@@ -68,72 +68,93 @@ export default function InventoryPage() {
     const toastId = toast.loading('Preparing full inventory export...');
     try {
       const { data } = await productsApi.list({ limit: 1000, type: 'product' });
-      const products: Product[] = data.products || [];
+      const products: any[] = data.products || [];
       const rows: any[] = [];
+
+      const escape = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+
+      const headers = [
+        'Category', 'Brand', 'Group', 'SubGroup',
+        'Item Code / SKU', 'Product Name', 'Print Name',
+        'Purchase Price (Rs)', 'MRP (Rs)',
+        'Sale Price 1 (Retail) (Rs)', 'Sale Price 2 (Wholesale) (Rs)', 'Sale Price 3 (Rs)', 'Min. Sale Price (Rs)',
+        'Sale Discount', 'Sale Discount Type',
+        'Unit', 'Secondary Unit', 'Conversion Rate',
+        'Opening Stock', 'Opening Stock Value (Rs)', 'Current Stock',
+        'Reorder Level', 'Low Level Limit',
+        'HSN / SAC Code', 'GST Rate (%)', 'Cess Rate (%)', 'IGST Rate (%)',
+        'Product Type', 'Location/Rack', 'Batch No.',
+        'Product Description',
+        'Print Description', 'One Click Sale', 'Enable Tracking', 'Print Batch No', 'Print Expiry Date', 'Not For Sale',
+        // Batch detail columns
+        'Batch No (Detail)', 'Batch Stock', 'Batch Sale Price', 'Batch MRP', 'Mfg Date', 'Expiry Date',
+      ];
 
       for (const p of products) {
         const batches: BatchInfo[] = p.availableBatches || [];
-        const baseRow = {
-          'Name': p.name || '',
-          'Print Name': p.printName || '',
-          'SKU': p.sku || '',
-          'Category': p.category || '',
-          'Group': p.group || '',
-          'Brand': p.brand || '',
-          'Unit': p.unit || '',
-          'Secondary Unit': p.secondaryUnit || '',
-          'Conversion Rate': p.conversionRate || 1,
-          'Selling Price': p.sellingPrice || 0,
-          'Purchase Price': p.purchasePrice || 0,
-          'MRP': p.mrp || 0,
-          'Sale Discount': p.saleDiscount || 0,
-          'Discount Type': p.saleDiscountType || 'percentage',
-          'GST %': p.gstRate || 0,
-          'HSN Code': p.hsnCode || '',
-          'Location': p.location || '',
-          'Reorder Level': p.reorderLevel || 0,
-          'Low Level Limit': p.lowLevelLimit || 0,
-          'Stock': p.currentStock || 0,
-          'Batch No': '',
-          'Batch Stock': '',
-          'Batch Sale Price': '',
-          'Batch MRP': '',
-          'Mfg Date': '',
-          'Expiry Date': '',
-        };
+        const baseValues = [
+          escape(p.category || ''),
+          escape(p.brand || ''),
+          escape(p.group || ''),
+          escape(p.subGroup || ''),
+          escape(p.sku || ''),
+          escape(p.name || ''),
+          escape(p.printName || ''),
+          escape(p.purchasePrice || 0),
+          escape(p.mrp || 0),
+          escape(p.sellingPrice || 0),
+          escape(p.sellingPrice2 || 0),
+          escape(p.sellingPrice3 || 0),
+          escape(p.minSalePrice || 0),
+          escape(p.saleDiscount || 0),
+          escape(p.saleDiscountType || 'percentage'),
+          escape(p.unit || ''),
+          escape(p.secondaryUnit || ''),
+          escape(p.conversionRate || 1),
+          escape(p.openingStock || 0),
+          escape(p.openingStockValue || 0),
+          escape(p.currentStock || 0),
+          escape(p.reorderLevel || 0),
+          escape(p.lowLevelLimit || 0),
+          escape(p.hsnCode || ''),
+          escape(p.gstRate ?? 0),
+          escape(p.cessRate || 0),
+          escape(p.igstRate || 0),
+          escape(p.productType || 'General'),
+          escape(p.location || ''),
+          escape(p.batchNo || ''),
+          escape(p.description || ''),
+          escape(p.printDescription ? 'TRUE' : 'FALSE'),
+          escape(p.oneClickSale ? 'TRUE' : 'FALSE'),
+          escape(p.enableTracking ? 'TRUE' : 'FALSE'),
+          escape(p.printBatchNo ? 'TRUE' : 'FALSE'),
+          escape(p.printExpiryDate ? 'TRUE' : 'FALSE'),
+          escape(p.notForSale ? 'TRUE' : 'FALSE'),
+        ];
 
         if (batches.length > 0) {
           for (const b of batches) {
-            rows.push({
-              ...baseRow,
-              'Batch No': b.batchNo || '',
-              'Batch Stock': b.currentStock || 0,
-              'Batch Sale Price': b.salePrice || '',
-              'Batch MRP': b.mrp || '',
-              'Mfg Date': b.manufacturingDate ? new Date(b.manufacturingDate).toISOString().split('T')[0] : '',
-              'Expiry Date': b.expiryDate ? new Date(b.expiryDate).toISOString().split('T')[0] : '',
-            });
+            rows.push([
+              ...baseValues,
+              escape(b.batchNo || ''),
+              escape(b.currentStock || 0),
+              escape(b.salePrice || ''),
+              escape(b.mrp || ''),
+              escape(b.manufacturingDate ? new Date(b.manufacturingDate).toISOString().split('T')[0] : ''),
+              escape(b.expiryDate ? new Date(b.expiryDate).toISOString().split('T')[0] : ''),
+            ].join(','));
           }
         } else {
-          rows.push(baseRow);
+          rows.push([
+            ...baseValues,
+            escape(''), escape(''), escape(''), escape(''), escape(''), escape(''),
+          ].join(','));
         }
       }
 
-      // Convert rows to CSV
-      const headers = Object.keys(rows[0] || {});
-      const csvLines = [
-        headers.join(','),
-        ...rows.map(row =>
-          headers.map(h => {
-            const val = String(row[h] ?? '');
-            return val.includes(',') || val.includes('"') || val.includes('\n')
-              ? `"${val.replace(/"/g, '""')}"`
-              : val;
-          }).join(',')
-        )
-      ];
-      const csvContent = csvLines.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const BOM = '\uFEFF';
+      const csvContent = [headers.map(h => `"${h}"`).join(','), ...rows].join('\n');
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -142,7 +163,7 @@ export default function InventoryPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success(`Exported ${rows.length} rows (${products.length} products)`, { id: toastId });
+      toast.success(`Exported ${rows.length} rows (${products.length} products) — ${headers.length} columns`, { id: toastId });
     } catch (e: any) {
       toast.error('Export failed: ' + (e.message || 'Unknown error'), { id: toastId });
     } finally {
