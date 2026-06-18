@@ -309,16 +309,15 @@ export default function NewInvoicePage() {
     let initialRate = defaultUnit === p.secondaryUnit && p.secSalePrice ? p.secSalePrice : primaryRate;
     let initialMrp = p.mrp || p.sellingPrice;
     let initialBatchNo = '';
-    
-    if (p.batches && p.batches.length > 0) {
-      const b = p.batches[0];
-      initialBatchNo = b.batchNo;
-      initialRate = b.salePrice;
-      initialMrp = b.mrp;
-    }
 
-    setItemInput(prev => ({
-      ...prev,
+    setItemSearch(p.name);
+    setShowItemDD(false);
+
+    const available = p.availableBatches || p.batches || [];
+
+    // Build the item input snapshot
+    const newInput = {
+      ...itemInput,
       productId: p._id,
       productName: p.name,
       hsnCode: p.hsnCode || '',
@@ -335,9 +334,18 @@ export default function NewInvoicePage() {
       secSalePrice: p.secSalePrice,
       conversionRate: p.conversionRate,
       selectedBaseRate: initialRate
-    }));
-    setItemSearch(p.name);
-    setShowItemDD(false);
+    };
+    setItemInput(newInput);
+
+    // If product has batches, show batch selector immediately on product pick
+    if (available.length > 0) {
+      setPendingBatchItem({
+        product: p,
+        quantity: newInput.quantity,
+        itemInputData: { ...newInput }
+      });
+      setShowBatchModal(true);
+    }
 
     if (selectedCustomer?._id) {
       try {
@@ -385,19 +393,6 @@ export default function NewInvoicePage() {
 
   const addItem = () => {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
-    
-    const p = products.find(x => x._id === itemInput.productId);
-    const available = p?.availableBatches || p?.batches || [];
-    
-    if (p && available.length > 0 && !itemInput.batchNo) {
-      setPendingBatchItem({
-        product: p,
-        quantity: itemInput.quantity,
-        itemInputData: { ...itemInput }
-      });
-      setShowBatchModal(true);
-      return;
-    }
 
     const newItem = calculateItem(itemInput);
     setLineItems([...lineItems, newItem]);
