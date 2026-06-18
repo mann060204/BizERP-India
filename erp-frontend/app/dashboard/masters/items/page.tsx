@@ -150,7 +150,7 @@ export default function MastersPage() {
       minSalePrice: p.minSalePrice || 0, mrp: p.mrp || 0,
       openingStock: p.openingStock || 0, openingStockValue: p.openingStockValue || 0,
       reorderLevel: p.reorderLevel || 5, lowLevelLimit: p.lowLevelLimit || 0,
-      gstRate: p.gstRate || 18, cessRate: p.cessRate || 0, igstRate: p.igstRate || 0,
+      gstRate: p.gstRate !== undefined && p.gstRate !== null ? p.gstRate : 0, cessRate: p.cessRate || 0, igstRate: p.igstRate || 0,
       saleDiscount: p.saleDiscount || 0, saleDiscountType: p.saleDiscountType || 'percentage',
       location: p.location || '', batchNo: p.batchNo || '',
       description: p.description || '', productType: p.productType || 'General',

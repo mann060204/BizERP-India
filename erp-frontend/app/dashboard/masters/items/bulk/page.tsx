@@ -33,7 +33,7 @@ export default function BulkAddItemsPage() {
   });
 
   // Grid State
-  const emptyRow = { id: Date.now(), name: '', sku: '', purchasePrice: 0, sellingPrice: 0, mrp: 0, openingStock: 0, reorderLevel: 5 };
+  const emptyRow = { id: Date.now(), name: '', sku: '', purchasePrice: 0, sellingPrice: 0, sellingPrice2: 0, sellingPrice3: 0, mrp: 0, openingStock: 0, reorderLevel: 5, location: '', batchNo: '' };
   const [rows, setRows] = useState<any[]>([emptyRow]);
 
   useEffect(() => {
@@ -102,10 +102,14 @@ export default function BulkAddItemsPage() {
         sku: r.sku,
         purchasePrice: Number(r.purchasePrice) || 0,
         sellingPrice: Number(r.sellingPrice) || 0,
+        sellingPrice2: Number(r.sellingPrice2) || 0,
+        sellingPrice3: Number(r.sellingPrice3) || 0,
         mrp: Number(r.mrp) || 0,
         openingStock: Number(r.openingStock) || 0,
         currentStock: Number(r.openingStock) || 0,
         reorderLevel: Number(r.reorderLevel) || 0,
+        location: r.location || '',
+        batchNo: r.batchNo || '',
         type: 'product',
         productType: 'General'
       }));
@@ -226,16 +230,20 @@ export default function BulkAddItemsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
+            <table className="w-full text-left border-collapse min-w-[1800px]">
               <thead>
                 <tr className="bg-slate-100/50 text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
                   <th className="font-semibold p-3 pl-4">Item Name <span className="text-red-400">*</span></th>
-                  <th className="font-semibold p-3 w-32">Code/SKU</th>
-                  <th className="font-semibold p-3 w-32 text-right">Purchase (₹)</th>
-                  <th className="font-semibold p-3 w-32 text-right">Selling (₹)</th>
-                  <th className="font-semibold p-3 w-32 text-right">MRP (₹)</th>
-                  <th className="font-semibold p-3 w-28 text-center">Op. Stock</th>
-                  <th className="font-semibold p-3 w-28 text-center">Min Stock</th>
+                  <th className="font-semibold p-3 w-28">Code/SKU</th>
+                  <th className="font-semibold p-3 w-28 text-right">Purchase (₹)</th>
+                  <th className="font-semibold p-3 w-28 text-right">Sale Price 1 (₹)</th>
+                  <th className="font-semibold p-3 w-28 text-right">Sale Price 2 (₹)</th>
+                  <th className="font-semibold p-3 w-28 text-right">Sale Price 3 (₹)</th>
+                  <th className="font-semibold p-3 w-28 text-right">MRP (₹)</th>
+                  <th className="font-semibold p-3 w-24 text-center">Op. Stock</th>
+                  <th className="font-semibold p-3 w-24 text-center">Min Stock</th>
+                  <th className="font-semibold p-3 w-32">Location/Rack</th>
+                  <th className="font-semibold p-3 w-32">Batch No.</th>
                   <th className="font-semibold p-3 w-12 pr-4 text-center"></th>
                 </tr>
               </thead>
@@ -259,6 +267,14 @@ export default function BulkAddItemsPage() {
                         className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm text-right shadow-sm font-bold text-slate-800" />
                     </td>
                     <td className="p-2">
+                      <input type="number" min="0" value={row.sellingPrice2 || ''} onChange={e => updateRow(row.id, 'sellingPrice2', e.target.value)} placeholder="0" 
+                        className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm text-right shadow-sm font-medium text-purple-600" />
+                    </td>
+                    <td className="p-2">
+                      <input type="number" min="0" value={row.sellingPrice3 || ''} onChange={e => updateRow(row.id, 'sellingPrice3', e.target.value)} placeholder="0" 
+                        className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm text-right shadow-sm font-medium text-primary" />
+                    </td>
+                    <td className="p-2">
                       <input type="number" min="0" value={row.mrp || ''} onChange={e => updateRow(row.id, 'mrp', e.target.value)} placeholder="0" 
                         className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm text-right shadow-sm text-slate-600" />
                     </td>
@@ -269,6 +285,14 @@ export default function BulkAddItemsPage() {
                     <td className="p-2">
                       <input type="number" min="0" value={row.reorderLevel || ''} onChange={e => updateRow(row.id, 'reorderLevel', e.target.value)} placeholder="0" 
                         className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm text-center shadow-sm text-slate-600" />
+                    </td>
+                    <td className="p-2">
+                      <input value={row.location || ''} onChange={e => updateRow(row.id, 'location', e.target.value)} placeholder="Rack / Shelf" 
+                        className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm shadow-sm text-slate-600" />
+                    </td>
+                    <td className="p-2">
+                      <input value={row.batchNo || ''} onChange={e => updateRow(row.id, 'batchNo', e.target.value)} placeholder="e.g. B001" 
+                        className="w-full px-3 py-1.5 rounded bg-white border border-slate-200 focus:border-primary focus:outline-none text-sm shadow-sm font-mono text-slate-600" />
                     </td>
                     <td className="p-2 pr-4 text-center">
                       <button onClick={() => removeRow(row.id)} disabled={rows.length === 1} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition disabled:opacity-30">
