@@ -113,7 +113,7 @@ export default function NewInvoicePage() {
   const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
 
   useEffect(() => {
-    banksApi.list().then((banks: any) => setBanks(banks || []));
+    banksApi.list().then((res: any) => setBanks(res?.banks || res || []));
   }, []);
 
   useEffect(() => {

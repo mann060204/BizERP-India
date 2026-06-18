@@ -100,7 +100,7 @@ export default function EditInvoicePage() {
   const [banks, setBanks] = useState<any[]>([]);
 
   useEffect(() => {
-    accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
+    banksApi.list().then((res: any) => setBanks(res?.banks || res || []));
   }, []);
 
   const [amountReceived1, setAmountReceived1] = useState(0);
