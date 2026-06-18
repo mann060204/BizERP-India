@@ -36,6 +36,13 @@ export default function ManualBatchSelectModal({
   onConfirm
 }: ManualBatchSelectModalProps) {
   const [selections, setSelections] = useState<{ [batchNo: string]: number }>({});
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
   
   // Auto-fill initially if we want to save user time (optional, user requested keeping auto-assign, but this is manual select modal)
   // We'll leave it empty for true manual selection, or pre-fill the first one if total is small.
