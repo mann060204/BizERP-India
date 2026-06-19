@@ -376,7 +376,7 @@ export default function QuickPaymentModal({ mode, onClose }: QuickPaymentModalPr
                         >
                           <option value="">-- Select Bank --</option>
                           {banks.map(b => (
-                            <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>
+                            <option key={b._id} value={b._id}>{b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}</option>
                           ))}
                         </select>
                       </div>

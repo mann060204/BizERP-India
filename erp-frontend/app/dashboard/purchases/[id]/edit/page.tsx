@@ -838,7 +838,7 @@ export default function EditPurchasePage() {
                     {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode) && (
                       <select value={paymentBankId} onChange={e => setPaymentBankId(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                         <option value="">-- Select Bank --</option>
-                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}</option>)}
                       </select>
                     )}
                     <div className="relative">

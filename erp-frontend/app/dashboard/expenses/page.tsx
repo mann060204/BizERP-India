@@ -219,7 +219,7 @@ export default function ExpensesPage() {
                     <select value={form.bankAccountId} onChange={e => setForm({ ...form, bankAccountId: e.target.value })}
                       className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
                       <option value="">Select Bank Account...</option>
-                      {bankAccounts.map(b => <option key={b._id} value={b._id}>{b.bankName} - {b.accountNumber}</option>)}
+                      {bankAccounts.map(b => <option key={b._id} value={b._id}>{b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}</option>)}
                     </select>
                   </div>
                 )}

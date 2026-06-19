@@ -100,7 +100,7 @@ export default function EditInvoicePage() {
   const [banks, setBanks] = useState<any[]>([]);
 
   useEffect(() => {
-    banksApi.list().then((res: any) => setBanks(Array.isArray(res) ? res : (res?.data || res?.banks || [])));
+    accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
   }, []);
 
   const [amountReceived1, setAmountReceived1] = useState(0);
@@ -1096,10 +1096,10 @@ export default function EditInvoicePage() {
                     <>
                       <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                         <option value="">-- Select Bank --</option>
-                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}</option>)}
                       </select>
                       {banks.length === 0 && (
-                        <a href="/dashboard/masters/banks" target="_blank" className="text-[9px] text-blue-600 underline hover:text-blue-800">⚠️ No banks found. Click to add bank account →</a>
+                        <a href="/dashboard/accounts/Bank" target="_blank" className="text-[9px] text-blue-600 underline hover:text-blue-800">⚠️ No banks found. Click to add bank account →</a>
                       )}
                     </>
                   )}
@@ -1123,10 +1123,10 @@ export default function EditInvoicePage() {
                     <>
                       <select value={bankId2} onChange={e => setBankId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                         <option value="">-- Select Bank --</option>
-                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.name} {b.accountNumber ? `(${b.accountNumber})` : ''}</option>)}
                       </select>
                       {banks.length === 0 && (
-                        <a href="/dashboard/masters/banks" target="_blank" className="text-[9px] text-blue-600 underline hover:text-blue-800">⚠️ No banks found. Click to add bank account →</a>
+                        <a href="/dashboard/accounts/Bank" target="_blank" className="text-[9px] text-blue-600 underline hover:text-blue-800">⚠️ No banks found. Click to add bank account →</a>
                       )}
                     </>
                   )}
