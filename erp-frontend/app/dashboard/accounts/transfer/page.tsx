@@ -46,8 +46,7 @@ export default function CashBankTransferPage() {
       const res = await accountsApi.list();
       const all: Account[] = res.accounts || [];
       setAccounts(all);
-      // "Cash" type accounts — you can also filter by name containing "cash"
-      const cash = all.filter(a => a.type === 'Cash' || a.name.toLowerCase().includes('cash'));
+      const cash = all.filter(a => a.type === 'Cash');
       const banks = all.filter(a => a.type === 'Bank');
       setCashAccounts(cash);
       setBankAccounts(banks);
@@ -375,10 +374,10 @@ export default function CashBankTransferPage() {
                   <div key={acc._id} className="px-5 py-3 flex items-center justify-between group">
                     <div className="flex items-center gap-2.5">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0
-                        ${acc.type === 'Bank' || acc.name.toLowerCase().includes('bank')
+                        ${acc.type === 'Bank'
                           ? 'bg-blue-50 text-blue-600'
                           : 'bg-amber-50 text-amber-600'}`}>
-                        {acc.type === 'Bank' || acc.name.toLowerCase().includes('bank')
+                        {acc.type === 'Bank'
                           ? <Landmark className="w-4 h-4" />
                           : <Wallet className="w-4 h-4" />}
                       </div>

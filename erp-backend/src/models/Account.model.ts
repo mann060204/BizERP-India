@@ -6,7 +6,7 @@ const mg = require('mongoose');
 export interface IAccount extends Document {
   businessId: mongoose.Types.ObjectId;
   name: string;
-  type: string; // Bank, Loan, Asset, Capital, Income, Tax
+  type: string; // Bank, Loan, Asset, Capital, Income, Tax, Cash
   bankName?: string; // e.g. State Bank of India
   accountNumber?: string; // Optional, mostly for Bank
   openingBalance: number;
@@ -25,7 +25,7 @@ const accountSchema = new mg.Schema(
     type: { 
       type: String, 
       required: true,
-      enum: ['Bank', 'Loan', 'Asset', 'Capital', 'Income', 'Tax']
+      enum: ['Bank', 'Loan', 'Asset', 'Capital', 'Income', 'Tax', 'Cash']
     },
     bankName: { type: String },
     accountNumber: { type: String },

@@ -36,6 +36,7 @@ const NAV_ITEMS = [
   },
   { label: 'Accounts',    href: '/dashboard/accounts',  icon: Landmark,
     subItems: [
+      { label: 'Cash Account',    href: '/dashboard/accounts/Cash' },
       { label: 'Bank Account',    href: '/dashboard/accounts/Bank' },
       { label: 'Loan Account',    href: '/dashboard/accounts/Loan' },
       { label: 'Asset Account',   href: '/dashboard/accounts/Asset' },
