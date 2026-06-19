@@ -42,6 +42,7 @@ const NAV_ITEMS = [
       { label: 'Capital Account', href: '/dashboard/accounts/Capital' },
       { label: 'Other Income',    href: '/dashboard/accounts/Income' },
       { label: 'Tax Payment',     href: '/dashboard/accounts/Tax' },
+      { label: '⇄ Cash ↔ Bank Transfer', href: '/dashboard/accounts/transfer' },
     ]
   },
   { label: 'Customers',   href: '/dashboard/customers', icon: Users },
