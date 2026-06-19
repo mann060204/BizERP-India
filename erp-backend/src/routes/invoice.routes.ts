@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import {
   getInvoices, getInvoice, createInvoice, updateInvoice,
-  updateInvoiceStatus, cancelInvoice, getSalesSummary,
+  updateInvoiceStatus, cancelInvoice, hardDeleteInvoice, getSalesSummary,
   getCustomerLastPrice, getPredictedInvoiceNumber, getPublicInvoice
 } from '../controllers/invoice.controller';
 import { protect, checkLockedFY } from '../middlewares/auth.middleware';
@@ -21,6 +21,7 @@ router.get('/:id', getInvoice);
 router.post('/', createInvoice);
 router.put('/:id', updateInvoice);
 router.put('/:id/status', updateInvoiceStatus);
+router.delete('/:id/hard', hardDeleteInvoice);
 router.delete('/:id', cancelInvoice);
 
 export default router;

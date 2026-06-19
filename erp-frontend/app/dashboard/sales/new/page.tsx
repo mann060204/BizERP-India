@@ -1064,10 +1064,15 @@ export default function NewInvoicePage() {
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
                   {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode1) && (
-                    <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
-                      <option value="">-- Select Bank --</option>
-                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
-                    </select>
+                    <>
+                      <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                        <option value="">-- Select Bank --</option>
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                      </select>
+                      {banks.length === 0 && (
+                        <a href="/dashboard/masters/banks" target="_blank" className="text-[9px] text-blue-600 underline hover:text-blue-800">⚠️ No banks found. Click to add bank account →</a>
+                      )}
+                    </>
                   )}
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
@@ -1086,10 +1091,15 @@ export default function NewInvoicePage() {
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
                   {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode2) && (
-                    <select value={bankId2} onChange={e => setBankId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
-                      <option value="">-- Select Bank --</option>
-                      {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
-                    </select>
+                    <>
+                      <select value={bankId2} onChange={e => setBankId2(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
+                        <option value="">-- Select Bank --</option>
+                        {banks.map(b => <option key={b._id} value={b._id}>{b.bankName} ({b.accountNumber})</option>)}
+                      </select>
+                      {banks.length === 0 && (
+                        <a href="/dashboard/masters/banks" target="_blank" className="text-[9px] text-blue-600 underline hover:text-blue-800">⚠️ No banks found. Click to add bank account →</a>
+                      )}
+                    </>
                   )}
                   <div className="relative">
                     <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>

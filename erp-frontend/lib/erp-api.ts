@@ -34,6 +34,7 @@ export const invoicesApi = {
   update: (id: string, data: any) => api.put(`/invoices/${id}`, data),
   updateStatus: (id: string, data: any) => api.put(`/invoices/${id}/status`, data),
   cancel: (id: string) => api.delete(`/invoices/${id}`),
+  hardDelete: (id: string) => api.delete(`/invoices/${id}/hard`),
   summary: (params?: any) => api.get('/invoices/analytics/summary', { params }),
   getNextNumber: (type: 'GST' | 'NON-GST') => api.get('/invoices/next-number', { params: { type } }),
   getLastPrice: (customerId: string, productId: string) => api.get('/invoices/last-price', { params: { customerId, productId } }),

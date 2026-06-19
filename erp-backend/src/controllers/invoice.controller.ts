@@ -445,6 +445,23 @@ export const cancelInvoice = async (req: AuthRequest, res: Response): Promise<vo
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// DELETE /api/v1/invoices/:id/hard  (permanent delete — only for cancelled invoices)
+export const hardDeleteInvoice = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user!.businessId;
+    const invoice = await Invoice.findOne({ _id: req.params['id'], businessId });
+    if (!invoice) { res.status(404).json({ message: 'Invoice not found' }); return; }
+
+    if (invoice.status !== 'cancelled') {
+      res.status(400).json({ message: 'Only cancelled invoices can be permanently deleted. Please cancel the invoice first.' });
+      return;
+    }
+
+    await Invoice.findByIdAndDelete(invoice._id);
+    res.json({ message: 'Invoice permanently deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // GET /api/v1/invoices/analytics/summary
 export const getSalesSummary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

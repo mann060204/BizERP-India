@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
 import { invoicesApi } from '../../../lib/erp-api';
-import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3 } from 'lucide-react';
+import { Plus, Filter, Search, FileText, TrendingUp, Loader2, CheckCircle, Clock, AlertCircle, XCircle, Printer, MessageCircle, Mail, Edit3, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ExportDropdown from '../../../components/shared/ExportDropdown';
 
@@ -42,8 +42,14 @@ export default function SalesPage() {
 
   const handleCancel = async (id: string, num: string) => {
     if (!confirm(`Cancel invoice ${num}?`)) return;
-    try { await invoicesApi.cancel(id); toast.success('Invoice cancelled'); setInvoices(inv => inv.filter(i => i._id !== id)); }
+    try { await invoicesApi.cancel(id); toast.success('Invoice cancelled'); setInvoices(inv => inv.map(i => i._id === id ? { ...i, status: 'cancelled' } : i)); }
     catch { toast.error('Failed to cancel'); }
+  };
+
+  const handleDelete = async (id: string, num: string) => {
+    if (!confirm(`⚠️ PERMANENTLY DELETE invoice ${num}?\n\nThis action CANNOT be undone. The invoice will be removed forever.`)) return;
+    try { await invoicesApi.hardDelete(id); toast.success('Invoice permanently deleted'); setInvoices(inv => inv.filter(i => i._id !== id)); }
+    catch (e: any) { toast.error(e.response?.data?.message || 'Failed to delete invoice'); }
   };
 
   const handleWhatsApp = (inv: Invoice) => {
@@ -215,6 +221,11 @@ Thank you for your business!`;
                             {inv.status !== 'cancelled' && (
                               <button onClick={() => handleCancel(inv._id, inv.invoiceNumber)} className="p-1.5 rounded-lg bg-[#E2E8F0] text-slate-600 hover:text-slate-900 hover:bg-red-500 transition" title="Cancel Invoice">
                                 <XCircle className="w-4 h-4" />
+                              </button>
+                            )}
+                            {inv.status === 'cancelled' && (
+                              <button onClick={() => handleDelete(inv._id, inv.invoiceNumber)} className="p-1.5 rounded-lg bg-red-100 text-red-600 hover:text-white hover:bg-red-600 transition" title="Delete Permanently">
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             )}
                           </div>
