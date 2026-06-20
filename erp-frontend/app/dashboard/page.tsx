@@ -134,8 +134,7 @@ export default function DashboardPage() {
   const [privacyMode, setPrivacyMode] = useState(false);
 
   const [banks, setBanks] = useState<any[]>([]);
-  const [cashInHand, setCashInHand] = useState(0);
-  const [cashAccount, setCashAccount] = useState<any>(null);
+  const [cashAccounts, setCashAccounts] = useState<any[]>([]);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -230,21 +229,15 @@ export default function DashboardPage() {
   useEffect(() => {
     
 
-    let baseCash = 0;
     businessApi.getProfile().then(res => {
       if (res.data.business?.name) setBusinessName(res.data.business.name);
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
-      if (res.data.business?.cashInHand) baseCash = res.data.business.cashInHand;
-      setCashInHand(baseCash);
-    }).catch(() => {
-      setCashInHand(baseCash);
-    });
+    }).catch(console.error);
 
     accountsApi.list().then(res => {
       const allAccounts = res.data?.accounts || [];
-      const cash = allAccounts.find((a: any) => a.name === 'Cash');
-      if (cash) setCashAccount(cash);
-      setBanks(allAccounts.filter((a: any) => a.name !== 'Cash' && a.bankName));
+      setCashAccounts(allAccounts.filter((a: any) => a.type === 'Cash'));
+      setBanks(allAccounts.filter((a: any) => a.type === 'Bank'));
     }).catch(console.error);
 
     Promise.all([
@@ -756,20 +749,20 @@ export default function DashboardPage() {
             <div className="mt-2 pt-3" style={{ borderTop: '0.5px solid var(--border)' }}>
               <h3 className="text-xs font-medium uppercase tracking-wider px-1 mb-2" style={{ color: 'var(--text-subtle)' }}>Fund Balances</h3>
               <div className="space-y-2">
-                <div 
-                    onClick={() => {
-                      if (cashAccount) setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cashAccount._id });
-                    }}
+                {cashAccounts.map(cash => (
+                  <div key={cash._id}
+                    onClick={() => setSelectedKpi({ type: 'cash', label: cash.name, bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cash._id })}
                     className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
                     style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
                     <div className="flex items-center gap-2">
                       <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-700">
-                      <IndianRupee className="w-4 h-4" />
+                        <IndianRupee className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>{cash.name}</span>
                     </div>
-                    <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>Cash in Hand</span>
+                    <span className={`text-sm font-medium ${cash.currentBalance < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{renderAmount(cash.currentBalance)}</span>
                   </div>
-                  <span className={`text-sm font-medium ${cashInHand < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{renderAmount(cashInHand)}</span>
-                </div>
+                ))}
                 {banks.map(bank => (
                   <div key={bank._id} 
                     onClick={() => setSelectedKpi({ type: 'bank', label: bank.name || bank.bankName, bg: 'bg-sky-100', color: 'text-sky-700', icon: Wallet, accountId: bank._id })}
@@ -780,8 +773,8 @@ export default function DashboardPage() {
                         <Wallet className="w-4 h-4" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="text-xs font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{bank.bankName}</span>
-                        <span className="text-[9px] truncate max-w-[100px]" style={{ color: 'var(--text-subtle)' }}>A/C: {bank.accountNumber}</span>
+                        <span className="text-xs font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{bank.name}</span>
+                        {bank.accountNumber && <span className="text-[9px] truncate max-w-[100px]" style={{ color: 'var(--text-subtle)' }}>A/C: {bank.accountNumber}</span>}
                       </div>
                     </div>
                     <span className={`text-sm font-medium ${bank.currentBalance < 0 ? 'text-red-600' : 'text-sky-700'}`}>{renderAmount(bank.currentBalance)}</span>
@@ -858,12 +851,31 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
       );
     } else if (kpi.type === 'cash' || kpi.type === 'bank') {
       return (
-        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm">
-          <div><p className="font-semibold text-slate-800">{item.description || item.particulars || 'Transaction'}</p><p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p></div>
-          <div className="text-right">
-            <p className={`font-bold ${item.credit > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-              {item.credit > 0 ? '-' : '+'}{fmtFull(item.credit > 0 ? item.credit : item.debit)}
+        <div key={i} className="flex justify-between items-center py-2.5 border-b last:border-0 text-sm hover:bg-slate-50 transition-colors -mx-2 px-2 rounded-lg">
+          <div className="flex-1 min-w-0 pr-4">
+            <p className="font-semibold text-slate-800 truncate" title={item.description || item.particulars || item.voucherType || 'Transaction'}>
+              {item.description || item.particulars || item.voucherType || 'Transaction'}
             </p>
+            <p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p>
+          </div>
+          <div className="text-right whitespace-nowrap flex flex-col items-end">
+            <div className="flex gap-4">
+              <div className="w-20 text-right">
+                {item.debit > 0 ? (
+                  <p className="font-bold text-emerald-600">{fmtFull(item.debit)}</p>
+                ) : <p className="text-slate-300">-</p>}
+              </div>
+              <div className="w-20 text-right">
+                {item.credit > 0 ? (
+                  <p className="font-bold text-red-600">{fmtFull(item.credit)}</p>
+                ) : <p className="text-slate-300">-</p>}
+              </div>
+            </div>
+            {item.closingBalance !== undefined && item.closingBalance !== null && (
+              <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                Bal: {fmtFull(Math.abs(item.closingBalance))} {item.closingBalance >= 0 ? 'Dr' : 'Cr'}
+              </p>
+            )}
           </div>
         </div>
       );
@@ -900,7 +912,18 @@ function KpiModal({ kpi, onClose }: { kpi: any; onClose: () => void }) {
         <div className="p-5 min-h-[200px] max-h-[60vh] overflow-y-auto">
            {loading ? <div className="h-32 flex flex-col gap-2 items-center justify-center"><Loader2 className="w-6 h-6 text-indigo-500 animate-spin"/><p className="text-xs text-slate-500 font-medium tracking-wide animate-pulse">Loading details...</p></div> 
             : data.length === 0 ? <div className="h-32 flex flex-col gap-2 items-center justify-center text-slate-400"><FileText className="w-8 h-8 opacity-20" /><p className="text-sm font-medium">No recent records found.</p></div>
-            : <div className="flex flex-col">{data.map(renderRow)}</div>
+            : <div className="flex flex-col">
+                {(kpi.type === 'cash' || kpi.type === 'bank') && (
+                  <div className="flex justify-between items-center py-2 border-b-2 border-slate-100 mb-1 text-[10px] uppercase font-bold text-slate-400 tracking-wider sticky top-0 bg-white z-10 px-2 -mx-2">
+                    <div className="flex-1">Particulars</div>
+                    <div className="flex gap-4">
+                      <div className="w-20 text-right text-emerald-600/70">Debit (In)</div>
+                      <div className="w-20 text-right text-red-600/70">Credit (Out)</div>
+                    </div>
+                  </div>
+                )}
+                {data.map(renderRow)}
+              </div>
            }
         </div>
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
