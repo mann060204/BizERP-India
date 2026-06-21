@@ -768,7 +768,11 @@ export default function DashboardPage() {
               <div className="space-y-2">
                 <div 
                     onClick={() => {
-                      if (cashAccount) setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cashAccount._id });
+                      if (cashAccount) {
+                        setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cashAccount._id });
+                      } else {
+                        alert("⚠️ No 'Cash' account exists yet!\n\nThe balance shown is your legacy Cash in Hand. To see a proper ledger, please go to 'Accounts' -> 'Cash Account' and create a new Cash account first.");
+                      }
                     }}
                     className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
                     style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
