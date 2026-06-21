@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import Account from '../models/Account.model';
 import AccountLedger from '../models/AccountLedger.model';
+import Business from '../models/Business.model';
 
 export const getAccounts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -10,6 +11,42 @@ export const getAccounts = async (req: AuthRequest, res: Response): Promise<void
     if (type) query.type = type;
 
     const accounts = await Account.find(query).sort({ createdAt: -1 });
+
+    // Auto-create default Cash account if none exists
+    if (!type || type === 'Cash') {
+      const hasCash = accounts.some(a => a.type === 'Cash');
+      if (!hasCash) {
+        const biz = await Business.findById(req.user!.businessId);
+        const legacyCash = biz?.cashInHand || 0;
+        
+        const newCash = await Account.create({
+          businessId: req.user!.businessId,
+          name: 'Main Cash',
+          type: 'Cash',
+          openingBalance: Math.abs(legacyCash),
+          balanceType: legacyCash >= 0 ? 'Dr' : 'Cr',
+          currentBalance: legacyCash,
+          isActive: true
+        });
+
+        if (newCash.openingBalance > 0) {
+          await AccountLedger.create({
+            businessId: req.user!.businessId,
+            accountId: newCash._id,
+            date: new Date(),
+            description: 'Opening Balance (Legacy)',
+            debit: newCash.balanceType === 'Dr' ? newCash.openingBalance : 0,
+            credit: newCash.balanceType === 'Cr' ? newCash.openingBalance : 0,
+            referenceType: 'Opening',
+            closingBalance: newCash.openingBalance,
+            voucherType: 'Opening'
+          });
+        }
+        
+        accounts.push(newCash);
+      }
+    }
+
     res.json({ accounts });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
