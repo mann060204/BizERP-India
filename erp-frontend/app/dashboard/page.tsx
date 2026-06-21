@@ -135,6 +135,8 @@ export default function DashboardPage() {
 
   const [banks, setBanks] = useState<any[]>([]);
   const [cashAccounts, setCashAccounts] = useState<any[]>([]);
+  const [cashInHand, setCashInHand] = useState(0);
+  const [cashAccount, setCashAccount] = useState<any>(null);
 
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -229,15 +231,30 @@ export default function DashboardPage() {
   useEffect(() => {
     
 
+    let baseCash = 0;
     businessApi.getProfile().then(res => {
       if (res.data.business?.name) setBusinessName(res.data.business.name);
       else if (res.data.business?.businessName) setBusinessName(res.data.business.businessName);
-    }).catch(console.error);
+      if (res.data.business?.cashInHand) baseCash = res.data.business.cashInHand;
+      setCashInHand(baseCash);
+    }).catch(() => {
+      setCashInHand(baseCash);
+    });
 
     accountsApi.list().then(res => {
       const allAccounts = res.data?.accounts || [];
-      setCashAccounts(allAccounts.filter((a: any) => a.type === 'Cash'));
+      const cashAccs = allAccounts.filter((a: any) => a.type === 'Cash');
+      setCashAccounts(cashAccs);
       setBanks(allAccounts.filter((a: any) => a.type === 'Bank'));
+
+      if (cashAccs.length > 0) {
+        setCashAccount(cashAccs[0]);
+        const sum = cashAccs.reduce((acc, curr) => acc + (curr.currentBalance || 0), 0);
+        setCashInHand(sum);
+      } else {
+        const legacyCash = allAccounts.find((a: any) => a.name === 'Cash');
+        if (legacyCash) setCashAccount(legacyCash);
+      }
     }).catch(console.error);
 
     Promise.all([
@@ -749,7 +766,21 @@ export default function DashboardPage() {
             <div className="mt-2 pt-3" style={{ borderTop: '0.5px solid var(--border)' }}>
               <h3 className="text-xs font-medium uppercase tracking-wider px-1 mb-2" style={{ color: 'var(--text-subtle)' }}>Fund Balances</h3>
               <div className="space-y-2">
-                {cashAccounts.map(cash => (
+                <div 
+                    onClick={() => {
+                      if (cashAccount) setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cashAccount._id });
+                    }}
+                    className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
+                    style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)' }}>
+                    <div className="flex items-center gap-2">
+                      <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-700">
+                      <IndianRupee className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-medium" style={{ color: 'var(--text)' }}>Cash in Hand</span>
+                  </div>
+                  <span className={`text-sm font-medium ${cashInHand < 0 ? 'text-red-600' : 'text-emerald-700'}`}>{renderAmount(cashInHand)}</span>
+                </div>
+                {cashAccounts.filter(c => c.name !== 'Cash').map(cash => (
                   <div key={cash._id}
                     onClick={() => setSelectedKpi({ type: 'cash', label: cash.name, bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cash._id })}
                     className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
