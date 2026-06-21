@@ -361,10 +361,10 @@ export default function NewInvoicePage() {
     }
   };
 
-  const calculateItem = (item: LineItem, invType = invoiceType, interState = isInterState) => {
-    const gross = item.quantity * item.rate;
-    const discountAmt = (gross * item.discount) / 100;
-    const taxableAmount = round2(gross - discountAmt);
+    const calculateItem = (item: LineItem, invType = invoiceType, interState = isInterState) => {
+      const gross = item.quantity * item.rate;
+      const discountAmt = item.discountType === 'amount' ? (item.discountAmount || 0) : ((gross * item.discount) / 100);
+      const taxableAmount = round2(gross - discountAmt);
     const cgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
     const sgst = (invType === 'GST' && !interState) ? round2((taxableAmount * item.gstRate) / 2 / 100) : 0;
     const igst = (invType === 'GST' && interState) ? round2((taxableAmount * item.gstRate) / 100) : 0;
@@ -505,7 +505,7 @@ export default function NewInvoicePage() {
   // Totals
   const totalQty = lineItems.reduce((s, i) => s + i.quantity, 0);
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.rate, 0);
-  const totalDiscount = lineItems.reduce((s, i) => s + (i.quantity * i.rate * i.discount) / 100, 0);
+    const totalDiscount = lineItems.reduce((s, i) => s + (i.discountType === 'amount' ? (i.discountAmount || 0) : (i.quantity * i.rate * i.discount) / 100), 0);
   const totalTaxable = lineItems.reduce((s, i) => s + i.taxableAmount, 0);
   
   let shipCGST = 0;
