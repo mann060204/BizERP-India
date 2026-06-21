@@ -770,6 +770,8 @@ export default function DashboardPage() {
                     onClick={() => {
                       if (cashAccount) {
                         setSelectedKpi({ type: 'cash', label: 'Cash Transactions', bg: 'bg-emerald-100', color: 'text-emerald-700', icon: IndianRupee, accountId: cashAccount._id });
+                      } else {
+                        alert("⚠️ Please restart your backend server terminal!\n\nThe new auto-create logic needs the backend server to restart so it can create your default 'Main Cash' ledger.");
                       }
                     }}
                     className="flex items-center justify-between rounded-lg p-2 cursor-pointer transition-colors hover:opacity-80"
