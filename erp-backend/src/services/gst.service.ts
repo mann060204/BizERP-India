@@ -6,7 +6,10 @@ interface LineItemInput {
   unit?: string;
   rate: number;
   discount?: number;
+  discountAmount?: number;
+  discountType?: 'percentage' | 'amount';
   gstRate: number;
+  cess?: number;
 }
 
 interface CalculatedLineItem extends LineItemInput {
@@ -52,26 +55,33 @@ export const calculateInvoiceTotals = (
     const qty = Number(item.quantity) || 0;
     const rate = Number(item.rate) || 0;
     const discountPct = Number(item.discount) || 0;
+    const discountAmtInput = Number(item.discountAmount) || 0;
     const gstRate = Number(item.gstRate) || 0;
+    const cess = Number(item.cess) || 0;
 
     const gross = qty * rate;
-    const discountAmt = (gross * discountPct) / 100;
+    const discountAmt = item.discountType === 'amount' ? discountAmtInput : (gross * discountPct) / 100;
     // Round taxable amount per item — matches frontend calculateItem()
     const taxableAmount = round2(gross - discountAmt);
 
     let cgst = 0, sgst = 0, igst = 0;
+    let cessAmt = 0;
     if (isNonGst) {
       cgst = 0;
       sgst = 0;
       igst = 0;
-    } else if (isInterState) {
-      igst = round2((taxableAmount * gstRate) / 100);
+      cessAmt = 0;
     } else {
-      cgst = round2((taxableAmount * gstRate) / 2 / 100);
-      sgst = round2((taxableAmount * gstRate) / 2 / 100);
+      cessAmt = round2((taxableAmount * cess) / 100);
+      if (isInterState) {
+        igst = round2((taxableAmount * gstRate) / 100);
+      } else {
+        cgst = round2((taxableAmount * gstRate) / 2 / 100);
+        sgst = round2((taxableAmount * gstRate) / 2 / 100);
+      }
     }
 
-    const totalAmount = round2(taxableAmount + cgst + sgst + igst);
+    const totalAmount = round2(taxableAmount + cgst + sgst + igst + cessAmt);
 
     subtotal += gross;
     totalDiscount += round2(discountAmt);
@@ -85,6 +95,9 @@ export const calculateInvoiceTotals = (
       ...item,
       unit: item.unit || 'Nos',
       discount: discountPct,
+      discountAmount: discountAmtInput,
+      discountType: item.discountType || 'percentage',
+      cess: cess,
       taxableAmount,
       cgst,
       sgst,

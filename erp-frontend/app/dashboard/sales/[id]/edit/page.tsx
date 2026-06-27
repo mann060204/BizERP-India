@@ -187,7 +187,8 @@ export default function EditInvoicePage() {
         setCustomerGstin(inv.customerSnapshot?.gstin || '');
         if (inv.customerId) setSelectedCustomer(cRes.data.customers.find((c: any) => c._id === (inv.customerId._id || inv.customerId)));
         
-        setLineItems(inv.lineItems.map((item: any) => ({
+        // Recalculate each item correctly on load to fix any bad legacy DB data
+        const mappedItems = inv.lineItems.map((item: any) => calculateItem({
           ...item,
           batchNo: item.batchNo || '',
           tag: item.tag || '',
@@ -197,8 +198,13 @@ export default function EditInvoicePage() {
           primaryUnit: item.primaryUnit || item.unit,
           secondaryUnit: item.secondaryUnit || item.unit,
           primaryRate: item.primaryRate || item.rate,
-          selectedBaseRate: item.selectedBaseRate || item.rate
-        })));
+          selectedBaseRate: item.selectedBaseRate || item.rate,
+          discountType: item.discountType || 'percentage',
+          discountAmount: item.discountAmount || 0,
+          discount: item.discount || 0
+        }, inv.invoiceType || 'GST', inv.isInterState || false));
+        
+        setLineItems(mappedItems);
         
         setPaymentMode1(inv.paymentHistory?.[0]?.mode || inv.paymentMode || 'Cash');
         setAmountReceived1(inv.paymentHistory?.[0]?.amount ?? inv.amountReceived ?? 0);
