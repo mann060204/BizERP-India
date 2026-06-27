@@ -203,16 +203,24 @@ export default function EditInvoicePage() {
         setPaymentMode1(inv.paymentHistory?.[0]?.mode || inv.paymentMode || 'Cash');
         setAmountReceived1(inv.paymentHistory?.[0]?.amount ?? inv.amountReceived ?? 0);
         setTxnId1(inv.paymentHistory?.[0]?.txnId || inv.txnId || '');
-        // Preserve original payment date — don't reset to today
-        const savedDate1 = inv.paymentHistory?.[0]?.date || inv.paymentDate;
-        if (savedDate1) setPaymentDate1(new Date(savedDate1).toISOString().split('T')[0]);
+        let pDate1 = '';
+        let pDate2 = '';
+
+        const savedDate1 = inv.paymentHistory?.[0]?.date || inv.invoiceDate; // Fallback to invoiceDate if no payment date
+        if (savedDate1) {
+          pDate1 = new Date(savedDate1).toISOString().split('T')[0];
+          setPaymentDate1(pDate1);
+        }
 
         if (inv.paymentHistory?.[1]) {
           setPaymentMode2(inv.paymentHistory[1].mode || '');
           setAmountReceived2(inv.paymentHistory[1].amount || 0);
           setTxnId2(inv.paymentHistory[1].txnId || '');
           const savedDate2 = inv.paymentHistory[1].date;
-          if (savedDate2) setPaymentDate2(new Date(savedDate2).toISOString().split('T')[0]);
+          if (savedDate2) {
+            pDate2 = new Date(savedDate2).toISOString().split('T')[0];
+            setPaymentDate2(pDate2);
+          }
         }
         
         setShippingCharge(inv.shippingCharge || 0);
@@ -242,8 +250,8 @@ export default function EditInvoicePage() {
           const defaultDate = today >= fyStart && today <= fyEnd ? today : fyStart;
           setFyDateRange({ min: fyStart, max: fyEnd, default: defaultDate });
           // Only apply FY default to payment dates if no date was loaded from the invoice
-          if (!paymentDate1) setPaymentDate1(defaultDate);
-          if (!paymentDate2) setPaymentDate2(defaultDate);
+          if (!pDate1) setPaymentDate1(defaultDate);
+          if (!pDate2) setPaymentDate2(defaultDate);
         }
       } catch (err) {
         toast.error('Failed to load data');
@@ -400,21 +408,8 @@ export default function EditInvoicePage() {
 
   useEffect(() => {
     setLineItems(prev => prev.map(item => calculateItem(item, invoiceType, isInterState)));
-    // Fetch next invoice number based on type
-    invoicesApi.getNextNumber(invoiceType as 'GST' | 'NON-GST')
-      .then(res => {
-        if (res.data?.nextInvoiceNumber) {
-          setInvoiceNumber(res.data.nextInvoiceNumber);
-        }
-      })
-      .catch(() => {
-        // Fallback
-        setInvoiceNumber(prev => {
-          if (invoiceType === 'GST' && prev.startsWith('NON-GST')) return prev.replace('NON-GST', 'GST');
-          if (invoiceType === 'NON-GST' && prev.startsWith('GST')) return prev.replace('GST', 'NON-GST');
-          return prev;
-        });
-      });
+    // We do NOT fetch the next invoice number here because this is the Edit page.
+    // The invoice number is already fixed and comes from the existing invoice data.
   }, [invoiceType, isInterState]);
 
   const addItem = () => {
