@@ -11,8 +11,13 @@ interface BatchItem {
   productId: any;
   batchNo: string;
   currentStock: number;
+  currentStock: number;
   salePrice: number;
+  salePrice2?: number;
+  salePrice3?: number;
   mrp: number;
+  box?: string;
+  location?: string;
   manufacturingDate?: string;
   expiryDate?: string;
   createdAt: string;
@@ -31,6 +36,10 @@ export default function BatchNumbersPage() {
     batchNo: '',
     quantity: 1,
     salePrice: 0,
+    salePrice2: 0,
+    salePrice3: 0,
+    box: '',
+    location: '',
     manufacturingDate: '',
     expiryDate: '',
   });
@@ -47,7 +56,11 @@ export default function BatchNumbersPage() {
   const [editForm, setEditForm] = useState({
     batchNo: '',
     salePrice: 0,
+    salePrice2: 0,
+    salePrice3: 0,
     mrp: 0,
+    box: '',
+    location: '',
     manufacturingDate: '',
     expiryDate: '',
   });
@@ -96,7 +109,7 @@ export default function BatchNumbersPage() {
     try {
       await inventoryApi.saveBatch(form);
       toast.success('Batch saved successfully');
-      setForm({ productId: '', productName: '', batchNo: '', quantity: 1, salePrice: 0, manufacturingDate: '', expiryDate: '' });
+      setForm({ productId: '', productName: '', batchNo: '', quantity: 1, salePrice: 0, salePrice2: 0, salePrice3: 0, box: '', location: '', manufacturingDate: '', expiryDate: '' });
       setProductSearch('');
       fetchBatches();
     } catch (e: any) {
@@ -110,7 +123,11 @@ export default function BatchNumbersPage() {
     setEditForm({
       batchNo: b.batchNo,
       salePrice: b.salePrice || 0,
+      salePrice2: b.salePrice2 || 0,
+      salePrice3: b.salePrice3 || 0,
       mrp: b.mrp || 0,
+      box: b.box || '',
+      location: b.location || '',
       manufacturingDate: b.manufacturingDate ? new Date(b.manufacturingDate).toISOString().split('T')[0] : '',
       expiryDate: b.expiryDate ? new Date(b.expiryDate).toISOString().split('T')[0] : '',
     });
@@ -356,7 +373,7 @@ export default function BatchNumbersPage() {
               {/* Sale Price + MRP */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Sale Price (₹)</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Sale Price - 1 (₹)</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₹</span>
                     <input
@@ -382,6 +399,62 @@ export default function BatchNumbersPage() {
                       placeholder="0.00"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Extra Prices */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Sale Price - 2 (₹)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₹</span>
+                    <input
+                      type="number"
+                      value={editForm.salePrice2 === 0 ? '' : editForm.salePrice2}
+                      onChange={e => setEditForm({ ...editForm, salePrice2: parseFloat(e.target.value) || 0 })}
+                      min="0" step="0.01"
+                      className="w-full pl-7 pr-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Sale Price - 3 (₹)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₹</span>
+                    <input
+                      type="number"
+                      value={editForm.salePrice3 === 0 ? '' : editForm.salePrice3}
+                      onChange={e => setEditForm({ ...editForm, salePrice3: parseFloat(e.target.value) || 0 })}
+                      min="0" step="0.01"
+                      className="w-full pl-7 pr-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Box and Location */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Box</label>
+                  <input
+                    type="text"
+                    value={editForm.box}
+                    onChange={e => setEditForm({ ...editForm, box: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                    placeholder="e.g. Box A"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Location/Godown</label>
+                  <input
+                    type="text"
+                    value={editForm.location}
+                    onChange={e => setEditForm({ ...editForm, location: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                    placeholder="e.g. Rack 12"
+                  />
                 </div>
               </div>
 

@@ -19,7 +19,7 @@ export default function InventoryPage() {
   const [showModal, setShowModal] = useState(false);
   const [adjusting, setAdjusting] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ type: 'add', quantity: 0, reason: '', notes: '', batchNo: '' });
+  const [form, setForm] = useState({ type: 'add', quantity: 0, reason: 'Physical Count', notes: '', batchNo: '', location: '' });
   const [batches, setBatches] = useState<BatchInfo[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
 
@@ -382,6 +382,13 @@ export default function InventoryPage() {
                     className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition"
                     placeholder="Enter batch number (optional)" />
                 )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">Location / Godown <span className="text-slate-400">(Optional)</span></label>
+                <input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition"
+                  placeholder="e.g. Rack A1" />
               </div>
 
               <div>

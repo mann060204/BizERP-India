@@ -15,6 +15,13 @@ export default function BulkImportPage() {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Duplicate resolution state for Suppliers
+  const [existingSuppliers, setExistingSuppliers] = useState<any[]>([]);
+  const [duplicates, setDuplicates] = useState<any[]>([]);
+  const [selectedDuplicates, setSelectedDuplicates] = useState<Set<number>>(new Set());
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [pendingSuppliers, setPendingSuppliers] = useState<any[]>([]);
+  
   const downloadTemplate = () => {
     let headers = '';
     let filename = '';
@@ -52,7 +59,9 @@ export default function BulkImportPage() {
       headers = cols.map(h => `"${h}"`).join(',') + '\n' + sample.map(v => `"${v}"`).join(',');
       filename = 'full_inventory_import_template.csv';
     } else if (importType === 'suppliers') {
-      headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Opening Balance,Street,City,State,Pincode\n"Supplier ABC","9876543211","supplier@example.com","27AADCB2230M1Z3","ABCDE1234G","ABC Enterprises","0","123 Industrial St","Pune","Maharashtra","411001"';
+      const cols = ['Name','Mobile','Email','GSTIN','PAN No','Trade Name','Phone No','Contact Person','Contact Person Number','Note','Price Category','Credit Limit','Opening Balance','Balance Type','Street','City','State','Pincode','Country','Bank Name','Account Number','IFSC','Document Type','Document No','Tags'];
+      const sample = ['Supplier ABC','9876543211','supplier@example.com','27AADCB2230M1Z3','ABCDE1234G','ABC Enterprises','020-1234567','John Smith','9876543212','VIP Supplier','Wholesale','50000','1000','Credit','123 Industrial St','Pune','Maharashtra','411001','India','HDFC Bank','1234567890','HDFC0001234','Aadhar','1234-5678-9012','Electronics,Hardware'];
+      headers = cols.map(h => `"${h}"`).join(',') + '\n' + sample.map(v => `"${v}"`).join(',');
       filename = 'suppliers_import_template.csv';
     } else {
       headers = 'Name,Mobile,Email,GSTIN,PAN No,Trade Name,Credit Limit,Opening Balance,Street,City,State,Pincode\n"John Doe","9876543210","john@example.com","27AADCB2230M1Z2","ABCDE1234F","Doe Enterprises","50000","0","123 Main St","Mumbai","Maharashtra","400001"';
@@ -170,26 +179,67 @@ export default function BulkImportPage() {
           toast.success(res.data.message);
         }
       } else if (importType === 'suppliers') {
-        const payload = {
-          suppliers: data.map(item => ({
-            name: item.name || item.Name,
-            mobile: item.mobile || item.Mobile || '',
-            email: item.email || item.Email || '',
-            gstin: item.gstin || item.GSTIN || '',
-            panNo: item.panNo || item['PAN No'] || '',
-            tradeName: item.tradeName || item['Trade Name'] || '',
-            openingBalance: parseFloat(item.openingBalance || item['Opening Balance'] || '0'),
-            billingAddress: {
-              street: item.street || item.Street || '',
-              city: item.city || item.City || '',
-              state: item.state || item.State || '',
-              pincode: item.pincode || item.Pincode || ''
-            },
-            isActive: true
-          }))
-        };
-        const res = await suppliersApi.bulkCreate(payload);
-        toast.success(res.data.message);
+        const mappedSuppliers = data.map((item, index) => ({
+          _originalIndex: index,
+          name: item.name || item.Name,
+          mobile: item.mobile || item.Mobile || '',
+          email: item.email || item.Email || '',
+          gstin: item.gstin || item.GSTIN || '',
+          panNo: item.panNo || item['PAN No'] || item.pan || item.PAN || '',
+          tradeName: item.tradeName || item['Trade Name'] || '',
+          phoneNo: item.phoneNo || item['Phone No'] || '',
+          contactPerson: item.contactPerson || item['Contact Person'] || '',
+          contactPersonNumber: item.contactPersonNumber || item['Contact Person Number'] || '',
+          note: item.note || item.Note || '',
+          priceCategory: item.priceCategory || item['Price Category'] || 'Retail',
+          creditLimit: parseFloat(item.creditLimit || item['Credit Limit'] || '0'),
+          openingBalance: parseFloat(item.openingBalance || item['Opening Balance'] || '0'),
+          balanceType: item.balanceType || item['Balance Type'] || 'Credit',
+          address: {
+            street: item.street || item.Street || '',
+            city: item.city || item.City || '',
+            state: item.state || item.State || '',
+            pincode: item.pincode || item.Pincode || '',
+            country: item.country || item.Country || 'India',
+          },
+          bankDetails: {
+            bankName: item.bankName || item['Bank Name'] || '',
+            accountNumber: item.accountNumber || item['Account Number'] || '',
+            ifsc: item.ifsc || item.IFSC || '',
+          },
+          documentType: item.documentType || item['Document Type'] || '',
+          documentNo: item.documentNo || item['Document No'] || '',
+          tags: item.tags || item.Tags ? String(item.tags || item.Tags).split(',').map(t => t.trim()) : [],
+          isActive: true
+        })).filter(s => !!s.name);
+
+        // Fetch existing suppliers to check for duplicates
+        const existingRes = await suppliersApi.list({ limit: 5000 });
+        const existing = existingRes.data.suppliers || [];
+        setExistingSuppliers(existing);
+
+        const dups: any[] = [];
+        mappedSuppliers.forEach(sup => {
+          const match = existing.find((e: any) => 
+            e.name.toLowerCase() === sup.name.toLowerCase() || 
+            (e.mobile && sup.mobile && e.mobile === sup.mobile)
+          );
+          if (match) {
+            dups.push({ new: sup, existing: match });
+          }
+        });
+
+        if (dups.length > 0) {
+          setDuplicates(dups);
+          setPendingSuppliers(mappedSuppliers);
+          setSelectedDuplicates(new Set());
+          setShowDuplicateModal(true);
+          setLoading(false);
+          return; // Stop here, wait for user resolution
+        } else {
+          await submitSuppliers(mappedSuppliers);
+        }
+
       } else {
         const payload = {
           customers: data.map(item => ({
@@ -222,6 +272,46 @@ export default function BulkImportPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const submitSuppliers = async (mappedSuppliers: any[]) => {
+    try {
+      setLoading(true);
+      const payload = { suppliers: mappedSuppliers };
+      const res = await suppliersApi.bulkCreate(payload);
+      toast.success(res.data.message);
+      if (res.data.errors?.length > 0) {
+        toast(`${res.data.errors.length} rows had errors — check console`, { icon: '⚠️' });
+        console.warn('Import errors:', res.data.errors);
+      }
+      setFile(null);
+      setData([]);
+      setShowDuplicateModal(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Import failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDuplicateResolution = () => {
+    const dupsToInclude = new Set(Array.from(selectedDuplicates).map(idx => duplicates[idx].new._originalIndex));
+    
+    // Filter pending suppliers: include non-duplicates, AND include duplicates that the user specifically checked
+    const finalSuppliers = pendingSuppliers.filter(sup => {
+      const isDup = duplicates.some(d => d.new._originalIndex === sup._originalIndex);
+      if (!isDup) return true;
+      return dupsToInclude.has(sup._originalIndex);
+    });
+
+    if (finalSuppliers.length === 0) {
+      toast.error('No suppliers left to import after skipping duplicates.');
+      setShowDuplicateModal(false);
+      return;
+    }
+
+    submitSuppliers(finalSuppliers);
   };
 
   return (
@@ -289,7 +379,7 @@ export default function BulkImportPage() {
                   ) : importType === 'suppliers' ? (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
                       Expected Headers:<br/>
-                      <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, PAN No, Trade Name, Opening Balance, Street, City, State, Pincode
+                      <span className="text-emerald-400">Name</span>, Mobile, Email, GSTIN, PAN No, Trade Name, Phone No, Contact Person, Contact Person Number, Note, Price Category, Credit Limit, Opening Balance, Balance Type, Street, City, State, Pincode, Country, Bank Name, Account Number, IFSC, Document Type, Document No, Tags
                     </div>
                   ) : (
                     <div className="text-xs text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-200">
@@ -377,6 +467,82 @@ export default function BulkImportPage() {
           </div>
         </div>
       </main>
+
+      {/* Duplicate Detection Modal */}
+      {showDuplicateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-amber-50">
+              <div>
+                <h3 className="text-slate-900 font-bold text-lg flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-amber-500" /> Similar Suppliers Found
+                </h3>
+                <p className="text-slate-600 text-sm mt-1">We found {duplicates.length} records in your CSV that look similar to existing suppliers (matching Name or Mobile). Check the ones you want to import anyway (as duplicates).</p>
+              </div>
+            </div>
+            
+            <div className="p-0 overflow-y-auto flex-1">
+              <table className="w-full text-left text-sm text-slate-600">
+                <thead className="bg-slate-50 sticky top-0 border-b border-slate-200 shadow-sm">
+                  <tr>
+                    <th className="px-4 py-3 font-medium text-center w-12">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary cursor-pointer"
+                        checked={selectedDuplicates.size === duplicates.length && duplicates.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedDuplicates(new Set(duplicates.map((_, i) => i)));
+                          else setSelectedDuplicates(new Set());
+                        }}
+                      />
+                    </th>
+                    <th className="px-4 py-3 font-medium">CSV Record (New)</th>
+                    <th className="px-4 py-3 font-medium">Existing Record (In System)</th>
+                    <th className="px-4 py-3 font-medium text-amber-600">Match Reason</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {duplicates.map((dup, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50 transition">
+                      <td className="px-4 py-3 text-center">
+                        <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary cursor-pointer"
+                          checked={selectedDuplicates.has(idx)}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedDuplicates);
+                            if (e.target.checked) newSet.add(idx);
+                            else newSet.delete(idx);
+                            setSelectedDuplicates(newSet);
+                          }}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-slate-900">{dup.new.name}</div>
+                        <div className="text-xs text-slate-500">{dup.new.mobile || 'No mobile'}</div>
+                      </td>
+                      <td className="px-4 py-3 bg-red-50/30">
+                        <div className="font-semibold text-slate-900">{dup.existing.name}</div>
+                        <div className="text-xs text-slate-500">{dup.existing.mobile || 'No mobile'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-amber-700 font-medium">
+                        {dup.existing.name.toLowerCase() === dup.new.name.toLowerCase() && 'Name matches. '}
+                        {dup.existing.mobile && dup.new.mobile && dup.existing.mobile === dup.new.mobile && 'Mobile matches.'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex gap-3 p-6 border-t border-slate-200 bg-slate-50">
+              <button onClick={() => setShowDuplicateModal(false)} className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-[#D4D4D4] font-medium text-sm transition bg-white">Cancel Import</button>
+              <div className="flex-1"></div>
+              <button onClick={handleDuplicateResolution} disabled={loading} className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Import {pendingSuppliers.length - duplicates.length + selectedDuplicates.size} Records
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

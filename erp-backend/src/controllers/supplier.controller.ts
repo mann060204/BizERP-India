@@ -58,6 +58,78 @@ export const createSupplier = async (req: AuthRequest, res: Response): Promise<v
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// POST /api/v1/suppliers/bulk
+export const bulkCreateSuppliers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { suppliers } = req.body;
+    if (!Array.isArray(suppliers) || suppliers.length === 0) {
+      res.status(400).json({ message: 'suppliers array is required' });
+      return;
+    }
+    const businessId = req.user!.businessId;
+    const created: any[] = [];
+    const errors: any[] = [];
+
+    for (let i = 0; i < suppliers.length; i++) {
+      const s = suppliers[i];
+      try {
+        if (!s.name || !s.name.trim()) {
+          errors.push({ row: i + 1, message: 'Name is required' });
+          continue;
+        }
+        const doc = await Supplier.create({
+          businessId,
+          name: s.name,
+          mobile: s.mobile || '',
+          mobileCode: s.mobileCode || '+91',
+          email: s.email || '',
+          gstin: s.gstin || '',
+          pan: s.pan || s.panNo || '',
+          tradeName: s.tradeName || '',
+          gstType: s.gstType || '',
+          phoneNo: s.phoneNo || '',
+          contactPerson: s.contactPerson || '',
+          contactPersonNumber: s.contactPersonNumber || '',
+          contactPersonCode: s.contactPersonCode || '+91',
+          note: s.note || '',
+          priceCategory: s.priceCategory || 'Retail',
+          creditLimit: Number(s.creditLimit) || 0,
+          creditAllowed: s.creditAllowed !== false,
+          openingBalance: Number(s.openingBalance) || 0,
+          currentBalance: Number(s.openingBalance) || 0,
+          balanceType: s.balanceType || 'Credit',
+          address: {
+            street: s.address?.street || s.street || '',
+            city: s.address?.city || s.city || '',
+            state: s.address?.state || s.state || '',
+            pinCode: s.address?.pinCode || s.address?.pincode || s.pinCode || s.pincode || '',
+            country: s.address?.country || s.country || 'India',
+          },
+          bankDetails: {
+            bankName: s.bankDetails?.bankName || s.bankName || '',
+            accountNumber: s.bankDetails?.accountNumber || s.accountNumber || '',
+            ifsc: s.bankDetails?.ifsc || s.ifsc || '',
+          },
+          documentType: s.documentType || '',
+          documentNo: s.documentNo || '',
+          tags: s.tags || [],
+          isActive: true,
+        });
+        await AccountingService.updateSupplierBalance(doc._id, businessId);
+        created.push(doc);
+      } catch (err: any) {
+        errors.push({ row: i + 1, name: s.name, message: err.message });
+      }
+    }
+
+    res.status(201).json({
+      message: `${created.length} suppliers created${errors.length ? `, ${errors.length} failed` : ''}`,
+      created: created.length,
+      errors,
+    });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // PUT /api/v1/suppliers/:id
 export const updateSupplier = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

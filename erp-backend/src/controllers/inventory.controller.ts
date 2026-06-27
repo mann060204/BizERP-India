@@ -41,7 +41,7 @@ export const getInventoryLevels = async (req: AuthRequest, res: Response): Promi
 // POST /api/v1/inventory/adjust
 export const adjustInventory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { productId, type, quantity, reason, notes, batchNo } = req.body;
+    const { productId, type, quantity, reason, notes, batchNo, location } = req.body;
     if (!productId || !type || !quantity || !reason) {
       res.status(400).json({ message: 'Missing required fields' });
       return;
@@ -61,13 +61,21 @@ export const adjustInventory = async (req: AuthRequest, res: Response): Promise<
 
     // Perform product-level adjustment
     product.currentStock += incValue;
+    if (location && (!batchNo || !batchNo.trim())) {
+      product.location = location.trim();
+    }
     await product.save();
 
     // If batchNo is provided, also adjust batch-level stock
     if (batchNo && batchNo.trim()) {
+      const batchUpdate: any = { $inc: { currentStock: incValue } };
+      if (location) {
+        batchUpdate.$set = { location: location.trim() };
+      }
+      
       const updatedBatch = await Batch.findOneAndUpdate(
         { businessId, productId, batchNo: batchNo.trim() },
-        { $inc: { currentStock: incValue } },
+        batchUpdate,
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
 
@@ -333,6 +341,10 @@ export const saveBatch = async (req: AuthRequest, res: Response): Promise<void> 
         batchNo: batchNo.trim(),
         mrp: Number(mrp) || Number(salePrice) || 0,
         salePrice: Number(salePrice) || 0,
+        salePrice2: Number(req.body.salePrice2) || 0,
+        salePrice3: Number(req.body.salePrice3) || 0,
+        box: req.body.box?.trim() || '',
+        location: req.body.location?.trim() || '',
         currentStock: qty,
         manufacturingDate: manufacturingDate ? new Date(manufacturingDate) : undefined,
         expiryDate: expiryDate ? new Date(expiryDate) : undefined,
@@ -371,7 +383,7 @@ export const updateBatch = async (req: AuthRequest, res: Response): Promise<void
   try {
     const { id } = req.params;
     const businessId = req.user!.businessId;
-    const { batchNo, salePrice, mrp, manufacturingDate, expiryDate } = req.body;
+    const { batchNo, salePrice, salePrice2, salePrice3, mrp, box, location, manufacturingDate, expiryDate } = req.body;
 
     const batch = await Batch.findOne({ _id: id, businessId });
     if (!batch) { res.status(404).json({ message: 'Batch not found' }); return; }
@@ -379,7 +391,11 @@ export const updateBatch = async (req: AuthRequest, res: Response): Promise<void
     const updateFields: any = {};
     if (batchNo !== undefined) updateFields.batchNo = batchNo.trim();
     if (salePrice !== undefined) updateFields.salePrice = Number(salePrice) || 0;
+    if (salePrice2 !== undefined) updateFields.salePrice2 = Number(salePrice2) || 0;
+    if (salePrice3 !== undefined) updateFields.salePrice3 = Number(salePrice3) || 0;
     if (mrp !== undefined) updateFields.mrp = Number(mrp) || 0;
+    if (box !== undefined) updateFields.box = box.trim();
+    if (location !== undefined) updateFields.location = location.trim();
     if (manufacturingDate !== undefined) updateFields.manufacturingDate = manufacturingDate ? new Date(manufacturingDate) : null;
     if (expiryDate !== undefined) updateFields.expiryDate = expiryDate ? new Date(expiryDate) : null;
 
