@@ -200,10 +200,20 @@ export default function EditInvoicePage() {
           selectedBaseRate: item.selectedBaseRate || item.rate
         })));
         
-        setPaymentMode1(inv.paymentMode || 'Cash');
-        setAmountReceived1(inv.amountReceived || 0);
-        if (inv.paymentDate) setPaymentDate1(new Date(inv.paymentDate).toISOString().split('T')[0]);
-        setTxnId1(inv.txnId || '');
+        setPaymentMode1(inv.paymentHistory?.[0]?.mode || inv.paymentMode || 'Cash');
+        setAmountReceived1(inv.paymentHistory?.[0]?.amount ?? inv.amountReceived ?? 0);
+        setTxnId1(inv.paymentHistory?.[0]?.txnId || inv.txnId || '');
+        // Preserve original payment date — don't reset to today
+        const savedDate1 = inv.paymentHistory?.[0]?.date || inv.paymentDate;
+        if (savedDate1) setPaymentDate1(new Date(savedDate1).toISOString().split('T')[0]);
+
+        if (inv.paymentHistory?.[1]) {
+          setPaymentMode2(inv.paymentHistory[1].mode || '');
+          setAmountReceived2(inv.paymentHistory[1].amount || 0);
+          setTxnId2(inv.paymentHistory[1].txnId || '');
+          const savedDate2 = inv.paymentHistory[1].date;
+          if (savedDate2) setPaymentDate2(new Date(savedDate2).toISOString().split('T')[0]);
+        }
         
         setShippingCharge(inv.shippingCharge || 0);
         setShippingGstRate(inv.shippingGstRate || 0);
@@ -231,9 +241,9 @@ export default function EditInvoicePage() {
           // Default to today if within FY range, else clamp to FY start
           const defaultDate = today >= fyStart && today <= fyEnd ? today : fyStart;
           setFyDateRange({ min: fyStart, max: fyEnd, default: defaultDate });
-          // Only set payment dates to default; preserve loaded invoice date & due date
-          if (!inv.paymentDate) setPaymentDate1(defaultDate);
-          setPaymentDate2(defaultDate);
+          // Only apply FY default to payment dates if no date was loaded from the invoice
+          if (!paymentDate1) setPaymentDate1(defaultDate);
+          if (!paymentDate2) setPaymentDate2(defaultDate);
         }
       } catch (err) {
         toast.error('Failed to load data');

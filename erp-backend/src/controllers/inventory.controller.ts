@@ -366,6 +366,30 @@ export const saveBatch = async (req: AuthRequest, res: Response): Promise<void> 
   }
 };
 
+// PUT /api/v1/inventory/batches/:id
+export const updateBatch = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const businessId = req.user!.businessId;
+    const { batchNo, salePrice, mrp, manufacturingDate, expiryDate } = req.body;
+
+    const batch = await Batch.findOne({ _id: id, businessId });
+    if (!batch) { res.status(404).json({ message: 'Batch not found' }); return; }
+
+    const updateFields: any = {};
+    if (batchNo !== undefined) updateFields.batchNo = batchNo.trim();
+    if (salePrice !== undefined) updateFields.salePrice = Number(salePrice) || 0;
+    if (mrp !== undefined) updateFields.mrp = Number(mrp) || 0;
+    if (manufacturingDate !== undefined) updateFields.manufacturingDate = manufacturingDate ? new Date(manufacturingDate) : null;
+    if (expiryDate !== undefined) updateFields.expiryDate = expiryDate ? new Date(expiryDate) : null;
+
+    const updated = await Batch.findByIdAndUpdate(id, { $set: updateFields }, { new: true })
+      .populate('productId', 'name sku unit');
+
+    res.json({ message: 'Batch updated successfully', batch: updated });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // POST /api/v1/inventory/bulk-import
 export const bulkImportInventory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

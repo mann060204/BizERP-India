@@ -87,6 +87,52 @@ export const deleteExpense = async (req: AuthRequest, res: Response): Promise<vo
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// PUT /api/v1/expenses/:id
+export const updateExpense = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const businessId = req.user!.businessId;
+    const { category, amount, date, paymentMode, vendorName, notes, gstRate = 0, isInterState = false, bankAccountId } = req.body;
+
+    const existing = await Expense.findOne({ _id: id, businessId });
+    if (!existing) { res.status(404).json({ message: 'Expense not found' }); return; }
+
+    // 1. Reverse the old accounting entry
+    await AccountingService.reverseExpense(existing);
+
+    // 2. Recalculate tax on new amount
+    const numAmount = Number(amount);
+    const numGstRate = Number(gstRate);
+    let cgst = 0, sgst = 0, igst = 0;
+    if (numGstRate > 0) {
+      const taxAmount = (numAmount * numGstRate) / 100;
+      if (isInterState) { igst = taxAmount; }
+      else { cgst = taxAmount / 2; sgst = taxAmount / 2; }
+    }
+    const totalWithTax = numAmount + cgst + sgst + igst;
+
+    // 3. Update the record
+    existing.category = category || existing.category;
+    existing.amount = numAmount;
+    existing.date = date ? new Date(date) : existing.date;
+    existing.paymentMode = paymentMode || existing.paymentMode;
+    existing.vendorName = vendorName ?? existing.vendorName;
+    existing.notes = notes ?? existing.notes;
+    existing.gstRate = numGstRate;
+    existing.cgst = cgst;
+    existing.sgst = sgst;
+    existing.igst = igst;
+    existing.totalWithTax = totalWithTax;
+    if (bankAccountId !== undefined) (existing as any).bankAccountId = bankAccountId || undefined;
+    await existing.save();
+
+    // 4. Re-record in the general ledger
+    await AccountingService.recordExpense(existing);
+
+    res.json({ message: 'Expense updated', expense: existing });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+};
+
 // GET /api/v1/expenses/analytics/summary
 export const getExpenseSummary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

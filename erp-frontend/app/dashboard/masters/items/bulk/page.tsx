@@ -55,6 +55,7 @@ const makeEmptyRow = (defaults: any = {}) => ({
   secondaryUnit: '',
   openingStock: '',
   openingStockValue: '',
+  currentStock: '',
   reorderLevel: '',
   lowLevelLimit: '',
   // GST
@@ -213,7 +214,7 @@ export default function BulkAddItemsPage() {
         secondaryUnit: r.secondaryUnit || '',
         openingStock: Number(r.openingStock) || 0,
         openingStockValue: Number(r.openingStockValue) || 0,
-        currentStock: Number(r.openingStock) || 0,
+        currentStock: Number(r.currentStock) !== 0 ? Number(r.currentStock) : Number(r.openingStock) || 0,
         reorderLevel: Number(r.reorderLevel) || 0,
         lowLevelLimit: Number(r.lowLevelLimit) || 0,
         hsnCode: r.hsnCode || '',
@@ -428,7 +429,7 @@ export default function BulkAddItemsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse" style={{ minWidth: '3200px' }}>
+            <table className="w-full text-left border-collapse" style={{ minWidth: '3400px' }}>
               <thead>
                 <tr className="bg-slate-100 text-[10px] text-slate-500 uppercase tracking-wider border-b border-slate-200">
                   {/* Classification */}
@@ -453,6 +454,7 @@ export default function BulkAddItemsPage() {
                   <th className="p-2 font-semibold w-24 bg-sky-50 text-sky-600">Unit</th>
                   <th className="p-2 font-semibold w-24 bg-sky-50 text-sky-600">Sec Unit</th>
                   <th className="p-2 font-semibold w-22 text-center bg-sky-50 text-sky-600">Op. Stock</th>
+                  <th className="p-2 font-semibold w-24 text-center bg-emerald-50 text-emerald-700 border-l-2 border-emerald-200">Curr. Stock</th>
                   <th className="p-2 font-semibold w-24 text-center bg-sky-50 text-sky-600">Stock Value (₹)</th>
                   <th className="p-2 font-semibold w-22 text-center bg-sky-50 text-sky-600">Reorder Lvl</th>
                   <th className="p-2 font-semibold w-22 text-center bg-sky-50 text-sky-600">Low Limit</th>
@@ -509,6 +511,17 @@ export default function BulkAddItemsPage() {
                     </td>
                     <td className="p-1.5 bg-sky-50/20"><TI row={row} field="secondaryUnit" updateRow={updateRow} placeholder="e.g. Mtr" /></td>
                     <td className="p-1.5 bg-sky-50/20"><TI row={row} field="openingStock" updateRow={updateRow} type="number" placeholder="0" cls="text-center text-blue-600 font-medium" /></td>
+                    <td className="p-1.5 bg-emerald-50/30 border-l-2 border-emerald-200">
+                      <input
+                        type="number"
+                        min={0}
+                        value={row.currentStock !== '' ? row.currentStock : row.openingStock}
+                        onChange={e => updateRow(row.id, 'currentStock', e.target.value)}
+                        placeholder={row.openingStock || '0'}
+                        title="Current Stock — leave blank to auto-fill from Opening Stock"
+                        className="w-full px-2 py-1.5 rounded bg-white border border-emerald-300 focus:border-emerald-500 focus:outline-none text-xs shadow-sm text-center text-emerald-700 font-bold"
+                      />
+                    </td>
                     <td className="p-1.5 bg-sky-50/20"><TI row={row} field="openingStockValue" updateRow={updateRow} type="number" placeholder="0" cls="text-center text-blue-600" /></td>
                     <td className="p-1.5 bg-sky-50/20"><TI row={row} field="reorderLevel" updateRow={updateRow} type="number" placeholder="5" cls="text-center" /></td>
                     <td className="p-1.5 bg-sky-50/20"><TI row={row} field="lowLevelLimit" updateRow={updateRow} type="number" placeholder="0" cls="text-center" /></td>

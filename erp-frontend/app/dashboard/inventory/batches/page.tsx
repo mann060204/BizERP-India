@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../../components/layout/Topbar';
 import { inventoryApi, productsApi } from '../../../../lib/erp-api';
-import { Search, Loader2, Package, Calendar, Hash, DollarSign } from 'lucide-react';
+import { Search, Loader2, Package, Calendar, Hash, DollarSign, Edit2, X, Save, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Product { _id: string; name: string; sku?: string; unit: string; }
@@ -24,7 +24,7 @@ export default function BatchNumbersPage() {
   const [productSearch, setProductSearch] = useState('');
   const [showProductDropdown, setShowProductDropdown] = useState(false);
 
-  // ─── Form ───────────────────────────────────────────────────────
+  // ─── Form (Add) ─────────────────────────────────────────────────
   const [form, setForm] = useState({
     productId: '',
     productName: '',
@@ -40,6 +40,18 @@ export default function BatchNumbersPage() {
   const [batches, setBatches] = useState<BatchItem[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [batchSearch, setBatchSearch] = useState('');
+
+  // ─── Edit Modal ─────────────────────────────────────────────────
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<BatchItem | null>(null);
+  const [editForm, setEditForm] = useState({
+    batchNo: '',
+    salePrice: 0,
+    mrp: 0,
+    manufacturingDate: '',
+    expiryDate: '',
+  });
+  const [editSaving, setEditSaving] = useState(false);
 
   // ─── Load products ──────────────────────────────────────────────
   useEffect(() => {
@@ -65,7 +77,8 @@ export default function BatchNumbersPage() {
   useEffect(() => { fetchBatches(); }, [fetchBatches]);
 
   // ─── Filtered product suggestions ───────────────────────────────
-  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+  const filteredProducts = products.filter(p =>
+    p?.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
     (p.sku && p.sku.toLowerCase().includes(productSearch.toLowerCase()))
   ).slice(0, 10);
 
@@ -75,7 +88,7 @@ export default function BatchNumbersPage() {
     setShowProductDropdown(false);
   };
 
-  // ─── Save batch ─────────────────────────────────────────────────
+  // ─── Save new batch ─────────────────────────────────────────────
   const handleSave = async () => {
     if (!form.productId) { toast.error('Please select a product'); return; }
     if (!form.batchNo.trim()) { toast.error('Batch No. is required'); return; }
@@ -89,6 +102,34 @@ export default function BatchNumbersPage() {
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save batch');
     } finally { setSaving(false); }
+  };
+
+  // ─── Open Edit Modal ────────────────────────────────────────────
+  const openEdit = (b: BatchItem) => {
+    setEditingBatch(b);
+    setEditForm({
+      batchNo: b.batchNo,
+      salePrice: b.salePrice || 0,
+      mrp: b.mrp || 0,
+      manufacturingDate: b.manufacturingDate ? new Date(b.manufacturingDate).toISOString().split('T')[0] : '',
+      expiryDate: b.expiryDate ? new Date(b.expiryDate).toISOString().split('T')[0] : '',
+    });
+    setShowEditModal(true);
+  };
+
+  // ─── Save Edited Batch ──────────────────────────────────────────
+  const handleEditSave = async () => {
+    if (!editingBatch) return;
+    if (!editForm.batchNo.trim()) { toast.error('Batch No. is required'); return; }
+    setEditSaving(true);
+    try {
+      await inventoryApi.updateBatch(editingBatch._id, editForm);
+      toast.success(`Batch "${editForm.batchNo}" updated`);
+      setShowEditModal(false);
+      fetchBatches();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to update batch');
+    } finally { setEditSaving(false); }
   };
 
   return (
@@ -211,41 +252,54 @@ export default function BatchNumbersPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      {['#', 'Item Name', 'Batch No.', 'Stock', 'Sale Price', 'MRP', 'Mfg Date', 'Expiry Date', 'Added On'].map(h => (
+                      {['#', 'Item Name', 'Batch No.', 'Stock', 'Sale Price', 'MRP', 'Mfg Date', 'Expiry Date', 'Added On', 'Actions'].map(h => (
                         <th key={h} className="text-left px-5 py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {batches.map((b, i) => (
-                      <tr key={b._id} className="hover:bg-blue-50/50 transition-colors">
-                        <td className="px-5 py-3 text-slate-400 text-xs">{i + 1}</td>
-                        <td className="px-5 py-3 text-slate-900 font-medium">{b.productId?.name || '—'}</td>
-                        <td className="px-5 py-3">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
-                            {b.batchNo}
-                          </span>
-                        </td>
-                        <td className={`px-5 py-3 font-semibold ${b.currentStock <= 0 ? 'text-red-500' : 'text-slate-900'}`}>
-                          {parseFloat((b.currentStock || 0).toFixed(2))} {b.productId?.unit || ''}
-                        </td>
-                        <td className="px-5 py-3 text-slate-700">₹{(b.salePrice || 0).toFixed(2)}</td>
-                        <td className="px-5 py-3 text-slate-700">₹{(b.mrp || 0).toFixed(2)}</td>
-                        <td className="px-5 py-3 text-slate-600 text-xs">
-                          {b.manufacturingDate ? new Date(b.manufacturingDate).toLocaleDateString('en-IN') : '—'}
-                        </td>
-                        <td className="px-5 py-3 text-xs">
-                          {b.expiryDate ? (
-                            <span className={`font-medium ${new Date(b.expiryDate) < new Date() ? 'text-red-600' : 'text-slate-600'}`}>
-                              {new Date(b.expiryDate).toLocaleDateString('en-IN')}
+                    {batches.map((b, i) => {
+                      const isExpired = b.expiryDate && new Date(b.expiryDate) < new Date();
+                      return (
+                        <tr key={b._id} className="hover:bg-blue-50/50 transition-colors group">
+                          <td className="px-5 py-3 text-slate-400 text-xs">{i + 1}</td>
+                          <td className="px-5 py-3 text-slate-900 font-medium">{b.productId?.name || '—'}</td>
+                          <td className="px-5 py-3">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
+                              {b.batchNo}
                             </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-5 py-3 text-slate-500 text-xs">
-                          {new Date(b.createdAt).toLocaleDateString('en-IN')}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className={`px-5 py-3 font-semibold ${b.currentStock <= 0 ? 'text-red-500' : 'text-slate-900'}`}>
+                            {parseFloat((b.currentStock || 0).toFixed(2))} {b.productId?.unit || ''}
+                          </td>
+                          <td className="px-5 py-3 text-slate-700">₹{(b.salePrice || 0).toFixed(2)}</td>
+                          <td className="px-5 py-3 text-slate-700">₹{(b.mrp || 0).toFixed(2)}</td>
+                          <td className="px-5 py-3 text-slate-600 text-xs">
+                            {b.manufacturingDate ? new Date(b.manufacturingDate).toLocaleDateString('en-IN') : '—'}
+                          </td>
+                          <td className="px-5 py-3 text-xs">
+                            {b.expiryDate ? (
+                              <span className={`font-medium ${isExpired ? 'text-red-600' : 'text-slate-600'}`}>
+                                {new Date(b.expiryDate).toLocaleDateString('en-IN')}
+                                {isExpired && <span className="ml-1 px-1 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-bold">Expired</span>}
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td className="px-5 py-3 text-slate-500 text-xs">
+                            {new Date(b.createdAt).toLocaleDateString('en-IN')}
+                          </td>
+                          <td className="px-5 py-3">
+                            <button
+                              onClick={() => openEdit(b)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition text-xs font-semibold opacity-0 group-hover:opacity-100"
+                              title="Edit batch details"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> Edit
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -254,6 +308,135 @@ export default function BatchNumbersPage() {
         </div>
 
       </main>
+
+      {/* ─── EDIT BATCH MODAL ──────────────────────────────────────── */}
+      {showEditModal && editingBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <Edit2 className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Edit Batch</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{editingBatch.productId?.name || 'Unknown Product'}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowEditModal(false)} className="p-2 rounded-xl hover:bg-blue-100 text-slate-500 hover:text-slate-900 transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Info Bar */}
+            <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-100 text-xs text-slate-500 flex items-center gap-4">
+              <span>Current Stock: <strong className="text-slate-800">{parseFloat((editingBatch.currentStock || 0).toFixed(2))} {editingBatch.productId?.unit || ''}</strong></span>
+              <span className="text-amber-600 font-medium">⚠ To adjust stock quantity, use the Stock Levels → Adjust feature</span>
+            </div>
+
+            {/* Fields */}
+            <div className="p-6 space-y-4">
+
+              {/* Batch No */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Batch No.</label>
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    value={editForm.batchNo}
+                    onChange={e => setEditForm({ ...editForm, batchNo: e.target.value })}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition font-mono"
+                    placeholder="Batch Number"
+                  />
+                </div>
+              </div>
+
+              {/* Sale Price + MRP */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Sale Price (₹)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₹</span>
+                    <input
+                      type="number"
+                      value={editForm.salePrice === 0 ? '' : editForm.salePrice}
+                      onChange={e => setEditForm({ ...editForm, salePrice: parseFloat(e.target.value) || 0 })}
+                      min="0" step="0.01"
+                      className="w-full pl-7 pr-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">MRP (₹)</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">₹</span>
+                    <input
+                      type="number"
+                      value={editForm.mrp === 0 ? '' : editForm.mrp}
+                      onChange={e => setEditForm({ ...editForm, mrp: parseFloat(e.target.value) || 0 })}
+                      min="0" step="0.01"
+                      className="w-full pl-7 pr-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Mfg Date + Expiry Date */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" /> Mfg Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.manufacturingDate}
+                    onChange={e => setEditForm({ ...editForm, manufacturingDate: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 text-sm transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" /> Expiry Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.expiryDate}
+                    onChange={e => setEditForm({ ...editForm, expiryDate: e.target.value })}
+                    className={`w-full px-3 py-2.5 rounded-lg bg-slate-50 border text-sm transition focus:outline-none focus:ring-1 focus:ring-blue-200 ${
+                      editForm.expiryDate && new Date(editForm.expiryDate) < new Date()
+                        ? 'border-red-300 text-red-700 focus:border-red-400'
+                        : 'border-slate-200 text-slate-900 focus:border-blue-400'
+                    }`}
+                  />
+                  {editForm.expiryDate && new Date(editForm.expiryDate) < new Date() && (
+                    <p className="text-red-500 text-[11px] mt-1">⚠ This date is in the past (expired)</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <button onClick={() => setShowEditModal(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-white font-medium text-sm transition">
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={editSaving}
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-blue-200"
+              >
+                {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

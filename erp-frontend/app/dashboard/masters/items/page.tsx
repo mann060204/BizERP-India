@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Topbar from '../../../../components/layout/Topbar';
 import { productsApi, businessApi } from '../../../../lib/erp-api';
-import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings, ExternalLink, RefreshCw, Download } from 'lucide-react';
+import { Plus, Search, Package, Edit2, Trash2, X, Loader2, Save, Tag, DollarSign, Layers, FileText, Settings, ExternalLink, RefreshCw, Download, GitMerge, AlertTriangle, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickCategoryModal from '../../../../components/modals/QuickCategoryModal';
 
@@ -91,10 +91,14 @@ export default function MastersPage() {
   
   const [showModal, setShowModal] = useState(false);
   const [showUnitModal, setShowUnitModal] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
   const [quickCategoryMode, setQuickCategoryMode] = useState<'category' | 'brand' | 'group' | 'subgroup' | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<Record<string, string>>({}); // groupKey -> winner _id
+  const [expandedDupGroups, setExpandedDupGroups] = useState<Record<string, boolean>>({});
+  const [mergingSaving, setMergingSaving] = useState(false);
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
@@ -127,6 +131,17 @@ export default function MastersPage() {
     fetchSettings();
     fetchProducts(); 
   }, [fetchProducts, fetchSettings]);
+
+  // --- Duplicate detection ---
+  const duplicateGroups: Record<string, Product[]> = {};
+  products.forEach(p => {
+    const key = p.name.trim().toLowerCase();
+    if (!duplicateGroups[key]) duplicateGroups[key] = [];
+    duplicateGroups[key].push(p);
+  });
+  const onlyDuplicates = Object.fromEntries(Object.entries(duplicateGroups).filter(([, v]) => v.length > 1));
+  const duplicateIds = new Set(Object.values(onlyDuplicates).flat().map(p => p._id));
+  const duplicateCount = Object.keys(onlyDuplicates).length;
 
   useEffect(() => {
     const action = searchParams.get('action');
@@ -178,6 +193,23 @@ export default function MastersPage() {
     if (!confirm(`Delete "${name}"?`)) return;
     try { await productsApi.delete(id); toast.success('Item deleted'); fetchProducts(); }
     catch { toast.error('Failed to delete'); }
+  };
+
+  const handleMergeDuplicates = async (groupItems: Product[], winnerId: string) => {
+    const winner = groupItems.find(p => p._id === winnerId);
+    if (!winner) return;
+    const toDelete = groupItems.filter(p => p._id !== winnerId);
+    if (!confirm(`Merge ${toDelete.length} duplicate(s) into "${winner.name}"?\nThe others will be permanently deleted.`)) return;
+    setMergingSaving(true);
+    try {
+      for (const p of toDelete) {
+        await productsApi.delete(p._id);
+      }
+      toast.success(`Merged: kept "${winner.name}", deleted ${toDelete.length} duplicate(s)`);
+      fetchProducts();
+      setShowDuplicateModal(false);
+    } catch { toast.error('Failed to merge duplicates'); }
+    finally { setMergingSaving(false); }
   };
 
   const exportProducts = async () => {
@@ -271,7 +303,14 @@ export default function MastersPage() {
             <h2 className="text-xl font-bold text-slate-900">Items & Services</h2>
             <p className="text-slate-600 text-sm mt-0.5">{products.length} item{products.length !== 1 ? 's' : ''} in master</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {duplicateCount > 0 && (
+              <button onClick={() => setShowDuplicateModal(true)}
+                className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm transition flex items-center gap-2 shadow-sm animate-pulse">
+                <AlertTriangle className="w-4 h-4" />
+                {duplicateCount} Duplicate{duplicateCount > 1 ? 's' : ''} Found
+              </button>
+            )}
             <button onClick={exportProducts} className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition flex items-center gap-2 shadow-sm">
               <Download className="w-4 h-4" /> Full Export (with Batch)
             </button>
@@ -320,15 +359,24 @@ export default function MastersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1A1A1A]">
-                  {products.map((p) => (
-                    <tr key={p._id} className="hover:bg-[#F1F5F9] transition-colors group">
+                  {products.map((p) => {
+                    const isDup = duplicateIds.has(p._id);
+                    return (
+                    <tr key={p._id} className={`transition-colors group ${isDup ? 'bg-amber-50 border-l-4 border-l-amber-400 hover:bg-amber-100' : 'hover:bg-[#F1F5F9]'}`}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${p.type === 'service' ? 'bg-violet-500/20 text-violet-300' : 'bg-primary/20 text-blue-300'}`}>
                             {p.type === 'service' ? 'S' : 'P'}
                           </div>
                           <div>
-                            <p className="text-slate-900 font-medium">{p.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-slate-900 font-medium">{p.name}</p>
+                              {isDup && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300">
+                                  <Copy className="w-2.5 h-2.5" /> DUP
+                                </span>
+                              )}
+                            </div>
                             {p.sku && <p className="text-slate-600 text-xs font-mono">{p.sku}</p>}
                           </div>
                         </div>
@@ -357,10 +405,16 @@ export default function MastersPage() {
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] text-slate-600 hover:text-slate-900 transition"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => handleDelete(p._id, p.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
+                          {isDup && (
+                            <button onClick={() => setShowDuplicateModal(true)} title="Manage duplicates" className="p-1.5 rounded-lg hover:bg-amber-100 text-amber-500 hover:text-amber-700 transition">
+                              <GitMerge className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -650,6 +704,128 @@ export default function MastersPage() {
             setForm((prev: any) => ({ ...prev, [stateKey]: newName }));
           }}
         />
+      )}
+
+      {/* ======= DUPLICATE MANAGER MODAL ======= */}
+      {showDuplicateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[88vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-amber-50 rounded-t-2xl shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Duplicate Items Manager</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{duplicateCount} group{duplicateCount > 1 ? 's' : ''} of duplicate items found</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDuplicateModal(false)} className="p-2 rounded-xl hover:bg-amber-100 text-slate-500 hover:text-slate-900 transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Info Bar */}
+            <div className="px-6 py-3 bg-amber-50/50 border-b border-amber-100 text-xs text-amber-700 flex items-center gap-2 shrink-0">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+              Select which item to <strong>keep</strong> as master, then click <strong>Merge</strong> — others will be deleted. Or delete individual items.
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto flex-1 p-4 space-y-3">
+              {Object.entries(onlyDuplicates).map(([key, groupItems]) => {
+                const isExpanded = expandedDupGroups[key] !== false; // default expanded
+                const selectedWinner = mergeTarget[key] || groupItems[0]._id;
+                return (
+                  <div key={key} className="border border-amber-200 rounded-xl overflow-hidden">
+                    {/* Group Header */}
+                    <button
+                      onClick={() => setExpandedDupGroups(prev => ({ ...prev, [key]: !isExpanded }))}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-amber-50 hover:bg-amber-100 transition text-left">
+                      <div className="flex items-center gap-2">
+                        <Copy className="w-4 h-4 text-amber-600" />
+                        <span className="font-semibold text-slate-800 capitalize">{groupItems[0].name}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-800">
+                          {groupItems.length} copies
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleMergeDuplicates(groupItems, selectedWinner); }}
+                          disabled={mergingSaving}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition shadow-sm disabled:opacity-50">
+                          {mergingSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <GitMerge className="w-3 h-3" />}
+                          Merge
+                        </button>
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                      </div>
+                    </button>
+
+                    {/* Group Items */}
+                    {isExpanded && (
+                      <div className="divide-y divide-slate-100">
+                        {groupItems.map((item, idx) => (
+                          <div key={item._id} className={`flex items-center gap-3 px-4 py-3 ${selectedWinner === item._id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'bg-white hover:bg-slate-50'} transition`}>
+                            {/* Radio: keep this one */}
+                            <input
+                              type="radio"
+                              name={`winner-${key}`}
+                              checked={selectedWinner === item._id}
+                              onChange={() => setMergeTarget(prev => ({ ...prev, [key]: item._id }))}
+                              className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-slate-800 text-sm truncate">{item.name}</span>
+                                {selectedWinner === item._id && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">KEEP</span>
+                                )}
+                                {idx === 0 && selectedWinner !== item._id && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-500">Original</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 mt-0.5 text-xs text-slate-500">
+                                <span>SKU: {item.sku || '—'}</span>
+                                <span>Sale: ₹{item.sellingPrice}</span>
+                                <span>Stock: {item.currentStock} {item.unit}</span>
+                                <span>GST: {item.gstRate}%</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                onClick={() => openEdit(item)}
+                                className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition"
+                                title="Edit">
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item._id, item.name)}
+                                className="p-1.5 rounded-lg hover:bg-red-100 text-slate-500 hover:text-red-600 transition"
+                                title="Delete this duplicate">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-between items-center shrink-0">
+              <p className="text-xs text-slate-500">
+                <strong>{Object.values(onlyDuplicates).flat().length}</strong> items across <strong>{duplicateCount}</strong> duplicate groups
+              </p>
+              <button onClick={() => setShowDuplicateModal(false)} className="px-5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium text-sm transition">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
