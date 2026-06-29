@@ -8,6 +8,7 @@ export interface ILineItem {
   tag?: string;
   description?: string;
   quantity: number;
+  actualQty?: number;
   unit: string;
   rate: number;
   mrp?: number;
@@ -85,6 +86,7 @@ const LineItemSchema = new Schema<ILineItem>({
   tag: String,
   description: String,
   quantity: { type: Number, required: true },
+  actualQty: { type: Number, default: null },
   unit: { type: String, default: 'Nos' },
   rate: { type: Number, required: true },
   mrp: { type: Number, default: 0 },

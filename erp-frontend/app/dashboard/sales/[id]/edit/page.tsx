@@ -19,7 +19,7 @@ interface Customer { _id: string; name: string; mobile?: string; gstin?: string;
 interface Product { _id: string; name: string; sellingPrice: number; sellingPrice2?: number; sellingPrice3?: number; gstRate: number; hsnCode?: string; unit: string; secondaryUnit?: string; secSalePrice?: number; conversionRate?: number; isDefaultSecondaryUnit?: boolean; mrp?: number; location?: string; currentStock?: number; group?: string; brand?: string; batches?: any[]; availableBatches?: any[];  description?: string; printDescription?: boolean; }
 interface LineItem { 
   productId?: string; productName: string; hsnCode: string; batchNo: string; tag: string; description: string;
-  quantity: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
+  quantity: number; actualQty?: number; unit: string; rate: number; mrp: number; discount: number; gstRate: number; cess: number;
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
   primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
   selectedBaseRate?: number;
@@ -40,6 +40,7 @@ export default function EditInvoicePage() {
   const [units, setUnits] = useState<string[]>(['Nos', 'Kg', 'Ltr', 'Box', 'Pcs', 'Mtr']);
   const [discountSchemes, setDiscountSchemes] = useState<any[]>([]);
   const [selectedSchemeId, setSelectedSchemeId] = useState('');
+  const [enableActualQty, setEnableActualQty] = useState(false);
 
   // Header State
   const [invoiceType, setInvoiceType] = useState('GST');
@@ -68,7 +69,7 @@ export default function EditInvoicePage() {
   // Particulars (Input Row) State
   const [itemInput, setItemInput] = useState<LineItem>({
     productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-    quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
+    quantity: 1, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
     taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
   });
   const [itemSearch, setItemSearch] = useState('');
@@ -167,6 +168,7 @@ export default function EditInvoicePage() {
         if (bizUnits && bizUnits.length > 0) setUnits(bizUnits);
         const bizDiscounts = bRes.data?.business?.discountSchemes || [];
         setDiscountSchemes(bizDiscounts.filter((d: any) => d.isActive));
+        setEnableActualQty(bRes.data?.business?.enableActualQty || false);
         
         const inv = iRes.data.invoice;
         setInvoiceNumber(inv.invoiceNumber);
@@ -201,7 +203,8 @@ export default function EditInvoicePage() {
           selectedBaseRate: item.selectedBaseRate || item.rate,
           discountType: item.discountType || 'percentage',
           discountAmount: item.discountAmount || 0,
-          discount: item.discount || 0
+          discount: item.discount || 0,
+          actualQty: item.actualQty ?? null
         }, inv.invoiceType || 'GST', inv.isInterState || false));
         
         setLineItems(mappedItems);
@@ -439,7 +442,7 @@ export default function EditInvoicePage() {
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
+      quantity: 1, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
@@ -466,7 +469,7 @@ export default function EditInvoicePage() {
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
+      quantity: 1, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
     });
     setItemSearch('');
@@ -878,9 +881,15 @@ export default function EditInvoicePage() {
                 </select>
               </div>
               <div>
-                <label className="erp-label">Quantity <span className="text-red-500">*</span></label>
+                <label className="erp-label">{enableActualQty ? 'Billed Qty' : 'Quantity'} <span className="text-red-500">*</span></label>
                 <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
               </div>
+              {enableActualQty && (
+                <div>
+                  <label className="erp-label">Actual Qty</label>
+                  <input type="number" value={itemInput.actualQty === 0 ? '' : itemInput.actualQty} step="0.001" onChange={e => setItemInput({...itemInput, actualQty: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full bg-amber-50" placeholder="Physical qty" />
+                </div>
+              )}
               <div className="relative group">
                 <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
                 <div className="relative">
@@ -988,7 +997,8 @@ export default function EditInvoicePage() {
            <div className="grid grid-cols-12 erp-grid-header border-b border-slate-200">
              <div className="col-span-1 erp-grid-cell">S.No</div>
              <div className="col-span-3 erp-grid-cell">Item Name</div>
-             <div className="col-span-1 erp-grid-cell text-center">Qty</div>
+             <div className="col-span-1 erp-grid-cell text-center">{enableActualQty ? 'Billed Qty' : 'Qty'}</div>
+             {enableActualQty && <div className="col-span-1 erp-grid-cell text-center text-amber-600">Actual Qty</div>}
              <div className="col-span-1 erp-grid-cell">Unit</div>
              <div className="col-span-1 erp-grid-cell text-right">Unit Price</div>
              <div className="col-span-1 erp-grid-cell text-center">Disc%</div>
@@ -1013,6 +1023,7 @@ export default function EditInvoicePage() {
                       {item.description && <div className="text-[10px] text-slate-600 font-normal leading-tight mt-0.5">{item.description}</div>}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
+                    {enableActualQty && <div className="col-span-1 erp-grid-cell text-center text-amber-600 font-semibold">{item.actualQty ?? '—'}</div>}
                     <div className="col-span-1 erp-grid-cell">{item.unit}</div>
                     <div className="col-span-1 erp-grid-cell text-right">₹{(item.rate || 0).toFixed(3)}</div>
                     <div className="col-span-1 erp-grid-cell text-center text-red-400">

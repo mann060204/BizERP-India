@@ -95,7 +95,8 @@ export default function SettingsPage() {
         productGroups: form.productGroups || [],
         productBrands: form.productBrands || [],
         inventorySequencing: form.inventorySequencing || 'FIFO',
-        enableManufacturing: form.enableManufacturing || false
+        enableManufacturing: form.enableManufacturing || false,
+        enableActualQty: form.enableActualQty || false
       });
       toast.success('Settings saved successfully');
         setTimeout(() => window.location.reload(), 1500);
@@ -412,6 +413,23 @@ export default function SettingsPage() {
                       placeholder="Enter default terms and conditions to print on invoices..."
                       className="w-full h-32 resize-none px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
                   </div>
+                  {/* Actual Qty Toggle */}
+                  <label className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                    <div>
+                      <span className="text-sm font-semibold text-slate-700 block">Enable Actual &amp; Billed Qty</span>
+                      <span className="text-[11px] text-slate-500">Show separate Actual Qty and Billed Qty columns on sales invoices</span>
+                    </div>
+                    <div
+                      onClick={() => setForm({ ...form, enableActualQty: !form.enableActualQty })}
+                      className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                        form.enableActualQty ? 'bg-primary' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                        form.enableActualQty ? 'translate-x-5' : 'translate-x-0'
+                      }`} />
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
