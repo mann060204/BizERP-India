@@ -18,7 +18,8 @@ export const getPurchaseOrders = async (req: Request, res: Response) => {
 
 export const getPurchaseOrder = async (req: Request, res: Response) => {
   try {
-    const order = await PurchaseOrder.findOne({ _id: req.params.id, businessId: (req as any).user.businessId });
+    const order = await PurchaseOrder.findOne({ _id: req.params.id, businessId: (req as any).user.businessId })
+      .populate('supplierId', 'name mobile gstin address');
     if (!order) return res.status(404).json({ message: 'Purchase Order not found' });
     res.json({ order });
   } catch (error: any) {

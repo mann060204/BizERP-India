@@ -126,7 +126,7 @@ export default function EditPurchaseOrderPage() {
           if (pur.supplierId) {
             setSupplierId(pur.supplierId._id);
             setSupplierSnapshot(pur.supplierId);
-            setSupplierSearch(pur.supplierId.name);
+            setSupplierSearch(pur.supplierId.name || '');
             setContactNo(pur.supplierId.mobile || '');
             let addrStr = '';
             if (pur.supplierId.address) {
@@ -171,8 +171,8 @@ export default function EditPurchaseOrderPage() {
     fetchData();
   }, [id]);
 
-  const filteredSuppliers = suppliers.filter(s => s?.name?.toLowerCase().includes(supplierSearch.toLowerCase()));
-  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes(itemSearch.toLowerCase()));
+  const filteredSuppliers = suppliers.filter(s => s?.name?.toLowerCase().includes((supplierSearch || '').toLowerCase()));
+  const filteredProducts = products.filter(p => p?.name?.toLowerCase().includes((itemSearch || '').toLowerCase()));
 
   const pickSupplier = (s: Supplier) => {
     setSupplierId(s._id);
