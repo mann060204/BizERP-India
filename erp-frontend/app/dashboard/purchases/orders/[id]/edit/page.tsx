@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Topbar from '../../../../../../components/layout/Topbar';
-import { suppliersApi, productsApi, purchaseOrdersApi, businessApi } from '../../../../../../lib/erp-api';
+import { suppliersApi, productsApi, purchaseOrdersApi, purchasesApi, businessApi } from '../../../../../../lib/erp-api';
 import { ChevronDown, Loader2, Plus, ArrowRight, X, Edit, Trash2, Search, Save, Printer, RotateCcw, Calculator, Bell, Truck, Barcode, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 import QuickAddItemModal from '../../../../../../components/modals/QuickAddItemModal';
@@ -111,8 +111,8 @@ export default function EditPurchaseOrderPage() {
         }
 
         if (id) {
-          const { data } = await purchaseOrdersApi.get(id);
-          const pur = data.purchase;
+          const data = await purchaseOrdersApi.get(id);
+          const pur = data.order;
           
           setPurchaseType(pur.purchaseType || 'GST');
           setorderNumber(pur.orderNumber || '');
@@ -216,7 +216,7 @@ export default function EditPurchaseOrderPage() {
 
     if (supplierId) {
       try {
-        const { data } = await purchaseOrdersApi.getLastPrices(supplierId, p._id);
+        const { data } = await purchasesApi.getLastPrices(supplierId, p._id);
         setLastPrices(data.prices || []);
       } catch (err) {
         setLastPrices([]);

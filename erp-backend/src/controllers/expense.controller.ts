@@ -30,7 +30,7 @@ export const getExpenses = async (req: AuthRequest, res: Response): Promise<void
 // POST /api/v1/expenses
 export const createExpense = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { category, amount, date, paymentMode, vendorName, notes, gstRate = 0, isInterState = false } = req.body;
+    const { category, amount, date, paymentMode, vendorName, notes, gstRate = 0, isInterState = false, bankAccountId } = req.body;
     
     if (!category || !amount) {
       res.status(400).json({ message: 'Category and Amount are required' });
@@ -64,6 +64,7 @@ export const createExpense = async (req: AuthRequest, res: Response): Promise<vo
       gstRate: numGstRate,
       cgst, sgst, igst,
       totalWithTax,
+      bankAccountId: bankAccountId || undefined,
       createdBy: req.user!.userId,
     });
 
@@ -123,7 +124,7 @@ export const updateExpense = async (req: AuthRequest, res: Response): Promise<vo
     existing.sgst = sgst;
     existing.igst = igst;
     existing.totalWithTax = totalWithTax;
-    if (bankAccountId !== undefined) (existing as any).bankAccountId = bankAccountId || undefined;
+    if (bankAccountId !== undefined) existing.bankAccountId = bankAccountId || undefined;
     await existing.save();
 
     // 4. Re-record in the general ledger

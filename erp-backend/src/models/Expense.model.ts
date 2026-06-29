@@ -13,6 +13,7 @@ export interface IExpense extends Document {
   sgst?: number;
   igst?: number;
   totalWithTax: number;
+  bankAccountId?: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -32,9 +33,11 @@ const ExpenseSchema = new Schema<IExpense>(
     sgst: { type: Number, default: 0 },
     igst: { type: Number, default: 0 },
     totalWithTax: { type: Number, required: true },
+    bankAccountId: { type: Schema.Types.ObjectId, ref: 'Account', default: null },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }
 );
 
 export default mongoose.model<IExpense>('Expense', ExpenseSchema);
+
