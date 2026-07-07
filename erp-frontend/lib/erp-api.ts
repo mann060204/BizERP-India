@@ -114,6 +114,7 @@ export const inventoryApi = {
   listBatches: (params?: any) => api.get('/inventory/batches', { params }),
   saveBatch: (data: any) => api.post('/inventory/batches', data),
   updateBatch: (id: string, data: any) => api.put(`/inventory/batches/${id}`, data),
+  deleteBatch: (id: string) => api.delete(`/inventory/batches/${id}`),
   bulkImport: (data: any) => api.post('/inventory/bulk-import', data),
 };
 

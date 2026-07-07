@@ -406,6 +406,33 @@ export const updateBatch = async (req: AuthRequest, res: Response): Promise<void
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
 
+// DELETE /api/v1/inventory/batches/:id
+export const deleteBatch = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const businessId = req.user!.businessId;
+
+    const batch = await Batch.findOne({ _id: id, businessId });
+    if (!batch) {
+      res.status(404).json({ message: 'Batch not found' });
+      return;
+    }
+
+    // Deduct the batch's current stock from the product total
+    if (batch.currentStock > 0) {
+      await Product.findByIdAndUpdate(batch.productId, {
+        $inc: { currentStock: -batch.currentStock },
+      });
+    }
+
+    await Batch.findByIdAndDelete(id);
+
+    res.json({ message: 'Batch deleted successfully' });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 // POST /api/v1/inventory/bulk-import
 export const bulkImportInventory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

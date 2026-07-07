@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../../components/layout/Topbar';
 import { inventoryApi, productsApi } from '../../../../lib/erp-api';
-import { Search, Loader2, Package, Calendar, Hash, DollarSign, Edit2, X, Save, Tag } from 'lucide-react';
+import { Search, Loader2, Package, Calendar, Hash, DollarSign, Edit2, X, Save, Tag, Trash2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Product { _id: string; name: string; sku?: string; unit: string; }
@@ -65,6 +65,11 @@ export default function BatchNumbersPage() {
     expiryDate: '',
   });
   const [editSaving, setEditSaving] = useState(false);
+
+  // ─── Delete Confirm ─────────────────────────────────────────────
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingBatch, setDeletingBatch] = useState<BatchItem | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // ─── Load products ──────────────────────────────────────────────
   useEffect(() => {
@@ -147,6 +152,21 @@ export default function BatchNumbersPage() {
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to update batch');
     } finally { setEditSaving(false); }
+  };
+
+  // ─── Delete Batch ───────────────────────────────────────────────
+  const handleDelete = async () => {
+    if (!deletingBatch) return;
+    setDeleteLoading(true);
+    try {
+      await inventoryApi.deleteBatch(deletingBatch._id);
+      toast.success(`Batch "${deletingBatch.batchNo}" deleted`);
+      setShowDeleteConfirm(false);
+      setDeletingBatch(null);
+      fetchBatches();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to delete batch');
+    } finally { setDeleteLoading(false); }
   };
 
   return (
@@ -306,13 +326,22 @@ export default function BatchNumbersPage() {
                             {new Date(b.createdAt).toLocaleDateString('en-IN')}
                           </td>
                           <td className="px-5 py-3">
-                            <button
-                              onClick={() => openEdit(b)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition text-xs font-semibold opacity-0 group-hover:opacity-100"
-                              title="Edit batch details"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" /> Edit
-                            </button>
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => openEdit(b)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-400 transition text-xs font-semibold"
+                                title="Edit batch details"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" /> Edit
+                              </button>
+                              <button
+                                onClick={() => { setDeletingBatch(b); setShowDeleteConfirm(true); }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 transition text-xs font-semibold"
+                                title="Delete batch"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -504,6 +533,59 @@ export default function BatchNumbersPage() {
               >
                 {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── DELETE CONFIRM MODAL ──────────────────────────────────────── */}
+      {showDeleteConfirm && deletingBatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-sm shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-red-50 to-rose-50 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <h3 className="font-bold text-slate-900 text-base">Delete Batch</h3>
+              </div>
+              <button onClick={() => { setShowDeleteConfirm(false); setDeletingBatch(null); }} className="p-2 rounded-xl hover:bg-red-100 text-slate-500 hover:text-slate-900 transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-4">
+              <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200">
+                <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-amber-800">
+                  This will permanently delete batch <strong className="font-semibold">{deletingBatch.batchNo}</strong> and reduce the product stock by <strong>{parseFloat((deletingBatch.currentStock || 0).toFixed(2))} {deletingBatch.productId?.unit || ''}</strong>.
+                </p>
+              </div>
+              <p className="text-sm text-slate-600">
+                Product: <span className="font-medium text-slate-900">{deletingBatch.productId?.name || '—'}</span>
+              </p>
+              <p className="text-xs text-slate-400">This action cannot be undone.</p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeletingBatch(null); }}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-white font-medium text-sm transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60 shadow-md shadow-red-200"
+              >
+                {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Delete Batch
               </button>
             </div>
           </div>
