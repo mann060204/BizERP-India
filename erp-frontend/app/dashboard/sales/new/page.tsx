@@ -318,8 +318,6 @@ export default function NewInvoicePage() {
     setItemSearch(p.name);
     setShowItemDD(false);
 
-    const available = p.availableBatches || p.batches || [];
-
     // Build the item input snapshot
     const newInput = {
       ...itemInput,
@@ -341,16 +339,6 @@ export default function NewInvoicePage() {
       selectedBaseRate: initialRate
     };
     setItemInput(newInput);
-
-    // If product has batches, show batch selector immediately on product pick
-    if (available.length > 0) {
-      setPendingBatchItem({
-        product: p,
-        quantity: newInput.quantity,
-        itemInputData: { ...newInput }
-      });
-      setShowBatchModal(true);
-    }
 
     if (selectedCustomer?._id) {
       try {
