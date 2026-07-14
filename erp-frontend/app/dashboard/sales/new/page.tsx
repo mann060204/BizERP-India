@@ -388,7 +388,7 @@ export default function NewInvoicePage() {
     if (!itemInput.productName) { toast.error('Select an item first'); return; }
 
     const p = products.find(prod => prod._id === itemInput.productId);
-    const available = p?.batches || [];
+    const available = p?.availableBatches || p?.batches || [];
 
     if (p && available.length > 0) {
       setPendingBatchItem({
