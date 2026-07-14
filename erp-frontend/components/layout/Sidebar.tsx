@@ -34,6 +34,12 @@ const NAV_ITEMS = [
       { label: 'Batch Numbers',    href: '/dashboard/inventory/batches' },
     ]
   },
+  { label: 'Manufacturing', href: '#',                  icon: Factory,
+    subItems: [
+      { label: 'Bill of Materials',    href: '/dashboard/manufacturing/bom' },
+      { label: 'Production Orders',    href: '/dashboard/manufacturing/orders' },
+    ]
+  },
   { label: 'Accounts',    href: '/dashboard/accounts',  icon: Landmark,
     subItems: [
       { label: 'Cash Account',    href: '/dashboard/accounts/Cash' },
