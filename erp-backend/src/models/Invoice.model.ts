@@ -5,6 +5,7 @@ export interface ILineItem {
   productName: string;
   hsnCode?: string;
   batchNo?: string;
+  batches?: { batchNo: string; quantity: number }[];
   tag?: string;
   description?: string;
   quantity: number;
@@ -83,6 +84,10 @@ const LineItemSchema = new Schema<ILineItem>({
   productName: { type: String, required: true },
   hsnCode: String,
   batchNo: String,
+  batches: [{
+    batchNo: { type: String, required: true },
+    quantity: { type: Number, required: true }
+  }],
   tag: String,
   description: String,
   quantity: { type: Number, required: true },

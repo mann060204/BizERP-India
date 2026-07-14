@@ -23,6 +23,7 @@ interface LineItem {
   taxableAmount: number; cgst: number; sgst: number; igst: number; totalAmount: number; 
   primaryUnit?: string; secondaryUnit?: string; primaryRate?: number; sellingPrice2?: number; sellingPrice3?: number; secSalePrice?: number; conversionRate?: number;
   selectedBaseRate?: number;
+  batches?: { batchNo: string; quantity: number }[];
 }
 
 const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit'];
@@ -70,8 +71,9 @@ export default function EditInvoicePage() {
   const [itemInput, setItemInput] = useState<LineItem>({
     productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
     quantity: 1, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
-    taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
+    taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0, batches: []
   });
+  const [batchInputQty, setBatchInputQty] = useState<number | ''>('');
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
   const [itemHighlightIndex, setItemHighlightIndex] = useState(-1);
@@ -427,7 +429,7 @@ export default function EditInvoicePage() {
     const p = products.find(x => x._id === itemInput.productId);
     const available = p?.availableBatches || p?.batches || [];
     
-    if (p && available.length > 0 && !itemInput.batchNo) {
+    if (p && available.length > 0) {
       setPendingBatchItem({
         product: p,
         quantity: itemInput.quantity,
@@ -442,8 +444,8 @@ export default function EditInvoicePage() {
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
-      quantity: 1, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
-      taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
+      quantity: 0, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
+      taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0, batches: []
     });
     setItemSearch('');
     setLastPriceInfo(null);
@@ -452,25 +454,21 @@ export default function EditInvoicePage() {
   const handleBatchModalConfirm = (selectedBatches: any[]) => {
     if (!pendingBatchItem) return;
     
-    const newItems: LineItem[] = [];
-    selectedBatches.forEach(b => {
-      const newItem = calculateItem({
-        ...pendingBatchItem.itemInputData,
-        batchNo: b.batchNo,
-        quantity: b.quantity,
-        rate: b.salePrice || pendingBatchItem.itemInputData.rate,
-        mrp: b.mrp || pendingBatchItem.itemInputData.mrp
-      });
-      newItems.push(newItem);
+    const totalQty = selectedBatches.reduce((acc, curr) => acc + curr.quantity, 0);
+
+    const newItem = calculateItem({
+      ...pendingBatchItem.itemInputData,
+      actualQty: totalQty,
+      batches: selectedBatches
     });
 
-    setLineItems([...lineItems, ...newItems]);
+    setLineItems([...lineItems, newItem]);
     
     // Reset input
     setItemInput({
       productName: '', hsnCode: '', batchNo: '', tag: '', description: '',
       quantity: 1, actualQty: 0, unit: 'Nos', rate: 0, mrp: 0, discount: 0, discountAmount: 0, discountType: 'percentage', gstRate: 0, cess: 0,
-      taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0
+      taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0, batches: []
     });
     setItemSearch('');
     setLastPriceInfo(null);
@@ -770,34 +768,15 @@ export default function EditInvoicePage() {
         {/* Section 2: Particulars Input */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Particulars</div>
-          <div className="p-1.5 overflow-x-auto">
-            <div className="flex items-end gap-1.5 min-w-[1300px] pb-2">
-              <div className="w-20 shrink-0">
-                <label className="erp-label truncate">Batch</label>
-                {itemInput.productId && products.find(p => p._id === itemInput.productId)?.batches?.length ? (
-                  <select 
-                    value={itemInput.batchNo}
-                    onChange={e => {
-                       const selectedBatch = products.find(p => p._id === itemInput.productId)?.batches?.find((b: any) => b.batchNo === e.target.value);
-                       if (selectedBatch) {
-                         setItemInput({...itemInput, batchNo: e.target.value, rate: selectedBatch.salePrice, mrp: selectedBatch.mrp, selectedBaseRate: selectedBatch.salePrice});
-                       } else {
-                         setItemInput({...itemInput, batchNo: e.target.value});
-                       }
-                    }}
-                    className="erp-input w-full bg-slate-50 px-1"
-                  >
-                    <option value="">Sel</option>
-                    {products.find(p => p._id === itemInput.productId)?.batches?.map((b: any) => (
-                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} ({parseFloat((b.currentStock || 0).toFixed(2))})</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50 px-1" placeholder="Opt" />
-                )}
+          <div className="p-2 bg-slate-50 border-b border-slate-200">
+            {/* Row 1 */}
+            <div className="grid grid-cols-12 gap-3 items-end mb-3">
+              <div className="col-span-2">
+                <label className="erp-label truncate">Batch No.</label>
+                <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full px-1" placeholder="Optional" />
               </div>
               
-              <div className="flex-1 min-w-[200px] flex flex-col justify-end">
+              <div className="col-span-3 flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
@@ -856,7 +835,7 @@ export default function EditInvoicePage() {
                 )}
               </div>
               
-              <div className="w-16 shrink-0">
+              <div className="col-span-1">
                 <label className="erp-label truncate">Unit*</label>
                 <select 
                   value={itemInput.unit}
@@ -883,20 +862,22 @@ export default function EditInvoicePage() {
                 </select>
               </div>
 
-              <div className="w-16 shrink-0">
+              <div className="col-span-1">
                 <label className="erp-label truncate">{enableActualQty ? 'B.Qty*' : 'Qty*'}</label>
                 <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
               </div>
               
-              {enableActualQty && (
-                <div className="w-16 shrink-0">
-                  <label className="erp-label truncate">A.Qty</label>
-                  <input type="number" value={itemInput.actualQty === 0 ? '' : itemInput.actualQty} step="0.001" onChange={e => setItemInput({...itemInput, actualQty: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full bg-amber-50 px-1" placeholder="Phy" />
+              {enableActualQty ? (
+                <div className="col-span-1">
+                  <label className="erp-label truncate">Actual Qty</label>
+                  <input type="number" value={itemInput.actualQty === 0 ? '' : itemInput.actualQty} readOnly className="erp-input w-full bg-slate-100 px-1 cursor-not-allowed" placeholder="Auto" title="Auto-calculated from batches" />
                 </div>
+              ) : (
+                <div className="col-span-1" />
               )}
               
-              <div className="w-20 shrink-0 relative group">
-                <label className="erp-label truncate">Price <span className="text-[8px] text-blue-400 lowercase cursor-pointer">▼</span></label>
+              <div className="col-span-2 relative group">
+                <label className="erp-label truncate">Sale Price <span className="text-[8px] text-blue-400 lowercase cursor-pointer">▼</span></label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
                    <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3 px-1" />
@@ -927,7 +908,7 @@ export default function EditInvoicePage() {
                 )}
               </div>
               
-              <div className="w-16 shrink-0">
+              <div className="col-span-1">
                 <label className="erp-label truncate">MRP</label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
@@ -935,8 +916,8 @@ export default function EditInvoicePage() {
                 </div>
               </div>
               
-              <div className="w-20 shrink-0">
-                <label className="erp-label truncate block mb-1">Disc</label>
+              <div className="col-span-1">
+                <label className="erp-label truncate block mb-1">Discount</label>
                 <div className="flex">
                   <input 
                     type="number" 
@@ -960,18 +941,16 @@ export default function EditInvoicePage() {
                   </select>
                 </div>
               </div>
-              
-              <div className="w-12 shrink-0">
-                <label className="erp-label truncate">Tax%</label>
+            </div>
+
+            {/* Row 2 */}
+            <div className="grid grid-cols-12 gap-3 items-end">
+              <div className="col-span-1">
+                <label className="erp-label truncate">Tax (%)</label>
                 <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
               </div>
 
-              <div className="w-12 shrink-0">
-                <label className="erp-label truncate">Cess%</label>
-                <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
-              </div>
-
-              <div className="w-20 shrink-0 flex flex-col justify-end">
+              <div className="col-span-2 flex flex-col justify-end">
                 <div className="flex items-center gap-1 mb-1">
                    <label className="flex items-center gap-0.5 text-[8px] cursor-pointer leading-none"><input type="radio" checked className="accent-white" /> Tag</label>
                    <label className="flex items-center gap-0.5 text-[8px] cursor-pointer leading-none"><input type="radio" className="accent-white" /> Code</label>
@@ -979,19 +958,26 @@ export default function EditInvoicePage() {
                 <input value={itemInput.tag} onChange={e => setItemInput({...itemInput, tag: e.target.value})} className="erp-input w-full px-1" placeholder="Tag..." />
               </div>
 
-              <div className="w-28 shrink-0">
-                <label className="erp-label truncate">Desc</label>
+              <div className="col-span-4">
+                <label className="erp-label truncate">Item Description</label>
                 <input value={itemInput.description} onChange={e => setItemInput({...itemInput, description: e.target.value})} className="erp-input w-full px-1" placeholder="Optional" />
               </div>
 
-              <div className="w-20 shrink-0">
+              <div className="col-span-1">
+                <label className="erp-label truncate">Cess (%)</label>
+                <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
+              </div>
+
+              <div className="col-span-3">
                 <label className="erp-label truncate">Amount</label>
                 <div className="erp-input w-full bg-emerald-50 text-emerald-600 font-bold px-1 overflow-hidden truncate">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
               </div>
 
-              <button onClick={addItem} className="shrink-0 h-[28px] w-[28px] flex items-center justify-center bg-green-600 hover:bg-green-700 text-slate-900 rounded transition" title="Add Item">
-                <Plus className="w-4 h-4" />
-              </button>
+              <div className="col-span-1 flex justify-end">
+                <button onClick={addItem} className="h-[28px] w-full flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded transition" title="Add Item">
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1027,7 +1013,13 @@ export default function EditInvoicePage() {
                     <div className="col-span-3 erp-grid-cell font-medium flex items-center overflow-hidden whitespace-nowrap">
                       <span className="truncate" title={item.productName}>{item.productName}</span>
                       {item.tag && <span className="ml-1 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600 whitespace-nowrap">{item.tag}</span>}
-                      {item.batchNo && <span className="ml-1 text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap">Batch: {item.batchNo}</span>}
+                      {item.batches && item.batches.length > 0 ? (
+                        <span className="ml-1 text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap" title={item.batches.map(b => `${b.batchNo} (${b.quantity})`).join(', ')}>
+                          Batches: {item.batches.map(b => b.batchNo).join(', ')}
+                        </span>
+                      ) : item.batchNo && (
+                        <span className="ml-1 text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap">Batch: {item.batchNo}</span>
+                      )}
                       {item.description && <span className="ml-1 text-[10px] text-slate-400 font-normal truncate" title={item.description}>({item.description})</span>}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>

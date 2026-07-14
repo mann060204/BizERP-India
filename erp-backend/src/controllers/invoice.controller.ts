@@ -167,14 +167,37 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     for (const item of lineItems) {
       if (item.productId && item.quantity > 0) {
         try {
+          const qtyToDeduct = item.actualQty !== undefined && item.actualQty !== null ? item.actualQty : item.quantity;
           await Product.findByIdAndUpdate(item.productId, {
-            $inc: { currentStock: -item.quantity },
+            $inc: { currentStock: -qtyToDeduct },
           });
 
-          if (item.batchNo) {
+          if (item.batches && item.batches.length > 0) {
+            for (const b of item.batches) {
+              const updatedBatch = await Batch.findOneAndUpdate(
+                { businessId, productId: item.productId, batchNo: b.batchNo },
+                { $inc: { currentStock: -b.quantity } },
+                { new: true }
+              );
+
+              if (updatedBatch) {
+                await BatchLog.create({
+                  businessId,
+                  batchId: updatedBatch._id,
+                  productId: item.productId,
+                  action: 'STOCK_OUT',
+                  quantityChanged: -b.quantity,
+                  currentStock: updatedBatch.currentStock,
+                  documentType: 'Invoice',
+                  documentNumber: invoiceNumber,
+                  userId: req.user!.userId,
+                });
+              }
+            }
+          } else if (item.batchNo) {
             const updatedBatch = await Batch.findOneAndUpdate(
               { businessId, productId: item.productId, batchNo: item.batchNo },
-              { $inc: { currentStock: -item.quantity } },
+              { $inc: { currentStock: -qtyToDeduct } },
               { new: true }
             );
 
@@ -184,7 +207,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
                 batchId: updatedBatch._id,
                 productId: item.productId,
                 action: 'STOCK_OUT',
-                quantityChanged: -item.quantity,
+                quantityChanged: -qtyToDeduct,
                 currentStock: updatedBatch.currentStock,
                 documentType: 'Invoice',
                 documentNumber: invoiceNumber,
@@ -266,14 +289,22 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     // Reverse old stock deductions
     for (const oldItem of existingInvoice.lineItems) {
       if (oldItem.productId) {
+        const qtyToReverse = oldItem.actualQty !== undefined && oldItem.actualQty !== null ? oldItem.actualQty : oldItem.quantity;
         await Product.findByIdAndUpdate(oldItem.productId, {
-          $inc: { currentStock: oldItem.quantity },
+          $inc: { currentStock: qtyToReverse },
         });
 
-        if (oldItem.batchNo) {
+        if (oldItem.batches && oldItem.batches.length > 0) {
+          for (const b of oldItem.batches) {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: oldItem.productId, batchNo: b.batchNo },
+              { $inc: { currentStock: b.quantity } }
+            );
+          }
+        } else if (oldItem.batchNo) {
           await Batch.findOneAndUpdate(
             { businessId, productId: oldItem.productId, batchNo: oldItem.batchNo },
-            { $inc: { currentStock: oldItem.quantity } }
+            { $inc: { currentStock: qtyToReverse } }
           );
         }
       }
@@ -290,14 +321,22 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     // Apply new stock deductions
     for (const item of lineItems) {
       if (item.productId) {
+        const qtyToDeduct = item.actualQty !== undefined && item.actualQty !== null ? item.actualQty : item.quantity;
         await Product.findByIdAndUpdate(item.productId, {
-          $inc: { currentStock: -item.quantity },
+          $inc: { currentStock: -qtyToDeduct },
         });
 
-        if (item.batchNo) {
+        if (item.batches && item.batches.length > 0) {
+          for (const b of item.batches) {
+            await Batch.findOneAndUpdate(
+              { businessId, productId: item.productId, batchNo: b.batchNo },
+              { $inc: { currentStock: -b.quantity } }
+            );
+          }
+        } else if (item.batchNo) {
           await Batch.findOneAndUpdate(
             { businessId, productId: item.productId, batchNo: item.batchNo },
-            { $inc: { currentStock: -item.quantity } }
+            { $inc: { currentStock: -qtyToDeduct } }
           );
         }
       }
@@ -420,13 +459,22 @@ export const cancelInvoice = async (req: AuthRequest, res: Response): Promise<vo
     for (const item of invoice.lineItems) {
       if (item.productId) {
         try {
+          const qtyToReverse = item.actualQty !== undefined && item.actualQty !== null ? item.actualQty : item.quantity;
           await Product.findByIdAndUpdate(item.productId, {
-            $inc: { currentStock: item.quantity },
+            $inc: { currentStock: qtyToReverse },
           });
-          if (item.batchNo) {
+          
+          if (item.batches && item.batches.length > 0) {
+            for (const b of item.batches) {
+              await Batch.findOneAndUpdate(
+                { businessId, productId: item.productId, batchNo: b.batchNo },
+                { $inc: { currentStock: b.quantity } }
+              );
+            }
+          } else if (item.batchNo) {
             await Batch.findOneAndUpdate(
               { businessId, productId: item.productId, batchNo: item.batchNo },
-              { $inc: { currentStock: item.quantity } }
+              { $inc: { currentStock: qtyToReverse } }
             );
           }
         } catch (stockErr) {
