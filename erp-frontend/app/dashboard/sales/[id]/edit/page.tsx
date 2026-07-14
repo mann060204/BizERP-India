@@ -770,10 +770,10 @@ export default function EditInvoicePage() {
         {/* Section 2: Particulars Input */}
         <div className="erp-container">
           <div className="erp-header py-1 text-xs">Particulars</div>
-          <div className="p-1.5 space-y-1">
-            <div className="grid grid-cols-10 gap-2">
-              <div className="col-span-1">
-                <label className="erp-label">Batch No.</label>
+          <div className="p-1.5 overflow-x-auto">
+            <div className="flex items-end gap-1.5 min-w-[1300px] pb-2">
+              <div className="w-20 shrink-0">
+                <label className="erp-label truncate">Batch</label>
                 {itemInput.productId && products.find(p => p._id === itemInput.productId)?.batches?.length ? (
                   <select 
                     value={itemInput.batchNo}
@@ -785,34 +785,35 @@ export default function EditInvoicePage() {
                          setItemInput({...itemInput, batchNo: e.target.value});
                        }
                     }}
-                    className="erp-input w-full bg-slate-50"
+                    className="erp-input w-full bg-slate-50 px-1"
                   >
-                    <option value="">Select Batch</option>
+                    <option value="">Sel</option>
                     {products.find(p => p._id === itemInput.productId)?.batches?.map((b: any) => (
-                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} (Qty: {parseFloat((b.currentStock || 0).toFixed(2))})</option>
+                      <option key={b.batchNo} value={b.batchNo}>{b.batchNo} ({parseFloat((b.currentStock || 0).toFixed(2))})</option>
                     ))}
                   </select>
                 ) : (
-                  <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50" placeholder="Optional" />
+                  <input value={itemInput.batchNo} onChange={e => setItemInput({...itemInput, batchNo: e.target.value})} className="erp-input w-full bg-slate-50 px-1" placeholder="Opt" />
                 )}
               </div>
-              <div className="col-span-3 flex flex-col justify-end">
+              
+              <div className="flex-1 min-w-[200px] flex flex-col justify-end">
                 <div className="flex justify-between items-end mb-1">
                   <label className="erp-label !mb-0 flex items-center gap-1.5">
                     Item Name <span className="text-red-500">*</span>
-                    <button onClick={() => setShowAdvancedSearch(true)} className="text-primary hover:text-blue-400 bg-primary/10 p-1 rounded transition" title="Advanced Search">
-                      <Search className="w-4 h-4" />
+                    <button onClick={() => setShowAdvancedSearch(true)} className="text-primary hover:text-blue-400 bg-primary/10 p-0.5 rounded transition" title="Advanced Search">
+                      <Search className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-1 rounded transition ml-1" title="Add New Item">
-                      <Plus className="w-4 h-4" />
+                    <button onClick={() => setShowQuickAddModal(true)} className="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 p-0.5 rounded transition" title="Add New Item">
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-slate-600 hover:text-slate-900 bg-[#E2E8F0] hover:bg-slate-100 p-1 rounded transition ml-1" title="Refresh Items">
-                      <RotateCcw className="w-4 h-4" />
+                    <button onClick={async () => { try { const { data } = await productsApi.list({limit:500}); setProducts(data.products); toast.success('Products Refreshed!'); } catch(e){} }} className="text-slate-600 hover:text-slate-900 bg-[#E2E8F0] hover:bg-slate-100 p-0.5 rounded transition" title="Refresh Items">
+                      <RotateCcw className="w-3.5 h-3.5" />
                     </button>
                   </label>
                   {itemInput.productId && (
-                    <span className="text-xs text-slate-600">
-                      Stock: <span className="text-emerald-600 font-bold text-sm">{parseFloat((products.find(p => p._id === itemInput.productId)?.currentStock || 0).toFixed(2))}</span> | Rack: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
+                    <span className="text-[10px] text-slate-600">
+                      Stk: <span className="text-emerald-600 font-bold">{parseFloat((products.find(p => p._id === itemInput.productId)?.currentStock || 0).toFixed(2))}</span> | Rk: <span className="text-slate-900">{products.find(p => p._id === itemInput.productId)?.location || 'N/A'}</span>
                     </span>
                   )}
                 </div>
@@ -826,13 +827,13 @@ export default function EditInvoicePage() {
                         else if (e.key === 'Enter') { e.preventDefault(); if (itemHighlightIndex >= 0 && filteredProducts[itemHighlightIndex]) pickProduct(filteredProducts[itemHighlightIndex]); }
                         else if (e.key === 'Escape') { setShowItemDD(false); }
                       }}
-                      className="erp-input w-full pr-8" placeholder="Type item name..." />
-                    <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 bg-white px-1">
+                      className="erp-input w-full pr-6 text-xs" placeholder="Type item name..." />
+                    <button type="button" onClick={() => setShowItemDD(!showItemDD)} className="absolute right-1 top-1 text-slate-400 hover:text-slate-600 bg-white px-1">
                       <ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
                   {showItemDD && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 z-50 max-h-40 overflow-y-auto shadow-2xl min-w-[300px]">
                       {filteredProducts.map((p, idx) => (
                         <div key={p._id} onClick={() => pickProduct(p)} className={`px-2 py-1.5 text-xs cursor-pointer border-b border-slate-200 flex justify-between items-center group ${itemHighlightIndex === idx ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>
                           <div className="flex flex-col">
@@ -849,13 +850,14 @@ export default function EditInvoicePage() {
                   )}
                 </div>
                 {itemInput.productId && lastPriceInfo && (
-                  <div className="mt-1 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2 py-1 rounded border border-emerald-200 inline-block">
-                    Last Sold: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 text-[9px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shadow-sm pointer-events-none">
+                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
                   </div>
                 )}
               </div>
-              <div className="col-span-1">
-                <label className="erp-label">Unit <span className="text-red-500">*</span></label>
+              
+              <div className="w-16 shrink-0">
+                <label className="erp-label truncate">Unit*</label>
                 <select 
                   value={itemInput.unit}
                   onChange={e => {
@@ -868,7 +870,7 @@ export default function EditInvoicePage() {
                     }
                     setItemInput({...itemInput, unit: newUnit, rate: newRate});
                   }} 
-                  className="erp-input w-full"
+                  className="erp-input w-full px-1"
                 >
                   {itemInput.primaryUnit ? (
                     <>
@@ -880,24 +882,26 @@ export default function EditInvoicePage() {
                   )}
                 </select>
               </div>
-              <div>
-                <label className="erp-label">{enableActualQty ? 'Billed Qty' : 'Quantity'} <span className="text-red-500">*</span></label>
-                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+
+              <div className="w-16 shrink-0">
+                <label className="erp-label truncate">{enableActualQty ? 'B.Qty*' : 'Qty*'}</label>
+                <input type="number" value={itemInput.quantity === 0 ? '' : itemInput.quantity} step="0.001" onChange={e => setItemInput({...itemInput, quantity: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
               </div>
+              
               {enableActualQty && (
-                <div>
-                  <label className="erp-label">Actual Qty</label>
-                  <input type="number" value={itemInput.actualQty === 0 ? '' : itemInput.actualQty} step="0.001" onChange={e => setItemInput({...itemInput, actualQty: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full bg-amber-50" placeholder="Physical qty" />
+                <div className="w-16 shrink-0">
+                  <label className="erp-label truncate">A.Qty</label>
+                  <input type="number" value={itemInput.actualQty === 0 ? '' : itemInput.actualQty} step="0.001" onChange={e => setItemInput({...itemInput, actualQty: parseFloat((parseFloat(e.target.value) || 0).toFixed(3))})} className="erp-input w-full bg-amber-50 px-1" placeholder="Phy" />
                 </div>
               )}
-              <div className="relative group">
-                <label className="erp-label">Sale Price <span className="text-[9px] text-blue-400 lowercase cursor-pointer">(options)▼</span></label>
+              
+              <div className="w-20 shrink-0 relative group">
+                <label className="erp-label truncate">Price <span className="text-[8px] text-blue-400 lowercase cursor-pointer">▼</span></label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
-                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                   <input type="number" value={itemInput.rate === 0 ? '' : itemInput.rate} onChange={e => setItemInput({...itemInput, rate: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3 px-1" />
                 </div>
                 
-                {/* Price Options Dropdown on hover */}
                 {itemInput.productId && (
                   <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-white border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
                      <div className="text-[10px] px-2 py-1.5 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 mb-1">Available Prices</div>
@@ -922,15 +926,17 @@ export default function EditInvoicePage() {
                   </div>
                 )}
               </div>
-              <div>
-                <label className="erp-label">MRP</label>
+              
+              <div className="w-16 shrink-0">
+                <label className="erp-label truncate">MRP</label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
-                   <input type="number" value={itemInput.mrp === 0 ? '' : itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3" />
+                   <input type="number" value={itemInput.mrp === 0 ? '' : itemInput.mrp} onChange={e => setItemInput({...itemInput, mrp: parseFloat(e.target.value) || 0})} className="erp-input w-full pl-3 px-1" />
                 </div>
               </div>
-              <div>
-                <label className="erp-label block mb-1">Discount</label>
+              
+              <div className="w-20 shrink-0">
+                <label className="erp-label truncate block mb-1">Disc</label>
                 <div className="flex">
                   <input 
                     type="number" 
@@ -943,45 +949,49 @@ export default function EditInvoicePage() {
                         setItemInput({...itemInput, discountAmount: val, discount: 0});
                       }
                     }} 
-                    className="erp-input w-full rounded-none" 
+                    className="erp-input w-full rounded-none px-1" 
                   />
                   <select 
                     value={itemInput.discountType || 'percentage'} 
                     onChange={e => setItemInput({...itemInput, discountType: e.target.value as 'percentage' | 'amount', discount: 0, discountAmount: 0})} 
-                    className="erp-input rounded-l-none bg-slate-100 px-1 border-l-0 text-xs w-12 cursor-pointer outline-none focus:ring-0">
+                    className="erp-input rounded-l-none bg-slate-100 px-0.5 border-l-0 text-xs w-8 cursor-pointer outline-none focus:ring-0">
                     <option value="percentage">%</option>
                     <option value="amount">₹</option>
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="erp-label">Tax (%)</label>
-                <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
+              
+              <div className="w-12 shrink-0">
+                <label className="erp-label truncate">Tax%</label>
+                <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
               </div>
-            </div>
-            
-            <div className="grid grid-cols-10 gap-2 items-end">
-               <div className="col-span-1 flex flex-col gap-1">
-                  <label className="flex items-center gap-1 text-[9px] cursor-pointer"><input type="radio" checked className="accent-white" /> Item Tag</label>
-                  <label className="flex items-center gap-1 text-[9px] cursor-pointer"><input type="radio" className="accent-white" /> Item Code</label>
-               </div>
-               <div className="col-span-1">
-                 <input value={itemInput.tag} onChange={e => setItemInput({...itemInput, tag: e.target.value})} className="erp-input w-full" placeholder="Tag..." />
-               </div>
-               <div className="col-span-4">
-                 <input value={itemInput.description} onChange={e => setItemInput({...itemInput, description: e.target.value})} className="erp-input w-full" placeholder="Item Description" />
-               </div>
-               <div>
-                 <label className="erp-label">Cess (%)</label>
-                 <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full" />
-               </div>
-               <div className="col-span-2">
-                  <label className="erp-label">Amount</label>
-                  <div className="erp-input w-full bg-emerald-50 text-emerald-600 font-bold">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
-               </div>
-               <button onClick={addItem} className="bg-green-600 hover:bg-green-700 text-slate-900 p-1 rounded flex items-center justify-center">
-                 <Plus className="w-5 h-5" />
-               </button>
+
+              <div className="w-12 shrink-0">
+                <label className="erp-label truncate">Cess%</label>
+                <input type="number" value={itemInput.cess === 0 ? '' : itemInput.cess} onChange={e => setItemInput({...itemInput, cess: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
+              </div>
+
+              <div className="w-20 shrink-0 flex flex-col justify-end">
+                <div className="flex items-center gap-1 mb-1">
+                   <label className="flex items-center gap-0.5 text-[8px] cursor-pointer leading-none"><input type="radio" checked className="accent-white" /> Tag</label>
+                   <label className="flex items-center gap-0.5 text-[8px] cursor-pointer leading-none"><input type="radio" className="accent-white" /> Code</label>
+                </div>
+                <input value={itemInput.tag} onChange={e => setItemInput({...itemInput, tag: e.target.value})} className="erp-input w-full px-1" placeholder="Tag..." />
+              </div>
+
+              <div className="w-28 shrink-0">
+                <label className="erp-label truncate">Desc</label>
+                <input value={itemInput.description} onChange={e => setItemInput({...itemInput, description: e.target.value})} className="erp-input w-full px-1" placeholder="Optional" />
+              </div>
+
+              <div className="w-20 shrink-0">
+                <label className="erp-label truncate">Amount</label>
+                <div className="erp-input w-full bg-emerald-50 text-emerald-600 font-bold px-1 overflow-hidden truncate">₹{calculateItem(itemInput).totalAmount.toFixed(2)}</div>
+              </div>
+
+              <button onClick={addItem} className="shrink-0 h-[28px] w-[28px] flex items-center justify-center bg-green-600 hover:bg-green-700 text-slate-900 rounded transition" title="Add Item">
+                <Plus className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -1014,13 +1024,11 @@ export default function EditInvoicePage() {
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 erp-grid-row group">
                     <div className="col-span-1 erp-grid-cell text-slate-600">{idx + 1}</div>
-                    <div className="col-span-3 erp-grid-cell font-medium flex flex-col justify-center">
-                      <div>
-                        {item.productName}
-                        {item.tag && <span className="ml-2 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600">{item.tag}</span>}
-                        {item.batchNo && <span className="ml-2 text-[9px] text-slate-500 border border-slate-200 rounded px-1">Batch: {item.batchNo}</span>}
-                      </div>
-                      {item.description && <div className="text-[10px] text-slate-600 font-normal leading-tight mt-0.5">{item.description}</div>}
+                    <div className="col-span-3 erp-grid-cell font-medium flex items-center overflow-hidden whitespace-nowrap">
+                      <span className="truncate" title={item.productName}>{item.productName}</span>
+                      {item.tag && <span className="ml-1 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600 whitespace-nowrap">{item.tag}</span>}
+                      {item.batchNo && <span className="ml-1 text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap">Batch: {item.batchNo}</span>}
+                      {item.description && <span className="ml-1 text-[10px] text-slate-400 font-normal truncate" title={item.description}>({item.description})</span>}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     {enableActualQty && <div className="col-span-1 erp-grid-cell text-center text-amber-600 font-semibold">{item.actualQty ?? '—'}</div>}
