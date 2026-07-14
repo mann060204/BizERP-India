@@ -118,9 +118,26 @@ export default function BOMPage() {
           </div>
           <div className="flex-1 overflow-y-auto">
             {filteredFG.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-xs">
-                <Factory className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                No FG/SFG products found.<br />Set item type in Item Master.
+              <div className="p-4 text-xs space-y-3">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800">
+                  <p className="font-bold mb-1 flex items-center gap-1">⚠ No Finished Goods found</p>
+                  <p className="leading-relaxed">Your products exist but none are tagged as <strong>Finished Good</strong> or <strong>WIP Component</strong> yet.</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-600 space-y-2">
+                  <p className="font-bold text-slate-700">How to fix:</p>
+                  <ol className="list-decimal list-inside space-y-1 leading-relaxed">
+                    <li>Go to <strong>Master → Items</strong></li>
+                    <li>Edit each product</li>
+                    <li>Set <strong>Product Type</strong> to:<br />
+                      <span className="inline-block mt-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">Finished Good</span> — for end products<br />
+                      <span className="inline-block mt-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-bold">Raw Material</span> — for RM components<br />
+                      <span className="inline-block mt-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-bold">WIP Component</span> — for SFG
+                    </li>
+                  </ol>
+                  <a href="/dashboard/masters/items" className="block mt-2 text-center text-primary font-semibold bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition">
+                    → Open Item Master
+                  </a>
+                </div>
               </div>
             ) : filteredFG.map(prod => (
               <button key={prod._id} onClick={() => selectFG(prod)}
