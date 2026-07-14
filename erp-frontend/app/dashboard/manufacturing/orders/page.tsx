@@ -1,206 +1,400 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Plus, Search, Hammer, Trash2, ArrowRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Hammer, RefreshCw, CheckCircle, XCircle, AlertTriangle, Eye, ChevronDown, ChevronRight, Clock, PackageCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { manufacturingApi, bomApi } from '../../../../lib/erp-api';
+import { manufacturingApi, productsApi } from '../../../../lib/erp-api';
 import Topbar from '../../../../components/layout/Topbar';
 
-export default function ManufacturingOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [boms, setBoms] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+type Product = { _id: string; name: string; productType: string; unit: string; currentStock: number; };
+type PreviewLine = { productId: string; productName: string; unit: string; qtyPerUnit: number; required: number; available: number; shortage: number; rate: number; amount: number; ok: boolean; };
+type PreviewData = { lines: PreviewLine[]; totalCost: number; costPerUnit: number; allAvailable: boolean; bom: any; };
+type MO = { _id: string; orderNumber: string; productName: string; quantityToProduce: number; status: string; totalActualCost: number; totalEstimatedCost: number; createdAt: string; rawMaterials: any[]; notes?: string; };
 
-  // Form State
-  const [form, setForm] = useState<any>({
-    bomId: '',
-    quantityToProduce: 1,
-  });
-  
-  useEffect(() => {
-    fetchData();
-  }, []);
+const STATUS_MAP: Record<string, { label: string; cls: string; icon: any }> = {
+  'Pending':   { label: 'Pending',   cls: 'bg-amber-100 text-amber-800 border border-amber-200',   icon: Clock },
+  'Completed': { label: 'Confirmed', cls: 'bg-emerald-100 text-emerald-800 border border-emerald-200', icon: CheckCircle },
+  'Cancelled': { label: 'Cancelled', cls: 'bg-red-100 text-red-700 border border-red-200',           icon: XCircle },
+};
 
-  const fetchData = async () => {
+export default function ProductionPage() {
+  const [tab, setTab] = useState<'new' | 'history'>('new');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<MO[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // New entry form
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [produceQty, setProduceQty] = useState<number | ''>('');
+  const [notes, setNotes] = useState('');
+  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // History
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  useEffect(() => { loadData(); }, []);
+
+  const loadData = async () => {
     try {
-      const [moRes, bomRes] = await Promise.all([
+      const [prodRes, moRes] = await Promise.all([
+        productsApi.list({ limit: 500 }),
         manufacturingApi.getAll(),
-        bomApi.getAll()
       ]);
-      setOrders(moRes.data.mos);
-      setBoms(bomRes.data.boms);
-    } catch (err: any) {
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
+      setProducts(prodRes.data.products || []);
+      setOrders(moRes.data.mos || []);
+    } catch { toast.error('Failed to load data'); }
+    finally { setLoadingOrders(false); }
   };
 
-  const handleCreateMO = async () => {
+  const fgProducts = products.filter(p => p.productType === 'Finished Good' || p.productType === 'WIP Component');
+
+  // Auto-fetch preview whenever product or qty changes (debounced)
+  useEffect(() => {
+    setPreview(null);
+    if (!selectedProductId || !produceQty || Number(produceQty) <= 0) return;
+    const timer = setTimeout(() => fetchPreview(), 400);
+    return () => clearTimeout(timer);
+  }, [selectedProductId, produceQty]);
+
+  const fetchPreview = async () => {
+    if (!selectedProductId || !produceQty || Number(produceQty) <= 0) return;
+    setPreviewing(true);
     try {
-      if (!form.bomId) return toast.error('Select a BOM');
-      if (form.quantityToProduce < 1) return toast.error('Quantity must be at least 1');
-
-      const selectedBOM = boms.find(b => b._id === form.bomId);
-      if (!selectedBOM) return;
-
-      const rawMaterials = selectedBOM.components.map((c: any) => ({
-        productId: c.productId,
-        productName: c.productName,
-        quantityRequired: c.quantity * form.quantityToProduce,
-        unit: c.unit,
-        costPerUnit: c.costPerUnit,
-        totalCost: (c.quantity * form.quantityToProduce) * c.costPerUnit
-      }));
-
-      const payload = {
-        bomId: selectedBOM._id,
-        productId: selectedBOM.productId,
-        productName: selectedBOM.productName,
-        quantityToProduce: form.quantityToProduce,
-        rawMaterials,
-        estimatedLaborCost: selectedBOM.directLaborCost * form.quantityToProduce,
-        estimatedOverhead: selectedBOM.manufacturingOverhead * form.quantityToProduce,
-        totalEstimatedCost: selectedBOM.totalEstimatedCost * form.quantityToProduce,
-        actualLaborCost: selectedBOM.directLaborCost * form.quantityToProduce,
-        actualOverhead: selectedBOM.manufacturingOverhead * form.quantityToProduce,
-      };
-
-      await manufacturingApi.create(payload);
-      toast.success('Production Order Created');
-      setIsModalOpen(false);
-      setForm({ bomId: '', quantityToProduce: 1 });
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to create order');
-    }
+      const res = await manufacturingApi.preview({ productId: selectedProductId, produceQty: Number(produceQty) });
+      setPreview(res.data);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to fetch BOM preview');
+      setPreview(null);
+    } finally { setPreviewing(false); }
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const handleSubmit = async () => {
+    if (!selectedProductId) return toast.error('Select a Finished Good');
+    if (!produceQty || Number(produceQty) <= 0) return toast.error('Enter produce quantity > 0');
+    if (!preview?.allAvailable) return toast.error('Cannot confirm — some raw materials are short');
+    setSubmitting(true);
     try {
-      if (!confirm(`Are you sure you want to mark this order as ${status}? This will affect inventory.`)) return;
-      await manufacturingApi.updateStatus(id, status);
-      toast.success(`Order marked as ${status}`);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update status');
-    }
+      const draftRes = await manufacturingApi.create({ productId: selectedProductId, produceQty: Number(produceQty), notes });
+      const moId = draftRes.data.mo._id;
+      await manufacturingApi.confirm(moId);
+      toast.success('Production confirmed! Stock updated.');
+      setSelectedProductId(''); setProduceQty(''); setNotes(''); setPreview(null);
+      setTab('history');
+      loadData();
+    } catch (e: any) {
+      const shortages = e.response?.data?.shortages;
+      if (shortages?.length) {
+        toast.error(`Short: ${shortages.map((s: any) => `${s.productName} (need ${s.short} more)`).join(', ')}`);
+      } else {
+        toast.error(e.response?.data?.message || 'Failed to confirm production');
+      }
+    } finally { setSubmitting(false); }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Pending': return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium border border-yellow-200">Pending</span>;
-      case 'In-Progress': return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium border border-blue-200">In-Progress (WIP)</span>;
-      case 'Completed': return <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-medium border border-emerald-200">Completed</span>;
-      default: return <span className="px-2 py-1 bg-slate-100 text-slate-800 rounded text-xs font-medium border border-slate-200">{status}</span>;
-    }
+  const handleConfirm = async (id: string) => {
+    if (!confirm('Confirm this production order? This will deduct RM stock and add FG stock.')) return;
+    setConfirmingId(id);
+    try {
+      await manufacturingApi.confirm(id);
+      toast.success('Production confirmed! Stock updated.');
+      loadData();
+    } catch (e: any) {
+      const shortages = e.response?.data?.shortages;
+      if (shortages?.length) {
+        toast.error(`Insufficient stock: ${shortages.map((s: any) => `${s.productName} (short by ${s.short})`).join(', ')}`);
+      } else {
+        toast.error(e.response?.data?.message || 'Failed to confirm');
+      }
+    } finally { setConfirmingId(null); }
   };
+
+  const handleCancel = async (mo: MO) => {
+    const msg = mo.status === 'Completed'
+      ? `Cancel "${mo.orderNumber}"? This will REVERSE all stock movements (RM returned, FG deducted).`
+      : `Delete draft order "${mo.orderNumber}"?`;
+    if (!confirm(msg)) return;
+    setCancellingId(mo._id);
+    try {
+      if (mo.status === 'Completed') {
+        await manufacturingApi.cancel(mo._id);
+        toast.success('Production cancelled. Stock reversed.');
+      } else {
+        await manufacturingApi.cancel(mo._id);
+        toast.success('Order cancelled.');
+      }
+      loadData();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to cancel');
+    } finally { setCancellingId(null); }
+  };
+
+  const selectedProduct = products.find(p => p._id === selectedProductId);
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans">
-      <Topbar title="Production Orders" />
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-        
-        <div className="flex items-center justify-between">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input type="text" placeholder="Search Orders..." value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm" />
-          </div>
-          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition text-sm font-medium">
-            <Plus className="w-4 h-4" /> New Order
+    <div className="flex flex-col h-screen bg-[var(--bg-base,#f8fafc)]">
+      <Topbar title="Production Entry" />
+
+      {/* Tabs */}
+      <div className="bg-white border-b border-slate-200 px-6 flex gap-0">
+        {([['new', 'New Production'], ['history', 'Production History']] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={`px-5 py-3 text-sm font-semibold border-b-2 transition ${tab === key ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+            {label}
           </button>
-        </div>
+        ))}
+      </div>
 
-        {/* Order List */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto w-full">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
-              <tr>
-                <th className="px-6 py-4">Order No.</th>
-                <th className="px-6 py-4">Product</th>
-                <th className="px-6 py-4">Qty</th>
-                <th className="px-6 py-4">Est. Cost</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Progress Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {orders.map((mo: any) => (
-                <tr key={mo._id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 font-medium text-slate-900">{mo.orderNumber}</td>
-                  <td className="px-6 py-4 text-slate-700">{mo.productName}</td>
-                  <td className="px-6 py-4 font-medium">{mo.quantityToProduce}</td>
-                  <td className="px-6 py-4 text-slate-700">₹{mo.totalEstimatedCost?.toFixed(2)}</td>
-                  <td className="px-6 py-4">{getStatusBadge(mo.status)}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    {mo.status === 'Pending' && (
-                      <button onClick={() => updateStatus(mo._id, 'In-Progress')} className="text-xs font-medium bg-blue-50 text-blue-600 px-3 py-1.5 rounded border border-blue-200 hover:bg-blue-100 transition inline-flex items-center gap-1">
-                        Start Production <ArrowRight className="w-3 h-3" />
-                      </button>
-                    )}
-                    {mo.status === 'In-Progress' && (
-                      <button onClick={() => updateStatus(mo._id, 'Completed')} className="text-xs font-medium bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded border border-emerald-200 hover:bg-emerald-100 transition inline-flex items-center gap-1">
-                        Mark Completed
-                      </button>
-                    )}
-                    {mo.status === 'Completed' && (
-                      <span className="text-xs text-slate-400">Finalized</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {orders.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                    <Hammer className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    No Production Orders found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      <main className="flex-1 overflow-y-auto p-6">
+
+        {/* ─── TAB: NEW PRODUCTION ─── */}
+        {tab === 'new' && (
+          <div className="max-w-4xl mx-auto space-y-5">
+
+            {/* Form */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <h2 className="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <Hammer className="w-4 h-4 text-primary" /> Production Setup
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Finished Good to Produce *</label>
+                  <select value={selectedProductId} onChange={e => setSelectedProductId(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    <option value="">— Select a Finished Good —</option>
+                    {fgProducts.map(p => (
+                      <option key={p._id} value={p._id}>{p.name} (Stock: {p.currentStock} {p.unit})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Produce Qty *</label>
+                  <input type="number" min="1" step="1" placeholder="e.g. 50" value={produceQty}
+                    onChange={e => setProduceQty(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Notes (optional)</label>
+                  <input type="text" placeholder="Batch remarks, lot number, etc." value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+              </div>
+            </div>
+
+            {/* Preview */}
+            {previewing && (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 flex items-center justify-center gap-3 text-slate-400">
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                <span className="text-sm">Fetching BOM requirements...</span>
+              </div>
+            )}
+
+            {!previewing && preview && (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                {/* Availability banner */}
+                <div className={`px-5 py-3 flex items-center gap-2.5 text-sm font-semibold ${preview.allAvailable ? 'bg-emerald-50 text-emerald-800 border-b border-emerald-200' : 'bg-red-50 text-red-800 border-b border-red-200'}`}>
+                  {preview.allAvailable
+                    ? <><CheckCircle className="w-4 h-4" /> All materials available — ready to produce</>
+                    : <><AlertTriangle className="w-4 h-4" /> Insufficient stock — cannot confirm until shortages are resolved</>}
+                </div>
+
+                {/* RM Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-medium uppercase tracking-wider">
+                        <th className="px-4 py-2.5 text-left">Raw Material</th>
+                        <th className="px-4 py-2.5 text-right">BOM Qty/unit</th>
+                        <th className="px-4 py-2.5 text-right">Required ({Number(produceQty)} units)</th>
+                        <th className="px-4 py-2.5 text-right">In Stock</th>
+                        <th className="px-4 py-2.5 text-center">Status</th>
+                        <th className="px-4 py-2.5 text-right">Rate</th>
+                        <th className="px-4 py-2.5 text-right">Cost</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {preview.lines.map((line, i) => (
+                        <tr key={i} className={`${line.ok ? 'hover:bg-slate-50' : 'bg-red-50/40 hover:bg-red-50'} transition`}>
+                          <td className="px-4 py-3 font-medium text-slate-800">{line.productName}<span className="ml-1.5 text-[10px] text-slate-400">{line.unit}</span></td>
+                          <td className="px-4 py-3 text-right text-slate-600">{line.qtyPerUnit}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-slate-700">{line.required}</td>
+                          <td className="px-4 py-3 text-right font-semibold"
+                            style={{ color: line.ok ? '#059669' : '#dc2626' }}>{line.available}</td>
+                          <td className="px-4 py-3 text-center">
+                            {line.ok
+                              ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"><CheckCircle className="w-3 h-3" /> OK</span>
+                              : <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"><XCircle className="w-3 h-3" /> Short by {line.shortage}</span>}
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600">₹{line.rate.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-slate-700">₹{line.amount.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Cost footer */}
+                <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                  <div className="text-sm text-slate-600">
+                    Producing <strong>{Number(produceQty)} units</strong> of <strong>{selectedProduct?.name}</strong>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-500">Total Material Cost</p>
+                    <p className="text-xl font-bold text-slate-900">₹{preview.totalCost.toFixed(2)}</p>
+                    <p className="text-xs text-slate-500">₹{preview.costPerUnit.toFixed(2)} per unit</p>
+                  </div>
+                </div>
+
+                {/* Confirm button */}
+                <div className="px-5 py-4 border-t border-slate-200">
+                  <button onClick={handleSubmit} disabled={submitting || !preview.allAvailable}
+                    className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${preview.allAvailable
+                      ? 'bg-primary text-white hover:bg-primary-hover shadow-lg'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+                    {submitting
+                      ? <><RefreshCw className="w-4 h-4 animate-spin" /> Confirming...</>
+                      : preview.allAvailable
+                        ? <><PackageCheck className="w-4 h-4" /> Confirm Production — Deduct RM & Add FG Stock</>
+                        : <><XCircle className="w-4 h-4" /> Cannot Confirm — Resolve stock shortages first</>}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!previewing && !preview && selectedProductId && produceQty && Number(produceQty) > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-800 flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                No BOM found for this product. Go to <strong>Bill of Materials</strong> to define the formula first.
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
+        {/* ─── TAB: HISTORY ─── */}
+        {tab === 'history' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-800">Production History</h2>
+              <button onClick={loadData} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition">
+                <RefreshCw className="w-4 h-4" /> Refresh
+              </button>
+            </div>
+
+            {loadingOrders ? (
+              <div className="flex items-center justify-center py-16"><RefreshCw className="w-6 h-6 animate-spin text-slate-400" /></div>
+            ) : orders.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-16 text-center text-slate-400">
+                <Hammer className="w-12 h-12 mx-auto mb-3 text-slate-200" />
+                <p className="font-semibold text-slate-500">No production orders yet.</p>
+                <p className="text-sm mt-1">Create a new production entry from the first tab.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-medium uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left w-8"></th>
+                      <th className="px-4 py-3 text-left">Order No.</th>
+                      <th className="px-4 py-3 text-left">Finished Good</th>
+                      <th className="px-4 py-3 text-right">Qty</th>
+                      <th className="px-4 py-3 text-right">Total Cost</th>
+                      <th className="px-4 py-3 text-right">Cost/Unit</th>
+                      <th className="px-4 py-3 text-left">Date</th>
+                      <th className="px-4 py-3 text-center">Status</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {orders.map(mo => {
+                      const sc = STATUS_MAP[mo.status] || STATUS_MAP.Pending;
+                      const StatusIcon = sc.icon;
+                      const isExpanded = expandedId === mo._id;
+                      const cost = mo.totalActualCost || mo.totalEstimatedCost || 0;
+                      const qty = mo.quantityToProduce;
+                      return [
+                        <tr key={mo._id} className={`hover:bg-slate-50 transition cursor-pointer ${isExpanded ? 'bg-slate-50' : ''}`}
+                          onClick={() => setExpandedId(isExpanded ? null : mo._id)}>
+                          <td className="px-4 py-3 text-slate-400">
+                            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </td>
+                          <td className="px-4 py-3 font-mono font-semibold text-slate-700 text-xs">{mo.orderNumber}</td>
+                          <td className="px-4 py-3 font-medium text-slate-800">{mo.productName}</td>
+                          <td className="px-4 py-3 text-right text-slate-700">{qty}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-slate-800">₹{cost.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-right text-slate-600">₹{qty > 0 ? (cost / qty).toFixed(2) : '—'}</td>
+                          <td className="px-4 py-3 text-slate-500 text-xs">{new Date(mo.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${sc.cls}`}>
+                              <StatusIcon className="w-3 h-3" /> {sc.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-end gap-1.5">
+                              {mo.status === 'Pending' && (
+                                <button onClick={() => handleConfirm(mo._id)} disabled={confirmingId === mo._id}
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition disabled:opacity-50">
+                                  {confirmingId === mo._id ? <RefreshCw className="w-3 h-3 animate-spin" /> : 'Confirm'}
+                                </button>
+                              )}
+                              {(mo.status === 'Pending' || mo.status === 'Completed') && (
+                                <button onClick={() => handleCancel(mo)} disabled={cancellingId === mo._id}
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition disabled:opacity-50">
+                                  {cancellingId === mo._id ? <RefreshCw className="w-3 h-3 animate-spin" /> : mo.status === 'Completed' ? 'Reverse' : 'Cancel'}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>,
+                        isExpanded && (
+                          <tr key={`${mo._id}-detail`} className="bg-slate-50/80">
+                            <td colSpan={9} className="px-6 py-4">
+                              <div className="rounded-lg border border-slate-200 overflow-hidden bg-white">
+                                <div className="px-4 py-2 bg-slate-100 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                                  <Eye className="w-3.5 h-3.5" /> Raw Material Breakdown
+                                </div>
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="text-slate-500 border-b border-slate-200">
+                                      <th className="px-4 py-2 text-left">RM Name</th>
+                                      <th className="px-4 py-2 text-right">Qty Consumed</th>
+                                      <th className="px-4 py-2 text-right">Rate</th>
+                                      <th className="px-4 py-2 text-right">Amount</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100">
+                                    {mo.rawMaterials?.map((rm: any, i: number) => (
+                                      <tr key={i} className="hover:bg-slate-50">
+                                        <td className="px-4 py-2 font-medium text-slate-700">{rm.productName}</td>
+                                        <td className="px-4 py-2 text-right text-slate-600">{rm.quantityConsumed || rm.quantityRequired} {rm.unit}</td>
+                                        <td className="px-4 py-2 text-right text-slate-600">₹{(rm.costPerUnit || 0).toFixed(2)}</td>
+                                        <td className="px-4 py-2 text-right font-semibold text-slate-800">₹{(rm.totalCost || 0).toFixed(2)}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                  <tfoot>
+                                    <tr className="bg-slate-50 border-t border-slate-200 font-bold">
+                                      <td colSpan={3} className="px-4 py-2 text-right text-slate-700">Total</td>
+                                      <td className="px-4 py-2 text-right text-primary">₹{cost.toFixed(2)}</td>
+                                    </tr>
+                                  </tfoot>
+                                </table>
+                                {mo.notes && <div className="px-4 py-2 border-t border-slate-200 text-xs text-slate-500">Notes: {mo.notes}</div>}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      ];
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </main>
-
-      {/* CREATE ORDER MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">New Production Order</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 text-2xl leading-none">&times;</button>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Select BOM</label>
-                <select value={form.bomId} onChange={e => setForm({ ...form, bomId: e.target.value })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-slate-900">
-                  <option value="">Select a Bill of Materials</option>
-                  {boms.map(b => (
-                    <option key={b._id} value={b._id}>[{b.bomNumber}] {b.productName}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity to Produce</label>
-                <input type="number" min="1" value={form.quantityToProduce} onChange={e => setForm({ ...form, quantityToProduce: parseInt(e.target.value) || 1 })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-slate-900" />
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
-              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition">Cancel</button>
-              <button onClick={handleCreateMO} className="bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition text-sm font-medium">Create Order</button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

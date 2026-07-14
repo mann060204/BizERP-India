@@ -1,273 +1,325 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Plus, Search, Factory, Edit, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Trash2, Save, ChevronRight, Factory, Package, Layers, RefreshCw, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { bomApi, productsApi } from '../../../../lib/erp-api';
 import Topbar from '../../../../components/layout/Topbar';
 
-export default function BOMPage() {
-  const [boms, setBoms] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+type Product = { _id: string; name: string; productType: string; unit: string; purchasePrice: number; currentStock: number; };
+type BOMLine = { productId: string; productName: string; unit: string; quantity: number; costPerUnit: number; totalCost: number; currentStock?: number; productType?: string; };
 
-  // Form State
-  const [form, setForm] = useState<any>({
-    productId: '',
-    productName: '',
-    directLaborCost: 0,
-    manufacturingOverhead: 0,
-  });
-  const [components, setComponents] = useState<any[]>([]);
-  const [scrapItems, setScrapItems] = useState<any[]>([]);
-  
-  useEffect(() => {
-    fetchData();
+const TYPE_BADGE: Record<string, string> = {
+  'Raw Material': 'bg-red-100 text-red-700 border border-red-200',
+  'Finished Good': 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+  'WIP Component': 'bg-amber-100 text-amber-700 border border-amber-200',
+  'General': 'bg-slate-100 text-slate-600 border border-slate-200',
+};
+const TYPE_LABEL: Record<string, string> = { 'Raw Material': 'RM', 'Finished Good': 'FG', 'WIP Component': 'SFG', 'General': 'GEN' };
+
+export default function BOMPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedFG, setSelectedFG] = useState<Product | null>(null);
+  const [bom, setBom] = useState<any>(null);
+  const [components, setComponents] = useState<BOMLine[]>([]);
+  const [directLaborCost, setDirectLaborCost] = useState(0);
+  const [overhead, setOverhead] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [fgSearch, setFgSearch] = useState('');
+
+  useEffect(() => { loadProducts(); }, []);
+
+  const loadProducts = async () => {
+    try {
+      const res = await productsApi.list({ limit: 500 });
+      setProducts(res.data.products || []);
+    } catch { toast.error('Failed to load products'); }
+  };
+
+  const fgProducts = products.filter(p => p.productType === 'Finished Good' || p.productType === 'WIP Component');
+  const rmProducts = products.filter(p => p.productType !== 'Finished Good');
+  const filteredFG = fgProducts.filter(p => p.name.toLowerCase().includes(fgSearch.toLowerCase()));
+
+  const selectFG = useCallback(async (prod: Product) => {
+    setSelectedFG(prod);
+    setLoading(true);
+    try {
+      const res = await bomApi.getByProduct(prod._id);
+      const existingBom = res.data.bom;
+      if (existingBom) {
+        setBom(existingBom);
+        setComponents(existingBom.components.map((c: any) => ({ ...c, totalCost: c.quantity * c.costPerUnit })));
+        setDirectLaborCost(existingBom.directLaborCost || 0);
+        setOverhead(existingBom.manufacturingOverhead || 0);
+      } else {
+        setBom(null); setComponents([]); setDirectLaborCost(0); setOverhead(0);
+      }
+    } catch { toast.error('Failed to load BOM'); }
+    finally { setLoading(false); }
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const [bomRes, prodRes] = await Promise.all([
-        bomApi.getAll(),
-        productsApi.list()
-      ]);
-      setBoms(bomRes.data.boms);
-      setProducts(prodRes.data.products);
-    } catch (err: any) {
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const addLine = () => setComponents(prev => [...prev, { productId: '', productName: '', unit: 'Nos', quantity: 1, costPerUnit: 0, totalCost: 0 }]);
 
-  const handleProductSelect = (id: string) => {
-    const prod = products.find(p => p._id === id);
-    if (prod) {
-      setForm({ ...form, productId: id, productName: prod.name });
-    } else {
-      setForm({ ...form, productId: '', productName: '' });
-    }
-  };
-
-  
-  const handleAddScrap = () => {
-    setScrapItems([...scrapItems, { productId: '', productName: '', quantity: 1, recoveryCostPerUnit: 0, unit: 'Nos', totalRecoveryValue: 0 }]);
-  };
-
-  const updateScrap = (index: number, field: string, value: any) => {
-    const updated = [...scrapItems];
-    updated[index][field] = value;
-    if (field === 'productId') {
-      const prod = products.find(p => p._id === value);
-      if (prod) {
-        updated[index].productName = prod.name;
-        updated[index].recoveryCostPerUnit = prod.sellingPrice || 0;
-        updated[index].unit = prod.unit || 'Nos';
+  const updateLine = (idx: number, field: string, value: any) => {
+    setComponents(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], [field]: value };
+      if (field === 'productId') {
+        const prod = products.find(p => p._id === value);
+        if (prod) {
+          updated[idx].productName = prod.name;
+          updated[idx].unit = prod.unit || 'Nos';
+          updated[idx].costPerUnit = prod.purchasePrice || 0;
+          updated[idx].currentStock = prod.currentStock;
+          updated[idx].productType = prod.productType;
+        }
       }
-    }
-    updated[index].totalRecoveryValue = updated[index].quantity * updated[index].recoveryCostPerUnit;
-    setScrapItems(updated);
+      updated[idx].totalCost = (updated[idx].quantity || 0) * (updated[idx].costPerUnit || 0);
+      return updated;
+    });
   };
 
-  const removeScrap = (index: number) => {
-    setScrapItems(scrapItems.filter((_, i) => i !== index));
-  };
+  const removeLine = (idx: number) => setComponents(prev => prev.filter((_, i) => i !== idx));
 
-  const handleAddComponent = () => {
-    setComponents([...components, { productId: '', productName: '', quantity: 1, costPerUnit: 0, unit: 'Nos', totalCost: 0 }]);
-  };
-
-  const updateComponent = (index: number, field: string, value: any) => {
-    const updated = [...components];
-    updated[index][field] = value;
-    
-    if (field === 'productId') {
-      const prod = products.find(p => p._id === value);
-      if (prod) {
-        updated[index].productName = prod.name;
-        updated[index].costPerUnit = prod.purchasePrice || 0;
-        updated[index].unit = prod.unit || 'Nos';
-      }
-    }
-
-    // Auto calculate total cost
-    updated[index].totalCost = updated[index].quantity * updated[index].costPerUnit;
-    setComponents(updated);
-  };
-
-  const removeComponent = (index: number) => {
-    setComponents(components.filter((_, i) => i !== index));
-  };
+  const materialCost = components.reduce((acc, c) => acc + c.totalCost, 0);
+  const totalCostPerUnit = materialCost + Number(directLaborCost) + Number(overhead);
 
   const handleSave = async () => {
-    try {
-      if (!form.productId) return toast.error('Select a Finished Good');
-      if (components.length === 0) return toast.error('Add at least one component');
-
-      const materialCost = components.reduce((acc, curr) => acc + curr.totalCost, 0);
-      const totalEstimatedCost = materialCost + Number(form.directLaborCost) + Number(form.manufacturingOverhead);
-
-      const payload = {
-        ...form,
-        components,
-        scrapItems,
-        totalEstimatedCost
-      };
-
-      await bomApi.create(payload);
-      toast.success('BOM created successfully');
-      setIsModalOpen(false);
-      setForm({ productId: '', productName: '', directLaborCost: 0, manufacturingOverhead: 0 });
-      setComponents([]);
-      setScrapItems([]);
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to save BOM');
+    if (!selectedFG) return toast.error('Select a Finished Good first');
+    if (components.length === 0) return toast.error('Add at least one RM component');
+    for (const c of components) {
+      if (!c.productId) return toast.error('Select a product for all component rows');
+      if (c.quantity <= 0) return toast.error('Qty must be > 0 for all rows');
     }
+    setSaving(true);
+    try {
+      await bomApi.saveForProduct(selectedFG._id, { components, directLaborCost, manufacturingOverhead: overhead });
+      toast.success(`BOM saved for ${selectedFG.name}`);
+      selectFG(selectedFG);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to save BOM');
+    } finally { setSaving(false); }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="flex flex-col h-screen bg-[var(--bg-base,#f8fafc)]">
       <Topbar title="Bill of Materials" />
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-        
-        <div className="flex items-center justify-between">
-          <div className="relative w-72">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input type="text" placeholder="Search BOMs..." value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 text-sm" />
-          </div>
-          <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition text-sm font-medium">
-            <Plus className="w-4 h-4" /> Create BOM
-          </button>
-        </div>
+      <div className="flex flex-1 overflow-hidden">
 
-        {/* BOM List */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto w-full">
-          <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
-              <tr>
-                <th className="px-6 py-4">BOM No.</th>
-                <th className="px-6 py-4">Finished Good</th>
-                <th className="px-6 py-4">Components</th>
-                <th className="px-6 py-4">Est. Cost</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {boms.map((bom: any) => (
-                <tr key={bom._id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 font-medium text-slate-900">{bom.bomNumber}</td>
-                  <td className="px-6 py-4 text-slate-700">{bom.productName}</td>
-                  <td className="px-6 py-4 text-slate-500">{bom.components.length} Items</td>
-                  <td className="px-6 py-4 text-slate-700">₹{bom.totalEstimatedCost?.toFixed(2)}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="text-slate-400 hover:text-slate-900 p-1"><Edit className="w-4 h-4" /></button>
-                  </td>
-                </tr>
-              ))}
-              {boms.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
-                    <Factory className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    No Bill of Materials found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* ─── Left Panel: FG Product List ─── */}
+        <div className="w-72 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
+          <div className="p-3 border-b border-slate-200">
+            <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1.5">Finished Goods &amp; SFG</p>
+            <input
+              type="text" placeholder="Search products..." value={fgSearch}
+              onChange={e => setFgSearch(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {filteredFG.length === 0 ? (
+              <div className="p-6 text-center text-slate-400 text-xs">
+                <Factory className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                No FG/SFG products found.<br />Set item type in Item Master.
+              </div>
+            ) : filteredFG.map(prod => (
+              <button key={prod._id} onClick={() => selectFG(prod)}
+                className={`w-full text-left px-3 py-2.5 border-b border-slate-100 hover:bg-slate-50 transition flex items-center justify-between group ${selectedFG?._id === prod._id ? 'bg-primary/5 border-l-2 border-l-primary' : ''}`}>
+                <div>
+                  <p className="text-sm font-medium text-slate-800 truncate">{prod.name}</p>
+                  <p className="text-[10px] text-slate-500">Stock: {prod.currentStock ?? 0} {prod.unit}</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${TYPE_BADGE[prod.productType] || TYPE_BADGE.General}`}>
+                    {TYPE_LABEL[prod.productType] || 'GEN'}
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-500" />
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
-      </main>
-
-      {/* CREATE BOM MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">Create Bill of Materials</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-900 text-2xl leading-none">&times;</button>
+        {/* ─── Main BOM Editor ─── */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          {!selectedFG ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-10 text-slate-400">
+              <Layers className="w-16 h-16 text-slate-200 mb-4" />
+              <p className="text-lg font-semibold text-slate-500">Select a Finished Good</p>
+              <p className="text-sm mt-1">Choose a product from the left panel to view or edit its Bill of Materials.</p>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Target Finished Good</label>
-                <select value={form.productId} onChange={e => handleProductSelect(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
-                  <option value="">Select a Product (Finished Good)</option>
-                  {products.map(p => (
-                    <option key={p._id} value={p._id}>{p.name} {p.sku ? `(${p.sku})` : ''}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ) : (
+            <div className="flex-1 flex flex-col">
+              {/* Header */}
+              <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Direct Labor Cost (₹)</label>
-                  <input type="number" value={form.directLaborCost} onChange={e => setForm({ ...form, directLaborCost: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Manufacturing Overhead (₹)</label>
-                  <input type="number" value={form.manufacturingOverhead} onChange={e => setForm({ ...form, manufacturingOverhead: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-slate-700">Raw Materials / Components</label>
-                  <button onClick={handleAddComponent} className="text-sm text-blue-600 hover:text-blue-700 font-medium">+ Add Component</button>
-                </div>
-                <div className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
-                  <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-100 border-b border-slate-200">
-                      <tr>
-                        <th className="p-2 w-1/2">Material</th>
-                        <th className="p-2 w-24">Qty</th>
-                        <th className="p-2 w-24">Cost/Unit</th>
-                        <th className="p-2 w-24">Total</th>
-                        <th className="p-2 w-10"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {components.map((comp, idx) => (
-                        <tr key={idx}>
-                          <td className="p-2">
-                            <select value={comp.productId} onChange={e => updateComponent(idx, 'productId', e.target.value)} className="w-full px-2 py-1 text-sm border border-slate-200 rounded">
-                              <option value="">Select Material</option>
-                              {products.map(p => (
-                                <option key={p._id} value={p._id}>{p.name}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="p-2"><input type="number" value={comp.quantity} onChange={e => updateComponent(idx, 'quantity', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 text-sm border border-slate-200 rounded" /></td>
-                          <td className="p-2"><input type="number" value={comp.costPerUnit} onChange={e => updateComponent(idx, 'costPerUnit', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 text-sm border border-slate-200 rounded" /></td>
-                          <td className="p-2 text-slate-700 font-medium">₹{comp.totalCost?.toFixed(2)}</td>
-                          <td className="p-2 text-right">
-                            <button onClick={() => removeComponent(idx)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900">{selectedFG.name}</h2>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${TYPE_BADGE[selectedFG.productType] || TYPE_BADGE.General}`}>
+                      {selectedFG.productType}
+                    </span>
+                    {bom && <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-2 py-0.5 rounded">{bom.bomNumber}</span>}
                   </div>
-                  {components.length === 0 && <div className="text-center text-sm text-slate-500 py-4">No components added.</div>}
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Current Stock: <strong>{selectedFG.currentStock ?? 0} {selectedFG.unit}</strong>
+                    {!bom && <span className="ml-3 text-amber-600 font-medium">⚠ No BOM yet — save below to create one</span>}
+                  </p>
                 </div>
+                <button onClick={handleSave} disabled={saving}
+                  className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-xl hover:bg-primary-hover transition text-sm font-semibold shadow disabled:opacity-50">
+                  {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Save BOM
+                </button>
               </div>
 
-            </div>
+              {loading ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <div className="flex-1 p-6 space-y-5">
 
-            <div className="p-6 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 rounded-b-xl">
-              <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition">Cancel</button>
-              <button onClick={handleSave} className="bg-slate-900 text-white px-6 py-2 rounded-lg hover:bg-slate-800 transition text-sm font-medium">Save BOM</button>
+                  {/* Components Table */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm font-semibold text-slate-700">Raw Materials / Components</span>
+                        <span className="text-xs text-slate-400">({components.length} items)</span>
+                      </div>
+                      <button onClick={addLine}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-hover bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition">
+                        <Plus className="w-3.5 h-3.5" /> Add Row
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-medium uppercase tracking-wider">
+                            <th className="px-4 py-2.5 text-left w-8">#</th>
+                            <th className="px-4 py-2.5 text-left">Raw Material / Component</th>
+                            <th className="px-4 py-2.5 text-left w-24">Unit</th>
+                            <th className="px-4 py-2.5 text-right w-32">Qty / 1 FG</th>
+                            <th className="px-4 py-2.5 text-right w-32">Rate (₹)</th>
+                            <th className="px-4 py-2.5 text-right w-32">Amount (₹)</th>
+                            <th className="px-4 py-2.5 text-center w-20">In Stock</th>
+                            <th className="px-4 py-2.5 w-10"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {components.map((comp, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/50 transition group">
+                              <td className="px-4 py-2 text-slate-400 text-xs">{idx + 1}</td>
+                              <td className="px-4 py-2">
+                                <div className="flex items-center gap-2">
+                                  <select value={comp.productId} onChange={e => updateLine(idx, 'productId', e.target.value)}
+                                    className="w-full min-w-[200px] px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white">
+                                    <option value="">— Select Material —</option>
+                                    {rmProducts.map(p => (
+                                      <option key={p._id} value={p._id} disabled={p._id === selectedFG._id}>
+                                        {p.name} ({p.productType === 'WIP Component' ? 'SFG' : 'RM'})
+                                      </option>
+                                    ))}
+                                  </select>
+                                  {comp.productType === 'WIP Component' && (
+                                    <span className="text-[9px] bg-amber-100 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap flex items-center gap-0.5">
+                                      <Info className="w-2.5 h-2.5" /> SFG nested
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-4 py-2">
+                                <input value={comp.unit} onChange={e => updateLine(idx, 'unit', e.target.value)}
+                                  className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                              </td>
+                              <td className="px-4 py-2">
+                                <input type="number" min="0.001" step="0.001" value={comp.quantity || ''}
+                                  onChange={e => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                                  className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 text-right" />
+                              </td>
+                              <td className="px-4 py-2">
+                                <input type="number" min="0" step="0.01" value={comp.costPerUnit || ''}
+                                  onChange={e => updateLine(idx, 'costPerUnit', parseFloat(e.target.value) || 0)}
+                                  className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 text-right" />
+                              </td>
+                              <td className="px-4 py-2 text-right font-semibold text-slate-700">
+                                ₹{comp.totalCost.toFixed(2)}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                {comp.productId && (
+                                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${(comp.currentStock ?? 0) > 0 ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-red-600 bg-red-50 border border-red-200'}`}>
+                                    {comp.currentStock ?? 0}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2 text-center">
+                                <button onClick={() => removeLine(idx)} className="p-1 text-slate-200 hover:text-red-500 transition rounded group-hover:text-slate-400">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {components.length === 0 && (
+                            <tr>
+                              <td colSpan={8} className="px-4 py-10 text-center text-slate-400 text-sm">
+                                Click &quot;Add Row&quot; to add raw materials to this BOM.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Cost Summary */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <h3 className="text-sm font-semibold text-slate-700 mb-4">Additional Costs (per unit FG)</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <label className="text-sm text-slate-600 w-44 shrink-0">Direct Labor Cost (₹)</label>
+                          <input type="number" min="0" value={directLaborCost}
+                            onChange={e => setDirectLaborCost(parseFloat(e.target.value) || 0)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 text-right" />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <label className="text-sm text-slate-600 w-44 shrink-0">Manufacturing Overhead (₹)</label>
+                          <input type="number" min="0" value={overhead}
+                            onChange={e => setOverhead(parseFloat(e.target.value) || 0)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 text-right" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-5">
+                      <h3 className="text-sm font-semibold text-slate-700 mb-4">💡 Cost Summary (per 1 unit FG)</h3>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between text-slate-600">
+                          <span>Material Cost</span>
+                          <span className="font-medium">₹{materialCost.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-600">
+                          <span>Direct Labor</span>
+                          <span className="font-medium">₹{Number(directLaborCost).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-600">
+                          <span>Manufacturing Overhead</span>
+                          <span className="font-medium">₹{Number(overhead).toFixed(2)}</span>
+                        </div>
+                        <div className="border-t border-primary/20 pt-2 mt-2 flex justify-between font-bold text-base text-primary">
+                          <span>Total Cost per Unit FG</span>
+                          <span>₹{totalCostPerUnit.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
-      )}
-
+      </div>
     </div>
   );
 }

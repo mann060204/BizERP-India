@@ -316,16 +316,22 @@ export const bomApi = {
   create: (data: any) => api.post('/bom', data),
   getAll: () => api.get('/bom'),
   getById: (id: string) => api.get(`/bom/${id}`),
+  getByProduct: (productId: string) => api.get(`/bom/product/${productId}`),
+  saveForProduct: (productId: string, data: any) => api.post(`/bom/product/${productId}`, data),
   update: (id: string, data: any) => api.put(`/bom/${id}`, data),
   delete: (id: string) => api.delete(`/bom/${id}`),
 };
 
 export const manufacturingApi = {
   create: (data: any) => api.post('/manufacturing', data),
+  preview: (data: any) => api.post('/manufacturing/preview', data),
   createDirect: (data: any) => api.post('/manufacturing/direct', data),
   createReverse: (data: any) => api.post('/manufacturing/reverse', data),
   getPlan: (data: any) => api.post('/manufacturing/plan', data),
   getAll: () => api.get('/manufacturing'),
+  getById: (id: string) => api.get(`/manufacturing/${id}`),
+  confirm: (id: string) => api.post(`/manufacturing/${id}/confirm`),
+  cancel: (id: string) => api.post(`/manufacturing/${id}/cancel`),
   updateStatus: (id: string, status: string) => api.put(`/manufacturing/${id}/status`, { status }),
   delete: (id: string) => api.delete(`/manufacturing/${id}`),
 };
