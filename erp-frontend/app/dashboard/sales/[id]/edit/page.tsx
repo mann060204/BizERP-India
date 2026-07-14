@@ -876,7 +876,7 @@ export default function EditInvoicePage() {
                 <div className="col-span-1" />
               )}
               
-              <div className="col-span-2 relative group">
+              <div className="col-span-1 relative group">
                 <label className="erp-label truncate">Sale Price <span className="text-[8px] text-blue-400 lowercase cursor-pointer">▼</span></label>
                 <div className="relative">
                    <span className="absolute left-1 top-1 text-[10px] text-slate-600">₹</span>
@@ -941,15 +941,15 @@ export default function EditInvoicePage() {
                   </select>
                 </div>
               </div>
-            </div>
 
-            {/* Row 2 */}
-            <div className="grid grid-cols-12 gap-3 items-end">
               <div className="col-span-1">
                 <label className="erp-label truncate">Tax (%)</label>
                 <input type="number" value={itemInput.gstRate === 0 ? '' : itemInput.gstRate} onChange={e => setItemInput({...itemInput, gstRate: parseFloat(e.target.value) || 0})} className="erp-input w-full px-1" />
               </div>
+            </div>
 
+            {/* Row 2 */}
+            <div className="grid grid-cols-12 gap-3 items-end">
               <div className="col-span-2 flex flex-col justify-end">
                 <div className="flex items-center gap-1 mb-1">
                    <label className="flex items-center gap-0.5 text-[8px] cursor-pointer leading-none"><input type="radio" checked className="accent-white" /> Tag</label>
@@ -958,7 +958,7 @@ export default function EditInvoicePage() {
                 <input value={itemInput.tag} onChange={e => setItemInput({...itemInput, tag: e.target.value})} className="erp-input w-full px-1" placeholder="Tag..." />
               </div>
 
-              <div className="col-span-4">
+              <div className="col-span-5">
                 <label className="erp-label truncate">Item Description</label>
                 <input value={itemInput.description} onChange={e => setItemInput({...itemInput, description: e.target.value})} className="erp-input w-full px-1" placeholder="Optional" />
               </div>
