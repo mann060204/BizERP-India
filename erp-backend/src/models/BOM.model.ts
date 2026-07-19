@@ -7,6 +7,8 @@ export interface IBOMComponent {
   unit: string;
   costPerUnit: number;
   totalCost: number;
+  /** Which unit was qty entered in: 'MAIN' = item.unit, 'SECOND' = item.secondaryUnit */
+  qtyUnitType: 'MAIN' | 'SECOND';
 }
 
 export interface IBOMScrap {
@@ -42,6 +44,7 @@ const BOMComponentSchema = new Schema<IBOMComponent>({
   unit: { type: String, default: 'Nos' },
   costPerUnit: { type: Number, default: 0 },
   totalCost: { type: Number, default: 0 },
+  qtyUnitType: { type: String, enum: ['MAIN', 'SECOND'], default: 'MAIN' },
 }, { _id: false });
 
 const BOMScrapSchema = new Schema<IBOMScrap>({

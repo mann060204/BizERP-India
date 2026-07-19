@@ -1,7 +1,8 @@
-﻿import { Response } from 'express';
+import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import BOM from '../models/BOM.model';
 import Product from '../models/Product.model';
+import { convertToMainUnit } from '../utils/conversionUtils';
 
 // Detect circular BOM references using DFS
 const detectCycle = async (
@@ -20,7 +21,7 @@ const detectCycle = async (
   return false;
 };
 
-// Recursively calculate BOM cost per 1 unit of FG (multi-level support)
+// Recursively calculate BOM cost per 1 unit of FG (multi-level, dual-unit aware)
 export const calcBOMCost = async (businessId: string, productId: string, depth = 0): Promise<number> => {
   if (depth > 10) return 0;
   const bom = await BOM.findOne({ businessId, productId, isActive: true });
@@ -34,7 +35,15 @@ export const calcBOMCost = async (businessId: string, productId: string, depth =
     const isSFG = rmProd?.productType === 'WIP Component';
     let costPerUnit = comp.costPerUnit;
     if (isSFG) costPerUnit = await calcBOMCost(businessId, comp.productId.toString(), depth + 1);
-    totalCost += comp.quantity * costPerUnit;
+
+    // Convert qty to main unit before multiplying by rate
+    let qtyInMainUnit = comp.quantity;
+    if (comp.qtyUnitType === 'SECOND' && rmProd && rmProd.secondaryUnit) {
+      try {
+        qtyInMainUnit = convertToMainUnit(comp.quantity, rmProd.secondaryUnit, rmProd);
+      } catch { /* skip if no rate configured */ }
+    }
+    totalCost += qtyInMainUnit * costPerUnit;
   }
   return totalCost + (bom.directLaborCost || 0) + (bom.manufacturingOverhead || 0);
 };
@@ -55,7 +64,15 @@ export const getBOMByProduct = async (req: AuthRequest, res: Response): Promise<
     if (!bom) { res.json({ bom: null, totalCostPerUnit: 0 }); return; }
     const enrichedComponents = await Promise.all(bom.components.map(async (comp) => {
       const prod = await Product.findOne({ _id: comp.productId, businessId });
-      return { ...comp.toObject(), currentStock: prod?.currentStock ?? 0, productType: prod?.productType ?? 'General', unit: prod?.unit || comp.unit };
+      return {
+        ...comp.toObject(),
+        currentStock: prod?.currentStock ?? 0,
+        productType: prod?.productType ?? 'General',
+        unit: prod?.unit || comp.unit,
+        secondaryUnit: prod?.secondaryUnit || null,  // expose for BOM UI unit toggle
+        conversionRate: prod?.conversionRate || null,
+        qtyUnitType: comp.qtyUnitType || 'MAIN',
+      };
     }));
     const totalCostPerUnit = await calcBOMCost(businessId.toString(), bom.productId.toString());
     res.json({ bom: { ...bom.toObject(), components: enrichedComponents }, totalCostPerUnit });
@@ -87,7 +104,9 @@ export const saveBOMForProduct = async (req: AuthRequest, res: Response): Promis
     }
 
     const enrichedComponents = components.map((comp: any) => ({
-      ...comp, totalCost: (comp.quantity || 0) * (comp.costPerUnit || 0),
+      ...comp,
+      qtyUnitType: comp.qtyUnitType || 'MAIN',
+      totalCost: (comp.quantity || 0) * (comp.costPerUnit || 0),
     }));
     const materialCost = enrichedComponents.reduce((acc: number, c: any) => acc + c.totalCost, 0);
     const totalEstimatedCost = materialCost + Number(directLaborCost) + Number(manufacturingOverhead);

@@ -3,12 +3,16 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IMORawMaterial {
   productId: mongoose.Types.ObjectId;
   productName: string;
-  quantityRequired: number;
-  quantityConsumed: number;
+  quantityRequired: number;  // qty in entered unit (from BOM)
+  quantityConsumed: number;  // qty in entered unit actually consumed
   unit: string;
   costPerUnit: number;
   totalCost: number;
   batchNo?: string;
+  // Dual-Unit audit trail
+  enteredUnit?: string;        // 'MAIN' or 'SECOND' — which unit BOM line used
+  convertedQty?: number;       // actual deduction in Main Unit
+  conversionRateUsed?: number; // rate snapshot at time of production confirm
 }
 
 export interface IMOScrapItem {
@@ -57,7 +61,11 @@ const MORawMaterialSchema = new Schema<IMORawMaterial>({
   unit: { type: String, default: 'Nos' },
   costPerUnit: { type: Number, default: 0 },
   totalCost: { type: Number, default: 0 },
-  batchNo: { type: String }
+  batchNo: { type: String },
+  // Dual-Unit audit trail
+  enteredUnit: { type: String },
+  convertedQty: { type: Number },
+  conversionRateUsed: { type: Number },
 }, { _id: false });
 
 const MOScrapItemSchema = new Schema<IMOScrapItem>({

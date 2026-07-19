@@ -8,7 +8,7 @@ export interface ILineItem {
   batches?: { batchNo: string; quantity: number }[];
   tag?: string;
   description?: string;
-  quantity: number;
+  quantity: number;       // qty AS BILLED (in enteredUnit) — shown on invoice face
   actualQty?: number;
   unit: string;
   rate: number;
@@ -23,6 +23,12 @@ export interface ILineItem {
   sgst: number;
   igst: number;
   totalAmount: number;
+  // ── Dual-Unit audit trail ───────────────────────────────────────────────────────
+  enteredUnit?: string;           // unit the user actually selected (main or second)
+  convertedQty?: number;          // qty in MAIN unit — used for stock deduction
+  conversionRateUsed?: number;    // snapshot of rate at transaction time (for audit)
+  batchId?: mongoose.Types.ObjectId; // which batch supplied the conversion rate
+  // ─────────────────────────────────────────────────────────────────────────────
 }
 
 export interface IInvoice extends Document {
@@ -105,6 +111,11 @@ const LineItemSchema = new Schema<ILineItem>({
   sgst: { type: Number, default: 0 },
   igst: { type: Number, default: 0 },
   totalAmount: { type: Number, required: true },
+  // Dual-Unit audit trail
+  enteredUnit: { type: String },
+  convertedQty: { type: Number },
+  conversionRateUsed: { type: Number },
+  batchId: { type: Schema.Types.ObjectId, ref: 'Batch' },
 }, { _id: false });
 
 const InvoiceSchema = new Schema<IInvoice>(

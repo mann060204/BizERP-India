@@ -180,6 +180,14 @@ export default function MastersPage() {
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Item name is required'); return; }
     if (!form.sellingPrice || form.sellingPrice <= 0) { toast.error('Sale Price 1 must be greater than 0'); return; }
+    // Dual-unit validation: if second unit set, must have rate OR batch tracking
+    if (form.secondaryUnit && form.secondaryUnit !== form.unit) {
+      const hasRate = form.conversionRate && form.conversionRate > 0;
+      if (!hasRate && !form.enableTracking) {
+        toast.error(`Second Unit is set to "${form.secondaryUnit}" but no conversion rate is configured. Set a rate (1 ${form.secondaryUnit} = ? ${form.unit}) or enable "Track by Batch".`);
+        return;
+      }
+    }
     setSaving(true);
     try {
       if (editing) { await productsApi.update(editing._id, form); toast.success('Item updated'); }
@@ -503,19 +511,48 @@ export default function MastersPage() {
 
                     {/* Stock and Unit Details */}
                     <div className="border border-slate-200 rounded-xl p-4 bg-[#F1F5F9]">
-                      <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Stock and Unit Details</h4>
+                      <h4 className="text-sm font-semibold text-slate-900 mb-4 border-b border-slate-300 pb-2">Stock & Unit Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                         <div className="flex gap-2">
                           <div className="flex-1">
-                             <Select label="Unit" keyName="unit" options={units} required form={form} setForm={setForm} />
+                             <Select label="Main Unit (Stock)" keyName="unit" options={units} required form={form} setForm={setForm} />
                           </div>
                           <button onClick={() => setShowUnitModal(true)} className="px-3 py-2 rounded-lg bg-primary/20 text-blue-400 hover:bg-primary/30 text-xs font-semibold whitespace-nowrap transition mt-5">
-                            Secondary Unit
+                            Second Unit
                           </button>
                         </div>
-                        <div className="flex items-center h-9 text-xs text-slate-600">
-                          {form.secondaryUnit && form.secondaryUnit !== form.unit && `1 ${form.unit} = ${form.conversionRate} ${form.secondaryUnit}`}
-                        </div>
+
+                        {/* Dual-Unit Conversion Rate */}
+                        {form.secondaryUnit && form.secondaryUnit !== form.unit ? (
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">
+                              1&nbsp;<span className="text-blue-600 font-bold">{form.secondaryUnit}</span>&nbsp;=&nbsp;___&nbsp;<span className="text-emerald-600 font-bold">{form.unit}</span>
+                            </label>
+                            <input
+                              type="number" step="0.0001"
+                              value={form.conversionRate === 0 ? '' : form.conversionRate}
+                              onChange={e => setForm({ ...form, conversionRate: parseFloat(e.target.value) || 0 })}
+                              disabled={!!form.enableTracking}
+                              placeholder={form.enableTracking ? 'Set per batch' : '0.0000'}
+                              className={`w-full px-3 py-2 rounded-lg border text-sm transition ${
+                                form.enableTracking
+                                  ? 'bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed'
+                                  : 'bg-[#F1F5F9] border-slate-200 text-slate-900 focus:outline-none focus:border-blue-400'
+                              }`}
+                            />
+                            {form.enableTracking && (
+                              <p className="text-[10px] text-amber-600 mt-1">⚠ Rate is set per batch. Item-level rate is ignored.</p>
+                            )}
+                            {!form.enableTracking && form.conversionRate > 0 && (
+                              <p className="text-[10px] text-emerald-600 mt-1">✓ 1 {form.secondaryUnit} deducts {form.conversionRate} {form.unit} from stock</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center h-9 text-xs text-slate-400 italic">
+                            {form.secondaryUnit ? 'Same as main unit' : 'No second unit configured'}
+                          </div>
+                        )}
+
                         {form.type === 'product' && (
                           <>
                             <Input label="Opening Stock" type="number" keyName="openingStock" form={form} setForm={setForm} />
@@ -573,7 +610,21 @@ export default function MastersPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Checkbox label="Print Description" keyName="printDescription" form={form} setForm={setForm} />
                         <Checkbox label="One Click Sale" keyName="oneClickSale" form={form} setForm={setForm} />
-                        <Checkbox label="Enable Tracking" keyName="enableTracking" form={form} setForm={setForm} />
+                        {/* Relabeled for dual-unit batch tracking */}
+                        <div className="col-span-2">
+                          <label className={`flex items-start gap-2 text-sm cursor-pointer ${form.secondaryUnit && form.secondaryUnit !== form.unit ? 'text-amber-700 font-medium' : 'text-slate-900'}`}>
+                            <input type="checkbox" checked={form.enableTracking} onChange={e => setForm({ ...form, enableTracking: e.target.checked })}
+                              className="w-4 h-4 mt-0.5 rounded border-slate-200 bg-[#F1F5F9] text-primary focus:ring-primary focus:ring-offset-black flex-shrink-0" />
+                            <span>
+                              Track by Batch <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-semibold ml-1">Dual-Unit</span>
+                              {form.secondaryUnit && form.secondaryUnit !== form.unit && (
+                                <span className="block text-[10px] text-slate-500 font-normal mt-0.5">
+                                  When ON: each batch stores its own {form.secondaryUnit}→{form.unit} rate. Item-level rate is not used.
+                                </span>
+                              )}
+                            </span>
+                          </label>
+                        </div>
                         <Checkbox label="Print Batch No" keyName="printBatchNo" form={form} setForm={setForm} />
                         <Checkbox label="Print Expiry Date" keyName="printExpiryDate" form={form} setForm={setForm} />
                         <Checkbox label="Not For Sale" keyName="notForSale" danger form={form} setForm={setForm} />

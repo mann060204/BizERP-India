@@ -336,7 +336,8 @@ export default function NewInvoicePage() {
       sellingPrice3: p.sellingPrice3,
       secSalePrice: p.secSalePrice,
       conversionRate: p.conversionRate,
-      selectedBaseRate: initialRate
+      selectedBaseRate: initialRate,
+      enableTracking: p.enableTracking || false,  // for batch-rate lookup
     };
     setItemInput(newInput);
 
@@ -400,7 +401,25 @@ export default function NewInvoicePage() {
       return;
     }
 
-    const newItem = calculateItem(itemInput);
+    // ── Dual-Unit: compute convertedQty before adding to line items ───────────
+    const enteredUnit = itemInput.unit || itemInput.primaryUnit || 'Nos';
+    const mainUnit = itemInput.primaryUnit || enteredUnit;
+    let convertedQty = itemInput.quantity;
+    let conversionRateUsed: number | undefined;
+    if (enteredUnit !== mainUnit && itemInput.secondaryUnit && enteredUnit === itemInput.secondaryUnit) {
+      const rate = itemInput.conversionRate || 0;
+      if (rate > 0) {
+        convertedQty = itemInput.quantity * rate;
+        conversionRateUsed = rate;
+      }
+    }
+
+    const newItem = calculateItem({
+      ...itemInput,
+      enteredUnit,
+      convertedQty,
+      conversionRateUsed,
+    });
     setLineItems([...lineItems, newItem]);
     // Reset input
     setItemInput({
@@ -821,6 +840,20 @@ export default function NewInvoicePage() {
                     <>{units.map(u => <option key={u} value={u}>{u}</option>)}</>
                   )}
                 </select>
+                {/* ── Dual-Unit live conversion preview ── */}
+                {itemInput.secondaryUnit && itemInput.unit === itemInput.secondaryUnit && itemInput.quantity > 0 && (
+                  <div className="mt-0.5">
+                    {(itemInput.conversionRate || 0) > 0 ? (
+                      <span className="text-[9px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded whitespace-nowrap">
+                        ≈ {(itemInput.quantity * (itemInput.conversionRate || 0)).toFixed(3)} {itemInput.primaryUnit} deducted
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">
+                        ⚠ No rate
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="col-span-1">
@@ -971,17 +1004,29 @@ export default function NewInvoicePage() {
                 lineItems.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 erp-grid-row group">
                     <div className="col-span-1 erp-grid-cell text-slate-600">{idx + 1}</div>
-                    <div className="col-span-3 erp-grid-cell font-medium flex items-center overflow-hidden whitespace-nowrap">
-                      <span className="truncate" title={item.productName}>{item.productName}</span>
-                      {item.tag && <span className="ml-1 text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600 whitespace-nowrap">{item.tag}</span>}
-                      {item.batches && item.batches.length > 0 ? (
-                        <span className="ml-1 text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap" title={item.batches.map(b => `${b.batchNo} (${b.quantity})`).join(', ')}>
-                          Batches: {item.batches.map(b => b.batchNo).join(', ')}
-                        </span>
-                      ) : item.batchNo && (
-                        <span className="ml-1 text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap">Batch: {item.batchNo}</span>
+                    <div className="col-span-3 erp-grid-cell font-medium flex flex-col justify-center overflow-hidden">
+                      <div className="flex items-center gap-1 overflow-hidden">
+                        <span className="truncate" title={item.productName}>{item.productName}</span>
+                        {item.tag && <span className="text-[9px] bg-[#E2E8F0] px-1 rounded text-slate-600 whitespace-nowrap flex-shrink-0">{item.tag}</span>}
+                        {item.batches && item.batches.length > 0 ? (
+                          <span className="text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap flex-shrink-0" title={item.batches.map(b => `${b.batchNo} (${b.quantity})`).join(', ')}>
+                            Batches: {item.batches.map(b => b.batchNo).join(', ')}
+                          </span>
+                        ) : item.batchNo && (
+                          <span className="text-[9px] text-slate-500 border border-slate-200 rounded px-1 whitespace-nowrap flex-shrink-0">Batch: {item.batchNo}</span>
+                        )}
+                      </div>
+                      {item.description && (
+                        <div className="text-[10px] text-slate-400 font-normal truncate leading-tight mt-0.5" title={item.description}>
+                          {item.description}
+                        </div>
                       )}
-                      {item.description && <span className="ml-1 text-[10px] text-slate-400 font-normal truncate" title={item.description}>({item.description})</span>}
+                      {/* Dual-Unit deduction badge */}
+                      {(item as any).enteredUnit && (item as any).enteredUnit !== (item as any).primaryUnit && (item as any).convertedQty && (
+                        <div className="text-[9px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-1 rounded mt-0.5 w-fit">
+                          ≈ {((item as any).convertedQty as number).toFixed(3)} {(item as any).primaryUnit} deducted
+                        </div>
+                      )}
                     </div>
                     <div className="col-span-1 erp-grid-cell text-center">{item.quantity}</div>
                     {enableActualQty && <div className="col-span-1 erp-grid-cell text-center text-amber-600 font-semibold">{item.actualQty ?? '—'}</div>}
@@ -996,11 +1041,11 @@ export default function NewInvoicePage() {
                     <div className={`erp-grid-cell text-right font-bold text-emerald-400 flex items-center justify-end ${invoiceType === 'GST' ? 'col-span-1' : 'col-span-3'}`}>
                       ₹{item.totalAmount.toFixed(2)}
                     </div>
-                    <div className="col-span-1 erp-grid-cell flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                      <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-primary/10 rounded">
+                    <div className="col-span-1 erp-grid-cell flex items-center justify-center gap-1">
+                      <button onClick={() => editItem(idx)} className="p-1 text-blue-400 hover:bg-primary/10 rounded" title="Edit Item">
                         <Pencil className="w-3 h-3" />
                       </button>
-                      <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded">
+                      <button onClick={() => removeItem(idx)} className="p-1 text-red-500 hover:bg-red-500/10 rounded" title="Remove Item">
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>

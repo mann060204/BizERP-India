@@ -18,6 +18,12 @@ export interface IBatch extends Document {
   qualityStatus: 'Pending' | 'Passed' | 'Failed';
   currentStock: number;
   isActive: boolean;
+  // ── Dual-Unit fields (for batch-tracked items) ──────────────────────────────
+  // e.g. for a roll: actualWeight = total Kg, actualLength = total Meters
+  actualWeight?: number;     // quantity in Main Unit (e.g. Kg)
+  actualLength?: number;     // quantity in Second Unit (e.g. Meter)
+  conversionRate?: number;   // auto-computed: actualWeight / actualLength (1 Meter = X Kg)
+  // ───────────────────────────────────────────────────────────────────────────
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +47,10 @@ const BatchSchema = new Schema<IBatch>(
     qualityStatus: { type: String, enum: ['Pending', 'Passed', 'Failed'], default: 'Passed' },
     currentStock: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    // Dual-Unit: batch-level conversion (overrides item-level conversionRate)
+    actualWeight: { type: Number },      // main unit qty for this batch
+    actualLength: { type: Number },      // second unit qty for this batch
+    conversionRate: { type: Number },    // = actualWeight / actualLength (overridable)
   },
   { timestamps: true }
 );

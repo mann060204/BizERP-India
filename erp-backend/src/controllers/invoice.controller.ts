@@ -9,6 +9,7 @@ import Business from '../models/Business.model';
 import { calculateInvoiceTotals } from '../services/gst.service';
 import { generateSequenceNumber } from '../utils/sequenceGenerator';
 import Customer from '../models/Customer.model';
+import { convertToMainUnit, getEffectiveConversionRate, validateDualUnitSetup } from '../utils/conversionUtils';
 
 // Helper: generate next invoice number
 const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' | 'Bill of Supply' = 'GST'): Promise<string> => {
@@ -163,20 +164,66 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     totals.grandTotal = Math.round((totals.grandTotal - dAmount + shipping + rOff) * 100) / 100;
     const balance = Math.round((totals.grandTotal - received) * 100) / 100;
 
-    // Deduct stock for product items
+    // Deduct stock for product items (with dual-unit conversion)
     for (const item of lineItems) {
       if (item.productId && item.quantity > 0) {
         try {
-          const qtyToDeduct = item.actualQty !== undefined && item.actualQty !== null ? item.actualQty : item.quantity;
+          // Fetch the product to get unit configuration
+          const product = await Product.findById(item.productId).lean();
+          if (!product) continue;
+
+          // Determine which unit was entered (fall back to item.unit if not set)
+          const enteredUnit = item.enteredUnit || item.unit || product.unit;
+
+          // Resolve the batch if the item uses batch-level conversion rate
+          let batchDoc: any = null;
+          if (product.enableTracking && (item.batchId || item.batchNo)) {
+            batchDoc = await Batch.findOne({
+              businessId,
+              productId: item.productId,
+              ...(item.batchId ? { _id: item.batchId } : { batchNo: item.batchNo }),
+            }).lean();
+          }
+
+          // Convert entered qty → main unit qty for stock deduction
+          let qtyToDeduct: number;
+          let conversionRateUsed: number | undefined;
+
+          if (enteredUnit !== product.unit && product.secondaryUnit) {
+            // Second unit path — apply conversion
+            validateDualUnitSetup(product);
+            qtyToDeduct = convertToMainUnit(item.quantity, enteredUnit, product, batchDoc);
+            conversionRateUsed = getEffectiveConversionRate(product, batchDoc) ?? undefined;
+          } else {
+            // Main unit path — use actualQty (batch difference) or billed qty
+            qtyToDeduct = item.actualQty !== undefined && item.actualQty !== null
+              ? item.actualQty
+              : item.quantity;
+          }
+
+          // Attach audit fields back onto the line item for storage
+          item.enteredUnit = enteredUnit;
+          item.convertedQty = qtyToDeduct;
+          item.conversionRateUsed = conversionRateUsed;
+          if (batchDoc) item.batchId = batchDoc._id;
+
+          // Deduct from product stock
           await Product.findByIdAndUpdate(item.productId, {
             $inc: { currentStock: -qtyToDeduct },
           });
 
+          // Deduct from batch stock if applicable
           if (item.batches && item.batches.length > 0) {
             for (const b of item.batches) {
+              // For multi-batch lines, each b.quantity is in the entered unit
+              const bDoc = await Batch.findOne({ businessId, productId: item.productId, batchNo: b.batchNo }).lean();
+              const bQtyMainUnit = (enteredUnit !== product.unit && product.secondaryUnit)
+                ? convertToMainUnit(b.quantity, enteredUnit, product, bDoc)
+                : b.quantity;
+
               const updatedBatch = await Batch.findOneAndUpdate(
                 { businessId, productId: item.productId, batchNo: b.batchNo },
-                { $inc: { currentStock: -b.quantity } },
+                { $inc: { currentStock: -bQtyMainUnit } },
                 { new: true }
               );
 
@@ -186,7 +233,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
                   batchId: updatedBatch._id,
                   productId: item.productId,
                   action: 'STOCK_OUT',
-                  quantityChanged: -b.quantity,
+                  quantityChanged: -bQtyMainUnit,
                   currentStock: updatedBatch.currentStock,
                   documentType: 'Invoice',
                   documentNumber: invoiceNumber,
@@ -215,8 +262,12 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
               });
             }
           }
-        } catch (stockErr) {
+        } catch (stockErr: any) {
           console.error(`Failed to deduct stock for product ${item.productId}:`, stockErr);
+          // Propagate dual-unit validation errors as 400
+          if (stockErr.message?.includes('conversion rate') || stockErr.message?.includes('Second Unit')) {
+            res.status(400).json({ message: stockErr.message }); return;
+          }
         }
       }
     }

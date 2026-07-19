@@ -1,10 +1,11 @@
-﻿import { Response } from 'express';
+import { Response } from 'express';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import ManufacturingOrder from '../models/ManufacturingOrder.model';
 import Product from '../models/Product.model';
 import BOM from '../models/BOM.model';
 import Batch from '../models/Batch.model';
+import { convertToMainUnit, getEffectiveConversionRate } from '../utils/conversionUtils';
 
 const generateMONumber = async (businessId: any, prefix = 'MFG') => {
   const count = await ManufacturingOrder.countDocuments({ businessId });
@@ -32,20 +33,36 @@ export const previewProduction = async (req: AuthRequest, res: Response): Promis
     let allAvailable = true;
     const lines = await Promise.all(bom.components.map(async (comp) => {
       const prod = await Product.findOne({ _id: comp.productId, businessId });
-      const required = comp.quantity * qty;
+      const rawRequired = comp.quantity * qty;
+
+      // Convert to main unit for stock comparison
+      const unitSelected = comp.qtyUnitType === 'SECOND' ? (prod?.secondaryUnit || comp.unit) : (prod?.unit || comp.unit);
+      let requiredInMainUnit = rawRequired;
+      let convRate: number | null = null;
+      try {
+        if (comp.qtyUnitType === 'SECOND' && prod) {
+          requiredInMainUnit = convertToMainUnit(rawRequired, unitSelected, prod);
+          convRate = getEffectiveConversionRate(prod);
+        }
+      } catch { /* if no rate, show as-is */ }
+
       const available = prod?.currentStock ?? 0;
-      const shortage = Math.max(0, required - available);
+      const shortage = Math.max(0, requiredInMainUnit - available);
       if (shortage > 0) allAvailable = false;
       return {
         productId: comp.productId,
         productName: comp.productName,
         unit: prod?.unit || comp.unit,
+        enteredUnit: unitSelected,
+        qtyUnitType: comp.qtyUnitType || 'MAIN',
         qtyPerUnit: comp.quantity,
-        required,
+        required: rawRequired,
+        requiredInMainUnit,
+        conversionRateUsed: convRate,
         available,
         shortage,
         rate: comp.costPerUnit,
-        amount: required * comp.costPerUnit,
+        amount: requiredInMainUnit * comp.costPerUnit,
         ok: shortage === 0,
       };
     }));
@@ -139,14 +156,30 @@ export const confirmProduction = async (req: AuthRequest, res: Response): Promis
 
     const qty = mo.quantityToProduce;
 
-    // Step 1: VALIDATE all RM stock before any changes
-    const shortages: { productName: string; required: number; available: number; short: number }[] = [];
+    // Step 1: VALIDATE all RM stock before any changes (with dual-unit conversion)
+    const shortages: { productName: string; required: number; requiredInMainUnit: number; available: number; short: number }[] = [];
     for (const comp of bom.components) {
       const prod = await Product.findOne({ _id: comp.productId, businessId }).session(session);
-      const required = comp.quantity * qty;
+      const rawRequired = comp.quantity * qty;
+
+      // Determine entered unit and convert to main unit for stock check
+      const unitSelected = comp.qtyUnitType === 'SECOND'
+        ? (prod?.secondaryUnit || comp.unit)
+        : (prod?.unit || comp.unit);
+
+      let requiredInMainUnit = rawRequired;
+      try {
+        if (comp.qtyUnitType === 'SECOND' && prod) {
+          requiredInMainUnit = convertToMainUnit(rawRequired, unitSelected, prod);
+        }
+      } catch (convErr: any) {
+        await session.abortTransaction();
+        res.status(400).json({ message: convErr.message }); return;
+      }
+
       const available = prod?.currentStock ?? 0;
-      if (available < required) {
-        shortages.push({ productName: comp.productName, required, available, short: required - available });
+      if (available < requiredInMainUnit) {
+        shortages.push({ productName: comp.productName, required: rawRequired, requiredInMainUnit, available, short: requiredInMainUnit - available });
       }
     }
     if (shortages.length > 0) {
@@ -155,25 +188,42 @@ export const confirmProduction = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Step 2: Apply stock changes
+    // Step 2: Apply stock changes (deduct in Main Unit)
     const consumedLines = [];
     let totalActualCost = 0;
 
     for (const comp of bom.components) {
-      const required = comp.quantity * qty;
-      const amount = required * comp.costPerUnit;
+      const prod = await Product.findOne({ _id: comp.productId, businessId }).session(session);
+      const rawRequired = comp.quantity * qty;
+
+      const unitSelected = comp.qtyUnitType === 'SECOND'
+        ? (prod?.secondaryUnit || comp.unit)
+        : (prod?.unit || comp.unit);
+
+      let mainUnitQty = rawRequired;
+      let convRate: number | null = null;
+      if (comp.qtyUnitType === 'SECOND' && prod) {
+        mainUnitQty = convertToMainUnit(rawRequired, unitSelected, prod);
+        convRate = getEffectiveConversionRate(prod);
+      }
+
+      const amount = mainUnitQty * comp.costPerUnit;
       totalActualCost += amount;
       consumedLines.push({
         productId: comp.productId,
         productName: comp.productName,
-        quantityRequired: required,
-        quantityConsumed: required,
+        quantityRequired: rawRequired,       // entered qty (for display)
+        quantityConsumed: rawRequired,       // entered qty
         unit: comp.unit,
         costPerUnit: comp.costPerUnit,
         totalCost: amount,
+        enteredUnit: unitSelected,
+        convertedQty: mainUnitQty,           // main unit qty (actual deduction)
+        conversionRateUsed: convRate ?? undefined,
       });
-      // Deduct RM
-      await Product.findByIdAndUpdate(comp.productId, { $inc: { currentStock: -required } }, { session });
+
+      // Deduct in MAIN unit from stock
+      await Product.findByIdAndUpdate(comp.productId, { $inc: { currentStock: -mainUnitQty } }, { session });
     }
 
     // Add overhead/labor cost

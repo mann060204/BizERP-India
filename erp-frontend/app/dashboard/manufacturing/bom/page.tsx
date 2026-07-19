@@ -5,8 +5,14 @@ import { toast } from 'react-hot-toast';
 import { bomApi, productsApi } from '../../../../lib/erp-api';
 import Topbar from '../../../../components/layout/Topbar';
 
-type Product = { _id: string; name: string; productType: string; unit: string; purchasePrice: number; currentStock: number; };
-type BOMLine = { productId: string; productName: string; unit: string; quantity: number; costPerUnit: number; totalCost: number; currentStock?: number; productType?: string; };
+type Product = { _id: string; name: string; productType: string; unit: string; purchasePrice: number; currentStock: number; secondaryUnit?: string; conversionRate?: number; };
+type BOMLine = {
+  productId: string; productName: string;
+  unit: string; secondaryUnit?: string; conversionRate?: number;
+  quantity: number; costPerUnit: number; totalCost: number;
+  currentStock?: number; productType?: string;
+  qtyUnitType: 'MAIN' | 'SECOND';  // which unit was qty entered in
+};
 
 const TYPE_BADGE: Record<string, string> = {
   'Raw Material': 'bg-red-100 text-red-700 border border-red-200',
@@ -48,7 +54,13 @@ export default function BOMPage() {
       const existingBom = res.data.bom;
       if (existingBom) {
         setBom(existingBom);
-        setComponents(existingBom.components.map((c: any) => ({ ...c, totalCost: c.quantity * c.costPerUnit })));
+        setComponents(existingBom.components.map((c: any) => ({
+          ...c,
+          qtyUnitType: c.qtyUnitType || 'MAIN',
+          secondaryUnit: c.secondaryUnit || null,
+          conversionRate: c.conversionRate || null,
+          totalCost: c.quantity * c.costPerUnit,
+        })));
         setDirectLaborCost(existingBom.directLaborCost || 0);
         setOverhead(existingBom.manufacturingOverhead || 0);
       } else {
@@ -58,20 +70,23 @@ export default function BOMPage() {
     finally { setLoading(false); }
   }, []);
 
-  const addLine = () => setComponents(prev => [...prev, { productId: '', productName: '', unit: 'Nos', quantity: 1, costPerUnit: 0, totalCost: 0 }]);
+  const addLine = () => setComponents(prev => [...prev, { productId: '', productName: '', unit: 'Nos', quantity: 1, costPerUnit: 0, totalCost: 0, qtyUnitType: 'MAIN' }]);
 
   const updateLine = (idx: number, field: string, value: any) => {
     setComponents(prev => {
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [field]: value };
       if (field === 'productId') {
-        const prod = products.find(p => p._id === value);
+        const prod = products.find(p => p._id === value) as any;
         if (prod) {
           updated[idx].productName = prod.name;
           updated[idx].unit = prod.unit || 'Nos';
+          updated[idx].secondaryUnit = prod.secondaryUnit || null;
+          updated[idx].conversionRate = prod.conversionRate || null;
           updated[idx].costPerUnit = prod.purchasePrice || 0;
           updated[idx].currentStock = prod.currentStock;
           updated[idx].productType = prod.productType;
+          updated[idx].qtyUnitType = 'MAIN'; // reset to main unit when product changes
         }
       }
       updated[idx].totalCost = (updated[idx].quantity || 0) * (updated[idx].costPerUnit || 0);
@@ -216,7 +231,7 @@ export default function BOMPage() {
                           <tr className="bg-slate-50 border-b border-slate-200 text-xs text-slate-500 font-medium uppercase tracking-wider">
                             <th className="px-4 py-2.5 text-left w-8">#</th>
                             <th className="px-4 py-2.5 text-left">Raw Material / Component</th>
-                            <th className="px-4 py-2.5 text-left w-24">Unit</th>
+                            <th className="px-4 py-2.5 text-left w-28">Unit Type</th>
                             <th className="px-4 py-2.5 text-right w-32">Qty / 1 FG</th>
                             <th className="px-4 py-2.5 text-right w-32">Rate (₹)</th>
                             <th className="px-4 py-2.5 text-right w-32">Amount (₹)</th>
@@ -247,8 +262,32 @@ export default function BOMPage() {
                                 </div>
                               </td>
                               <td className="px-4 py-2">
-                                <input value={comp.unit} onChange={e => updateLine(idx, 'unit', e.target.value)}
-                                  className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                {comp.secondaryUnit ? (
+                                  // Dual-unit toggle: MAIN / SECOND
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => updateLine(idx, 'qtyUnitType', 'MAIN')}
+                                      className={`px-2 py-1 text-[10px] font-bold rounded-l-md border transition ${
+                                        comp.qtyUnitType !== 'SECOND'
+                                          ? 'bg-emerald-600 text-white border-emerald-600'
+                                          : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                      }`}
+                                      title={`Main unit: ${comp.unit}`}
+                                    >{comp.unit}</button>
+                                    <button
+                                      onClick={() => updateLine(idx, 'qtyUnitType', 'SECOND')}
+                                      className={`px-2 py-1 text-[10px] font-bold rounded-r-md border-t border-b border-r transition ${
+                                        comp.qtyUnitType === 'SECOND'
+                                          ? 'bg-blue-600 text-white border-blue-600'
+                                          : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                      }`}
+                                      title={`Second unit: ${comp.secondaryUnit}`}
+                                    >{comp.secondaryUnit}</button>
+                                  </div>
+                                ) : (
+                                  <input value={comp.unit} onChange={e => updateLine(idx, 'unit', e.target.value)}
+                                    className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                )}
                               </td>
                               <td className="px-4 py-2">
                                 <input type="number" min="0.001" step="0.001" value={comp.quantity || ''}
