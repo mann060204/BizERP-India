@@ -105,6 +105,12 @@ export default function BOMPage() {
     for (const c of components) {
       if (!c.productId) return toast.error('Select a product for all component rows');
       if (c.quantity <= 0) return toast.error('Qty must be > 0 for all rows');
+      // Fix 4: Block save when Second Unit is selected but conversion rate is not configured
+      if (c.qtyUnitType === 'SECOND' && (!c.conversionRate || c.conversionRate <= 0)) {
+        return toast.error(
+          `"${c.productName || 'A component'}": Conversion rate not set. Cannot use ${c.secondaryUnit || 'Second Unit'} — set the rate in Item Master first.`
+        );
+      }
     }
     setSaving(true);
     try {
@@ -293,6 +299,18 @@ export default function BOMPage() {
                                 <input type="number" min="0.001" step="0.001" value={comp.quantity || ''}
                                   onChange={e => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)}
                                   className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 text-right" />
+                                { /* Fix 3: Live conversion preview — shown when Second Unit is active */ }
+                                {comp.qtyUnitType === 'SECOND' && comp.conversionRate && comp.conversionRate > 0 && comp.quantity > 0 && (
+                                  <div className="mt-1 text-[10px] text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 text-right font-semibold">
+                                    ≈ {(comp.quantity * comp.conversionRate).toFixed(2)} {comp.unit} will be deducted
+                                  </div>
+                                )}
+                                { /* Warn when Second Unit selected but no conversion rate */ }
+                                {comp.qtyUnitType === 'SECOND' && (!comp.conversionRate || comp.conversionRate <= 0) && (
+                                  <div className="mt-1 text-[10px] text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5 text-right font-semibold">
+                                    ⚠ No conversion rate — set in Item Master
+                                  </div>
+                                )}
                               </td>
                               <td className="px-4 py-2">
                                 <input type="number" min="0" step="0.01" value={comp.costPerUnit || ''}

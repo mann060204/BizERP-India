@@ -6,7 +6,13 @@ import { manufacturingApi, productsApi } from '../../../../lib/erp-api';
 import Topbar from '../../../../components/layout/Topbar';
 
 type Product = { _id: string; name: string; productType: string; unit: string; currentStock: number; };
-type PreviewLine = { productId: string; productName: string; unit: string; qtyPerUnit: number; required: number; available: number; shortage: number; rate: number; amount: number; ok: boolean; };
+type PreviewLine = {
+  productId: string; productName: string;
+  unit: string; enteredUnit?: string; qtyUnitType?: string;
+  qtyPerUnit: number; required: number; requiredInMainUnit?: number;
+  available: number; shortage: number; rate: number; amount: number; ok: boolean;
+  conversionRateUsed?: number;
+};
 type PreviewData = { lines: PreviewLine[]; totalCost: number; costPerUnit: number; allAvailable: boolean; bom: any; };
 type MO = { _id: string; orderNumber: string; productName: string; quantityToProduce: number; status: string; totalActualCost: number; totalEstimatedCost: number; createdAt: string; rawMaterials: any[]; notes?: string; };
 
@@ -209,7 +215,7 @@ export default function ProductionPage() {
                         <th className="px-4 py-2.5 text-left">Raw Material</th>
                         <th className="px-4 py-2.5 text-right">BOM Qty/unit</th>
                         <th className="px-4 py-2.5 text-right">Required ({Number(produceQty)} units)</th>
-                        <th className="px-4 py-2.5 text-right">In Stock</th>
+                        <th className="px-4 py-2.5 text-right">In Stock (Main Unit)</th>
                         <th className="px-4 py-2.5 text-center">Status</th>
                         <th className="px-4 py-2.5 text-right">Rate</th>
                         <th className="px-4 py-2.5 text-right">Cost</th>
@@ -218,15 +224,31 @@ export default function ProductionPage() {
                     <tbody className="divide-y divide-slate-100">
                       {preview.lines.map((line, i) => (
                         <tr key={i} className={`${line.ok ? 'hover:bg-slate-50' : 'bg-red-50/40 hover:bg-red-50'} transition`}>
-                          <td className="px-4 py-3 font-medium text-slate-800">{line.productName}<span className="ml-1.5 text-[10px] text-slate-400">{line.unit}</span></td>
-                          <td className="px-4 py-3 text-right text-slate-600">{line.qtyPerUnit}</td>
-                          <td className="px-4 py-3 text-right font-semibold text-slate-700">{line.required}</td>
+                          <td className="px-4 py-3 font-medium text-slate-800">
+                            {line.productName}
+                            <span className="ml-1.5 text-[10px] text-slate-400">{line.unit}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right text-slate-600">
+                            {line.qtyPerUnit} {line.enteredUnit || line.unit}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {line.qtyUnitType === 'SECOND' && line.requiredInMainUnit !== undefined ? (
+                              <div>
+                                <span className="font-semibold text-slate-700">{line.required} {line.enteredUnit}</span>
+                                <div className="text-[10px] text-blue-700 font-semibold mt-0.5">
+                                  → {line.requiredInMainUnit.toFixed(2)} {line.unit} from stock
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="font-semibold text-slate-700">{line.required} {line.unit}</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-right font-semibold"
-                            style={{ color: line.ok ? '#059669' : '#dc2626' }}>{line.available}</td>
+                            style={{ color: line.ok ? '#059669' : '#dc2626' }}>{line.available} {line.unit}</td>
                           <td className="px-4 py-3 text-center">
                             {line.ok
                               ? <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"><CheckCircle className="w-3 h-3" /> OK</span>
-                              : <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"><XCircle className="w-3 h-3" /> Short by {line.shortage}</span>}
+                              : <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"><XCircle className="w-3 h-3" /> Short by {(line.requiredInMainUnit ?? line.shortage).toFixed(2)} {line.unit}</span>}
                           </td>
                           <td className="px-4 py-3 text-right text-slate-600">₹{line.rate.toFixed(2)}</td>
                           <td className="px-4 py-3 text-right font-semibold text-slate-700">₹{line.amount.toFixed(2)}</td>
@@ -359,7 +381,8 @@ export default function ProductionPage() {
                                   <thead>
                                     <tr className="text-slate-500 border-b border-slate-200">
                                       <th className="px-4 py-2 text-left">RM Name</th>
-                                      <th className="px-4 py-2 text-right">Qty Consumed</th>
+                                      <th className="px-4 py-2 text-right">Qty Entered</th>
+                                      <th className="px-4 py-2 text-right">Deducted (Main Unit)</th>
                                       <th className="px-4 py-2 text-right">Rate</th>
                                       <th className="px-4 py-2 text-right">Amount</th>
                                     </tr>
@@ -368,7 +391,22 @@ export default function ProductionPage() {
                                     {mo.rawMaterials?.map((rm: any, i: number) => (
                                       <tr key={i} className="hover:bg-slate-50">
                                         <td className="px-4 py-2 font-medium text-slate-700">{rm.productName}</td>
-                                        <td className="px-4 py-2 text-right text-slate-600">{rm.quantityConsumed || rm.quantityRequired} {rm.unit}</td>
+                                        <td className="px-4 py-2 text-right text-slate-600">
+                                          {rm.quantityConsumed || rm.quantityRequired}{' '}
+                                          <span className="text-slate-400">{rm.enteredUnit || rm.unit}</span>
+                                        </td>
+                                        <td className="px-4 py-2 text-right">
+                                          {rm.convertedQty !== undefined && rm.convertedQty !== (rm.quantityConsumed || rm.quantityRequired) ? (
+                                            <div>
+                                              <span className="font-semibold text-blue-700">{rm.convertedQty.toFixed(2)} {rm.unit}</span>
+                                              {rm.conversionRateUsed && (
+                                                <div className="text-[9px] text-slate-400 mt-0.5">rate: {rm.conversionRateUsed}</div>
+                                              )}
+                                            </div>
+                                          ) : (
+                                            <span className="text-slate-400">—</span>
+                                          )}
+                                        </td>
                                         <td className="px-4 py-2 text-right text-slate-600">₹{(rm.costPerUnit || 0).toFixed(2)}</td>
                                         <td className="px-4 py-2 text-right font-semibold text-slate-800">₹{(rm.totalCost || 0).toFixed(2)}</td>
                                       </tr>
@@ -376,7 +414,7 @@ export default function ProductionPage() {
                                   </tbody>
                                   <tfoot>
                                     <tr className="bg-slate-50 border-t border-slate-200 font-bold">
-                                      <td colSpan={3} className="px-4 py-2 text-right text-slate-700">Total</td>
+                                      <td colSpan={4} className="px-4 py-2 text-right text-slate-700">Total</td>
                                       <td className="px-4 py-2 text-right text-primary">₹{cost.toFixed(2)}</td>
                                     </tr>
                                   </tfoot>

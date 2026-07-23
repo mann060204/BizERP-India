@@ -99,14 +99,25 @@ export const createDraftProduction = async (req: AuthRequest, res: Response): Pr
     const fgProd = await Product.findOne({ _id: productId, businessId });
     if (!fgProd) { res.status(404).json({ message: 'Finished Good not found' }); return; }
 
-    const rawMaterials = bom.components.map((comp) => ({
-      productId: comp.productId,
-      productName: comp.productName,
-      quantityRequired: comp.quantity * qty,
-      quantityConsumed: 0,
-      unit: comp.unit,
-      costPerUnit: comp.costPerUnit,
-      totalCost: (comp.quantity * qty) * comp.costPerUnit,
+    // Fetch products so we can record the entered-unit label on the draft
+    const rawMaterials = await Promise.all(bom.components.map(async (comp) => {
+      const prod = await Product.findOne({ _id: comp.productId, businessId });
+      // Determine the unit label that was selected in the BOM
+      const enteredUnit = comp.qtyUnitType === 'SECOND'
+        ? (prod?.secondaryUnit || comp.unit)
+        : (prod?.unit || comp.unit);
+      return {
+        productId: comp.productId,
+        productName: comp.productName,
+        quantityRequired: comp.quantity * qty,
+        quantityConsumed: 0,
+        unit: prod?.unit || comp.unit,   // always store Main Unit here
+        costPerUnit: comp.costPerUnit,
+        totalCost: (comp.quantity * qty) * comp.costPerUnit,
+        enteredUnit,                     // unit label used in BOM entry
+        // convertedQty populated at confirm time; null until then
+        conversionRateUsed: prod?.conversionRate ?? undefined,
+      };
     }));
 
     const totalEstimatedCost = rawMaterials.reduce((acc, r) => acc + r.totalCost, 0)
@@ -268,8 +279,11 @@ export const cancelProduction = async (req: AuthRequest, res: Response): Promise
     // Reverse stock only if it was Completed (stock was moved)
     if (mo.status === 'Completed') {
       // Restore RM stock
+      // IMPORTANT: use convertedQty (main-unit qty actually deducted at confirm time).
+      // Fall back to quantityConsumed for legacy single-unit orders where convertedQty was never set.
       for (const rm of mo.rawMaterials) {
-        await Product.findByIdAndUpdate(rm.productId, { $inc: { currentStock: rm.quantityConsumed } }, { session });
+        const qtyToRestore = rm.convertedQty ?? rm.quantityConsumed;
+        await Product.findByIdAndUpdate(rm.productId, { $inc: { currentStock: qtyToRestore } }, { session });
       }
       // Deduct FG stock
       await Product.findByIdAndUpdate(mo.productId, { $inc: { currentStock: -mo.quantityToProduce } }, { session });
