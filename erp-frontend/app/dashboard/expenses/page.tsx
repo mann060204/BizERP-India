@@ -1,20 +1,25 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Topbar from '../../../components/layout/Topbar';
-import { expensesApi, businessApi, accountsApi, banksApi } from '../../../lib/erp-api';
-import { Plus, Search, Receipt, Trash2, Loader2, X, Edit } from 'lucide-react';
+import { expensesApi, businessApi, accountsApi, paymentModesApi } from '../../../lib/erp-api';
+import { Plus, Search, Receipt, Trash2, Loader2, X, Edit, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Expense { _id: string; category: string; amount: number; date: string; paymentMode: string; vendorName?: string; notes?: string; totalWithTax: number; bankAccountId?: string; }
+interface PaymentModeDoc { _id: string; name: string; ledgerType: 'CASH' | 'BANK'; linkedAccountId: any; isActive: boolean; }
 
 const DEFAULT_CATEGORIES = ['Rent', 'Salaries', 'Electricity', 'Internet', 'Marketing', 'Travel', 'Office Supplies', 'Maintenance', 'Legal & Professional', 'Miscellaneous'];
-const PAYMENT_MODES = ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit Card'];
+
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<any>({ monthTotal: 0, byCategory: [] });
+
+  const [modes, setModes] = useState<PaymentModeDoc[]>([]);
+  const [modeResolution, setModeResolution] = useState<{ resolved: boolean; account: any; ledgerType: string; warning: string | null } | null>(null);
+  const [resolving, setResolving] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,6 +30,7 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     accountsApi.list({ type: 'Bank' }).then((res: any) => setBankAccounts(res.accounts || [])).catch(() => {});
+    paymentModesApi.list().then((res: any) => setModes(res.data?.modes || [])).catch(() => {});
   }, []);
 
   // Load categories from business profile on mount
@@ -53,6 +59,19 @@ export default function ExpensesPage() {
 
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
 
+  // Resolve payment mode when mode selection changes in the form
+  useEffect(() => {
+    if (!showModal) return;
+    setResolving(true);
+    setModeResolution(null);
+    paymentModesApi.resolve(form.paymentMode)
+      .then((res: any) => setModeResolution(res.data))
+      .catch(() => setModeResolution(null))
+      .finally(() => setResolving(false));
+  }, [form.paymentMode, showModal]);
+
+  const paymentModeNames = modes.length > 0 ? modes.filter(m => m.isActive).map(m => m.name) : ['Cash', 'UPI', 'NEFT', 'RTGS', 'Cheque', 'Credit Card', 'Bank Transfer'];
+
   const openCreate = () => { setEditingId(null); setForm({ category: categories[0] || 'Miscellaneous', amount: 0, date: new Date().toISOString().split('T')[0], paymentMode: 'Cash', vendorName: '', notes: '', gstRate: 0, isInterState: false, bankAccountId: '' }); setShowModal(true); };
 
   const openEdit = (e: any) => {
@@ -73,6 +92,11 @@ export default function ExpensesPage() {
 
   const handleSave = async () => {
     if (!form.amount || form.amount <= 0) { toast.error('Amount is required'); return; }
+    // Block save if mode has no linked account
+    if (modeResolution && !modeResolution.resolved) {
+      toast.error(modeResolution.warning || 'Configure a linked account for this payment mode first');
+      return;
+    }
     setSaving(true);
     try {
       if (editingId) {
@@ -208,10 +232,32 @@ export default function ExpensesPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1.5">Payment Mode</label>
-                  <select value={form.paymentMode} onChange={e => setForm({ ...form, paymentMode: e.target.value })}
+                   <select value={form.paymentMode} onChange={e => setForm({ ...form, paymentMode: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition">
-                    {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+                    {paymentModeNames.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
+                  {/* ── Posts-to Preview ── */}
+                  {resolving && (
+                    <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Resolving account...
+                    </p>
+                  )}
+                  {!resolving && modeResolution && (
+                    <div className={`mt-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 ${
+                      modeResolution.resolved
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-red-50 text-red-600 border border-red-200'
+                    }`}>
+                      {modeResolution.resolved ? (
+                        <>
+                          ✅ Posts to: <strong>{modeResolution.ledgerType === 'CASH' ? 'Cash in Hand' : modeResolution.account?.name}</strong>
+                          {modeResolution.account?.bankName && <span className="text-slate-500"> — {modeResolution.account.bankName}</span>}
+                        </>
+                      ) : (
+                        <><AlertTriangle className="w-3 h-3" /> {modeResolution.warning}</>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {['UPI', 'NEFT', 'RTGS', 'Cheque'].includes(form.paymentMode) && bankAccounts.length > 0 && (
                   <div>

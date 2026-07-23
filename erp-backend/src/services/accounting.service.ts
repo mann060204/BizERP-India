@@ -4,6 +4,7 @@ import AccountLedger from '../models/AccountLedger.model';
 import Customer from '../models/Customer.model';
 import Supplier from '../models/Supplier.model';
 import Business from '../models/Business.model';
+import PaymentMode from '../models/PaymentMode.model';
 
 export class AccountingService {
   /**
@@ -64,14 +65,87 @@ export class AccountingService {
   }
 
   /**
+   * Resolves which Account should be hit for a given payment mode.
+   *
+   * Resolution priority:
+   *   1. PaymentMode master doc for this business (user-configured)
+   *   2. Legacy fallback: explicit bankId param → use that Account
+   *   3. Legacy fallback: Account flags (isDefaultUpi / isDefaultNeft / isDefaultCheque)
+   *   4. If ledgerType=BANK and still no account found → throw (forces config)
+   *
+   * Returns { ledgerType, accountId | null }
+   */
+  static async resolvePaymentAccount(
+    businessId: string,
+    paymentMode: string,
+    explicitBankId?: string
+  ): Promise<{ ledgerType: 'CASH' | 'BANK'; accountId: string | null }> {
+    const modeLower = (paymentMode || 'cash').toLowerCase().trim();
+
+    // 1. Check PaymentMode master
+    const modeDoc = await PaymentMode.findOne({
+      businessId,
+      name: { $regex: new RegExp(`^${modeLower}$`, 'i') },
+      isActive: true,
+    });
+
+    if (modeDoc) {
+      if (modeDoc.ledgerType === 'CASH') {
+        return { ledgerType: 'CASH', accountId: modeDoc.linkedAccountId?.toString() || null };
+      }
+      // BANK type
+      const acctId = explicitBankId || modeDoc.linkedAccountId?.toString() || null;
+      if (!acctId) {
+        throw new Error(
+          `Payment mode "${paymentMode}" is configured as BANK but has no linked account. ` +
+          `Go to Settings → Payment Modes to link a bank account.`
+        );
+      }
+      return { ledgerType: 'BANK', accountId: acctId };
+    }
+
+    // 2. Legacy fallback — explicit bankId always wins for non-cash
+    if (modeLower === 'cash') {
+      return { ledgerType: 'CASH', accountId: null };
+    }
+
+    if (explicitBankId) {
+      return { ledgerType: 'BANK', accountId: explicitBankId };
+    }
+
+    // 3. Legacy fallback — use Account flags
+    let flagQuery: any = { businessId, type: 'Bank', isActive: true };
+    if (['upi'].includes(modeLower))            flagQuery.isDefaultUpi = true;
+    else if (['neft', 'rtgs', 'bank transfer', 'bank'].includes(modeLower)) flagQuery.isDefaultNeft = true;
+    else if (['cheque', 'check'].includes(modeLower)) flagQuery.isDefaultCheque = true;
+    else if (['card', 'credit card', 'debit card'].includes(modeLower)) {
+      // Card — try UPI default, then NEFT default
+      flagQuery = { businessId, type: 'Bank', isActive: true, $or: [{ isDefaultUpi: true }, { isDefaultNeft: true }] };
+    }
+
+    const defaultAcct = await Account.findOne(flagQuery);
+    if (defaultAcct) {
+      return { ledgerType: 'BANK', accountId: defaultAcct._id.toString() };
+    }
+
+    // 4. Nothing found → throw so the caller can surface the error
+    throw new Error(
+      `Payment mode "${paymentMode}" maps to a bank account but none is configured. ` +
+      `Go to Settings → Payment Modes to link a bank account for this mode.`
+    );
+  }
+
+  /**
    * Helper to update Cash or specific Bank balance based on payment received or made.
-   * CRITICAL FIX: Now accepts explicit `txnDate` parameter instead of using new Date().
+   *
+   * FIXED: No longer silently drops transactions when paymentMode ≠ 'Cash' and bankId is missing.
+   * Uses resolvePaymentAccount() to find the correct account for every mode.
    */
   static async updateCashOrBankBalance(
-    businessId: string, 
-    amount: number, 
-    paymentMode: string, 
-    bankId?: string, 
+    businessId: string,
+    amount: number,
+    paymentMode: string,
+    bankId?: string,
     isReceiving: boolean = true,
     description: string = 'Payment',
     referenceType: string = 'Payment',
@@ -81,35 +155,65 @@ export class AccountingService {
     if (!amount) return;
     const change = isReceiving ? amount : -amount;
     const ledgerDate = txnDate || new Date();
-    
-    if (paymentMode.toLowerCase() === 'cash') {
-      await Business.findByIdAndUpdate(businessId, { $inc: { cashInHand: change } });
-    } else if (bankId && paymentMode.toLowerCase() !== 'cash') {
-      const account = await Account.findOne({ _id: bankId, businessId });
-      if (account) {
-        // Update balance
-        if (account.balanceType === 'Dr') {
-          account.currentBalance += change;
-        } else {
-          account.currentBalance -= change;
-        }
-        await account.save();
 
-        // Create Ledger Entry with the ACTUAL transaction date
+    let resolved: { ledgerType: 'CASH' | 'BANK'; accountId: string | null };
+    try {
+      resolved = await this.resolvePaymentAccount(businessId, paymentMode, bankId);
+    } catch (err: any) {
+      // Surface the error so controllers can return 400 to the client
+      throw err;
+    }
+
+    if (resolved.ledgerType === 'CASH') {
+      // Update cashInHand on Business
+      await Business.findByIdAndUpdate(businessId, { $inc: { cashInHand: change } });
+
+      // Also create a Cash Account ledger entry if a Cash account exists
+      const cashAcct = await Account.findOne({ businessId, type: 'Cash', isActive: true });
+      if (cashAcct) {
+        cashAcct.currentBalance = (cashAcct.currentBalance || 0) + change;
+        await cashAcct.save();
         await AccountLedger.create({
           businessId,
-          accountId: bankId,
+          accountId: cashAcct._id,
           date: ledgerDate,
           description,
           debit: isReceiving ? amount : 0,
           credit: !isReceiving ? amount : 0,
           referenceType,
           referenceId,
-          closingBalance: account.currentBalance,
-          voucherType: referenceType === 'Payment' ? 'Payment' : 'Receipt',
-          voucherNo: referenceId || undefined
+          closingBalance: cashAcct.currentBalance,
+          voucherType: referenceType === 'Payment' ? 'Payment' : referenceType === 'Expense' ? 'Expense' : 'Receipt',
+          voucherNo: referenceId || undefined,
         });
       }
+    } else {
+      // BANK — accountId is guaranteed non-null here (resolvePaymentAccount throws otherwise)
+      const account = await Account.findOne({ _id: resolved.accountId, businessId });
+      if (!account) {
+        throw new Error(`Bank account (id: ${resolved.accountId}) not found for business.`);
+      }
+
+      if (account.balanceType === 'Dr') {
+        account.currentBalance += change;
+      } else {
+        account.currentBalance -= change;
+      }
+      await account.save();
+
+      await AccountLedger.create({
+        businessId,
+        accountId: account._id,
+        date: ledgerDate,
+        description,
+        debit: isReceiving ? amount : 0,
+        credit: !isReceiving ? amount : 0,
+        referenceType,
+        referenceId,
+        closingBalance: account.currentBalance,
+        voucherType: referenceType === 'Payment' ? 'Payment' : referenceType === 'Expense' ? 'Expense' : 'Receipt',
+        voucherNo: referenceId || undefined,
+      });
     }
   }
 
@@ -365,6 +469,7 @@ export class AccountingService {
   /**
    * Records an Expense into the General Ledger.
    * Creates a ledger entry and updates cash/bank balance.
+   * FIXED: Uses bankAccountId (correct field) instead of bankId.
    */
   static async recordExpense(expense: any) {
     const expenseDate = expense.date ? new Date(expense.date) : new Date();
@@ -384,11 +489,17 @@ export class AccountingService {
       partyName: expense.paidTo || expense.vendorName || ''
     });
 
-    // Update cash or bank
+    // Update cash or bank — use bankAccountId (the correct field on Expense model)
     if (expense.amount > 0) {
       await this.updateCashOrBankBalance(
-        expense.businessId.toString(), expense.amount, expense.paymentMode || 'Cash', expense.bankId, false,
-        `Expense: ${expense.category || 'General'}`, 'Expense', expense._id.toString(),
+        expense.businessId.toString(),
+        expense.amount,
+        expense.paymentMode || 'Cash',
+        expense.bankAccountId?.toString(),  // FIXED: was expense.bankId (wrong field)
+        false,
+        `Expense: ${expense.category || 'General'}`,
+        'Expense',
+        expense._id.toString(),
         expenseDate
       );
     }
@@ -396,6 +507,7 @@ export class AccountingService {
 
   /**
    * Reverses an Expense from the General Ledger
+   * FIXED: Uses bankAccountId (correct field) instead of bankId.
    */
   static async reverseExpense(expense: any) {
     await AccountLedger.deleteMany({
@@ -408,8 +520,14 @@ export class AccountingService {
     const expenseDate = expense.date ? new Date(expense.date) : new Date();
     if (expense.amount > 0) {
       await this.updateCashOrBankBalance(
-        expense.businessId.toString(), expense.amount, expense.paymentMode || 'Cash', expense.bankId, true,
-        `Reversal: Expense ${expense.category || ''}`, 'Expense', expense._id.toString(),
+        expense.businessId.toString(),
+        expense.amount,
+        expense.paymentMode || 'Cash',
+        expense.bankAccountId?.toString(),  // FIXED: was expense.bankId
+        true,
+        `Reversal: Expense ${expense.category || ''}`,
+        'Expense',
+        expense._id.toString(),
         expenseDate
       );
     }

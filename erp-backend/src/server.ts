@@ -49,6 +49,7 @@ import salesReturnRoutes from './routes/salesReturn.routes';
 import purchaseReturnRoutes from './routes/purchaseReturn.routes';
 import bomRoutes from './routes/bom.routes';
 import manufacturingRoutes from './routes/manufacturing.routes';
+import paymentModeRoutes from './routes/paymentMode.routes';
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/customers', customerRoutes);
@@ -69,6 +70,7 @@ app.use('/api/v1/sales-returns', salesReturnRoutes);
 app.use('/api/v1/purchase-returns', purchaseReturnRoutes);
 app.use('/api/v1/bom', bomRoutes);
 app.use('/api/v1/manufacturing', manufacturingRoutes);
+app.use('/api/v1/payment-modes', paymentModeRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'ERP API is running' });

@@ -50,6 +50,8 @@ const NAV_ITEMS = [
       { label: 'Other Income',    href: '/dashboard/accounts/Income' },
       { label: 'Tax Payment',     href: '/dashboard/accounts/Tax' },
       { label: '⇄ Cash ↔ Bank Transfer', href: '/dashboard/accounts/transfer' },
+      { label: '💳 Payment Modes', href: '/dashboard/settings/payment-modes' },
+      { label: '📒 Cash & Bank Ledger', href: '/dashboard/reports/ledger' },
     ]
   },
   { label: 'Customers',   href: '/dashboard/customers', icon: Users },

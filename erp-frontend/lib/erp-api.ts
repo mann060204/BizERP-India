@@ -366,3 +366,13 @@ export const dashboardApi = {
   reconciliation: () => api.get('/reports/admin/reconciliation').then(res => res.data),
 };
 
+// ─── Payment Modes ────────────────────────────────────────────────────────────
+export const paymentModesApi = {
+  list: () => api.get('/payment-modes'),
+  resolve: (mode: string) => api.get('/payment-modes/resolve', { params: { mode } }),
+  create: (data: any) => api.post('/payment-modes', data),
+  update: (id: string, data: any) => api.put(`/payment-modes/${id}`, data),
+  delete: (id: string) => api.delete(`/payment-modes/${id}`),
+};
+
+

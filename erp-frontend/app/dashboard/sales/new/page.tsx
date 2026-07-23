@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi } from '../../../../lib/erp-api';
+import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi, paymentModesApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '@/lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
@@ -116,6 +116,8 @@ export default function NewInvoicePage() {
   const [globalDiscountType, setGlobalDiscountType] = useState('%');
   const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
 
+  const [modeResolution1, setModeResolution1] = useState<{ resolved: boolean; account: any; ledgerType: string; warning: string | null } | null>(null);
+
   useEffect(() => {
     accountsApi.list({ type: 'Bank' }).then((res: any) => setBanks(res.accounts || []));
   }, []);
@@ -132,6 +134,14 @@ export default function NewInvoicePage() {
       if (defaultChequeBank) setBankId1(defaultChequeBank._id);
     }
   }, [paymentMode1, banks]);
+
+  // Resolve payment mode → fetch Posts-to account name
+  useEffect(() => {
+    if (!paymentMode1) return;
+    paymentModesApi.resolve(paymentMode1)
+      .then((res: any) => setModeResolution1(res.data))
+      .catch(() => setModeResolution1(null));
+  }, [paymentMode1]);
 
   useEffect(() => {
     if (paymentMode2 === 'UPI') {
@@ -1120,6 +1130,19 @@ export default function NewInvoicePage() {
                   <select value={paymentMode1} onChange={e => setPaymentMode1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
                     {PAYMENT_MODES.map(m => <option key={m}>{m}</option>)}
                   </select>
+                  {/* Posts-to preview */}
+                  {modeResolution1 && (
+                    <div className={`text-[9px] font-semibold px-1.5 py-0.5 rounded mb-1 flex items-center gap-1 ${
+                      modeResolution1.resolved
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-red-50 text-red-600 border border-red-200'
+                    }`}>
+                      {modeResolution1.resolved
+                        ? `✅ Posts to: ${modeResolution1.ledgerType === 'CASH' ? 'Cash in Hand' : (modeResolution1.account?.name || 'Bank')}`
+                        : `⚠ ${modeResolution1.warning || 'No account configured'}`
+                      }
+                    </div>
+                  )}
                   {['Bank Transfer', 'UPI', 'Cheque', 'NEFT', 'RTGS'].includes(paymentMode1) && (
                     <>
                       <select value={bankId1} onChange={e => setBankId1(e.target.value)} className="erp-input w-full text-xs p-1 h-7 mb-1">
