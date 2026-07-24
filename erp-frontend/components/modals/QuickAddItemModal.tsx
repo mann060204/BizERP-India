@@ -298,14 +298,14 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
             </div>
             
             <div className="p-6 space-y-6 bg-yellow-50">
-              {/* Base Unit & Secondary Unit */}
+              {/* Main Unit & Second Unit */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Base Unit</label>
+                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Main Unit</label>
                    <input type="text" disabled value={form.unit || 'Pieces'} className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-600 focus:outline-none text-sm cursor-not-allowed" />
                 </div>
                 <div>
-                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Secondary Unit <span className="text-red-500">*</span></label>
+                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Second Unit <span className="text-red-500">*</span></label>
                    <select value={form.secondaryUnit} onChange={e => setForm({...form, secondaryUnit: e.target.value})} className="w-full px-3 py-2.5 rounded-lg bg-yellow-50 border border-slate-200 text-slate-900 focus:outline-none focus:border-[#D4D4D4] text-sm transition appearance-none cursor-pointer">
                       {['', ...dynamicUnits].map(u => <option key={u} value={u}>{u}</option>)}
                    </select>
@@ -316,9 +316,14 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
               <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-white">
                  <div className="flex justify-between items-center mb-3">
                    <label className="block text-[11px] font-medium text-slate-600 uppercase tracking-wider">Conversion Factor</label>
-                   <div className="text-[11px] text-blue-400 font-semibold bg-action-500/10 px-2 py-1 rounded-md border border-action-400/20">1 {form.unit || 'Pieces'} = {form.conversionRate || 1} {form.secondaryUnit || 'Feet'}</div>
+                   {/* CORRECT direction: 1 Second Unit = rate × Main Unit (matches Add New Item screen & conversionUtils.ts) */}
+                   <div className="text-[11px] text-blue-400 font-semibold bg-action-500/10 px-2 py-1 rounded-md border border-action-400/20">1 {form.secondaryUnit || 'Second Unit'} = {form.conversionRate || 1} {form.unit || 'Main Unit'}</div>
                  </div>
                  <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-yellow-50 border border-slate-200 text-slate-900 focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
+                 {/* Live preview — identical wording to Add New Item screen */}
+                 {form.secondaryUnit && form.conversionRate > 0 && (
+                   <p className="text-[10px] text-emerald-600 mt-1.5">✓ 1 {form.secondaryUnit} deducts {form.conversionRate} {form.unit} from stock</p>
+                 )}
               </div>
 
               {/* Sale Price */}

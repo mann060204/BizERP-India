@@ -51,8 +51,10 @@ export function convertToMainUnit(
     return qty;
   }
 
-  // Resolve conversion rate: batch > item
-  const rate = (batch?.conversionRate ?? item.conversionRate) || 0;
+  // Resolve conversion rate: batch > item, but only if batch rate is a positive number.
+  // Zero or negative batch rate is treated as "not set" — fall back to item rate.
+  const batchRate = batch?.conversionRate && batch.conversionRate > 0 ? batch.conversionRate : null;
+  const rate = batchRate ?? item.conversionRate ?? 0;
 
   if (!rate || rate <= 0) {
     throw new Error(
