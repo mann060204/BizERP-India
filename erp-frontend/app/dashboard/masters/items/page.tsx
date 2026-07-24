@@ -437,7 +437,7 @@ export default function MastersPage() {
                       </td>
                       <td className="px-5 py-4 text-slate-600">
                         <span className="text-slate-900">{p.unit}</span>
-                        {p.secondaryUnit && <div className="text-xs">1 = {p.conversionRate} {p.secondaryUnit}</div>}
+                        {p.secondaryUnit && <div className="text-xs">1 {p.unit} = {p.conversionRate} {p.secondaryUnit}</div>}
                       </td>
                       <td className="px-5 py-4 text-slate-600">₹{p.purchasePrice.toFixed(2)}</td>
                       <td className="px-5 py-4 text-slate-900 font-semibold">₹{p.sellingPrice.toFixed(2)}</td>
@@ -567,7 +567,7 @@ export default function MastersPage() {
                         {form.secondaryUnit && form.secondaryUnit !== form.unit ? (
                           <div>
                             <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">
-                              1&nbsp;<span className="text-blue-600 font-bold">{form.secondaryUnit}</span>&nbsp;=&nbsp;___&nbsp;<span className="text-emerald-600 font-bold">{form.unit}</span>
+                              1&nbsp;<span className="text-emerald-600 font-bold">{form.unit}</span>&nbsp;=&nbsp;___&nbsp;<span className="text-blue-600 font-bold">{form.secondaryUnit}</span>
                             </label>
                             <input
                               type="number" step="0.0001"
@@ -585,7 +585,7 @@ export default function MastersPage() {
                               <p className="text-[10px] text-amber-600 mt-1">⚠ Rate is set per batch. Item-level rate is ignored.</p>
                             )}
                             {!form.enableTracking && form.conversionRate > 0 && (
-                              <p className="text-[10px] text-emerald-600 mt-1">✓ 1 {form.secondaryUnit} deducts {form.conversionRate} {form.unit} from stock</p>
+                              <p className="text-[10px] text-emerald-600 mt-1">✓ 1 {form.unit} = {form.conversionRate} {form.secondaryUnit} | Selling in {form.secondaryUnit} deducts proportionally from {form.unit} stock</p>
                             )}
                           </div>
                         ) : (

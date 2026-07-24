@@ -79,3 +79,34 @@ export function getRateForUnitByName(
   // newUnit === primaryUnit (or any other unit — fall back to main rate)
   return mainUnitRate;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Label-rendering helpers — use these in UI instead of inlining the string.
+// CANONICAL FORMAT (non-negotiable):  1 [MainUnit] = [Factor] [SecondUnit]
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the canonical conversion label string.
+ * @example conversionLabel('Feet', 'Inch', 12) → "1 Feet = 12 Inch"
+ */
+export function conversionLabel(
+  mainUnit: string,
+  secondUnit: string,
+  factor: number | null | undefined
+): string {
+  return `1 ${mainUnit} = ${factor ?? '?'} ${secondUnit}`;
+}
+
+/**
+ * Returns the full conversion note with stock-deduction explanation.
+ * @example conversionNote('Feet', 'Inch', 12)
+ *   → "1 Feet = 12 Inch | Selling in Inch deducts proportionally from Feet stock"
+ */
+export function conversionNote(
+  mainUnit: string,
+  secondUnit: string,
+  factor: number | null | undefined
+): string {
+  return `1 ${mainUnit} = ${factor ?? '?'} ${secondUnit} | Selling in ${secondUnit} deducts proportionally from ${mainUnit} stock`;
+}
+
