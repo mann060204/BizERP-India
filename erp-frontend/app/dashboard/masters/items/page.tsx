@@ -728,13 +728,13 @@ export default function MastersPage() {
               <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-white">
                  <div className="flex justify-between items-center mb-3">
                    <label className="block text-[11px] font-medium text-slate-600 uppercase tracking-wider">Conversion Factor</label>
-                   {/* CORRECT direction: 1 Second Unit = rate × Main Unit (matches Add New Item screen & conversionUtils.ts) */}
-                   <div className="text-[11px] text-blue-400 font-semibold bg-primary/10 px-2 py-1 rounded-md border border-action-400/20">1 {form.secondaryUnit || 'Second Unit'} = {form.conversionRate || 1} {form.unit || 'Main Unit'}</div>
+                   {/* CORRECT direction: 1 Main Unit = rate × Second Units */}
+                   <div className="text-[11px] text-blue-400 font-semibold bg-primary/10 px-2 py-1 rounded-md border border-action-400/20">1 {form.unit || 'Main Unit'} = {form.conversionRate || 1} {form.secondaryUnit || 'Second Unit'}</div>
                  </div>
                  <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
                  {/* Live preview — identical wording to Add New Item screen */}
                  {form.secondaryUnit && form.conversionRate > 0 && (
-                   <p className="text-[10px] text-emerald-600 mt-1.5">✓ 1 {form.secondaryUnit} deducts {form.conversionRate} {form.unit} from stock</p>
+                   <p className="text-[10px] text-emerald-600 mt-1.5">✓ 1 {form.unit} = {form.conversionRate} {form.secondaryUnit} | Selling in {form.secondaryUnit} deducts proportionally from {form.unit} stock</p>
                  )}
               </div>
 

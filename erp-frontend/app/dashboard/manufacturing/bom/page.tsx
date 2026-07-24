@@ -4,11 +4,14 @@ import { Plus, Trash2, Save, ChevronRight, Factory, Package, Layers, RefreshCw, 
 import { toast } from 'react-hot-toast';
 import { bomApi, productsApi } from '../../../../lib/erp-api';
 import Topbar from '../../../../components/layout/Topbar';
+import { getRateForUnit } from '../../../../lib/unitConversion';
 
 type Product = { _id: string; name: string; productType: string; unit: string; purchasePrice: number; currentStock: number; secondaryUnit?: string; conversionRate?: number; };
 type BOMLine = {
   productId: string; productName: string;
   unit: string; secondaryUnit?: string; conversionRate?: number;
+  /** Always the purchase price in Main Unit — never changes when toggling unit type */
+  mainUnitRate: number;
   quantity: number; costPerUnit: number; totalCost: number;
   currentStock?: number; productType?: string;
   qtyUnitType: 'MAIN' | 'SECOND';  // which unit was qty entered in
@@ -59,6 +62,11 @@ export default function BOMPage() {
           qtyUnitType: c.qtyUnitType || 'MAIN',
           secondaryUnit: c.secondaryUnit || null,
           conversionRate: c.conversionRate || null,
+          // mainUnitRate: store from saved data if available, otherwise derive from costPerUnit
+          // When qtyUnitType is SECOND, mainUnitRate = costPerUnit * conversionRate
+          mainUnitRate: c.qtyUnitType === 'SECOND' && c.conversionRate
+            ? (c.costPerUnit || 0) * (c.conversionRate || 1)
+            : (c.costPerUnit || 0),
           totalCost: c.quantity * c.costPerUnit,
         })));
         setDirectLaborCost(existingBom.directLaborCost || 0);
@@ -70,12 +78,16 @@ export default function BOMPage() {
     finally { setLoading(false); }
   }, []);
 
-  const addLine = () => setComponents(prev => [...prev, { productId: '', productName: '', unit: 'Nos', quantity: 1, costPerUnit: 0, totalCost: 0, qtyUnitType: 'MAIN' }]);
+  const addLine = () => setComponents(prev => [...prev, {
+    productId: '', productName: '', unit: 'Nos', mainUnitRate: 0,
+    quantity: 1, costPerUnit: 0, totalCost: 0, qtyUnitType: 'MAIN'
+  }]);
 
   const updateLine = (idx: number, field: string, value: any) => {
     setComponents(prev => {
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [field]: value };
+
       if (field === 'productId') {
         const prod = products.find(p => p._id === value) as any;
         if (prod) {
@@ -83,12 +95,26 @@ export default function BOMPage() {
           updated[idx].unit = prod.unit || 'Nos';
           updated[idx].secondaryUnit = prod.secondaryUnit || null;
           updated[idx].conversionRate = prod.conversionRate || null;
+          // Store the main-unit purchase price — this is the anchor for conversion
+          updated[idx].mainUnitRate = prod.purchasePrice || 0;
           updated[idx].costPerUnit = prod.purchasePrice || 0;
           updated[idx].currentStock = prod.currentStock;
           updated[idx].productType = prod.productType;
           updated[idx].qtyUnitType = 'MAIN'; // reset to main unit when product changes
         }
       }
+
+      // When the unit type toggles, recalculate costPerUnit using the shared utility
+      if (field === 'qtyUnitType') {
+        const line = updated[idx];
+        const mainRate = line.mainUnitRate ?? line.costPerUnit; // fallback for old data
+        updated[idx].costPerUnit = getRateForUnit(
+          mainRate,
+          line.conversionRate,
+          value as 'MAIN' | 'SECOND'
+        );
+      }
+
       updated[idx].totalCost = (updated[idx].quantity || 0) * (updated[idx].costPerUnit || 0);
       return updated;
     });

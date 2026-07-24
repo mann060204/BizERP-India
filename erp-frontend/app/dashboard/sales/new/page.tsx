@@ -2,6 +2,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useEnterToNext, useGlobalShortcuts } from '../../../../hooks/useKeyboardNav';
+import { getRateForUnitByName } from '../../../../lib/unitConversion';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi, paymentModesApi } from '../../../../lib/erp-api';
@@ -847,12 +848,15 @@ export default function NewInvoicePage() {
                   value={itemInput.unit}
                   onChange={e => {
                     const newUnit = e.target.value;
-                    let newRate = itemInput.rate;
-                    if (newUnit === itemInput.secondaryUnit) {
-                       newRate = itemInput.conversionRate ? (itemInput.selectedBaseRate || 0) / itemInput.conversionRate : (itemInput.secSalePrice || itemInput.rate);
-                    } else if (newUnit === itemInput.primaryUnit) {
-                       newRate = itemInput.selectedBaseRate || itemInput.primaryRate || 0;
-                    }
+                    // Use shared utility — identical logic to BOM's getRateForUnit
+                    const newRate = getRateForUnitByName(
+                      itemInput.selectedBaseRate || itemInput.primaryRate || 0,
+                      itemInput.conversionRate,
+                      newUnit,
+                      itemInput.primaryUnit,
+                      itemInput.secondaryUnit,
+                      itemInput.secSalePrice
+                    );
                     setItemInput({...itemInput, unit: newUnit, rate: newRate});
                   }} 
                   className="erp-input w-full px-1"
