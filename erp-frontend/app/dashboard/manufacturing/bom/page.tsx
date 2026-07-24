@@ -4,7 +4,7 @@ import { Plus, Trash2, Save, ChevronRight, Factory, Package, Layers, RefreshCw, 
 import { toast } from 'react-hot-toast';
 import { bomApi, productsApi } from '../../../../lib/erp-api';
 import Topbar from '../../../../components/layout/Topbar';
-import { getRateForUnit } from '../../../../lib/unitConversion';
+import { getRateForUnit, getStockDeduction } from '../../../../lib/unitConversion';
 
 type Product = { _id: string; name: string; productType: string; unit: string; purchasePrice: number; currentStock: number; secondaryUnit?: string; conversionRate?: number; };
 type BOMLine = {
@@ -325,10 +325,10 @@ export default function BOMPage() {
                                 <input type="number" min="0.001" step="0.001" value={comp.quantity || ''}
                                   onChange={e => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)}
                                   className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 text-right" />
-                                { /* Fix 3: Live conversion preview — shown when Second Unit is active */ }
+                                { /* Live conversion preview — shown when Second Unit is active */ }
                                 {comp.qtyUnitType === 'SECOND' && comp.conversionRate && comp.conversionRate > 0 && comp.quantity > 0 && (
                                   <div className="mt-1 text-[10px] text-blue-700 bg-blue-50 border border-blue-200 rounded px-1.5 py-0.5 text-right font-semibold">
-                                    ≈ {(comp.quantity * comp.conversionRate).toFixed(2)} {comp.unit} will be deducted
+                                    ≈ {getStockDeduction(comp.quantity, 'SECOND', comp.conversionRate).toFixed(4).replace(/\.?0+$/, '')} {comp.unit} will be deducted
                                   </div>
                                 )}
                                 { /* Warn when Second Unit selected but no conversion rate */ }

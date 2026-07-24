@@ -110,3 +110,29 @@ export function conversionNote(
   return `1 ${mainUnit} = ${factor ?? '?'} ${secondUnit} | Selling in ${secondUnit} deducts proportionally from ${mainUnit} stock`;
 }
 
+/**
+ * Computes how many Main Unit items are deducted from stock for a given
+ * quantity entered in the selected unit.
+ *
+ * KEY RULE:
+ *   conversionRate = "1 Main Unit = conversionRate Second Units"
+ *   e.g. 1 Box = 15 Pieces  →  conversionRate = 15
+ *
+ *   MAIN selected:   deduction = qty                    (already in main unit)
+ *   SECOND selected: deduction = qty / conversionRate   (DIVIDE, never multiply)
+ *
+ * @example
+ *   getStockDeduction(1, 'SECOND', 15) // → 0.0667  (1 Piece = 1/15 Box)
+ *   getStockDeduction(1, 'MAIN',   15) // → 1.0000  (1 Box   = 1 Box)
+ *   getStockDeduction(3, 'SECOND', 12) // → 0.25    (3 Inch  = 3/12 Feet)
+ */
+export function getStockDeduction(
+  qty: number,
+  selectedUnitType: 'MAIN' | 'SECOND',
+  conversionRate: number | null | undefined
+): number {
+  if (selectedUnitType === 'SECOND' && conversionRate && conversionRate > 0) {
+    return qty / conversionRate;
+  }
+  return qty; // MAIN unit or no conversion configured
+}
