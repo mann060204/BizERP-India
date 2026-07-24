@@ -1,5 +1,6 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useFocusTrap, useGlobalShortcuts } from '../../hooks/useKeyboardNav';
 import { productsApi, businessApi } from '../../lib/erp-api';
 import { X, Loader2, Save, Layers, Plus, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -65,6 +66,9 @@ const Checkbox = ({ label, keyName, form, setForm, danger = false }: any) => (
 
 export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () => void; onAdded: (product: any) => void; }) {
 
+  const modalRef = useRef<HTMLDivElement>(null);
+  const unitModalRef = useRef<HTMLDivElement>(null);
+
   const [showUnitModal, setShowUnitModal] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -109,9 +113,21 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
       setSaving(false);
     }
   };
+  // Focus trap: Tab stays inside; Escape closes
+  useFocusTrap(modalRef, !showUnitModal, onClose);
+  useFocusTrap(unitModalRef, showUnitModal, () => setShowUnitModal(false));
+  // Ctrl+S saves
+  useGlobalShortcuts({ onSave: handleSave });
+
   return (
     <>
-<div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm">
+<div
+  ref={modalRef}
+  role="dialog"
+  aria-modal="true"
+  aria-label="Add New Item"
+  className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm"
+>
           <div className="bg-yellow-50 border border-slate-200 rounded-2xl w-full max-w-6xl shadow-2xl flex flex-col max-h-[90vh]">
             
             <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0">
@@ -284,7 +300,13 @@ export default function QuickAddItemModal({ onClose, onAdded }: { onClose: () =>
 
 {/* Unit Settings Modal - Dark Theme */}
       {showUnitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm">
+        <div
+          ref={unitModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Unit Settings"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm"
+        >
           <div className="bg-yellow-50 text-slate-900 border border-slate-200 w-full max-w-[440px] flex flex-col shadow-2xl rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-white">

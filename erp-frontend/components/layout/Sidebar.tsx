@@ -1,7 +1,21 @@
+/**
+ * Sidebar.tsx — with keyboard navigation
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Keyboard mappings (WAI-ARIA menubar / tree pattern):
+ *   Arrow Down / Up   → move between top-level nav items (roving tabindex)
+ *   Arrow Right       → expand submenu (if has sub-items); focus first sub-item
+ *   Arrow Left        → collapse expanded submenu; return to parent
+ *   Enter             → navigate to href (leaf) OR toggle submenu (parent)
+ *   Escape            → collapse current submenu
+ *   Sub-items:
+ *     Arrow Up/Down   → move between sub-items
+ *     Arrow Left / Escape → close submenu, return focus to parent
+ *     Enter           → navigate to sub-item href
+ */
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   BarChart3, LayoutDashboard, ShoppingCart, Package, Users, Truck,
   Receipt, FileText, Wrench, Settings, LogOut, ChevronLeft, ChevronRight,
@@ -65,14 +79,19 @@ const NAV_ITEMS = [
 
 export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boolean, setCollapsed?: (val: boolean) => void }) {
   const pathname = usePathname();
+  const router = useRouter();
   const dispatch = useAppDispatch();
-  // internal fallback in case used without props
+
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const isCollapsed = collapsed !== undefined ? collapsed : internalCollapsed;
   const toggleCollapsed = () => setCollapsed ? setCollapsed(!isCollapsed) : setInternalCollapsed(!isCollapsed);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+
+  // Roving tabindex state for keyboard navigation
+  const navRef = useRef<HTMLElement>(null);
+  const [focusedIdx, setFocusedIdx] = useState(-1);
 
   // Auto-expand the active parent menu on load
   useEffect(() => {
@@ -86,11 +105,131 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === href : pathname.startsWith(href);
 
-  const toggleSubmenu = (label: string, e: React.MouseEvent) => {
-    e.preventDefault();
+  const toggleSubmenu = (label: string, e?: React.MouseEvent | React.KeyboardEvent) => {
+    e?.preventDefault();
     if (isCollapsed) toggleCollapsed();
     setExpandedMenus(prev => ({ ...prev, [label]: !prev[label] }));
   };
+
+  const expandSubmenu = useCallback((label: string) => {
+    if (isCollapsed) toggleCollapsed();
+    setExpandedMenus(prev => ({ ...prev, [label]: true }));
+  }, [isCollapsed]);
+
+  const collapseSubmenu = useCallback((label: string) => {
+    setExpandedMenus(prev => ({ ...prev, [label]: false }));
+  }, []);
+
+  // ─── Keyboard handler for top-level nav items ──────────────────────────────
+  const handleNavKeyDown = useCallback((e: React.KeyboardEvent, itemIdx: number) => {
+    const item = NAV_ITEMS[itemIdx];
+    const navEl = navRef.current;
+    if (!navEl) return;
+
+    // Get all top-level nav link elements
+    const topLinks = Array.from(
+      navEl.querySelectorAll<HTMLElement>('[data-nav-toplevel]')
+    );
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        {
+          const nextIdx = (itemIdx + 1) % NAV_ITEMS.length;
+          setFocusedIdx(nextIdx);
+          topLinks[nextIdx]?.focus();
+        }
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        {
+          const prevIdx = (itemIdx - 1 + NAV_ITEMS.length) % NAV_ITEMS.length;
+          setFocusedIdx(prevIdx);
+          topLinks[prevIdx]?.focus();
+        }
+        break;
+
+      case 'ArrowRight':
+      case 'Enter':
+        e.preventDefault();
+        if (item.subItems) {
+          expandSubmenu(item.label);
+          // Focus first sub-item after expanding
+          setTimeout(() => {
+            const subLinks = navEl.querySelectorAll<HTMLElement>(`[data-nav-sub="${item.label}"]`);
+            subLinks[0]?.focus();
+          }, 60);
+        } else if (e.key === 'Enter') {
+          router.push(item.href);
+          setMobileOpen(false);
+        }
+        break;
+
+      case 'ArrowLeft':
+      case 'Escape':
+        e.preventDefault();
+        if (item.subItems && expandedMenus[item.label]) {
+          collapseSubmenu(item.label);
+        }
+        break;
+
+      case 'Home':
+        e.preventDefault();
+        setFocusedIdx(0);
+        topLinks[0]?.focus();
+        break;
+
+      case 'End':
+        e.preventDefault();
+        setFocusedIdx(NAV_ITEMS.length - 1);
+        topLinks[NAV_ITEMS.length - 1]?.focus();
+        break;
+    }
+  }, [expandedMenus, expandSubmenu, collapseSubmenu, router]);
+
+  // ─── Keyboard handler for sub-items ───────────────────────────────────────
+  const handleSubKeyDown = useCallback((
+    e: React.KeyboardEvent,
+    parentLabel: string,
+    subIdx: number,
+    subItems: { label: string; href: string }[]
+  ) => {
+    const navEl = navRef.current;
+    if (!navEl) return;
+    const subLinks = Array.from(
+      navEl.querySelectorAll<HTMLElement>(`[data-nav-sub="${parentLabel}"]`)
+    );
+    const parentLinks = Array.from(
+      navEl.querySelectorAll<HTMLElement>('[data-nav-toplevel]')
+    );
+    const parentIdx = NAV_ITEMS.findIndex(i => i.label === parentLabel);
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        subLinks[Math.min(subIdx + 1, subLinks.length - 1)]?.focus();
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        if (subIdx === 0) {
+          // Return focus to parent
+          parentLinks[parentIdx]?.focus();
+        } else {
+          subLinks[subIdx - 1]?.focus();
+        }
+        break;
+      case 'ArrowLeft':
+      case 'Escape':
+        e.preventDefault();
+        collapseSubmenu(parentLabel);
+        parentLinks[parentIdx]?.focus();
+        break;
+      case 'Enter':
+        // Allow navigation naturally — sub-items are real <Link> elements
+        break;
+    }
+  }, [collapseSubmenu]);
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -108,22 +247,34 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
+      <nav
+        ref={navRef}
+        className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5"
+        aria-label="Main navigation"
+        role="menubar"
+        aria-orientation="vertical"
+      >
+        {NAV_ITEMS.map((item, itemIdx) => {
           const { label, href, icon: Icon, subItems } = item;
           const isParentActive = subItems?.some(sub => pathname.startsWith(sub.href));
           const active = isActive(href) || (!!isParentActive && !subItems);
           const expanded = expandedMenus[label];
 
           return (
-            <div key={label}>
+            <div key={label} data-nav-parent={label}>
               <Link
                 href={subItems ? '#' : href}
                 prefetch={false}
+                role="menuitem"
+                aria-haspopup={!!subItems}
+                aria-expanded={subItems ? expanded : undefined}
+                tabIndex={focusedIdx === itemIdx ? 0 : focusedIdx === -1 && itemIdx === 0 ? 0 : -1}
+                data-nav-toplevel
                 onClick={(e) => {
                   if (subItems) toggleSubmenu(label, e);
                   else setMobileOpen(false);
                 }}
+                onKeyDown={(e) => handleNavKeyDown(e, itemIdx)}
                 className={`sidebar-nav-link flex items-center justify-between px-3 py-2.5 rounded-xl group
                   ${(active && !subItems) || isParentActive ? 'active' : ''}`}
               >
@@ -143,13 +294,17 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
 
               {/* Sub-menu */}
               {!isCollapsed && subItems && expanded && (
-                <div className="mt-0.5 ml-3 pl-4 border-l space-y-0.5 py-1" style={{ borderColor: 'var(--sidebar-border)' }}>
-                  {subItems.map(sub => (
+                <div className="mt-0.5 ml-3 pl-4 border-l space-y-0.5 py-1" style={{ borderColor: 'var(--sidebar-border)' }} role="menu">
+                  {subItems.map((sub, subIdx) => (
                     <Link
                       key={sub.href}
                       href={sub.href}
                       prefetch={false}
+                      role="menuitem"
+                      tabIndex={0}
+                      data-nav-sub={label}
                       onClick={() => setMobileOpen(false)}
+                      onKeyDown={(e) => handleSubKeyDown(e, label, subIdx, subItems)}
                       className={`sidebar-sub-link block px-3 py-2 rounded-lg text-[12px] font-medium transition-all
                         ${pathname === sub.href ? 'active' : ''}`}
                     >
@@ -197,6 +352,7 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
         {/* Collapse toggle */}
         <button
           onClick={toggleCollapsed}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className="absolute -right-3 top-[72px] w-6 h-6 rounded-full flex items-center justify-center text-white border shadow-lg transition-all hover:scale-110"
           style={{ background: 'var(--sidebar-active-bg)', borderColor: 'var(--sidebar-border)' }}
         >
@@ -220,6 +376,7 @@ export default function Sidebar({ collapsed, setCollapsed }: { collapsed?: boole
       <button
         className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-xl text-white shadow-lg"
         style={{ background: 'var(--sidebar-active-bg)' }}
+        aria-label="Open navigation menu"
         onClick={() => setMobileOpen(true)}
       >
         <Menu style={{ width: '18px', height: '18px' }} />

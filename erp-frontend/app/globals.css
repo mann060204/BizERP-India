@@ -408,3 +408,62 @@
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KEYBOARD NAVIGATION — Global Focus Ring System
+   Applied automatically to all screens — do not override per-component.
+   Uses :focus-visible so mouse users never see rings; keyboard users always do.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Base focus ring for all interactive elements */
+*:focus-visible {
+  outline: 2px solid var(--primary, #4f46e5);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* 2. Table row keyboard focus (used with data-nav-row attribute) */
+[data-nav-row]:focus-visible,
+[data-nav-row][aria-selected="true"]:focus {
+  outline: none;
+  background-color: var(--primary-light, #eef2ff) !important;
+  box-shadow: inset 3px 0 0 var(--primary, #4f46e5);
+  position: relative;
+}
+
+/* 3. Sidebar nav link keyboard focus — matches hover exactly */
+.sidebar-nav-link:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: -2px;
+  background: var(--sidebar-hover-bg, rgba(255,255,255,0.07));
+}
+.sidebar-sub-link:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: -2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+
+/* 4. Modal trap — ensure modal backdrop doesn't steal focus */
+[role="dialog"] *:focus-visible {
+  outline: 2px solid var(--primary, #4f46e5);
+  outline-offset: 2px;
+}
+
+/* 5. Skip-to-content link (accessibility) */
+.skip-to-content {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--primary, #4f46e5);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: top 0.1s;
+}
+.skip-to-content:focus {
+  top: 16px;
+}

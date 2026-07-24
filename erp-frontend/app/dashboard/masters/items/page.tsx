@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRovingIndex, useFocusTrap, useGlobalShortcuts } from '../../../../hooks/useKeyboardNav';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Topbar from '../../../../components/layout/Topbar';
@@ -96,9 +97,35 @@ export default function MastersPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>(emptyForm);
   const [quickCategoryMode, setQuickCategoryMode] = useState<'category' | 'brand' | 'group' | 'subgroup' | null>(null);
+
+  // ── Keyboard navigation refs ──────────────────────────────────────────────
+  const tableRef = useRef<HTMLTableSectionElement>(null);
+  const unitModalRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Stable refs to avoid stale closures in hooks (updated each render)
+  const openEditRef = useRef<(p: Product) => void>(() => {});
+  const handleSaveRef = useRef<() => void>(() => {});
+
   const [mergeTarget, setMergeTarget] = useState<Record<string, string>>({}); // groupKey -> winner _id
   const [expandedDupGroups, setExpandedDupGroups] = useState<Record<string, boolean>>({});
   const [mergingSaving, setMergingSaving] = useState(false);
+
+  // Table row roving navigation — Enter opens edit for that row
+  useRovingIndex(
+    products.length,
+    tableRef,
+    (idx) => { if (products[idx]) openEditRef.current(products[idx]); },
+    !showModal && !showUnitModal && !showDuplicateModal
+  );
+
+  // Unit Settings modal focus trap
+  useFocusTrap(unitModalRef, showUnitModal, () => setShowUnitModal(false));
+
+  // Global shortcuts: Ctrl+S saves open form; Ctrl+K / '/' focuses search
+  useGlobalShortcuts({
+    onSave: () => { if (showModal) handleSaveRef.current(); },
+    onSearch: () => searchRef.current?.focus(),
+  });
 
   const [productGroups, setProductGroups] = useState<string[]>([]);
   const [productBrands, setProductBrands] = useState<string[]>([]);
@@ -196,6 +223,10 @@ export default function MastersPage() {
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to save'); }
     finally { setSaving(false); }
   };
+
+  // Keep keyboard-nav refs current (avoids stale closure in hook callbacks)
+  useEffect(() => { openEditRef.current = openEdit; });
+  useEffect(() => { handleSaveRef.current = handleSave; });
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"?`)) return;
@@ -331,11 +362,11 @@ export default function MastersPage() {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters — Ctrl+K / '/' focuses search */}
         <div className="flex gap-3 flex-wrap">
           <div className="relative flex-1 min-w-52">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items..."
+            <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search items… (Ctrl+K)"
               className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] transition text-sm" />
           </div>
           {['', 'product', 'service'].map(t => (
@@ -366,11 +397,21 @@ export default function MastersPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1A1A1A]">
-                  {products.map((p) => {
+                {/* Keyboard tip hint */}
+                <caption className="sr-only">Use Arrow Up/Down to navigate rows, Enter to edit, Home/End to jump, Page Up/Down to scroll by 10</caption>
+                <tbody ref={tableRef} className="divide-y divide-[#1A1A1A]">
+                  {products.map((p, rowIdx) => {
                     const isDup = duplicateIds.has(p._id);
                     return (
-                    <tr key={p._id} className={`transition-colors group ${isDup ? 'bg-amber-50 border-l-4 border-l-amber-400 hover:bg-amber-100' : 'hover:bg-[#F1F5F9]'}`}>
+                    <tr
+                      key={p._id}
+                      data-nav-row
+                      tabIndex={rowIdx === 0 ? 0 : -1}
+                      role="row"
+                      aria-selected="false"
+                      aria-label={`${p.name}, ${p.unit}, ₹${p.sellingPrice}`}
+                      onDoubleClick={() => openEdit(p)}
+                      className={`transition-colors group cursor-pointer ${isDup ? 'bg-amber-50 border-l-4 border-l-amber-400 hover:bg-amber-100' : 'hover:bg-[#F1F5F9]'}`}>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${p.type === 'service' ? 'bg-violet-500/20 text-violet-300' : 'bg-primary/20 text-blue-300'}`}>
@@ -410,9 +451,9 @@ export default function MastersPage() {
                         ) : <span className="text-slate-600">N/A</span>}
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] text-slate-600 hover:text-slate-900 transition"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(p._id, p.name)} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                          <button onClick={() => openEdit(p)} aria-label={`Edit ${p.name}`} className="p-1.5 rounded-lg hover:bg-[#E2E8F0] text-slate-600 hover:text-slate-900 transition"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDelete(p._id, p.name)} aria-label={`Delete ${p.name}`} className="p-1.5 rounded-lg hover:bg-red-900/20 text-slate-600 hover:text-red-400 transition"><Trash2 className="w-4 h-4" /></button>
                           {isDup && (
                             <button onClick={() => setShowDuplicateModal(true)} title="Manage duplicates" className="p-1.5 rounded-lg hover:bg-amber-100 text-amber-500 hover:text-amber-700 transition">
                               <GitMerge className="w-4 h-4" />
@@ -649,7 +690,13 @@ export default function MastersPage() {
 
       {/* Unit Settings Modal - Dark Theme */}
       {showUnitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm">
+        <div
+          ref={unitModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Unit Settings"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-50/60 backdrop-blur-sm"
+        >
           <div className="bg-[#F1F5F9] text-slate-900 border border-slate-200 w-full max-w-[440px] flex flex-col shadow-2xl rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-white">

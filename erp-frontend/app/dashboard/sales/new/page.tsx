@@ -1,6 +1,7 @@
 // @ts-nocheck
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEnterToNext, useGlobalShortcuts } from '../../../../hooks/useKeyboardNav';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
 import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi, paymentModesApi } from '../../../../lib/erp-api';
@@ -619,6 +620,16 @@ export default function NewInvoicePage() {
     }
   };
 
+  const handleSaveRef = useRef<typeof handleSave>(handleSave);
+  useEffect(() => { handleSaveRef.current = handleSave; });
+  
+  // Enter-to-next navigation for header fields
+  const headerFormRef = useRef<HTMLDivElement>(null);
+  useEnterToNext(headerFormRef);
+
+  // Ctrl+S saves
+  useGlobalShortcuts({ onSave: () => handleSaveRef.current(false) });
+
   if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 animate-spin text-slate-900" /></div>;
 
   return (
@@ -628,23 +639,23 @@ export default function NewInvoicePage() {
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">
         
         {/* Section 1: Invoice Information */}
-        <div className="erp-container">
+        <div className="erp-container" ref={headerFormRef}>
           <div className="erp-header py-1 text-xs">Invoice Information</div>
           <div className="p-1.5 grid grid-cols-6 gap-x-2 gap-y-1">
             <div>
               <label className="erp-label">Invoice Type</label>
-              <select value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
+              <select data-nav-field value={invoiceType} onChange={e => setInvoiceType(e.target.value)} className="erp-input w-full">
                 <option>GST</option>
                 <option>NON-GST</option>
               </select>
             </div>
             <div>
               <label className="erp-label">Invoice No. <span className="text-red-500">*</span></label>
-              <input value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="erp-input w-full" />
+              <input data-nav-field value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Date {fyDateRange && <span className="ml-1 text-[9px] bg-indigo-100 text-indigo-600 font-semibold px-1.5 py-0.5 rounded-full">{fyDateRange.min.slice(0,4)}-{fyDateRange.max.slice(0,4)}</span>}</label>
-              <input type="date" value={invoiceDate}
+              <input data-nav-field type="date" value={invoiceDate}
                 min={fyDateRange?.min}
                 max={fyDateRange?.max}
                 title={fyDateRange ? `FY: ${fyDateRange.min} to ${fyDateRange.max}` : ''}
@@ -652,13 +663,13 @@ export default function NewInvoicePage() {
             </div>
             <div>
               <label className="erp-label">Place of Supply <span className="text-red-500">*</span></label>
-              <select value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
+              <select data-nav-field value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="erp-input w-full">
                 {STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <label className="erp-label">Due Date</label>
-              <input type="date" value={dueDate}
+              <input data-nav-field type="date" value={dueDate}
                 min={fyDateRange?.min}
                 max={fyDateRange?.max}
                 onChange={e => setDueDate(e.target.value)} className="erp-input w-full" />
@@ -698,12 +709,17 @@ export default function NewInvoicePage() {
               </div>
               <div className="relative">
                 <div className="flex w-full relative">
-                  <input value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); setCustomerHighlightIndex(-1); }} onFocus={() => setShowCustomerDD(true)} 
+                  <input data-nav-field value={customerSearch} onChange={e => { setCustomerSearch(e.target.value); setShowCustomerDD(true); setCustomerHighlightIndex(-1); }} onFocus={() => setShowCustomerDD(true)} 
                     onKeyDown={e => {
                       if (!showCustomerDD) return;
+                      // Don't intercept Enter if dropdown is closed (allow useEnterToNext to handle it)
                       if (e.key === 'ArrowDown') { e.preventDefault(); setCustomerHighlightIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1)); }
                       else if (e.key === 'ArrowUp') { e.preventDefault(); setCustomerHighlightIndex(prev => Math.max(prev - 1, 0)); }
-                      else if (e.key === 'Enter') { e.preventDefault(); if (customerHighlightIndex >= 0 && filteredCustomers[customerHighlightIndex]) pickCustomer(filteredCustomers[customerHighlightIndex]); }
+                      else if (e.key === 'Enter' && showCustomerDD && customerHighlightIndex >= 0) { 
+                        e.preventDefault(); 
+                        e.stopPropagation(); // prevent useEnterToNext from advancing field
+                        if (filteredCustomers[customerHighlightIndex]) pickCustomer(filteredCustomers[customerHighlightIndex]); 
+                      }
                       else if (e.key === 'Escape') { setShowCustomerDD(false); }
                     }}
                     className="erp-input w-full pr-24" placeholder="Search customer..." />
@@ -729,15 +745,15 @@ export default function NewInvoicePage() {
             </div>
             <div>
               <label className="erp-label">Contact No.</label>
-              <input value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
+              <input data-nav-field value={contactNo} onChange={e => setContactNo(e.target.value)} className="erp-input w-full" />
             </div>
             <div className="col-span-2">
               <label className="erp-label">Address</label>
-              <input value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} className="erp-input w-full" />
+              <input data-nav-field value={customerAddress} onChange={e => setCustomerAddress(e.target.value)} className="erp-input w-full" />
             </div>
             <div>
               <label className="erp-label">Customer GSTIN</label>
-              <input value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
+              <input data-nav-field value={customerGstin} onChange={e => setCustomerGstin(e.target.value)} className="erp-input w-full font-mono uppercase" />
             </div>
             
             <div className="col-span-6 border-t border-slate-200 mt-2 pt-2">
