@@ -421,7 +421,9 @@ export default function NewInvoicePage() {
     if (enteredUnit !== mainUnit && itemInput.secondaryUnit && enteredUnit === itemInput.secondaryUnit) {
       const rate = itemInput.conversionRate || 0;
       if (rate > 0) {
-        convertedQty = itemInput.quantity * rate;
+        // Definition B: 1 Main = rate × Second → stock deducted = qty ÷ rate
+        // e.g. sell 1 Piece (rate=15) → deducts 1/15 = 0.0667 Box
+        convertedQty = itemInput.quantity / rate;
         conversionRateUsed = rate;
       }
     }
@@ -875,7 +877,7 @@ export default function NewInvoicePage() {
                   <div className="mt-0.5">
                     {(itemInput.conversionRate || 0) > 0 ? (
                       <span className="text-[9px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded whitespace-nowrap">
-                        ≈ {(itemInput.quantity * (itemInput.conversionRate || 0)).toFixed(3)} {itemInput.primaryUnit} deducted
+                        ≈ {(itemInput.quantity / (itemInput.conversionRate || 1)).toFixed(3)} {itemInput.primaryUnit} deducted
                       </span>
                     ) : (
                       <span className="text-[9px] text-amber-600 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">
