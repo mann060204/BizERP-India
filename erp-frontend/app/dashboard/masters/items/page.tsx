@@ -437,7 +437,13 @@ export default function MastersPage() {
                       </td>
                       <td className="px-5 py-4 text-slate-600">
                         <span className="text-slate-900">{p.unit}</span>
-                        {p.secondaryUnit && <div className="text-xs">1 {p.secondaryUnit} = {p.conversionRate} {p.unit}</div>}
+                        {p.secondaryUnit && p.conversionRate > 0 && (
+                          <div className="text-xs text-slate-500 mt-0.5">
+                            <span>1 {p.unit} = {p.conversionRate} {p.secondaryUnit}</span>
+                            <span className="mx-1 text-slate-300">|</span>
+                            <span className="text-slate-400">1 {p.secondaryUnit} = {(1 / p.conversionRate).toFixed(4).replace(/\.?0+$/, '')} {p.unit}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-4 text-slate-600">₹{p.purchasePrice.toFixed(2)}</td>
                       <td className="px-5 py-4 text-slate-900 font-semibold">₹{p.sellingPrice.toFixed(2)}</td>
@@ -567,7 +573,7 @@ export default function MastersPage() {
                         {form.secondaryUnit && form.secondaryUnit !== form.unit ? (
                           <div>
                             <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">
-                              1&nbsp;<span className="text-blue-600 font-bold">{form.secondaryUnit}</span>&nbsp;=&nbsp;___&nbsp;<span className="text-emerald-600 font-bold">{form.unit}</span>
+                              1&nbsp;<span className="text-emerald-600 font-bold">{form.unit}</span>&nbsp;=&nbsp;___&nbsp;<span className="text-blue-600 font-bold">{form.secondaryUnit}</span>
                             </label>
                             <input
                               type="number" step="0.0001"
@@ -585,7 +591,10 @@ export default function MastersPage() {
                               <p className="text-[10px] text-amber-600 mt-1">⚠ Rate is set per batch. Item-level rate is ignored.</p>
                             )}
                             {!form.enableTracking && form.conversionRate > 0 && (
-                              <p className="text-[10px] text-emerald-600 mt-1">✓ 1 {form.secondaryUnit} deducts {form.conversionRate} {form.unit} from stock</p>
+                              <div className="mt-1 space-y-0.5">
+                                <p className="text-[10px] text-emerald-600">✓ 1 {form.unit} = {form.conversionRate} {form.secondaryUnit}</p>
+                                <p className="text-[10px] text-blue-500">↳ 1 {form.secondaryUnit} = {(1/form.conversionRate).toFixed(4).replace(/\.?0+$/, '')} {form.unit} deducted from stock</p>
+                              </div>
                             )}
                           </div>
                         ) : (
@@ -728,14 +737,18 @@ export default function MastersPage() {
               <div className="p-4 rounded-xl border border-[#1e3a8a]/30 bg-white">
                  <div className="flex justify-between items-center mb-3">
                    <label className="block text-[11px] font-medium text-slate-600 uppercase tracking-wider">Conversion Factor</label>
-                   {/* CORRECT direction: 1 Second Unit = rate × Main Units */}
-                   <div className="text-[11px] text-blue-400 font-semibold bg-primary/10 px-2 py-1 rounded-md border border-action-400/20">1 {form.secondaryUnit || 'Second Unit'} = {form.conversionRate || 1} {form.unit || 'Main Unit'}</div>
+                   {/* Definition B: user enters rate as '1 Main = rate Second' */}
+                   <div className="text-[11px] text-blue-500 font-semibold bg-blue-50 px-2 py-1 rounded-md border border-blue-200">1 {form.unit || 'Main Unit'} = {form.conversionRate || '?'} {form.secondaryUnit || 'Second Unit'}</div>
                  </div>
                  <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
                  {/* Live preview — identical wording to Add New Item screen */}
-                 {form.secondaryUnit && form.conversionRate > 0 && (
-                   <p className="text-[10px] text-emerald-600 mt-1.5">✓ 1 {form.secondaryUnit} = {form.conversionRate} {form.unit} | Selling in {form.secondaryUnit} deducts {form.conversionRate} {form.unit} from stock per unit</p>
-                 )}
+                  {form.secondaryUnit && form.conversionRate > 0 && (
+                    <div className="mt-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                      <p className="text-[10px] font-semibold text-emerald-700">✓ Conversion Summary</p>
+                      <p className="text-[10px] text-emerald-600 mt-0.5">1 {form.unit} = {form.conversionRate} {form.secondaryUnit}</p>
+                      <p className="text-[10px] text-blue-600">1 {form.secondaryUnit} = {(1/form.conversionRate).toFixed(4).replace(/\.?0+$/, '')} {form.unit} <span className="text-slate-400">(deducted from stock per {form.secondaryUnit} sold)</span></p>
+                    </div>
+                  )}
               </div>
 
               {/* Sale Price */}
