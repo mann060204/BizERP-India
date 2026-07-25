@@ -1,190 +1,177 @@
 /**
  * conversionUtils.test.ts
- * ─────────────────────────────────────────────────────────────────────────────
- * Unit tests proving:
- *   CANONICAL DEFINITION A — the only definition:
- *   conversionRate = "1 Second Unit = conversionRate × Main Units"
- *   e.g. 1 Meter = 0.28 KG  →  rate = 0.28
+ * ─────────────────────────────────────────────────────────────────
+ * CANONICAL DEFINITION B:
+ *   conversionRate = "1 Main Unit = rate × Second Units"
+ *   e.g. 1 Box = 15 Pieces   → rate = 15
+ *   e.g. 1 KG  = 3.571 MTRS  → rate = 3.571
  *
- *   Stock deduction:  qty × rate   (MULTIPLY)
- *   Price per Second: mainPrice × rate  (MULTIPLY — same direction)
- *
- * Test pairs:
- *   1. PVC Sheet  — KG / Meter  (rate = 0.28)     ← bug-report example
- *   2. Box / Piece              (rate = 1/15 ≈ 0.0667)
- *   3. Litre / ML               (rate = 0.001)
+ *   Stock deduction: qty / rate  (DIVIDE)
+ *   Price per Second: mainPrice / rate  (DIVIDE — same direction)
  *
  * Run: npx jest src/utils/conversionUtils.test.ts
  */
 
 import { convertToMainUnit, getEffectiveConversionRate, validateDualUnitSetup } from './conversionUtils';
 
-// ─── PVC Sheet — the exact bug-report test case ───────────────────────────────
-// Pack: 1 Roll = 14 KG = 50 Meters → 1 Meter = 14/50 = 0.28 KG → rate = 0.28
-const pvcSheet = {
-  name: 'PVC Sheet',
-  unit: 'KG',             // Main Unit (stock unit)
-  secondaryUnit: 'Meter', // Second Unit (billing unit)
-  conversionRate: 0.28,   // 1 Meter = 0.28 KG
+// ─── KG / MTRS — PVC Strip/Sheet example ─────────────────────────────────────
+// 1 Roll = 14 KG = 50 MTRS → 1 KG = 3.571 MTRS → rate = 3.571
+// Inverse shown in UI: 1 MTRS = 0.280 KG (= 1/3.571)
+const pvcItem = {
+  name: 'PVC Strip',
+  unit: 'KG',
+  secondaryUnit: 'MTRS',
+  conversionRate: 3.571,   // 1 KG = 3.571 MTRS
 };
 
-describe('PVC Sheet — bug-report test case (KG / Meter, rate = 0.28)', () => {
-  it('selling 1 Meter deducts 0.28 KG from stock', () => {
-    // 1 × 0.28 = 0.28 KG
-    expect(convertToMainUnit(1, 'Meter', pvcSheet)).toBeCloseTo(0.28, 4);
+describe('KG / MTRS — PVC Strip (rate = 3.571)', () => {
+  it('sell 1 MTRS → deducts 0.280 KG (1 / 3.571)', () => {
+    expect(convertToMainUnit(1, 'MTRS', pvcItem)).toBeCloseTo(0.28, 2);
   });
 
-  it('selling 50 Meters deducts exactly 14 KG (= 1 full Roll)', () => {
-    // 50 × 0.28 = 14.0 KG
-    expect(convertToMainUnit(50, 'Meter', pvcSheet)).toBeCloseTo(14.0, 2);
+  it('sell 50 MTRS → deducts 14 KG (= 1 full Roll)', () => {
+    expect(convertToMainUnit(50, 'MTRS', pvcItem)).toBeCloseTo(14.0, 1);
   });
 
-  it('opening stock 14 KG − sell 1 Meter → remaining 13.72 KG', () => {
-    const openingStock = 14;
-    const deducted = convertToMainUnit(1, 'Meter', pvcSheet);
-    expect(openingStock - deducted).toBeCloseTo(13.72, 2);
+  it('sell in KG (Main Unit) → returns qty unchanged', () => {
+    expect(convertToMainUnit(14, 'KG', pvcItem)).toBe(14);
   });
 
-  it('selling in KG (Main Unit) returns qty unchanged', () => {
-    expect(convertToMainUnit(14, 'KG', pvcSheet)).toBe(14);
+  it('stock balance: 14 KG − 1 MTRS = 13.72 KG', () => {
+    const bal = 14 - convertToMainUnit(1, 'MTRS', pvcItem);
+    expect(bal).toBeCloseTo(13.72, 2);
   });
 
-  // Price test — uses the same rate in the same direction
-  it('sale price ₹338/KG × 0.28 = ₹94.64/Meter', () => {
-    const mainRate = 338;
-    const meterRate = mainRate * pvcSheet.conversionRate;
-    expect(meterRate).toBeCloseTo(94.64, 1);
+  it('price: ₹338/KG ÷ 3.571 = ₹94.64/MTRS', () => {
+    expect(338 / pvcItem.conversionRate).toBeCloseTo(94.64, 1);
   });
 
-  it('stock deduction and price use the same rate × direction', () => {
-    const rate = pvcSheet.conversionRate;
-    const stockDeducted = convertToMainUnit(1, 'Meter', pvcSheet);    // qty × rate
-    const price = 338 * rate;                                          // price × rate
-    // Both must multiply by 0.28
-    expect(stockDeducted).toBeCloseTo(0.28, 4);
-    expect(price).toBeCloseTo(94.64, 1);
+  it('inverse rate display: 1/3.571 = 0.280 KG per MTRS', () => {
+    expect(1 / pvcItem.conversionRate).toBeCloseTo(0.28, 3);
   });
 });
 
-// ─── Box / Piece ──────────────────────────────────────────────────────────────
-// 1 Box = 15 Pieces → 1 Piece = 1/15 Box = 0.0667 Box → rate = 0.0667
+// ─── Box / Pieces ─────────────────────────────────────────────────────────────
+// 1 Box = 15 Pieces → rate = 15
+// Inverse: 1 Piece = 0.0667 Box (= 1/15)
 const boxItem = {
   name: 'Widget',
   unit: 'Box',
-  secondaryUnit: 'Piece',
-  conversionRate: 1 / 15,  // 1 Piece = 1/15 Box ≈ 0.0667
+  secondaryUnit: 'Pieces',
+  conversionRate: 15,   // 1 Box = 15 Pieces
 };
 
-describe('Box / Piece (rate = 1/15 ≈ 0.0667)', () => {
-  it('selling 1 Piece deducts 1/15 Box from stock', () => {
-    expect(convertToMainUnit(1, 'Piece', boxItem)).toBeCloseTo(1 / 15, 4);
+describe('Box / Pieces (rate = 15)', () => {
+  it('sell 1 Piece → deducts 0.0667 Box (1/15)', () => {
+    expect(convertToMainUnit(1, 'Pieces', boxItem)).toBeCloseTo(1 / 15, 4);
   });
 
-  it('selling 15 Pieces deducts exactly 1 Box', () => {
-    expect(convertToMainUnit(15, 'Piece', boxItem)).toBeCloseTo(1.0, 4);
+  it('sell 15 Pieces → deducts exactly 1 Box', () => {
+    expect(convertToMainUnit(15, 'Pieces', boxItem)).toBeCloseTo(1, 6);
   });
 
-  it('selling 1 Box deducts exactly 1 Box (main unit)', () => {
+  it('sell 1 Box → deducts 1 Box (main unit)', () => {
     expect(convertToMainUnit(1, 'Box', boxItem)).toBe(1);
   });
 
-  it('price: ₹300/Box × 0.0667 = ₹20/Piece', () => {
-    expect(300 * boxItem.conversionRate).toBeCloseTo(20, 1);
+  it('price: ₹300/Box ÷ 15 = ₹20/Piece', () => {
+    expect(300 / boxItem.conversionRate).toBeCloseTo(20, 2);
+  });
+
+  it('inverse rate: 1/15 = 0.0667 Box per Piece', () => {
+    expect(1 / boxItem.conversionRate).toBeCloseTo(0.0667, 3);
   });
 });
 
-// ─── Litre / ML ──────────────────────────────────────────────────────────────
-// 1 ML = 0.001 Litre → rate = 0.001
+// ─── Litre / ML ───────────────────────────────────────────────────────────────
 const litreItem = {
   name: 'Chemical',
-  unit: 'Litre',
+  unit: 'Ltr',
   secondaryUnit: 'ML',
-  conversionRate: 0.001,  // 1 ML = 0.001 Litre
+  conversionRate: 1000,  // 1 Ltr = 1000 ML
 };
 
-describe('Litre / ML (rate = 0.001)', () => {
-  it('selling 500 ML deducts 0.5 Litres', () => {
+describe('Litre / ML (rate = 1000)', () => {
+  it('sell 500 ML → deducts 0.5 Ltr', () => {
     expect(convertToMainUnit(500, 'ML', litreItem)).toBeCloseTo(0.5, 4);
   });
 
-  it('selling 1000 ML deducts exactly 1 Litre', () => {
+  it('sell 1000 ML → deducts 1 Ltr', () => {
     expect(convertToMainUnit(1000, 'ML', litreItem)).toBeCloseTo(1.0, 6);
   });
 });
 
 // ─── Edge cases ───────────────────────────────────────────────────────────────
 describe('Edge cases', () => {
-  it('throws when rate is 0', () => {
-    const item = { name: 'X', unit: 'KG', secondaryUnit: 'Meter', conversionRate: 0 };
-    expect(() => convertToMainUnit(1, 'Meter', item)).toThrow(/No valid conversion rate/);
+  it('throws when rate = 0', () => {
+    const item = { name: 'X', unit: 'KG', secondaryUnit: 'MTRS', conversionRate: 0 };
+    expect(() => convertToMainUnit(1, 'MTRS', item)).toThrow(/No valid conversion rate/);
   });
 
-  it('throws when rate is undefined', () => {
-    const item = { name: 'Y', unit: 'KG', secondaryUnit: 'Meter' };
-    expect(() => convertToMainUnit(1, 'Meter', item)).toThrow(/No valid conversion rate/);
+  it('throws when rate undefined', () => {
+    const item = { name: 'Y', unit: 'Box', secondaryUnit: 'Pieces' };
+    expect(() => convertToMainUnit(1, 'Pieces', item)).toThrow(/No valid conversion rate/);
   });
 
-  it('batch-level rate overrides item-level rate', () => {
-    // Batch B001 is a lighter roll: 1 Meter = 0.25 KG (item default is 0.28)
-    const item  = { name: 'PVC Roll', unit: 'KG', secondaryUnit: 'Meter', conversionRate: 0.28 };
-    const batch = { conversionRate: 0.25, batchNo: 'B001' };
-    expect(convertToMainUnit(1, 'Meter', item, batch)).toBeCloseTo(0.25, 4);
+  it('batch rate overrides item rate', () => {
+    const item  = { name: 'PVC', unit: 'KG', secondaryUnit: 'MTRS', conversionRate: 3.571 };
+    const batch = { conversionRate: 4.0, batchNo: 'B001' }; // lighter roll: 1 KG = 4 MTRS
+    expect(convertToMainUnit(1, 'MTRS', item, batch)).toBeCloseTo(0.25, 4); // 1/4 = 0.25
   });
 
   it('batch rate = 0 falls back to item rate', () => {
-    const item  = { name: 'PVC Roll', unit: 'KG', secondaryUnit: 'Meter', conversionRate: 0.28 };
-    const batch = { conversionRate: 0, batchNo: 'B002' };
-    expect(convertToMainUnit(1, 'Meter', item, batch)).toBeCloseTo(0.28, 4);
+    const item  = { name: 'PVC', unit: 'KG', secondaryUnit: 'MTRS', conversionRate: 3.571 };
+    const batch = { conversionRate: 0 };
+    expect(convertToMainUnit(1, 'MTRS', item, batch)).toBeCloseTo(0.28, 2);
   });
 
-  it('getEffectiveConversionRate returns null when no rate set', () => {
-    expect(getEffectiveConversionRate({ unit: 'KG', secondaryUnit: 'Meter' })).toBeNull();
+  it('getEffectiveConversionRate returns null when no rate', () => {
+    expect(getEffectiveConversionRate({ unit: 'KG', secondaryUnit: 'MTRS' })).toBeNull();
   });
 
   it('getEffectiveConversionRate prefers batch rate', () => {
-    const item  = { unit: 'KG', secondaryUnit: 'Meter', conversionRate: 0.28 };
-    const batch = { conversionRate: 0.25 };
-    expect(getEffectiveConversionRate(item, batch)).toBe(0.25);
+    const item  = { unit: 'KG', secondaryUnit: 'MTRS', conversionRate: 3.571 };
+    const batch = { conversionRate: 4.0 };
+    expect(getEffectiveConversionRate(item, batch)).toBe(4.0);
   });
 
   it('validateDualUnitSetup throws when rate missing', () => {
-    const item = { name: 'Cable', unit: 'KG', secondaryUnit: 'Meter', conversionRate: 0 };
+    const item = { name: 'Cable', unit: 'KG', secondaryUnit: 'MTRS', conversionRate: 0 };
     expect(() => validateDualUnitSetup(item)).toThrow(/no conversion rate/i);
   });
 
-  it('validateDualUnitSetup passes with batch tracking on', () => {
-    const item = { name: 'Roll', unit: 'KG', secondaryUnit: 'Meter', conversionRate: 0, enableTracking: true };
+  it('validateDualUnitSetup passes with batch tracking', () => {
+    const item = { unit: 'KG', secondaryUnit: 'MTRS', conversionRate: 0, enableTracking: true };
     expect(() => validateDualUnitSetup(item)).not.toThrow();
   });
 
-  it('validateDualUnitSetup passes when no secondaryUnit', () => {
-    expect(() => validateDualUnitSetup({ name: 'Simple', unit: 'KG' })).not.toThrow();
+  it('validateDualUnitSetup passes with no secondaryUnit', () => {
+    expect(() => validateDualUnitSetup({ unit: 'KG' })).not.toThrow();
   });
 });
 
 // ─── Large production run ─────────────────────────────────────────────────────
 describe('Large production run', () => {
-  it('100 FGs × 3 Meters each (rate=0.28) deducts 84 KG total', () => {
-    const total = convertToMainUnit(3, 'Meter', pvcSheet) * 100;
-    expect(total).toBeCloseTo(84.0, 1);  // 3 × 0.28 × 100 = 84
+  it('100 FGs × 3 MTRS each (rate=3.571) deducts ≈ 84 KG', () => {
+    const total = convertToMainUnit(3, 'MTRS', pvcItem) * 100;
+    expect(total).toBeCloseTo(84.0, 0); // (3/3.571) × 100 ≈ 84
   });
 
-  it('100 FGs × 15 Pieces each (Box, rate=1/15) deducts exactly 100 Boxes', () => {
-    const total = convertToMainUnit(15, 'Piece', boxItem) * 100;
-    expect(total).toBeCloseTo(100.0, 4);  // 15 × (1/15) × 100 = 100
+  it('100 FGs × 15 Pieces each (rate=15) deducts exactly 100 Boxes', () => {
+    const total = convertToMainUnit(15, 'Pieces', boxItem) * 100;
+    expect(total).toBeCloseTo(100.0, 4); // (15/15) × 100 = 100
   });
 });
 
-// ─── Frontend ↔ Backend consistency ──────────────────────────────────────────
-describe('Frontend price ↔ Backend stock consistency', () => {
-  it('both use same rate × direction: stock = qty × rate, price = mainRate × rate', () => {
-    const rate = pvcSheet.conversionRate; // 0.28
-    const stockDeducted = convertToMainUnit(1, 'Meter', pvcSheet); // 1 × 0.28 = 0.28 KG
-    const meterPrice = 338 * rate;                                  // 338 × 0.28 = 94.64
-    expect(stockDeducted).toBeCloseTo(0.28, 4);
+// ─── Price ↔ Stock consistency ────────────────────────────────────────────────
+describe('Price / stock use same rate ÷ direction', () => {
+  it('PVC: price = 338 ÷ 3.571 = 94.64, stock = 1 ÷ 3.571 = 0.28', () => {
+    const rate = pvcItem.conversionRate;
+    const stockDeducted = convertToMainUnit(1, 'MTRS', pvcItem);
+    const meterPrice    = 338 / rate;
+    expect(stockDeducted).toBeCloseTo(0.28, 2);
     expect(meterPrice).toBeCloseTo(94.64, 1);
-    // Cross-check: price paid for the 0.28 KG consumed must equal meterPrice
-    const priceForKgConsumed = stockDeducted * (338 / 1); // KG used × ₹/KG
-    expect(priceForKgConsumed).toBeCloseTo(meterPrice, 1); // ₹94.64 = ₹94.64 ✅
+    // Cross-check: price per KG consumed must equal ₹338
+    expect(meterPrice / stockDeducted).toBeCloseTo(338, 1);
   });
 });

@@ -3,34 +3,38 @@
  * ──────────────────────────────────────────────────────────────────
  * Single source of truth for dual-unit stock conversion.
  *
- * CANONICAL DEFINITION (Definition A — the only definition used everywhere):
+ * CANONICAL DEFINITION (Definition B — matches stored data):
  *   item.unit           = Main Unit  (stock is ALWAYS tracked in this unit)
  *   item.secondaryUnit  = Second Unit (used for billing / BOM entry)
- *   item.conversionRate = "1 Second Unit = conversionRate × Main Units"
- *                         e.g. 1 Meter = 0.28 KG   → rate = 0.28
- *                         e.g. 1 Piece = 0.0667 Box → rate = 0.0667  (Box/15)
- *                         e.g. 1 ML    = 0.001 Litre → rate = 0.001
+ *   item.conversionRate = "1 Main Unit = conversionRate Second Units"
+ *                         e.g. 1 Box = 15 Pieces  → rate = 15
+ *                         e.g. 1 KG  = 3.571 MTRS → rate = 3.571
+ *                         e.g. 1 Ltr = 1000 ML    → rate = 1000
  *
- * STOCK DEDUCTION formula:
- *   qty entered in Second Unit × rate = qty deducted from Main Unit stock
- *   e.g. 1 Meter × 0.28 = 0.28 KG deducted from stock
+ * STOCK DEDUCTION formula (Second Unit → Main Unit):
+ *   qty in Second Unit ÷ rate = qty deducted from Main Unit stock
+ *   e.g. 1 Piece ÷ 15 = 0.0667 Box
+ *   e.g. 1 MTRS  ÷ 3.571 = 0.28 KG
  *
  * PRICE formula (same rate, same direction):
- *   pricePerSecondUnit = pricePerMainUnit × rate
- *   e.g. ₹338/KG × 0.28 = ₹94.64/Meter
+ *   pricePerSecondUnit = pricePerMainUnit ÷ rate
+ *   e.g. ₹300/Box ÷ 15 = ₹20/Piece
+ *   e.g. ₹338/KG  ÷ 3.571 = ₹94.64/MTRS
  *
- * Both formulas multiply by the SAME rate — there is no separate inversion.
+ * INVERSE (for display only — not stored):
+ *   1 Second Unit = (1 / rate) Main Units
+ *   e.g. 1 Piece = 0.0667 Box
+ *   e.g. 1 MTRS  = 0.280 KG
  *
  * Per-batch override:
  *   batch.conversionRate takes precedence over item.conversionRate
- *   (used for PVC rolls / sheets where each roll has a different weight/length)
  */
 
 export interface ConversionItem {
   name?: string;
   unit: string;           // Main Unit
   secondaryUnit?: string; // Second Unit (optional)
-  conversionRate?: number; // 1 Second Unit = conversionRate × Main Units
+  conversionRate?: number; // 1 Main Unit = conversionRate Second Units
   enableTracking?: boolean; // true = batch-level rate required
 }
 
@@ -40,24 +44,14 @@ export interface ConversionBatch {
 }
 
 /**
- * Convert a quantity from whichever unit was entered → Main Unit.
+ * Convert a quantity entered in Second Unit → Main Unit for stock deduction.
  *
- * Rate resolution priority:
- *   1. batch.conversionRate  (batch-level, most specific)
- *   2. item.conversionRate   (item-level default)
+ * Formula: Main Unit qty = enteredQty / conversionRate
  *
- * Formula:
- *   Main Unit qty = enteredQty × conversionRate
- *   (because rate = "1 Second Unit = rate Main Units")
- *
- *   Example: 1 Meter entered, rate = 0.28 (1 Meter = 0.28 KG)
- *            → 1 × 0.28 = 0.28 KG deducted from stock
- *
- * @param qty           Quantity as entered by user
- * @param unitSelected  Unit the user chose (item.unit OR item.secondaryUnit)
- * @param item          Product / RM item record
- * @param batch         Optional: batch record (for batch-tracked items)
- * @returns             Equivalent quantity in Main Unit
+ * Examples:
+ *   1 Piece ÷ 15 = 0.0667 Box
+ *   1 MTRS  ÷ 3.571 = 0.28 KG
+ *   50 MTRS ÷ 3.571 = 14 KG
  */
 export function convertToMainUnit(
   qty: number,
@@ -65,40 +59,29 @@ export function convertToMainUnit(
   item: ConversionItem,
   batch?: ConversionBatch | null
 ): number {
-  // If user picked the main unit — no conversion needed
-  if (unitSelected === item.unit) {
-    return qty;
-  }
+  if (unitSelected === item.unit) return qty; // no conversion needed
 
-  // Resolve conversion rate: batch > item, but only if batch rate is a positive number.
-  // Zero or negative batch rate is treated as "not set" — fall back to item rate.
   const batchRate = batch?.conversionRate && batch.conversionRate > 0 ? batch.conversionRate : null;
   const rate = batchRate ?? item.conversionRate ?? 0;
 
   if (!rate || rate <= 0) {
     throw new Error(
       `No valid conversion rate for item "${item.name || 'unknown'}". ` +
-      `Set a conversion rate (1 ${item.secondaryUnit} = ? ${item.unit}) before using Second Unit.`
+      `Set a conversion rate (1 ${item.unit} = ? ${item.secondaryUnit}) before using Second Unit.`
     );
   }
 
-  // rate = "1 Second Unit = rate Main Units"
-  // qty in Second Unit → Main Unit = qty × rate
-  return qty * rate;
+  return qty / rate; // DIVIDE: 1 Second Unit = (1/rate) Main Units
 }
 
 /**
- * Validate that an item's dual-unit configuration is complete before
- * allowing a Second Unit transaction to proceed.
- *
- * Throws an Error if configuration is incomplete.
+ * Validate that an item's dual-unit config is complete before a Second Unit
+ * transaction proceeds. Throws if incomplete.
  */
 export function validateDualUnitSetup(item: ConversionItem): void {
-  if (!item.secondaryUnit) return; // No second unit configured → nothing to validate
-
+  if (!item.secondaryUnit) return;
   const hasItemRate = item.conversionRate && item.conversionRate > 0;
   const isBatchTracked = item.enableTracking === true;
-
   if (!hasItemRate && !isBatchTracked) {
     throw new Error(
       `Item "${item.name || 'unknown'}" has Second Unit "${item.secondaryUnit}" configured ` +
@@ -110,7 +93,6 @@ export function validateDualUnitSetup(item: ConversionItem): void {
 
 /**
  * Get the effective conversion rate for a given item+batch combination.
- * Returns null if no rate is available (caller should handle).
  */
 export function getEffectiveConversionRate(
   item: ConversionItem,
