@@ -37,7 +37,9 @@ const emptyForm = {
   secSalePriceType: 'fixed', secSalePrice: 0, secMrp: 0, secMinSalePrice: 0, isDefaultSecondaryUnit: false,
 };
 
-// Reusable styling components defined OUTSIDE to prevent focus loss
+// Bug fix: use type='text' + inputMode='decimal' so the browser never swallows a
+// trailing decimal point. Store raw string on change; parse to number only on blur.
+// This prevents the "need to click twice" issue caused by parseFloat on every keystroke.
 const Input = ({ label, required = false, type = 'text', keyName, form, setForm, placeholder = '', onQuickAdd }: any) => (
   <div>
     <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider flex items-center justify-between">
@@ -48,9 +50,12 @@ const Input = ({ label, required = false, type = 'text', keyName, form, setForm,
         </button>
       )}
     </label>
-    <input type={type}
-      value={form[keyName] === 0 && type === 'number' ? '' : form[keyName]}
-      onChange={e => setForm({ ...form, [keyName]: type === 'number' ? parseFloat(e.target.value) || 0 : e.target.value })}
+    <input
+      type={type === 'number' ? 'text' : type}
+      inputMode={type === 'number' ? 'decimal' : undefined}
+      value={form[keyName] === 0 && type === 'number' ? '' : (form[keyName] ?? '')}
+      onChange={e => setForm({ ...form, [keyName]: e.target.value })}
+      onBlur={type === 'number' ? (e => setForm({ ...form, [keyName]: parseFloat(e.target.value) || 0 })) : undefined}
       placeholder={placeholder}
       className="w-full px-3 py-2 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 placeholder-[#475569] focus:outline-none focus:border-[#D4D4D4] text-sm transition" />
   </div>
@@ -217,8 +222,16 @@ export default function MastersPage() {
     }
     setSaving(true);
     try {
-      if (editing) { await productsApi.update(editing._id, form); toast.success('Item updated'); }
-      else { await productsApi.create(form); toast.success('Item created'); }
+      // Normalize all numeric fields before submitting — prevents raw strings
+      // reaching the backend if the user never blurred a field before clicking Save
+      const numFields = ['purchasePrice','sellingPrice','sellingPrice2','sellingPrice3',
+        'minSalePrice','mrp','openingStock','openingStockValue','reorderLevel',
+        'lowLevelLimit','gstRate','cessRate','igstRate','saleDiscount','conversionRate'];
+      const payload: any = { ...form };
+      for (const f of numFields) { payload[f] = parseFloat(payload[f]) || 0; }
+
+      if (editing) { await productsApi.update(editing._id, payload); toast.success('Item updated'); }
+      else { await productsApi.create(payload); toast.success('Item created'); }
       setShowModal(false); fetchProducts();
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to save'); }
     finally { setSaving(false); }
@@ -605,8 +618,14 @@ export default function MastersPage() {
 
                         {form.type === 'product' && (
                           <>
-                            <Input label="Opening Stock" type="number" keyName="openingStock" form={form} setForm={setForm} />
-                            <Input label="Opening Stock Value (₹)" type="number" keyName="openingStockValue" form={form} setForm={setForm} />
+                            <Input label="Opening Stock" type="number" keyName="openingStock" form={form} setForm={setForm} placeholder="0" />
+                            <Input label="Opening Stock Value (₹)" type="number" keyName="openingStockValue" form={form} setForm={setForm} placeholder="0" />
+                            {form.enableTracking && (
+                              <p className="text-[10px] text-amber-600 col-span-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                ⚠ Track by Batch is ON — opening stock will be saved as a single &quot;Opening Stock&quot; batch.
+                                You can split it later by adding individual batches via Purchase entry.
+                              </p>
+                            )}
                           </>
                         )}
                       </div>
@@ -631,7 +650,13 @@ export default function MastersPage() {
                         <div>
                           <label className="block text-[11px] font-medium text-slate-600 mb-1 uppercase tracking-wider">Sale Discount</label>
                           <div className="flex rounded-lg overflow-hidden border border-slate-200">
-                            <input type="number" value={form.saleDiscount === 0 ? '' : form.saleDiscount} onChange={e => setForm({ ...form, saleDiscount: parseFloat(e.target.value) || 0 })} placeholder="0" className="w-full px-3 py-2 bg-white text-slate-900 focus:outline-none text-sm" />
+                            <input
+                              type="text" inputMode="decimal"
+                              value={form.saleDiscount === 0 ? '' : (form.saleDiscount ?? '')}
+                              onChange={e => setForm({ ...form, saleDiscount: e.target.value })}
+                              onBlur={e => setForm({ ...form, saleDiscount: parseFloat(e.target.value) || 0 })}
+                              placeholder="0"
+                              className="w-full px-3 py-2 bg-white text-slate-900 focus:outline-none text-sm" />
                             <select value={form.saleDiscountType} onChange={e => setForm({ ...form, saleDiscountType: e.target.value })} className="bg-[#E2E8F0] text-slate-900 px-2 py-2 text-sm focus:outline-none cursor-pointer border-l border-slate-200">
                               <option value="percentage">%</option>
                               <option value="amount">₹</option>
@@ -740,7 +765,13 @@ export default function MastersPage() {
                    {/* Definition B: user enters rate as '1 Main = rate Second' */}
                    <div className="text-[11px] text-blue-500 font-semibold bg-blue-50 px-2 py-1 rounded-md border border-blue-200">1 {form.unit || 'Main Unit'} = {form.conversionRate || '?'} {form.secondaryUnit || 'Second Unit'}</div>
                  </div>
-                 <input type="number" value={form.conversionRate || ''} onChange={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:border-[#D4D4D4] focus:outline-none text-sm transition" placeholder="e.g. 16" />
+                 <input 
+                    type="text" inputMode="decimal"
+                    value={form.conversionRate === 0 ? '' : (form.conversionRate ?? '')}
+                    onChange={e => setForm({...form, conversionRate: e.target.value})}
+                    onBlur={e => setForm({...form, conversionRate: parseFloat(e.target.value) || 0})}
+                    className="w-full px-3 py-2.5 rounded-lg bg-[#F1F5F9] border border-slate-200 text-slate-900 focus:border-[#D4D4D4] focus:outline-none text-sm transition" 
+                    placeholder="e.g. 16" />
                  {/* Live preview — identical wording to Add New Item screen */}
                   {form.secondaryUnit && form.conversionRate > 0 && (
                     <div className="mt-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
@@ -765,7 +796,13 @@ export default function MastersPage() {
                 </div>
                 <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#D4D4D4] transition">
                   <div className="bg-[#F1F5F9] text-slate-600 px-4 py-2.5 border-r border-slate-200 flex items-center justify-center text-sm font-medium">₹</div>
-                  <input type="number" value={form.secSalePrice || ''} onChange={e => setForm({...form, secSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2.5 bg-white text-slate-900 focus:outline-none text-sm" placeholder="Secondary Sale Price" />
+                  <input
+                    type="text" inputMode="decimal"
+                    value={form.secSalePrice === 0 ? '' : (form.secSalePrice ?? '')}
+                    onChange={e => setForm({...form, secSalePrice: e.target.value})}
+                    onBlur={e => setForm({...form, secSalePrice: parseFloat(e.target.value) || 0})}
+                    className="flex-1 px-3 py-2.5 bg-white text-slate-900 focus:outline-none text-sm"
+                    placeholder="Secondary Sale Price" />
                 </div>
               </div>
 
@@ -775,14 +812,26 @@ export default function MastersPage() {
                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">M.R.P.</label>
                   <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#D4D4D4] transition">
                     <div className="bg-[#F1F5F9] text-slate-600 px-3 py-2.5 border-r border-slate-200 flex items-center justify-center text-sm">₹</div>
-                    <input type="number" value={form.secMrp || ''} onChange={e => setForm({...form, secMrp: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-white text-slate-900 focus:outline-none text-sm" placeholder="0.00" />
+                    <input
+                      type="text" inputMode="decimal"
+                      value={form.secMrp === 0 ? '' : (form.secMrp ?? '')}
+                      onChange={e => setForm({...form, secMrp: e.target.value})}
+                      onBlur={e => setForm({...form, secMrp: parseFloat(e.target.value) || 0})}
+                      className="flex-1 px-3 py-2 bg-white text-slate-900 focus:outline-none text-sm"
+                      placeholder="0.00" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-slate-600 mb-1.5 uppercase tracking-wider">Min. Sale Price</label>
                   <div className="flex rounded-lg overflow-hidden border border-slate-200 focus-within:border-[#D4D4D4] transition">
                     <div className="bg-[#F1F5F9] text-slate-600 px-3 py-2.5 border-r border-slate-200 flex items-center justify-center text-sm">₹</div>
-                    <input type="number" value={form.secMinSalePrice || ''} onChange={e => setForm({...form, secMinSalePrice: parseFloat(e.target.value) || 0})} className="flex-1 px-3 py-2 bg-white text-slate-900 focus:outline-none text-sm" placeholder="0.00" />
+                    <input
+                      type="text" inputMode="decimal"
+                      value={form.secMinSalePrice === 0 ? '' : (form.secMinSalePrice ?? '')}
+                      onChange={e => setForm({...form, secMinSalePrice: e.target.value})}
+                      onBlur={e => setForm({...form, secMinSalePrice: parseFloat(e.target.value) || 0})}
+                      className="flex-1 px-3 py-2 bg-white text-slate-900 focus:outline-none text-sm"
+                      placeholder="0.00" />
                   </div>
                 </div>
               </div>
