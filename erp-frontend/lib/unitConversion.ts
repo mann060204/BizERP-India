@@ -3,36 +3,32 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * Shared unit-rate conversion utilities for the ERP frontend.
  *
- * CANONICAL DEFINITION:
- *   conversionRate is stored as: "1 Main Unit = conversionRate Second Units"
- *   e.g. 1 Feet = 12 Inch  →  conversionRate = 12
+ * CANONICAL DEFINITION A (the only definition — used everywhere):
+ *   conversionRate = "1 Second Unit = conversionRate × Main Units"
+ *   e.g. 1 Meter = 0.28 KG  →  rate = 0.28
+ *   e.g. 1 Piece = 0.0667 Box → rate = 0.0667
  *
- * CONSEQUENCE:
- *   Cost / Rate per 1 Second Unit = Main Unit Rate ÷ conversionRate
- *   e.g. ₹350 / Feet ÷ 12 = ₹29.17 / Inch
+ * STOCK DEDUCTION:  qty (Second Unit) × rate  = qty deducted (Main Unit)
+ * PRICE:            mainPrice × rate            = price per Second Unit
  *
- * This function is consumed by:
+ * Both multiply by the SAME rate. No division. No inversion.
+ *
+ * Consumed by:
  *   - Sales Invoice (sales/new/page.tsx) — unit dropdown onChange
- *   - BOM (manufacturing/bom/page.tsx)  — unit type toggle (MAIN / SECOND)
- *
- * Adding it to any future screen: import getRateForUnit and call with the
- * three parameters below. Never duplicate the division inline again.
+ *   - BOM (manufacturing/bom/page.tsx)  — unit type toggle + stock tooltip
+ *   - Item Master modals (items/page.tsx, QuickAddItemModal.tsx) — label display
  */
 
 /**
- * Returns the correct per-unit rate/cost for the selected unit.
+ * Returns the correct per-unit cost/rate for the selected unit.
  *
- * @param mainUnitRate    The rate/cost when selling or consuming in Main Unit.
- * @param conversionRate  1 Main Unit = conversionRate Second Units.
- *                        Pass null/undefined/0 if no second unit exists.
- * @param selectedUnitType  'MAIN' or 'SECOND'
- * @returns The adjusted rate for the given unit selection.
+ * conversionRate = "1 Second Unit = rate × Main Units"
+ * → price per Second Unit = mainRate × rate
  *
  * @example
- *   // Fabric: Main = Feet (₹350), Second = Inch, 1 Feet = 12 Inch
- *   getRateForUnit(350, 12, 'SECOND') // → 29.17
- *   getRateForUnit(350, 12, 'MAIN')   // → 350
- *   getRateForUnit(350, 0, 'SECOND')  // → 350  (no rate configured, fallback)
+ *   // PVC Sheet: Main=KG (₹338), Second=Meter, 1 Meter = 0.28 KG
+ *   getRateForUnit(338, 0.28, 'SECOND') // → 94.64
+ *   getRateForUnit(338, 0.28, 'MAIN')   // → 338
  */
 export function getRateForUnit(
   mainUnitRate: number,
@@ -40,27 +36,17 @@ export function getRateForUnit(
   selectedUnitType: 'MAIN' | 'SECOND'
 ): number {
   if (selectedUnitType === 'SECOND' && conversionRate && conversionRate > 0) {
-    return mainUnitRate / conversionRate;
+    return mainUnitRate * conversionRate;   // MULTIPLY — same as stock deduction
   }
   return mainUnitRate;
 }
 
 /**
- * Same logic expressed for the Sales Invoice's unit dropdown, where the unit is
- * identified by name rather than 'MAIN'/'SECOND' enum.
- *
- * @param mainUnitRate       Rate when unit === primaryUnit (Main Unit)
- * @param conversionRate     1 Main Unit = conversionRate Second Units
- * @param newUnit            The newly selected unit string
- * @param primaryUnit        The item's Main Unit string
- * @param secondaryUnit      The item's Second Unit string (may be undefined)
- * @param secSalePrice       Optional fixed secondary sale price (overrides derived rate)
- * @returns The adjusted rate for the selected unit
+ * Price/rate lookup by unit name (used by Sales Invoice unit dropdown).
  *
  * @example
- *   // Fabric: primaryUnit='Feet', secondaryUnit='Inch', mainUnitRate=350, conversionRate=12
- *   getRateForUnitByName(350, 12, 'Inch', 'Feet', 'Inch') // → 29.17
- *   getRateForUnitByName(350, 12, 'Feet', 'Feet', 'Inch') // → 350
+ *   getRateForUnitByName(338, 0.28, 'Meter', 'KG', 'Meter') // → 94.64
+ *   getRateForUnitByName(338, 0.28, 'KG',    'KG', 'Meter') // → 338
  */
 export function getRateForUnitByName(
   mainUnitRate: number,
@@ -71,60 +57,55 @@ export function getRateForUnitByName(
   secSalePrice?: number | null
 ): number {
   if (newUnit === secondaryUnit) {
-    // Prefer explicit secSalePrice if set; otherwise derive from main rate
+    // Prefer an explicitly-set secondary sale price if available
     if (secSalePrice && secSalePrice > 0) return secSalePrice;
-    if (conversionRate && conversionRate > 0) return mainUnitRate / conversionRate;
+    // Otherwise derive: mainRate × rate
+    if (conversionRate && conversionRate > 0) return mainUnitRate * conversionRate;
     return mainUnitRate;
   }
-  // newUnit === primaryUnit (or any other unit — fall back to main rate)
-  return mainUnitRate;
+  return mainUnitRate; // main unit — no change
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Label-rendering helpers — use these in UI instead of inlining the string.
-// CANONICAL FORMAT (non-negotiable):  1 [MainUnit] = [Factor] [SecondUnit]
+// Label helpers — always render as "1 [Second Unit] = [rate] [Main Unit]"
+// This matches how users enter the rate in the Item Master:
+//   "1 Meter = 0.28 KG" → user types 0.28
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Returns the canonical conversion label string.
- * @example conversionLabel('Feet', 'Inch', 12) → "1 Feet = 12 Inch"
+ * Returns the canonical conversion label: "1 {secondUnit} = {factor} {mainUnit}"
+ * @example conversionLabel('KG', 'Meter', 0.28) → "1 Meter = 0.28 KG"
  */
 export function conversionLabel(
   mainUnit: string,
   secondUnit: string,
   factor: number | null | undefined
 ): string {
-  return `1 ${mainUnit} = ${factor ?? '?'} ${secondUnit}`;
+  return `1 ${secondUnit} = ${factor ?? '?'} ${mainUnit}`;
 }
 
 /**
- * Returns the full conversion note with stock-deduction explanation.
- * @example conversionNote('Feet', 'Inch', 12)
- *   → "1 Feet = 12 Inch | Selling in Inch deducts proportionally from Feet stock"
+ * Returns the full conversion note.
+ * @example conversionNote('KG', 'Meter', 0.28)
+ *   → "1 Meter = 0.28 KG | Selling in Meter deducts 0.28 KG from stock per unit"
  */
 export function conversionNote(
   mainUnit: string,
   secondUnit: string,
   factor: number | null | undefined
 ): string {
-  return `1 ${mainUnit} = ${factor ?? '?'} ${secondUnit} | Selling in ${secondUnit} deducts proportionally from ${mainUnit} stock`;
+  return `1 ${secondUnit} = ${factor ?? '?'} ${mainUnit} | Selling in ${secondUnit} deducts ${factor ?? '?'} ${mainUnit} from stock per unit`;
 }
 
 /**
- * Computes how many Main Unit items are deducted from stock for a given
- * quantity entered in the selected unit.
+ * Computes Main Unit stock deducted for a given qty entered in Second Unit.
  *
- * KEY RULE:
- *   conversionRate = "1 Main Unit = conversionRate Second Units"
- *   e.g. 1 Box = 15 Pieces  →  conversionRate = 15
- *
- *   MAIN selected:   deduction = qty                    (already in main unit)
- *   SECOND selected: deduction = qty / conversionRate   (DIVIDE, never multiply)
+ * Formula: qty × rate  (MULTIPLY — same direction as price)
  *
  * @example
- *   getStockDeduction(1, 'SECOND', 15) // → 0.0667  (1 Piece = 1/15 Box)
- *   getStockDeduction(1, 'MAIN',   15) // → 1.0000  (1 Box   = 1 Box)
- *   getStockDeduction(3, 'SECOND', 12) // → 0.25    (3 Inch  = 3/12 Feet)
+ *   getStockDeduction(1,  'SECOND', 0.28) // → 0.28  (1 Meter → 0.28 KG)
+ *   getStockDeduction(50, 'SECOND', 0.28) // → 14.0  (50 Meters → 14 KG)
+ *   getStockDeduction(1,  'MAIN',   0.28) // → 1.0   (1 KG → 1 KG, no conversion)
  */
 export function getStockDeduction(
   qty: number,
@@ -132,7 +113,7 @@ export function getStockDeduction(
   conversionRate: number | null | undefined
 ): number {
   if (selectedUnitType === 'SECOND' && conversionRate && conversionRate > 0) {
-    return qty / conversionRate;
+    return qty * conversionRate;   // MULTIPLY — same direction as price formula
   }
-  return qty; // MAIN unit or no conversion configured
+  return qty;
 }
