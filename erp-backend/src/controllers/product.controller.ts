@@ -59,6 +59,21 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
     const data = { ...req.body, businessId: req.user!.businessId };
     data.currentStock = data.openingStock || 0;
     const product = await Product.create(data);
+
+    // If batch-tracked with opening stock, create the "Opening Stock" batch automatically
+    if (product.enableTracking && product.openingStock > 0) {
+      await Batch.create({
+        businessId: product.businessId,
+        productId: product._id,
+        batchNo: 'Opening Stock',
+        currentStock: product.openingStock,
+        salePrice: product.sellingPrice,
+        mrp: product.mrp ?? product.sellingPrice,
+        qualityStatus: 'Passed',
+        isActive: true,
+      });
+    }
+
     res.status(201).json({ message: 'Product created', product });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -66,12 +81,67 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 // PUT /api/v1/products/:id
 export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const businessId = req.user!.businessId;
+    const productId = req.params['id'];
+    const update: any = { ...req.body };
+
+    // Load current product to detect what changed
+    const old = await Product.findOne({ _id: productId, businessId }).lean();
+    if (!old) { res.status(404).json({ message: 'Product not found' }); return; }
+
+    // ── Opening Stock sync ──────────────────────────────────────────────────
+    // If openingStock is being explicitly set, cast it to a number first
+    if (update.openingStock !== undefined) {
+      const newOS = Number(update.openingStock) || 0;
+      update.openingStock = newOS;
+
+      // Sync currentStock only when no transactions have modified it yet.
+      // Heuristic: if currentStock still equals the old openingStock, the item
+      // is "pristine" (no purchases/sales processed) → safe to update currentStock.
+      if (Number(old.currentStock) === Number(old.openingStock)) {
+        update.currentStock = newOS;
+      }
+    }
+
     const product = await Product.findOneAndUpdate(
-      { _id: req.params['id'], businessId: req.user!.businessId },
-      req.body,
+      { _id: productId, businessId },
+      update,
       { new: true, runValidators: true }
     );
     if (!product) { res.status(404).json({ message: 'Product not found' }); return; }
+
+    // ── Batch-tracked items: upsert "Opening Stock" batch ───────────────────
+    // When enableTracking is ON, the stock column is driven by batch records.
+    // We must upsert an "Opening Stock" batch so the list reflects the entered qty.
+    const isTracked = (update.enableTracking ?? old.enableTracking) === true;
+    if (isTracked && update.openingStock !== undefined) {
+      const qty = Number(update.openingStock) || 0;
+
+      await Batch.findOneAndUpdate(
+        { businessId, productId: product._id, batchNo: 'Opening Stock' },
+        {
+          $setOnInsert: {
+            businessId,
+            productId: product._id,
+            batchNo: 'Opening Stock',
+          },
+          $set: {
+            currentStock: qty,
+            salePrice: product.sellingPrice,
+            mrp: product.mrp ?? product.sellingPrice,
+            qualityStatus: 'Passed',
+            isActive: true,
+          },
+        },
+        { upsert: true, new: true }
+      );
+
+      // Keep product.currentStock in sync so the item-list stock column is correct
+      // (the list reads p.currentStock, not a batch aggregation)
+      await Product.updateOne({ _id: product._id }, { $set: { currentStock: qty } });
+      (product as any).currentStock = qty; // reflect in the API response too
+    }
+
     res.json({ message: 'Product updated', product });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
