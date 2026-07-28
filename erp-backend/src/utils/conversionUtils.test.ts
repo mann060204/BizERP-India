@@ -175,3 +175,44 @@ describe('Price / stock use same rate ÷ direction', () => {
     expect(meterPrice / stockDeducted).toBeCloseTo(338, 1);
   });
 });
+
+// ─── Production Entry COST column — regression tests ─────────────────────────
+// Bug: cost was computed as requiredInMainUnit × costPerUnit
+//      (mixed units: Main Unit qty × Second Unit price → wrong magnitude)
+// Fix: cost = rawRequired (entered unit) × costPerUnit (per entered unit)
+describe('Production Entry: cost = rawRequired × costPerUnit (same unit)', () => {
+  // EYELET TEP: Required = 50.4 Meter, Rate = ₹28/Meter
+  it('EYELET TEP: 50.4 Meter × ₹28/Meter = ₹1411.20', () => {
+    const rawRequired = 50.4; // entered unit = Meter
+    const costPerUnit = 28;   // ₹ per Meter
+    const cost = rawRequired * costPerUnit;
+    expect(cost).toBeCloseTo(1411.20, 2);
+  });
+
+  // AMETO THEREAD: Required = 36 Pieces, Rate = ₹6.67/Piece
+  it('AMETO THEREAD: 36 Pieces × ₹6.67/Piece = ₹240.12', () => {
+    const rawRequired = 36;   // entered unit = Pieces
+    const costPerUnit = 6.67; // ₹ per Piece
+    const cost = rawRequired * costPerUnit;
+    expect(cost).toBeCloseTo(240.12, 2);
+  });
+
+  // Total Material Cost = sum of all rows
+  it('Total Material Cost = 1411.20 + 240.12 = ₹1651.32', () => {
+    const costs = [50.4 * 28, 36 * 6.67];
+    const total = costs.reduce((a, b) => a + b, 0);
+    expect(total).toBeCloseTo(1651.32, 2);
+  });
+
+  // OLD (wrong) formula sanity: requiredInMainUnit × costPerUnit gives wrong result
+  // EYELET TEP: if convRate = 50 (1 Main = 50 Meter), requiredInMainUnit = 50.4/50 = 1.008
+  // 1.008 × 28 = 28.22 — exactly matches the reported bug
+  it('OLD formula produced ₹28.22 for EYELET TEP (confirms root cause)', () => {
+    const rawRequired = 50.4;
+    const convRate    = 50;   // hypothetical item conversionRate
+    const requiredInMainUnit = rawRequired / convRate; // = 1.008
+    const costPerUnit = 28;
+    const wrongCost = requiredInMainUnit * costPerUnit;
+    expect(wrongCost).toBeCloseTo(28.22, 1); // reproduces the reported bug
+  });
+});

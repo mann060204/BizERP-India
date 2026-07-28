@@ -49,6 +49,14 @@ export const previewProduction = async (req: AuthRequest, res: Response): Promis
       const available = prod?.currentStock ?? 0;
       const shortage = Math.max(0, requiredInMainUnit - available);
       if (shortage > 0) allAvailable = false;
+      // ── Cost formula ────────────────────────────────────────────────────────
+      // comp.costPerUnit is stored in the SAME unit that qty was entered in BOM
+      // (i.e. per Second Unit when qtyUnitType='SECOND', per Main Unit otherwise).
+      // So: cost = rawRequired (entered unit) × costPerUnit (per entered unit).
+      // Using requiredInMainUnit × costPerUnit was wrong because requiredInMainUnit
+      // is in Main Unit while costPerUnit is per Second Unit → magnitude error.
+      const amount = rawRequired * comp.costPerUnit;
+
       return {
         productId: comp.productId,
         productName: comp.productName,
@@ -62,7 +70,7 @@ export const previewProduction = async (req: AuthRequest, res: Response): Promis
         available,
         shortage,
         rate: comp.costPerUnit,
-        amount: requiredInMainUnit * comp.costPerUnit,
+        amount,
         ok: shortage === 0,
       };
     }));
