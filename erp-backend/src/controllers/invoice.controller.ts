@@ -65,22 +65,33 @@ export const getCustomerLastPrice = async (req: AuthRequest, res: Response): Pro
       return;
     }
     
-    // Find the most recent invoice for this customer that contains this product
-    const invoice = await Invoice.findOne({
+    // Find the most recent 5 invoices for this customer that contains this product
+    const invoices = await Invoice.find({
       businessId: req.user!.businessId,
       customerId: customerId as string,
       'lineItems.productId': productId as string,
       status: { $ne: 'cancelled' }
-    }).sort({ invoiceDate: -1 });
+    }).sort({ invoiceDate: -1 }).limit(5).lean();
 
-    if (!invoice) {
-      res.json({ lastPrice: null });
+    if (!invoices || invoices.length === 0) {
+      res.json({ lastPrice: null, lastPrices: [] });
       return;
     }
 
-    // Find the specific line item
-    const lineItem = invoice.lineItems.find(item => item.productId?.toString() === productId);
-    res.json({ lastPrice: lineItem?.rate || null, invoiceDate: invoice.invoiceDate });
+    const lastPrices = invoices.map(inv => {
+      const lineItem = inv.lineItems.find((item: any) => item.productId?.toString() === productId);
+      return {
+        price: lineItem?.rate || 0,
+        date: inv.invoiceDate,
+        invoiceNumber: inv.invoiceNumber
+      };
+    });
+
+    res.json({ 
+      lastPrice: lastPrices[0].price, 
+      invoiceDate: lastPrices[0].date,
+      lastPrices 
+    });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }

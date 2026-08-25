@@ -79,7 +79,7 @@ export default function NewInvoicePage() {
   const [itemSearch, setItemSearch] = useState('');
   const [showItemDD, setShowItemDD] = useState(false);
   const [itemHighlightIndex, setItemHighlightIndex] = useState(-1);
-  const [lastPriceInfo, setLastPriceInfo] = useState<{ price: number, date: string } | null>(null);
+  const [lastPrices, setLastPrices] = useState<{ price: number, date: string, invoiceNumber?: string }[]>([]);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [pendingBatchItem, setPendingBatchItem] = useState<{product: Product, quantity: number, itemInputData: any} | null>(null);
 
@@ -356,13 +356,19 @@ export default function NewInvoicePage() {
     if (selectedCustomer?._id) {
       try {
         const { data } = await invoicesApi.getLastPrice(selectedCustomer._id, p._id);
-        if (data && data.lastPrice !== null) {
-          setLastPriceInfo({ price: data.lastPrice, date: new Date(data.invoiceDate).toLocaleDateString() });
+        if (data && data.lastPrices && data.lastPrices.length > 0) {
+          setLastPrices(data.lastPrices.map((lp: any) => ({
+            price: lp.price,
+            date: new Date(lp.date).toLocaleDateString('en-IN'),
+            invoiceNumber: lp.invoiceNumber
+          })));
+        } else if (data && data.lastPrice !== null) {
+          setLastPrices([{ price: data.lastPrice, date: new Date(data.invoiceDate).toLocaleDateString('en-IN') }]);
         } else {
-          setLastPriceInfo(null);
+          setLastPrices([]);
         }
       } catch (e) {
-        setLastPriceInfo(null);
+        setLastPrices([]);
       }
     }
   };
@@ -442,7 +448,7 @@ export default function NewInvoicePage() {
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0, batches: []
     });
     setItemSearch('');
-    setLastPriceInfo(null);
+    setLastPrices([]);
   };
 
   const handleBatchModalConfirm = (selectedBatches: any[]) => {
@@ -465,7 +471,7 @@ export default function NewInvoicePage() {
       taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, totalAmount: 0, batches: []
     });
     setItemSearch('');
-    setLastPriceInfo(null);
+    setLastPrices([]);
     setShowBatchModal(false);
     setPendingBatchItem(null);
   };
@@ -837,9 +843,23 @@ export default function NewInvoicePage() {
                     </div>
                   )}
                 </div>
-                {itemInput.productId && lastPriceInfo && (
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 text-[9px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shadow-sm pointer-events-none">
-                    Last: ₹{lastPriceInfo.price} ({lastPriceInfo.date})
+                
+                {itemInput.productId && lastPrices.length > 0 && (
+                  <div className="relative group/lastsold mt-1 inline-block">
+                    <div className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 cursor-pointer flex items-center gap-1">
+                      Last Sold: ₹{lastPrices[0].price} ({lastPrices[0].date})
+                      <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </div>
+                    <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover/lastsold:block bg-white border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max">
+                       <div className="text-[10px] px-2 py-1 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 mb-1">Last 5 Sales</div>
+                       {lastPrices.map((lp, i) => (
+                         <div key={i} className="px-3 py-1.5 text-xs text-slate-700 flex justify-between gap-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-default">
+                           <span>{lp.date}</span> 
+                           <span className="font-semibold text-emerald-600">₹{lp.price}</span>
+                           <span className="text-[9px] text-slate-400">{lp.invoiceNumber ? `#${lp.invoiceNumber}` : ''}</span>
+                         </div>
+                       ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -913,11 +933,12 @@ export default function NewInvoicePage() {
                   <div className="absolute top-full left-0 z-50 mt-1 hidden group-hover:block bg-white border border-slate-200 p-1 rounded-lg shadow-2xl min-w-max border-t-[#0078D7]">
                      <div className="text-[10px] px-2 py-1.5 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 mb-1">Available Prices</div>
                      
-                     {[{ label: 'Retail', price: itemInput.primaryRate, color: 'text-slate-900' },
+                     {[
+                       { label: 'Retail', price: itemInput.primaryRate, color: 'text-slate-900' },
                        { label: 'Wholesale', price: itemInput.sellingPrice2, color: 'text-purple-600' },
                        { label: 'Price 3', price: itemInput.sellingPrice3, color: 'text-primary' },
                        { label: 'M.R.P.', price: itemInput.mrp, color: 'text-orange-600' },
-                       ...(lastPriceInfo ? [{ label: `Last Sold (${lastPriceInfo.date})`, price: lastPriceInfo.price, color: 'text-emerald-600', isLast: true }] : [])
+                       ...lastPrices.map(lp => ({ label: `Last Sold (${lp.date})`, price: lp.price, color: 'text-emerald-600', isLast: true }))
                      ].map((opt, i) => opt.price ? (
                         <div key={i} onClick={() => {
                            const basePrice = opt.price!;
