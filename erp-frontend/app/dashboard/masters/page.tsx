@@ -23,8 +23,8 @@ export default function MasterDashboard() {
       color: 'text-rose-400',
       bg: 'bg-rose-500/10',
       actions: [
-        { label: 'Add Discount', href: '/dashboard/discounts/new', icon: PlusCircle },
-        { label: 'Manage Schemes', href: '/dashboard/discounts', icon: Search },
+        { label: 'Add Discount', href: '/dashboard/discount-schemes/new', icon: PlusCircle },
+        { label: 'Manage Schemes', href: '/dashboard/discount-schemes', icon: Search },
       ]
     },
     {
