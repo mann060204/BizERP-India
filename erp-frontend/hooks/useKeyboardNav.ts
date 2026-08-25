@@ -154,6 +154,11 @@ export function useFocusTrap(
   onClose: () => void
 ) {
   const triggerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -179,7 +184,7 @@ export function useFocusTrap(
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -196,7 +201,7 @@ export function useFocusTrap(
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, modalRef, onClose]);
+  }, [isOpen, modalRef]);
 
   // Restore focus when modal closes
   useEffect(() => {
