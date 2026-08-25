@@ -1399,6 +1399,7 @@ export default function NewInvoicePage() {
           requestedQuantity={pendingBatchItem.quantity}
           unit={pendingBatchItem.itemInputData.unit}
           availableBatches={pendingBatchItem.product.availableBatches || pendingBatchItem.product.batches || []}
+          item={pendingBatchItem.product}
           onClose={() => {
             setShowBatchModal(false);
             setPendingBatchItem(null);

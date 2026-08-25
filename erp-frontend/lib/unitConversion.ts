@@ -142,3 +142,45 @@ export function getStockDeduction(
   }
   return qty;
 }
+
+/**
+ * Gets the applicable conversion rate based on the item and units.
+ */
+export function getConversionRate(
+  stockUnit: string,
+  sellingUnit: string,
+  item: { unit?: string; secondaryUnit?: string; conversionRate?: number }
+): number {
+  if (stockUnit !== sellingUnit && sellingUnit === item.secondaryUnit && item.conversionRate && item.conversionRate > 0) {
+    return item.conversionRate;
+  }
+  return 1;
+}
+
+/**
+ * Converts a quantity from one unit to another (e.g. from stock unit to selling unit or vice versa).
+ */
+export function convertQuantity(
+  qty: number,
+  fromUnit: string,
+  toUnit: string,
+  item: { unit?: string; secondaryUnit?: string; conversionRate?: number }
+): number {
+  if (fromUnit === toUnit) return qty;
+  
+  const rate = getConversionRate(item.unit || '', item.secondaryUnit || '', item);
+  if (rate === 1) return qty; // No valid conversion
+
+  // Converting from Main to Secondary
+  if (fromUnit === item.unit && toUnit === item.secondaryUnit) {
+    return qty * rate;
+  }
+  
+  // Converting from Secondary to Main
+  if (fromUnit === item.secondaryUnit && toUnit === item.unit) {
+    return qty / rate;
+  }
+
+  return qty;
+}
+

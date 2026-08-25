@@ -2,18 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { convertQuantity, getConversionRate } from '../../../lib/unitConversion';
+
 interface BatchInfo {
   batchNo: string;
   mrp: number;
   salePrice: number;
-  currentStock: number;
+  currentStock: number; // In stock unit
   manufacturingDate?: string;
   expiryDate?: string;
+  conversionRate?: number;
 }
 
 interface SelectedBatch {
   batchNo: string;
-  quantity: number;
+  quantity: number; // In selected unit
   mrp: number;
   salePrice: number;
 }
@@ -23,6 +26,7 @@ interface ManualBatchSelectModalProps {
   requestedQuantity: number;
   unit: string;
   availableBatches: BatchInfo[];
+  item?: any;
   onClose: () => void;
   onConfirm: (selectedBatches: SelectedBatch[]) => void;
 }
@@ -32,6 +36,7 @@ export default function ManualBatchSelectModal({
   requestedQuantity,
   unit,
   availableBatches,
+  item,
   onClose,
   onConfirm
 }: ManualBatchSelectModalProps) {
@@ -49,12 +54,19 @@ export default function ManualBatchSelectModal({
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  const handleQtyChange = (batchNo: string, qty: string, maxStock: number) => {
+  const getAvailableStockInSelectedUnit = (batch: BatchInfo) => {
+    if (!item) return batch.currentStock;
+    // Allow batch-level override of conversion rate
+    const batchItem = batch.conversionRate ? { ...item, conversionRate: batch.conversionRate } : item;
+    return convertQuantity(batch.currentStock, item.unit || '', unit, batchItem);
+  };
+
+  const handleQtyChange = (batchNo: string, qty: string, maxStockInSelectedUnit: number) => {
     let val = parseFloat(qty) || 0;
     // Clamp to available stock — cannot exceed what's in stock
-    if (val > maxStock) {
-      val = maxStock;
-      toast.error(`Max available for this batch is ${maxStock} ${unit}`);
+    if (val > maxStockInSelectedUnit) {
+      val = maxStockInSelectedUnit;
+      toast.error(`Max available for this batch is ${maxStockInSelectedUnit} ${unit}`);
     }
     if (val < 0) val = 0;
     setSelections(prev => ({ ...prev, [batchNo]: val }));
@@ -63,7 +75,7 @@ export default function ManualBatchSelectModal({
   const totalSelected = Object.values(selections).reduce((a, b) => a + b, 0);
 
   // Any batch where the entered qty exceeds stock (safety check)
-  const hasOverflow = availableBatches.some(b => (selections[b.batchNo] || 0) > b.currentStock);
+  const hasOverflow = availableBatches.some(b => (selections[b.batchNo] || 0) > getAvailableStockInSelectedUnit(b));
 
   // Confirm is allowed as long as at least 1 unit allocated and no overflows
   const canConfirm = totalSelected > 0 && !hasOverflow;
@@ -78,8 +90,9 @@ export default function ManualBatchSelectModal({
     for (const batch of availableBatches) {
       const qty = selections[batch.batchNo] || 0;
       if (qty > 0) {
-        if (qty > batch.currentStock) {
-          toast.error(`Batch ${batch.batchNo}: allocated ${qty} exceeds stock of ${batch.currentStock}`);
+        const maxStockInSelectedUnit = getAvailableStockInSelectedUnit(batch);
+        if (qty > maxStockInSelectedUnit) {
+          toast.error(`Batch ${batch.batchNo}: allocated ${qty} exceeds stock of ${maxStockInSelectedUnit}`);
           return;
         }
         result.push({
@@ -93,7 +106,7 @@ export default function ManualBatchSelectModal({
     onConfirm(result);
   };
 
-  const totalStock = availableBatches.reduce((a, b) => a + b.currentStock, 0);
+  const totalStock = availableBatches.reduce((a, b) => a + getAvailableStockInSelectedUnit(b), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -143,11 +156,12 @@ export default function ManualBatchSelectModal({
               <tbody>
                 {availableBatches.map((b) => {
                   const entered = selections[b.batchNo] || 0;
-                  const isOver = entered > b.currentStock;
+                  const maxStockInSelectedUnit = getAvailableStockInSelectedUnit(b);
+                  const isOver = entered > maxStockInSelectedUnit;
                   return (
                     <tr key={b.batchNo} className="text-sm hover:bg-slate-50">
                       <td className="p-2 border border-slate-200 font-medium">{b.batchNo}</td>
-                      <td className="p-2 border border-slate-200 text-center font-bold text-slate-700">{b.currentStock}</td>
+                      <td className="p-2 border border-slate-200 text-center font-bold text-slate-700">{maxStockInSelectedUnit}</td>
                       <td className="p-2 border border-slate-200 text-center text-slate-500">
                         {b.manufacturingDate ? new Date(b.manufacturingDate).toLocaleDateString() : '-'}
                       </td>
@@ -160,10 +174,10 @@ export default function ManualBatchSelectModal({
                         <input
                           type="number"
                           min="0"
-                          max={b.currentStock}
+                          max={maxStockInSelectedUnit}
                           step="0.001"
                           value={selections[b.batchNo] ?? ''}
-                          onChange={(e) => handleQtyChange(b.batchNo, e.target.value, b.currentStock)}
+                          onChange={(e) => handleQtyChange(b.batchNo, e.target.value, maxStockInSelectedUnit)}
                           className={`w-full border rounded px-2 py-1 text-center font-bold focus:outline-none focus:ring-1 ${
                             isOver
                               ? 'border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-400'
@@ -174,7 +188,7 @@ export default function ManualBatchSelectModal({
                           placeholder="0"
                         />
                         {isOver && (
-                          <p className="text-red-500 text-[10px] mt-0.5 text-center">Max: {b.currentStock}</p>
+                          <p className="text-red-500 text-[10px] mt-0.5 text-center">Max: {maxStockInSelectedUnit}</p>
                         )}
                       </td>
                     </tr>
