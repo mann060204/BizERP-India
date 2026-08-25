@@ -10,6 +10,8 @@ import { calculateInvoiceTotals } from '../services/gst.service';
 import { generateSequenceNumber } from '../utils/sequenceGenerator';
 import Customer from '../models/Customer.model';
 import { convertToMainUnit, getEffectiveConversionRate, validateDualUnitSetup } from '../utils/conversionUtils';
+import DiscountUsage from '../models/DiscountUsage.model';
+import DiscountAuditLog from '../models/DiscountAuditLog.model';
 
 // Helper: generate next invoice number
 const getNextInvoiceNumber = async (businessId: string, invoiceType: 'GST' | 'NON-GST' | 'Bill of Supply' = 'GST'): Promise<string> => {
@@ -156,7 +158,7 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceType, shippingAddress,
       txnId, deliveryTerms, deliveryRemarks, paymentHistory,
-      discountAmount, roundOff, invoiceDate
+      discountAmount, roundOff, invoiceDate, appliedSchemes
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -323,6 +325,29 @@ export const createInvoice = async (req: AuthRequest, res: Response): Promise<vo
     // Record in ledger
     await AccountingService.recordSalesInvoice(invoice);
 
+    // Record discount usage if any schemes were applied
+    if (appliedSchemes && Array.isArray(appliedSchemes) && appliedSchemes.length > 0) {
+      for (const scheme of appliedSchemes) {
+        await DiscountUsage.create({
+          businessId,
+          schemeId: scheme.schemeId,
+          invoiceId: invoice._id,
+          customerId: customerId || undefined,
+          discountAmount: scheme.amount
+        });
+        
+        await DiscountAuditLog.create({
+          businessId,
+          userId: req.user!.userId,
+          action: 'APPLIED',
+          schemeId: scheme.schemeId,
+          invoiceId: invoice._id,
+          newValue: scheme.amount,
+          reason: 'Applied via Sales Invoice'
+        });
+      }
+    }
+
     res.status(201).json({ message: 'Invoice created', invoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 };
@@ -336,7 +361,7 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
       lineItems, paymentMode, amountReceived, shippingCharge, dueDate, notes,
       termsAndConditions, isReverseCharge, status, invoiceDate, invoiceType,
       txnId, deliveryTerms, deliveryRemarks, paymentHistory,
-      discountAmount, roundOff
+      discountAmount, roundOff, appliedSchemes
     } = req.body;
 
     if (!lineItems || lineItems.length === 0) {
@@ -453,6 +478,32 @@ export const updateInvoice = async (req: AuthRequest, res: Response): Promise<vo
     // Sync Ledger: Reverse old, record new
     await AccountingService.reverseInvoice(existingInvoice);
     await AccountingService.recordSalesInvoice(updatedInvoice);
+
+    // Update discount usage if any schemes were applied
+    if (appliedSchemes && Array.isArray(appliedSchemes)) {
+      // For simplicity in update, we remove old usage for this invoice and add new
+      await DiscountUsage.deleteMany({ invoiceId: id });
+      
+      for (const scheme of appliedSchemes) {
+        await DiscountUsage.create({
+          businessId,
+          schemeId: scheme.schemeId,
+          invoiceId: updatedInvoice!._id,
+          customerId: customerId || undefined,
+          discountAmount: scheme.amount
+        });
+        
+        await DiscountAuditLog.create({
+          businessId,
+          userId: req.user!.userId,
+          action: 'UPDATED',
+          schemeId: scheme.schemeId,
+          invoiceId: updatedInvoice!._id,
+          newValue: scheme.amount,
+          reason: 'Updated via Sales Invoice Edit'
+        });
+      }
+    }
 
     res.json({ message: 'Invoice updated', invoice: updatedInvoice });
   } catch (e: any) { res.status(500).json({ message: e.message }); }

@@ -50,6 +50,7 @@ import purchaseReturnRoutes from './routes/purchaseReturn.routes';
 import bomRoutes from './routes/bom.routes';
 import manufacturingRoutes from './routes/manufacturing.routes';
 import paymentModeRoutes from './routes/paymentMode.routes';
+import discountSchemeRoutes from './routes/discountSchemes.routes';
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/customers', customerRoutes);
@@ -58,6 +59,7 @@ app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/quotations', quotationRoutes);
 app.use('/api/v1/suppliers', supplierRoutes);
 app.use('/api/v1/purchases', purchaseRoutes);
+app.use('/api/v1/discount-schemes', discountSchemeRoutes);
 app.use('/api/v1/purchase-orders', purchaseOrderRoutes);
 app.use('/api/v1/inventory', inventoryRoutes);
 app.use('/api/v1/expenses', expenseRoutes);

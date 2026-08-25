@@ -375,4 +375,11 @@ export const paymentModesApi = {
   delete: (id: string) => api.delete(`/payment-modes/${id}`),
 };
 
-
+export const discountSchemesApi = {
+  list: () => api.get('/discount-schemes'),
+  getById: (id: string) => api.get(`/discount-schemes/${id}`),
+  create: (data: any) => api.post('/discount-schemes', data),
+  update: (id: string, data: any) => api.put(`/discount-schemes/${id}`, data),
+  updateStatus: (id: string, status: string) => api.put(`/discount-schemes/${id}/status`, { status }),
+  calculate: (data: any) => api.post('/discount-schemes/calculate', data),
+};

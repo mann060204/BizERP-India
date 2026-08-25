@@ -5,7 +5,7 @@ import { useEnterToNext, useGlobalShortcuts } from '../../../../hooks/useKeyboar
 import { getRateForUnitByName } from '../../../../lib/unitConversion';
 import { useRouter } from 'next/navigation';
 import Topbar from '../../../../components/layout/Topbar';
-import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi, paymentModesApi } from '../../../../lib/erp-api';
+import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi, paymentModesApi, discountSchemesApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '@/lib/utils';
 import { 
   Plus, Trash2, Search, Loader2, Save, CheckCircle, 
@@ -118,6 +118,12 @@ export default function NewInvoicePage() {
   const [shippingGstRate, setShippingGstRate] = useState(0);
   const [globalDiscountType, setGlobalDiscountType] = useState('%');
   const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
+
+  // Discount Schemes State
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [eligibleSchemes, setEligibleSchemes] = useState<any[]>([]);
+  const [appliedSchemes, setAppliedSchemes] = useState<any[]>([]);
+  const [calculatingDiscounts, setCalculatingDiscounts] = useState(false);
 
   const [modeResolution1, setModeResolution1] = useState<{ resolved: boolean; account: any; ledgerType: string; warning: string | null } | null>(null);
 
@@ -577,10 +583,48 @@ export default function NewInvoicePage() {
   const totalIGST = lineItems.reduce((s, i) => s + i.igst, 0) + shipIGST;
   
   const globalDiscountAmount = globalDiscountType === '%' ? round2((totalTaxable * globalDiscountValue) / 100) : globalDiscountValue;
-  const preRoundTotal = totalTaxable - globalDiscountAmount + totalCGST + totalSGST + totalIGST + shippingCharge;
+  const schemeDiscountAmount = appliedSchemes.reduce((sum, scheme) => sum + scheme.amount, 0);
+  const totalCombinedDiscount = globalDiscountAmount + schemeDiscountAmount;
+
+  const preRoundTotal = totalTaxable - totalCombinedDiscount + totalCGST + totalSGST + totalIGST + shippingCharge;
   const grandTotal = Math.round(preRoundTotal);
   const roundOff = round2(grandTotal - preRoundTotal);
   const balance = round2(grandTotal - totalAmountReceived);
+
+  const fetchEligibleDiscounts = async () => {
+    if (lineItems.length === 0) return toast.error('Add items to calculate discounts');
+    setCalculatingDiscounts(true);
+    setShowDiscountModal(true);
+    try {
+      const { data } = await discountSchemesApi.calculate({
+        customerId: selectedCustomer?._id,
+        lineItems: lineItems.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          sellingPrice: item.rate
+        })),
+        subtotal
+      });
+      setEligibleSchemes(data.eligibleSchemes || []);
+      // Pre-select Best Schemes based on API result
+      if (data.appliedSchemes && appliedSchemes.length === 0) {
+        setAppliedSchemes(data.appliedSchemes);
+      }
+    } catch (e: any) {
+      toast.error('Failed to calculate discounts');
+    } finally {
+      setCalculatingDiscounts(false);
+    }
+  };
+
+  const handleToggleScheme = (scheme: any) => {
+    const isApplied = appliedSchemes.find(s => s.schemeId === scheme.schemeId);
+    if (isApplied) {
+      setAppliedSchemes(prev => prev.filter(s => s.schemeId !== scheme.schemeId));
+    } else {
+      setAppliedSchemes(prev => [...prev, scheme]);
+    }
+  };
 
   const handleSave = async (printAfterSave: boolean) => {
     if (!invoiceType) {
@@ -608,7 +652,8 @@ export default function NewInvoicePage() {
         placeOfSupply,
         isInterState,
         invoiceType,
-        discountAmount: globalDiscountAmount,
+        discountAmount: totalCombinedDiscount,
+        appliedSchemes,
         roundOff,
         lineItems,
         paymentMode: combinedPaymentMode,
@@ -1357,10 +1402,10 @@ export default function NewInvoicePage() {
                   <span>Subtotal</span>
                   <span>₹{subtotal.toFixed(2)}</span>
                 </div>
-                {(totalDiscount + globalDiscountAmount) > 0 && (
-                  <div className="flex justify-between text-red-400">
-                    <span>Discount</span>
-                    <span>-₹{(totalDiscount + globalDiscountAmount).toFixed(2)}</span>
+                {(totalDiscount + totalCombinedDiscount) > 0 && (
+                  <div className="flex justify-between text-red-400 font-medium">
+                    <span>Discount {schemeDiscountAmount > 0 && '(inc. Schemes)'}</span>
+                    <span>-₹{(totalDiscount + totalCombinedDiscount).toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -1529,8 +1574,20 @@ export default function NewInvoicePage() {
       )}
 
       {/* Bottom Toolbar */}
-      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-50">
-        <div className="flex gap-4"></div>
+      <footer className="fixed bottom-0 left-0 right-0 h-12 bg-[#F1F5F9] border-t border-slate-200 flex items-center justify-between px-4 z-40">
+        <div className="flex gap-4">
+          <button
+            onClick={fetchEligibleDiscounts}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-bold transition ${
+              appliedSchemes.length > 0 
+                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300' 
+                : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border border-indigo-200'
+            }`}
+          >
+            <Tag className="w-4 h-4" />
+            {appliedSchemes.length > 0 ? `${appliedSchemes.length} Scheme(s) Applied (-₹${schemeDiscountAmount.toFixed(2)})` : 'Apply Discount Scheme'}
+          </button>
+        </div>
         
         <div className="text-xs font-mono text-slate-600">
           Balance : <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500'}>₹{balance.toFixed(2)}</span>
@@ -1545,6 +1602,91 @@ export default function NewInvoicePage() {
           </button>
         </div>
       </footer>
+
+      {/* Discount Schemes Modal */}
+      {showDiscountModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <Tag className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-slate-900 font-bold text-sm">Available Discount Schemes</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Select schemes to apply to this invoice</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDiscountModal(false)} className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 bg-slate-50/30">
+              {calculatingDiscounts ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 text-indigo-500 animate-spin mb-4" />
+                  <p className="text-sm text-slate-600 font-medium">Calculating eligible discounts...</p>
+                </div>
+              ) : eligibleSchemes.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
+                  <Tag className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-slate-900 mb-1">No Schemes Available</p>
+                  <p className="text-xs text-slate-500">There are no active discount schemes applicable for these items.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {eligibleSchemes.map((scheme, idx) => {
+                    const isApplied = appliedSchemes.find(s => s.schemeId === scheme.schemeId);
+                    return (
+                      <div 
+                        key={idx}
+                        onClick={() => handleToggleScheme(scheme)}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                          isApplied 
+                            ? 'border-emerald-500 bg-emerald-50/50 shadow-sm' 
+                            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30'
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isApplied ? 'border-emerald-500' : 'border-slate-300'}`}>
+                            {isApplied && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-900">{scheme.schemeName}</span>
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                Priority: {scheme.priority}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">{scheme.reason}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-emerald-600">-₹{scheme.amount.toFixed(2)}</div>
+                          <div className="text-[10px] text-slate-500 mt-1 uppercase font-semibold text-emerald-600/70">{isApplied ? 'Applied' : 'Tap to apply'}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-between">
+              <div className="text-sm font-medium text-slate-600">
+                Total Scheme Discount: <span className="font-bold text-emerald-600 ml-1">₹{schemeDiscountAmount.toFixed(2)}</span>
+              </div>
+              <button 
+                onClick={() => setShowDiscountModal(false)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
