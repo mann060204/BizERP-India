@@ -105,11 +105,23 @@ export default function NewDiscountSchemePage() {
               <h3 className="text-lg font-semibold text-slate-800 mb-4">Discount Configuration</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Scheme Type</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Scheme Category</label>
+                  <select name="schemeCategory" onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <option value="PROMOTIONAL">Promotional Discount</option>
+                    <option value="FESTIVAL">Festival Discount</option>
+                    <option value="SEASONAL">Seasonal Discount</option>
+                    <option value="CLEARANCE">Clearance Discount</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Scheme Type / Mechanic</label>
                   <select name="schemeType" value={formData.schemeType} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                     <option value="PERCENTAGE">Percentage Discount (%)</option>
                     <option value="FLAT">Flat Amount Discount (₹)</option>
-                    {/* Simplified for MVP, more to be added as per plan */}
+                    <option value="BUY_X_GET_Y">Buy X Get Y Free</option>
+                    <option value="QUANTITY_BULK">Quantity / Bulk Discount</option>
+                    <option value="PURCHASE_VALUE">Purchase Value / Slab Discount</option>
+                    <option value="COMBO">Combo Discount</option>
                   </select>
                 </div>
                 <div>
@@ -128,18 +140,22 @@ export default function NewDiscountSchemePage() {
               <h3 className="text-lg font-semibold text-slate-800 mb-4">Applicability</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Customers</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Customers Scope</label>
                   <select name="applicability.customerScope" value={formData.applicability.customerScope} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                     <option value="ALL">All Customers</option>
+                    <option value="SPECIFIC">Specific Customers (Customer-wise)</option>
+                    <option value="GROUP">Specific Customer Group (Group-wise)</option>
                     <option value="WHOLESALE">Wholesale Customers</option>
                     <option value="RETAIL">Retail Customers</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Products</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Products Scope</label>
                   <select name="applicability.productScope" value={formData.applicability.productScope} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
                     <option value="ALL">All Products</option>
-                    {/* In a full version, this triggers a multi-select for specific products/categories */}
+                    <option value="SPECIFIC">Specific Products (Product-wise)</option>
+                    <option value="CATEGORY">Specific Categories (Category-wise)</option>
+                    <option value="BRAND">Specific Brands (Brand-wise)</option>
                   </select>
                 </div>
               </div>
