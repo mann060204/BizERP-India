@@ -45,8 +45,9 @@ export default function NewInvoicePage() {
   const [enableActualQty, setEnableActualQty] = useState(false);
 
   // Header State
-  const [invoiceType, setInvoiceType] = useState('GST');
-  const [invoiceNumber, setInvoiceNumber] = useState('GST-001');
+  const [invoiceType, setInvoiceType] = useState('');
+  const [showTaxTypeModal, setShowTaxTypeModal] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
   // FY date range — clamped to selected financial year
   const [fyDateRange, setFyDateRange] = useState<{ min: string; max: string; default: string } | null>(null);
   const [invoiceDate, setInvoiceDate] = useState('');
@@ -209,6 +210,14 @@ export default function NewInvoicePage() {
         const bizDiscounts = bRes.data?.business?.discountSchemes || [];
         setDiscountSchemes(bizDiscounts.filter((d: any) => d.isActive));
         setEnableActualQty(bRes.data?.business?.enableActualQty || false);
+
+        const bizTaxType = bRes.data?.business?.defaultInvoiceTaxType || 'ASK';
+        if (bizTaxType === 'ASK') {
+          setInvoiceType('');
+          setShowTaxTypeModal(true);
+        } else {
+          setInvoiceType(bizTaxType);
+        }
 
         // ── Parse Financial Year to clamp invoice dates ──────────────────
         const fyLabel: string = bRes.data?.business?.financialYearLabel || '';
@@ -385,6 +394,7 @@ export default function NewInvoicePage() {
   };
 
   useEffect(() => {
+    if (!invoiceType) return;
     setLineItems(prev => prev.map(item => calculateItem(item, invoiceType, isInterState)));
     // Fetch next invoice number based on type
     invoicesApi.getNextNumber(invoiceType as 'GST' | 'NON-GST')
@@ -573,6 +583,12 @@ export default function NewInvoicePage() {
   const balance = round2(grandTotal - totalAmountReceived);
 
   const handleSave = async (printAfterSave: boolean) => {
+    if (!invoiceType) {
+      toast.error('Please select an Invoice Type (GST/NON-GST) first');
+      setShowTaxTypeModal(true);
+      return;
+    }
+    if (!invoiceNumber) { toast.error('Invoice number is required'); return; }
     if (lineItems.length === 0) { toast.error('Add at least one item'); return; }
     setSaving(true);
     try {
@@ -643,6 +659,89 @@ export default function NewInvoicePage() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
+      {/* ── Tax Type Modal ── */}
+      {showTaxTypeModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden ring-1 ring-slate-200 animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Select Invoice Type</h3>
+                <p className="text-sm text-slate-500 mt-0.5">Choose how to generate this invoice</p>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <label 
+                className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  invoiceType === 'GST' 
+                    ? 'border-primary bg-primary/5 shadow-sm' 
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+                onClick={() => setInvoiceType('GST')}
+              >
+                <div className="mt-1 flex-shrink-0">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${invoiceType === 'GST' ? 'border-primary' : 'border-slate-300'}`}>
+                    {invoiceType === 'GST' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">GST Invoice</div>
+                  <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Standard B2B/B2C invoice with tax calculation (CGST, SGST, IGST) and HSN/SAC codes.
+                  </div>
+                </div>
+              </label>
+              
+              <label 
+                className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  invoiceType === 'NON-GST' 
+                    ? 'border-emerald-500 bg-emerald-50 shadow-sm' 
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+                onClick={() => setInvoiceType('NON-GST')}
+              >
+                <div className="mt-1 flex-shrink-0">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${invoiceType === 'NON-GST' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                    {invoiceType === 'NON-GST' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">Non-GST Invoice (Bill of Supply)</div>
+                  <div className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Exempted goods, composite scheme, or simple bill of supply. Taxes will not be calculated.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button 
+                onClick={() => router.back()}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  if (!invoiceType) {
+                    toast.error('Please select an option');
+                    return;
+                  }
+                  setShowTaxTypeModal(false);
+                }}
+                disabled={!invoiceType}
+                className="px-6 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Topbar title="New Invoice" />
 
       <main className="flex-1 overflow-y-auto p-1 space-y-1 pb-14">

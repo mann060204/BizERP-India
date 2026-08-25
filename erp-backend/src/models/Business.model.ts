@@ -76,6 +76,7 @@ export interface IBusiness extends Document {
   enableManufacturing: boolean;
   enableActualQty: boolean;
   cashInHand: number;
+  defaultInvoiceTaxType?: 'GST' | 'NON-GST' | 'ASK';
   isLocked: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -177,6 +178,11 @@ const BusinessSchema = new Schema<IBusiness>(
       type: String,
       enum: ['FIFO', 'FEFO', 'LIFO'],
       default: 'FIFO'
+    },
+    defaultInvoiceTaxType: {
+      type: String,
+      enum: ['GST', 'NON-GST', 'ASK'],
+      default: 'ASK'
     },
     documentSequences: {
       type: Map,

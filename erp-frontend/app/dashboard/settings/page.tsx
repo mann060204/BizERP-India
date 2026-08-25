@@ -95,6 +95,7 @@ export default function SettingsPage() {
         productGroups: form.productGroups || [],
         productBrands: form.productBrands || [],
         inventorySequencing: form.inventorySequencing || 'FIFO',
+        defaultInvoiceTaxType: form.defaultInvoiceTaxType || 'ASK',
         enableManufacturing: form.enableManufacturing || false,
         enableActualQty: form.enableActualQty || false
       });
@@ -389,6 +390,16 @@ export default function SettingsPage() {
                       <option value="A4">A4 Standard Format</option>
                       <option value="POS">Thermal Receipt (POS)</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1.5">Default Invoice Tax Type</label>
+                    <select value={form.defaultInvoiceTaxType || 'ASK'} onChange={e => setForm({ ...form, defaultInvoiceTaxType: e.target.value })}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-900 focus:outline-none focus:border-primary text-sm transition font-medium">
+                      <option value="ASK">Ask Every Time</option>
+                      <option value="GST">GST Invoice</option>
+                      <option value="NON-GST">Non-GST Invoice</option>
+                    </select>
+                    <p className="text-[10px] text-slate-500 mt-1">Determine how new invoices handle tax by default.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-2">
