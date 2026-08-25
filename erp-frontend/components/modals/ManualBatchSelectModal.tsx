@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { convertQuantity, getConversionRate } from '../../../lib/unitConversion';
+import { convertQuantity, getConversionRate } from '../../lib/unitConversion';
 
 interface BatchInfo {
   batchNo: string;
