@@ -36,16 +36,34 @@ export interface IDiscountScheme extends Document {
     maxDiscountAmount?: number;
   }[];
 
-  buyXGetY?: {
-    buyQty: number;
-    freeQty: number;
-    freeProductId?: mongoose.Types.ObjectId;
-    isSameProduct: boolean;
+  buyCondition?: {
+    products: {
+      productId: mongoose.Types.ObjectId;
+      unit: string;
+      quantity: number;
+    }[];
+    conditionType: string; // 'ALL', 'ANY'
+  };
+
+  getReward?: {
+    products: {
+      productId: mongoose.Types.ObjectId;
+      unit: string;
+      quantity: number;
+    }[];
+    benefitType: string; // 'FREE', 'PERCENTAGE_DISCOUNT', 'FIXED_DISCOUNT', 'SPECIAL_PRICE'
+    discountValue?: number;
+    selectionType: string; // 'ALL', 'CHOOSE_ONE', 'CHOOSE_ANY'
   };
 
   combo?: {
-    products: mongoose.Types.ObjectId[];
-    comboPrice: number;
+    products: {
+      productId: mongoose.Types.ObjectId;
+      unit: string;
+      quantity: number;
+    }[];
+    benefitType: string; // 'FIXED_PRICE', 'PERCENTAGE_DISCOUNT', 'FIXED_DISCOUNT'
+    discountValue: number;
   };
 
   minimums?: {
@@ -131,16 +149,34 @@ const DiscountSchemeSchema = new Schema<IDiscountScheme>({
 
   slabs: [SlabSchema],
 
-  buyXGetY: {
-    buyQty: { type: Number },
-    freeQty: { type: Number },
-    freeProductId: { type: Schema.Types.ObjectId, ref: 'Product' },
-    isSameProduct: { type: Boolean, default: true }
+  buyCondition: {
+    products: [{
+      productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+      unit: { type: String },
+      quantity: { type: Number }
+    }],
+    conditionType: { type: String, enum: ['ALL', 'ANY'], default: 'ALL' }
+  },
+
+  getReward: {
+    products: [{
+      productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+      unit: { type: String },
+      quantity: { type: Number }
+    }],
+    benefitType: { type: String, enum: ['FREE', 'PERCENTAGE_DISCOUNT', 'FIXED_DISCOUNT', 'SPECIAL_PRICE'], default: 'FREE' },
+    discountValue: { type: Number },
+    selectionType: { type: String, enum: ['ALL', 'CHOOSE_ONE', 'CHOOSE_ANY'], default: 'ALL' }
   },
 
   combo: {
-    products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
-    comboPrice: { type: Number }
+    products: [{
+      productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+      unit: { type: String },
+      quantity: { type: Number }
+    }],
+    benefitType: { type: String, enum: ['FIXED_PRICE', 'PERCENTAGE_DISCOUNT', 'FIXED_DISCOUNT'], default: 'FIXED_PRICE' },
+    discountValue: { type: Number }
   },
 
   minimums: {

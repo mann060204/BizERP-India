@@ -118,19 +118,34 @@ export default function DiscountSchemesPage() {
                       <td className="px-6 py-4">
                         <div className="font-medium text-slate-900">{scheme.schemeName}</div>
                         <div className="text-xs text-slate-500 mt-1">{scheme.schemeCode}</div>
+                        {scheme.buyCondition?.products?.length > 0 && (
+                          <div className="text-xs text-blue-600 mt-1 font-medium">
+                            BUY {scheme.buyCondition.products.length} Items
+                          </div>
+                        )}
+                        {scheme.getReward?.products?.length > 0 && (
+                          <div className="text-xs text-emerald-600 font-medium">
+                            GET {scheme.getReward.products.length} Items {scheme.getReward.benefitType === 'FREE' ? 'FREE' : 'DISCOUNTED'}
+                          </div>
+                        )}
+                        {scheme.combo?.products?.length > 0 && (
+                          <div className="text-xs text-purple-600 mt-1 font-medium">
+                            COMBO of {scheme.combo.products.length} Items
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700">
                           {scheme.schemeType.replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        {scheme.applicability.customerScope} Customers<br/>
-                        {scheme.applicability.productScope} Products
+                      <td className="px-6 py-4 text-slate-600 text-xs">
+                        {scheme.applicability?.customerScope} Customers<br/>
+                        {scheme.applicability?.productScope} Products
                       </td>
-                      <td className="px-6 py-4 text-slate-600">
+                      <td className="px-6 py-4 text-slate-600 text-xs">
                         {scheme.startDate ? new Date(scheme.startDate).toLocaleDateString() : 'Always'} 
-                        {' - '} 
+                        <br/>to<br/> 
                         {scheme.endDate ? new Date(scheme.endDate).toLocaleDateString() : 'Forever'}
                       </td>
                       <td className="px-6 py-4">

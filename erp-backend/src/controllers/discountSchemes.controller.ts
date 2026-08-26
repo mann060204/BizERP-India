@@ -169,14 +169,19 @@ export const calculateDiscounts = async (req: AuthRequest, res: Response): Promi
       ]
     }).sort({ priority: -1 });
 
-    // Dummy engine for now (to be expanded later)
-    // Here we would run the complex logic engine evaluating 
-    // each item against conditions/slabs/stacking limits.
-    
-    // For MVP response, just return empty list to not break UI while we build.
+    // MVP Engine: Return the schemes that match date criteria as eligible, 
+    // to prove the UI integration without building a full cart evaluation engine yet.
+    const eligibleSchemes = schemes.map(s => ({
+      schemeId: s._id,
+      schemeName: s.schemeName,
+      schemeType: s.schemeType,
+      benefitSummary: s.schemeType === 'BUY_X_GET_Y' ? 'Reward Available' : 
+                     s.schemeType === 'COMBO' ? 'Combo Applied' : 'Discount Applied'
+    }));
+
     res.json({ 
       success: true, 
-      eligibleSchemes: [],
+      eligibleSchemes,
       appliedSchemes: [],
       calculatedItems: items,
       totalDiscount: 0

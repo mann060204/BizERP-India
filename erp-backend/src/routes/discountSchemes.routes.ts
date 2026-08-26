@@ -19,15 +19,15 @@ router.post('/calculate', calculateDiscounts);
 router
   .route('/')
   .get(getDiscountSchemes)
-  .post(authorize('ADMIN', 'MANAGER'), createDiscountScheme);
+  .post(authorize('admin'), createDiscountScheme);
 
 router
   .route('/:id')
   .get(getDiscountScheme)
-  .put(authorize('ADMIN', 'MANAGER'), updateDiscountScheme);
+  .put(authorize('admin'), updateDiscountScheme);
 
 router
   .route('/:id/status')
-  .put(authorize('ADMIN', 'MANAGER'), updateSchemeStatus);
+  .put(authorize('admin'), updateSchemeStatus);
 
 export default router;
