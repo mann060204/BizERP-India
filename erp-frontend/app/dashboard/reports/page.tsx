@@ -1,4 +1,5 @@
 'use client';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Topbar from '../../../components/layout/Topbar';
 import {
@@ -6,273 +7,348 @@ import {
   Banknote, Briefcase, CreditCard, Download, Activity, Scale, CheckSquare,
   Archive, AlertTriangle, CheckCircle, SlidersHorizontal, BatteryCharging,
   Zap, Clock, Hash, List, Users, ShoppingCart, Package, DollarSign,
-  BarChart2, PieChart, Layers, UserCheck, ArrowDownCircle, Timer, IndianRupee,
-  ClipboardList, Truck, Wallet, History,
-  MapPin, Calendar, Star, ShoppingBag, GitMerge, Award, CornerUpLeft, Shield, Tag
+  BarChart2, PieChart, Layers, UserCheck, ArrowDownCircle, IndianRupee,
+  ClipboardList, Truck, Wallet, History, Calendar, Star, GitMerge,
+  Award, CornerUpLeft, Shield, Tag, Search, TrendingDown, Compass,
+  Target, Globe, LayoutDashboard, Boxes, ArrowRightLeft, Cpu, ChevronRight
 } from 'lucide-react';
 
-const categoryColors: Record<string, string> = {
-  Accounts: 'text-orange-600',
-  Inventory: 'text-purple-600',
-  Sales: 'text-green-700',
-  Customers: 'text-blue-600',
-  Purchases: 'text-red-600',
-  Suppliers: 'text-yellow-600',
-  Expenses: 'text-rose-600',
-  'GST / Tax': 'text-indigo-600',
-
-  'Financials (Advanced)': 'text-teal-700',
-  'Advanced Inventory': 'text-fuchsia-600',
-  'Advanced Sales': 'text-emerald-700',
-  'Advanced Purchases': 'text-rose-700',
-  'Compliance': 'text-slate-700',
-  'Management': 'text-sky-700',
-  'Special Reports': 'text-amber-700',
+// ─── Category Config ──────────────────────────────────────────────────────────
+const CAT_CONFIG: Record<string, { color: string; bg: string; border: string; dot: string }> = {
+  'Accounts':              { color: 'text-orange-700',  bg: 'bg-orange-50',  border: 'border-orange-100', dot: 'bg-orange-500' },
+  'Inventory':             { color: 'text-purple-700',  bg: 'bg-purple-50',  border: 'border-purple-100', dot: 'bg-purple-500' },
+  'Sales':                 { color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-500' },
+  'Purchases':             { color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-100',    dot: 'bg-red-500' },
+  'Customers':             { color: 'text-blue-700',    bg: 'bg-blue-50',    border: 'border-blue-100',   dot: 'bg-blue-500' },
+  'Suppliers':             { color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-100',  dot: 'bg-amber-500' },
+  'Expenses':              { color: 'text-rose-700',    bg: 'bg-rose-50',    border: 'border-rose-100',   dot: 'bg-rose-500' },
+  'GST / Tax':             { color: 'text-indigo-700',  bg: 'bg-indigo-50',  border: 'border-indigo-100', dot: 'bg-indigo-500' },
+  'Financials':            { color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-100',   dot: 'bg-teal-500' },
+  'Compliance':            { color: 'text-slate-700',   bg: 'bg-slate-50',   border: 'border-slate-200',  dot: 'bg-slate-500' },
+  'Management Analytics':  { color: 'text-sky-700',     bg: 'bg-sky-50',     border: 'border-sky-100',    dot: 'bg-sky-500' },
+  'Planning & Forecast':   { color: 'text-violet-700',  bg: 'bg-violet-50',  border: 'border-violet-100', dot: 'bg-violet-500' },
 };
 
-const categoryBadges: Record<string, string> = {
-  Accounts: 'bg-orange-50 border-orange-100',
-  Inventory: 'bg-purple-50 border-purple-100',
-  Sales: 'bg-green-50 border-green-100',
-  Customers: 'bg-blue-50 border-blue-100',
-  Purchases: 'bg-red-50 border-red-100',
-  Suppliers: 'bg-yellow-50 border-yellow-100',
-  Expenses: 'bg-rose-50 border-rose-100',
-  'GST / Tax': 'bg-indigo-50 border-indigo-100',
+type Badge = 'IMPROVED' | 'NEW' | 'CONSOLIDATED';
 
-  'Financials (Advanced)': 'bg-teal-50 border-teal-100',
-  'Advanced Inventory': 'bg-fuchsia-50 border-fuchsia-100',
-  'Advanced Sales': 'bg-emerald-50 border-emerald-100',
-  'Advanced Purchases': 'bg-rose-50 border-rose-100',
-  'Compliance': 'bg-slate-50 border-slate-100',
-  'Management': 'bg-sky-50 border-sky-100',
-  'Special Reports': 'bg-amber-50 border-amber-100',
-};
+interface ReportItem {
+  name: string;
+  desc: string;
+  icon: any;
+  href: string;
+  badge?: Badge;
+}
 
-const REPORTS = [
+interface ReportSection {
+  category: string;
+  icon: any;
+  items: ReportItem[];
+}
+
+// ─── Report Data ──────────────────────────────────────────────────────────────
+const REPORTS: ReportSection[] = [
   {
     category: 'Accounts',
+    icon: Banknote,
     items: [
-      { name: 'Cash Book', desc: 'Daily cash transaction summary', icon: Banknote, href: '/dashboard/reports/accounts/cash-book' },
-      { name: 'Business Book', desc: 'Comprehensive business ledger', icon: Briefcase, href: '/dashboard/reports/accounts/business-book' },
-      { name: 'Payment Paid', desc: 'Summary of all outgoing payments', icon: CreditCard, href: '/dashboard/reports/accounts/payment-paid' },
-      { name: 'Payment Received', desc: 'Summary of all incoming payments', icon: Download, href: '/dashboard/reports/accounts/payment-received' },
-      { name: 'Daily Summary', desc: 'Daybook and chronological ledger', icon: Activity, href: '/dashboard/reports/daybook' },
-      { name: 'Input/Output Tax', desc: 'Tax collection and payment summary', icon: FileStack, href: '/dashboard/reports/gstr' },
-      { name: 'Profit & Loss', desc: 'Sales vs Purchases vs Expenses', icon: TrendingUp, href: '/dashboard/reports/pnl' },
-      { name: 'Chart Of Accounts', desc: 'Directory of all ledger accounts', icon: List, href: '/dashboard/reports/accounts/chart-of-accounts' },
-      { name: 'Balance Sheet', desc: 'Snapshot of assets & liabilities', icon: Scale, href: '/dashboard/reports/accounts/balance-sheet' },
-    ]
+      { name: 'Cash Book',           desc: 'Daily cash transaction summary',           icon: Banknote,      href: '/dashboard/reports/accounts/cash-book' },
+      { name: 'Business Book',       desc: 'Comprehensive business ledger',            icon: Briefcase,     href: '/dashboard/reports/accounts/business-book' },
+      { name: 'Payment Paid',        desc: 'Summary of all outgoing payments',         icon: CreditCard,    href: '/dashboard/reports/accounts/payment-paid' },
+      { name: 'Payment Received',    desc: 'Summary of all incoming payments',         icon: Download,      href: '/dashboard/reports/accounts/payment-received' },
+      { name: 'Daily Summary',       desc: 'Daybook and chronological ledger',         icon: Activity,      href: '/dashboard/reports/daybook' },
+      { name: 'Profit & Loss',       desc: 'Sales vs Purchases vs Expenses',          icon: TrendingUp,    href: '/dashboard/reports/pnl' },
+      { name: 'Chart of Accounts',   desc: 'Directory of all ledger accounts',         icon: List,          href: '/dashboard/reports/accounts/chart-of-accounts' },
+      { name: 'Balance Sheet',       desc: 'Snapshot of assets & liabilities',         icon: Scale,         href: '/dashboard/reports/accounts/balance-sheet' },
+    ],
   },
   {
     category: 'Inventory',
+    icon: Package,
     items: [
-      { name: 'Item Register', desc: 'Complete registry of all items', icon: Archive, href: '/dashboard/reports/inventory/item-register' },
-      { name: 'Low Level Stock', desc: 'Items below minimum stock threshold', icon: AlertTriangle, href: '/dashboard/reports/inventory/low-level-stock' },
-      { name: 'Stock Availability', desc: 'Current available stock balances', icon: CheckCircle, href: '/dashboard/reports/inventory/stock-availability' },
-      { name: 'Stock Adjustment', desc: 'History of manual stock adjustments', icon: SlidersHorizontal, href: '/dashboard/reports/inventory/stock-adjustment' },
-      { name: 'Consumable Stock', desc: 'Tracking of consumable inventory', icon: BatteryCharging, href: '/dashboard/reports/inventory/consumable-stock' },
-      { name: 'Fast Moving Items', desc: 'High velocity inventory items', icon: Zap, href: '/dashboard/reports/inventory/fast-moving' },
-      { name: 'Slow Moving Items', desc: 'Dead stock or slow-moving items', icon: Clock, href: '/dashboard/reports/inventory/slow-moving' },
-      { name: 'Available Serials', desc: 'Available serial/batch numbers', icon: Hash, href: '/dashboard/reports/inventory/available-serials' },
-      { name: 'Item List', desc: 'Master list of inventory products', icon: FileText, href: '/dashboard/reports/inventory/item-list' },
-    ]
+      { name: 'Item Register',         desc: 'Complete registry of all items & stock',      icon: Archive,          href: '/dashboard/reports/inventory/item-register' },
+      { name: 'Stock Availability',    desc: 'Current available stock balances',             icon: CheckCircle,      href: '/dashboard/reports/inventory/stock-availability' },
+      { name: 'Low Level Stock',       desc: 'Items below minimum stock threshold',          icon: AlertTriangle,    href: '/dashboard/reports/inventory/low-level-stock' },
+      { name: 'Stock Adjustment',      desc: 'History of manual stock adjustments',          icon: SlidersHorizontal,href: '/dashboard/reports/inventory/stock-adjustment' },
+      { name: 'Fast Moving Items',     desc: 'High velocity inventory items',                icon: Zap,              href: '/dashboard/reports/inventory/fast-moving' },
+      { name: 'Slow Moving Items',     desc: 'Dead stock or slow-moving items',              icon: Clock,            href: '/dashboard/reports/inventory/slow-moving' },
+      { name: 'Consumable Stock',      desc: 'Tracking of consumable inventory',             icon: BatteryCharging,  href: '/dashboard/reports/inventory/consumable-stock' },
+      { name: 'Available Serials',     desc: 'Available serial/batch numbers',               icon: Hash,             href: '/dashboard/reports/inventory/available-serials' },
+      { name: 'Inventory Valuation',   desc: 'Total stock value at current cost',            icon: DollarSign,       href: '/dashboard/reports/advanced-inventory/inventory-valuation', badge: 'IMPROVED' },
+      { name: 'Stock Movement',        desc: 'Historical log of all stock in/out',           icon: History,          href: '/dashboard/reports/advanced-inventory/stock-movement', badge: 'IMPROVED' },
+      { name: 'Warehouse-wise Stock',  desc: 'Inventory by physical location',               icon: Boxes,            href: '/dashboard/reports/advanced-inventory/warehouse-stock' },
+      { name: 'Dead Stock Analysis',   desc: 'Unsold capital & liquidation recommendations', icon: TrendingDown,     href: '/dashboard/reports/advanced-inventory/dead-stock-advanced', badge: 'CONSOLIDATED' },
+      { name: 'Expiry Items',          desc: 'Monitor expiring batches',                     icon: AlertTriangle,    href: '/dashboard/reports/advanced-inventory/expiry-items' },
+      { name: 'Inventory Turnover',    desc: 'Efficiency of stock sales cycle',              icon: ArrowRightLeft,   href: '/dashboard/reports/special/inventory-turnover-ratio' },
+    ],
   },
   {
     category: 'Sales',
+    icon: TrendingUp,
     items: [
-      { name: 'Sales Aging', desc: 'Overdue invoices by aging bracket', icon: Timer, href: '/dashboard/reports/sales/aging' },
-      { name: 'Itemwise Sales', desc: 'Total qty and revenue per product', icon: Package, href: '/dashboard/reports/sales/itemwise' },
-      { name: 'Invoicewise Sales', desc: 'All invoices with payment status', icon: ClipboardList, href: '/dashboard/reports/sales/invoicewise' },
-      { name: 'Invoicewise Margin', desc: 'Revenue vs taxable per invoice', icon: BarChart2, href: '/dashboard/reports/sales/invoicewise-margin' },
-      { name: 'Itemwise Margin', desc: 'Gross profit per product', icon: PieChart, href: '/dashboard/reports/sales/itemwise-margin' },
-      { name: 'Customerwise Margin', desc: 'Revenue analysis per customer', icon: UserCheck, href: '/dashboard/reports/sales/customerwise-margin' },
-      { name: 'Invoicewise Summary', desc: 'Per-invoice GST breakdown', icon: FileStack, href: '/dashboard/reports/sales/invoicewise-summary' },
-      { name: 'Customerwise Summary', desc: 'Aggregated sales per customer', icon: Users, href: '/dashboard/reports/sales/customerwise-summary' },
-      { name: 'Itemwise Summary', desc: 'Item-level GST summary', icon: Layers, href: '/dashboard/reports/sales/itemwise-summary' },
-      { name: 'GST Sales Register', desc: 'Invoice-level outward GST detail', icon: IndianRupee, href: '/dashboard/reports/sales/gst' },
-      { name: 'Active Recurring', desc: 'All outstanding unpaid invoices', icon: ArrowDownCircle, href: '/dashboard/reports/sales/recurring' },
-    ]
-  },
-  {
-    category: 'Customers',
-    items: [
-      { name: 'Amount Due', desc: 'Outstanding balances per customer', icon: AlertTriangle, href: '/dashboard/reports/customers/amount-due' },
-      { name: 'Payment History', desc: 'Payment records from customers', icon: History, href: '/dashboard/reports/customers/payment-history' },
-      { name: 'Account Balances', desc: 'All customer ledger balances', icon: Wallet, href: '/dashboard/reports/customers/account-balances' },
-    ]
+      { name: 'Itemwise Sales',          desc: 'Total quantity and revenue per product',       icon: Package,     href: '/dashboard/reports/sales/itemwise' },
+      { name: 'Invoicewise Sales',       desc: 'All invoices with payment status',             icon: ClipboardList,href: '/dashboard/reports/sales/invoicewise' },
+      { name: 'Invoicewise Margin',      desc: 'Revenue vs cost per invoice',                  icon: BarChart2,   href: '/dashboard/reports/sales/invoicewise-margin' },
+      { name: 'Itemwise Margin',         desc: 'Gross profit per product sold',                icon: PieChart,    href: '/dashboard/reports/sales/itemwise-margin' },
+      { name: 'Customerwise Margin',     desc: 'Revenue analysis per customer',                icon: UserCheck,   href: '/dashboard/reports/sales/customerwise-margin' },
+      { name: 'Invoicewise Summary',     desc: 'Per-invoice GST breakdown',                   icon: FileStack,   href: '/dashboard/reports/sales/invoicewise-summary' },
+      { name: 'Customerwise Summary',    desc: 'Aggregated sales per customer',                icon: Users,       href: '/dashboard/reports/sales/customerwise-summary' },
+      { name: 'Itemwise Summary',        desc: 'Item-level GST summary',                      icon: Layers,      href: '/dashboard/reports/sales/itemwise-summary' },
+      { name: 'GST Sales Register',      desc: 'Invoice-level outward GST detail',            icon: IndianRupee, href: '/dashboard/reports/sales/gst' },
+      { name: 'Active Recurring',        desc: 'All unpaid recurring invoices',                icon: ArrowDownCircle, href: '/dashboard/reports/sales/recurring' },
+      { name: 'Salesperson Performance', desc: 'Sales, targets & margin by salesperson',      icon: Users,       href: '/dashboard/reports/advanced-sales/salesperson-performance', badge: 'IMPROVED' },
+    ],
   },
   {
     category: 'Purchases',
+    icon: ShoppingCart,
     items: [
-      { name: 'Purchase Aging', desc: 'Overdue bills by aging bracket', icon: Timer, href: '/dashboard/reports/purchases/aging' },
-      { name: 'Billwise Purchases', desc: 'All purchase bills listed', icon: ClipboardList, href: '/dashboard/reports/purchases/billwise' },
-      { name: 'Itemwise Purchases', desc: 'Qty and amount per item', icon: Package, href: '/dashboard/reports/purchases/itemwise' },
-      { name: 'Billwise Summary', desc: 'Bill totals with GST breakdown', icon: FileStack, href: '/dashboard/reports/purchases/billwise-summary' },
-      { name: 'Itemwise Summary', desc: 'Item totals across all bills', icon: Layers, href: '/dashboard/reports/purchases/itemwise-summary' },
-      { name: 'Supplierwise Summary', desc: 'Totals grouped by supplier', icon: Truck, href: '/dashboard/reports/purchases/supplierwise-summary' },
-      { name: 'GST Purchase Register', desc: 'Bill-level ITC input register', icon: IndianRupee, href: '/dashboard/reports/purchases/gst' },
-    ]
+      { name: 'Billwise Purchases',    desc: 'All purchase bills with status',                icon: ClipboardList, href: '/dashboard/reports/purchases/billwise' },
+      { name: 'Itemwise Purchases',    desc: 'Quantity and amount per item',                  icon: Package,       href: '/dashboard/reports/purchases/itemwise' },
+      { name: 'Billwise Summary',      desc: 'Bill totals with GST breakdown',                icon: FileStack,     href: '/dashboard/reports/purchases/billwise-summary' },
+      { name: 'Itemwise Summary',      desc: 'Item totals across all bills',                  icon: Layers,        href: '/dashboard/reports/purchases/itemwise-summary' },
+      { name: 'Supplierwise Summary',  desc: 'Totals grouped by supplier',                   icon: Truck,         href: '/dashboard/reports/purchases/supplierwise-summary' },
+      { name: 'GST Purchase Register', desc: 'Bill-level ITC input register',                icon: IndianRupee,   href: '/dashboard/reports/purchases/gst' },
+      { name: 'Purchase Return',       desc: 'Returned purchases with amounts',               icon: CornerUpLeft,  href: '/dashboard/reports/special/purchase-return-report', badge: 'IMPROVED' },
+    ],
+  },
+  {
+    category: 'Customers',
+    icon: Users,
+    items: [
+      { name: 'Customer Account Balances', desc: 'All customer ledger balances',              icon: Wallet,     href: '/dashboard/reports/customers/account-balances' },
+      { name: 'Customer Payment History',  desc: 'Payment records from all customers',        icon: History,    href: '/dashboard/reports/customers/payment-history' },
+      { name: 'Customer 360°',             desc: 'Sales, outstanding, ledger, returns & buying history per customer', icon: Compass, href: '/dashboard/reports/customers/customer-360', badge: 'NEW' },
+      { name: 'Customer Wise Item Sales',  desc: 'Products bought by each customer',          icon: ShoppingCart, href: '/dashboard/reports/special/customer-wise-item-sales' },
+      { name: 'Inv. Wise Customer',        desc: 'Which customers bought specific items',     icon: Users,      href: '/dashboard/reports/special/inventory-wise-customer-summary' },
+    ],
   },
   {
     category: 'Suppliers',
+    icon: Truck,
     items: [
-      { name: 'Account Balances', desc: 'Supplier ledger balance sheet', icon: Wallet, href: '/dashboard/reports/suppliers/account-balances' },
-      { name: 'Payment History', desc: 'Payments made to suppliers', icon: History, href: '/dashboard/reports/suppliers/payment-history' },
-    ]
+      { name: 'Supplier Account Balances', desc: 'Supplier ledger balance sheet',             icon: Wallet,    href: '/dashboard/reports/suppliers/account-balances' },
+      { name: 'Supplier Payment History',  desc: 'Payments made to suppliers',                icon: History,   href: '/dashboard/reports/suppliers/payment-history' },
+      { name: 'Supplier 360°',             desc: 'Purchase history, ledger, rate history & performance per supplier', icon: Compass, href: '/dashboard/reports/suppliers/supplier-360', badge: 'NEW' },
+      { name: 'Supplier Rate Comparison',  desc: 'Compare item rates across suppliers',       icon: GitMerge,  href: '/dashboard/reports/special/supplier-rate-comparison' },
+      { name: 'Supplier Item History',     desc: 'Item purchase history per supplier',        icon: Clock,     href: '/dashboard/reports/special/supplier-item-history' },
+      { name: 'Supplier Performance',      desc: 'Evaluate vendors on volume & delivery',     icon: Award,     href: '/dashboard/reports/advanced-purchases/supplier-performance', badge: 'IMPROVED' },
+      { name: 'Inv. Wise Supplier',        desc: 'Which suppliers provide specific items',    icon: Truck,     href: '/dashboard/reports/special/inventory-wise-supplier-summary' },
+    ],
   },
   {
     category: 'Expenses',
+    icon: Receipt,
     items: [
-      { name: 'Search Expenses', desc: 'Filterable expense list', icon: Receipt, href: '/dashboard/reports/expenses/search' },
-      { name: 'Indirect Expenses', desc: 'Expense category summary', icon: PieChart, href: '/dashboard/reports/expenses/indirect' },
-    ]
+      { name: 'Search Expenses', desc: 'Filterable expense list',                              icon: Receipt, href: '/dashboard/reports/expenses/search' },
+      { name: 'Expense Analysis', desc: 'Category-wise expense breakdown & trends',            icon: PieChart, href: '/dashboard/reports/expenses/indirect', badge: 'IMPROVED' },
+    ],
   },
   {
     category: 'GST / Tax',
+    icon: IndianRupee,
     items: [
-      { name: 'GSTR-1', desc: 'Detailed outward supply statement', icon: FileText, href: '/dashboard/reports/gstr/gstr1' },
-      { name: 'GSTR-3B', desc: 'GST summary with ITC reconciliation', icon: Calculator, href: '/dashboard/reports/gstr/gstr3b' },
-    ]
-  },
-
-  {
-    category: 'Financials (Advanced)',
-    items: [
-      { name: 'Trial Balance', desc: 'Validates debits vs credits', icon: Scale, href: '/dashboard/reports/financial/trial-balance' },
-      { name: 'General Ledger', desc: 'Deep dive into account transactions', icon: BookOpen, href: '/dashboard/reports/financial/general-ledger' },
-      { name: 'Bank Book', desc: 'Ledger view for Bank & Cash accounts', icon: Wallet, href: '/dashboard/reports/financial/bank-book' },
-      { name: 'Bank Reconciliation', desc: 'Compare system vs bank statements', icon: CheckSquare, href: '/dashboard/reports/financial/bank-reconciliation' },
-      { name: 'Cash Flow', desc: 'Operations, Investing, Financing cash movements', icon: Activity, href: '/dashboard/reports/financial/cash-flow' },
-      { name: 'Outstanding Receivables', desc: 'Customer invoices aging', icon: Timer, href: '/dashboard/reports/financial/outstanding-receivables' },
-      { name: 'Outstanding Payables', desc: 'Supplier bills aging', icon: Timer, href: '/dashboard/reports/financial/outstanding-payables' },
-    ]
+      { name: 'GSTR-1',               desc: 'Detailed outward supply statement',             icon: FileText,   href: '/dashboard/reports/gstr/gstr1' },
+      { name: 'GSTR-3B',              desc: 'GST summary with ITC reconciliation',           icon: Calculator, href: '/dashboard/reports/gstr/gstr3b' },
+      { name: 'GST Sales Register',   desc: 'Invoice-level outward GST detail',             icon: IndianRupee,href: '/dashboard/reports/sales/gst' },
+      { name: 'GST Purchase Register',desc: 'Bill-level input tax credit register',          icon: IndianRupee,href: '/dashboard/reports/purchases/gst' },
+      { name: 'GST Audit',            desc: 'Reconcile Output vs Input GST',                icon: FileStack,  href: '/dashboard/reports/compliance/gst-audit' },
+      { name: 'Input/Output Tax',     desc: 'Tax collection and payment summary',            icon: FileStack,  href: '/dashboard/reports/gstr' },
+    ],
   },
   {
-    category: 'Advanced Inventory',
+    category: 'Financials',
+    icon: Scale,
     items: [
-      { name: 'Inventory Valuation', desc: 'Calculates total stock value', icon: DollarSign, href: '/dashboard/reports/advanced-inventory/inventory-valuation' },
-      { name: 'Stock Movement', desc: 'Historical log of stock in/out', icon: History, href: '/dashboard/reports/advanced-inventory/stock-movement' },
-      { name: 'Warehouse Wise Stock', desc: 'Inventory by physical location', icon: Package, href: '/dashboard/reports/advanced-inventory/warehouse-stock' },
-      { name: 'Expiry Items', desc: 'Monitor expiring batches', icon: AlertTriangle, href: '/dashboard/reports/advanced-inventory/expiry-items' },
-      { name: 'Dead Stock Analysis', desc: 'Identify unsold capital', icon: Archive, href: '/dashboard/reports/advanced-inventory/dead-stock-advanced' },
-    ]
-  },
-  {
-    category: 'Advanced Sales',
-    items: [
-      { name: 'Salesperson Performance', desc: 'Evaluate team members', icon: Users, href: '/dashboard/reports/advanced-sales/salesperson-performance' },
-      { name: 'Sales Trend', desc: 'Month-over-month growth analytics', icon: TrendingUp, href: '/dashboard/reports/advanced-sales/sales-trend' },
-      { name: 'Top Customers', desc: 'High-value repeat buyers', icon: UserCheck, href: '/dashboard/reports/advanced-sales/top-customers-advanced' },
-      { name: 'Top Selling Products', desc: 'Margin and volume analysis', icon: PieChart, href: '/dashboard/reports/advanced-sales/top-selling-products' },
-    ]
-  },
-  {
-    category: 'Advanced Purchases',
-    items: [
-      { name: 'Supplier Performance', desc: 'Evaluate vendors on delivery & volume', icon: Truck, href: '/dashboard/reports/advanced-purchases/supplier-performance' },
-      { name: 'Purchase Trend', desc: 'Month-over-month purchasing analytics', icon: TrendingUp, href: '/dashboard/reports/advanced-purchases/purchase-trend' },
-    ]
+      { name: 'Trial Balance',             desc: 'Validates all debits vs credits',                    icon: Scale,      href: '/dashboard/reports/financial/trial-balance' },
+      { name: 'General Ledger',            desc: 'Deep dive into account transactions',                icon: BookOpen,   href: '/dashboard/reports/financial/general-ledger' },
+      { name: 'Bank Book',                 desc: 'Ledger view for Bank & Cash accounts',               icon: Wallet,     href: '/dashboard/reports/financial/bank-book' },
+      { name: 'Bank Reconciliation',       desc: 'Compare system vs bank statements',                  icon: CheckSquare,href: '/dashboard/reports/financial/bank-reconciliation' },
+      { name: 'Cash Flow',                 desc: 'Operations, investing & financing cash movements',    icon: Activity,   href: '/dashboard/reports/financial/cash-flow' },
+      { name: 'Outstanding Receivables',   desc: 'Customer invoice aging (0–30, 31–60, 61–90, 90+)',   icon: AlertTriangle, href: '/dashboard/reports/financial/outstanding-receivables', badge: 'IMPROVED' },
+      { name: 'Outstanding Payables',      desc: 'Supplier bill aging (0–30, 31–60, 61–90, 90+)',      icon: AlertTriangle, href: '/dashboard/reports/financial/outstanding-payables', badge: 'IMPROVED' },
+    ],
   },
   {
     category: 'Compliance',
+    icon: Shield,
     items: [
-      { name: 'GST Audit', desc: 'Reconcile Output vs Input GST', icon: FileStack, href: '/dashboard/reports/compliance/gst-audit' },
-      { name: 'E-Invoice Register', desc: 'Tracker for IRN generation', icon: FileText, href: '/dashboard/reports/compliance/e-invoice-register' },
-      { name: 'E-Way Bill Register', desc: 'Tracker for E-Way Bills', icon: Truck, href: '/dashboard/reports/compliance/eway-bill-register' },
-    ]
+      { name: 'E-Invoice Register', desc: 'Tracker for IRN generation',       icon: FileText, href: '/dashboard/reports/compliance/e-invoice-register' },
+      { name: 'E-Way Bill Register',desc: 'Tracker for E-Way Bills generated', icon: Truck,    href: '/dashboard/reports/compliance/eway-bill-register' },
+      { name: 'Audit Trail',        desc: 'System security and change log',    icon: History,  href: '/dashboard/reports/management/audit-trail' },
+    ],
   },
   {
-    category: 'Management',
+    category: 'Management Analytics',
+    icon: LayoutDashboard,
     items: [
-      { name: 'Business Dashboard', desc: 'Single-screen management overview', icon: BarChart3, href: '/dashboard/reports/management/business-dashboard-advanced' },
-      { name: 'Profitability Analysis', desc: 'Margin analysis comparing revenue/costs', icon: PieChart, href: '/dashboard/reports/management/profitability-analysis' },
-      { name: 'Budget vs Actual', desc: 'Account expenditures vs budgets', icon: Scale, href: '/dashboard/reports/management/budget-vs-actual' },
-      { name: 'Audit Trail', desc: 'System security and changes log', icon: History, href: '/dashboard/reports/management/audit-trail' },
-    ]
+      { name: 'Business Health Dashboard', desc: 'KPIs, charts & trends — the complete business overview',    icon: LayoutDashboard, href: '/dashboard/reports/management/business-dashboard-advanced', badge: 'IMPROVED' },
+      { name: 'Sales Performance',         desc: 'Revenue trend, top customers, products & salesperson',      icon: TrendingUp,      href: '/dashboard/reports/management/sales-performance', badge: 'CONSOLIDATED' },
+      { name: 'Purchase Performance',      desc: 'Purchase trend, supplier analysis & cost tracking',         icon: ShoppingCart,    href: '/dashboard/reports/management/purchase-performance', badge: 'CONSOLIDATED' },
+      { name: 'Profit Performance',        desc: 'Gross & net profit, margin trends, category profitability', icon: BarChart3,       href: '/dashboard/reports/management/profit-performance', badge: 'CONSOLIDATED' },
+      { name: 'Category Performance',      desc: 'Sales, P&L, margins & supplier dependency by category',    icon: Layers,          href: '/dashboard/reports/management/category-performance', badge: 'CONSOLIDATED' },
+      { name: 'Margin Analysis',           desc: 'Profit margins by product, customer, brand & invoice',      icon: PieChart,        href: '/dashboard/reports/management/margin-analysis', badge: 'CONSOLIDATED' },
+      { name: 'Customer Performance',      desc: 'Top customers, CLV, repeat rate & buying behavior',         icon: UserCheck,       href: '/dashboard/reports/management/customer-performance', badge: 'CONSOLIDATED' },
+      { name: 'Product Performance',       desc: 'Top/bottom products by revenue, volume & profit',           icon: Package,         href: '/dashboard/reports/management/product-performance', badge: 'CONSOLIDATED' },
+      { name: 'Receivable & Payable Aging',desc: 'Combined aging view for working capital management',        icon: AlertTriangle,   href: '/dashboard/reports/management/aging-summary', badge: 'NEW' },
+      { name: 'Discount Impact',           desc: 'Revenue vs discount analysis by scheme, customer & product',icon: Tag,             href: '/dashboard/reports/management/discount-impact', badge: 'NEW' },
+      { name: 'Budget vs Actual',          desc: 'Account expenditures vs budgets',                           icon: Target,          href: '/dashboard/reports/management/budget-vs-actual' },
+    ],
   },
   {
-    category: 'Special Reports',
+    category: 'Planning & Forecast',
+    icon: Cpu,
     items: [
-      { name: 'Inv. Wise Customer', desc: 'Customers who bought specific items', icon: Users, href: '/dashboard/reports/special/inventory-wise-customer-summary' },
-      { name: 'Inv. Wise Supplier', desc: 'Suppliers providing specific items', icon: Truck, href: '/dashboard/reports/special/inventory-wise-supplier-summary' },
-      { name: 'Supplier Wise Bill', desc: 'Bills grouped by supplier', icon: ClipboardList, href: '/dashboard/reports/special/supplier-wise-bill-summary' },
-      { name: 'Group Wise P&L', desc: 'Gross profit by Item Group', icon: BarChart2, href: '/dashboard/reports/special/group-wise-profit-loss' },
-      { name: 'Category Wise Summary', desc: 'High-level business snapshot per category', icon: Layers, href: '/dashboard/reports/special/category-wise-summary' },
-      { name: 'Category Wise P&L', desc: 'Gross profit by Category', icon: BarChart2, href: '/dashboard/reports/special/category-wise-profit-loss' },
-      { name: 'Category Wise Sales', desc: 'Sales volumes by Category', icon: Package, href: '/dashboard/reports/special/category-wise-sales' },
-      { name: 'Category Wise Margin', desc: 'Sorted categories by margin %', icon: PieChart, href: '/dashboard/reports/special/category-wise-margin' },
-      { name: 'Category Supplier Analysis', desc: 'Supplier dependency per category', icon: Truck, href: '/dashboard/reports/special/category-wise-supplier-analysis' },
-
-      { name: 'ABC Analysis', desc: 'Top Selling Products (A/B/C)', icon: PieChart, href: '/dashboard/reports/special/abc-analysis' },
-      { name: 'Inventory Turnover', desc: 'Efficiency of stock sales', icon: Timer, href: '/dashboard/reports/special/inventory-turnover-ratio' },
-      { name: 'Gross Profit %', margin: 'Item level gross profit', icon: Scale, href: '/dashboard/reports/special/gross-profit-pct' },
-      { name: 'Net Profit %', margin: 'Item level net profit', icon: Scale, href: '/dashboard/reports/special/net-profit-pct' },
-      { name: 'Customer Lifetime Value', desc: 'Historical CLV analysis', icon: UserCheck, href: '/dashboard/reports/special/customer-lifetime-value' },
-      { name: 'Repeat Customers', desc: 'Retention & purchase frequency', icon: Users, href: '/dashboard/reports/special/repeat-customer-report' },
-      { name: 'Top 100 Products', desc: 'Highest performing items', icon: TrendingUp, href: '/dashboard/reports/special/top-100-products' },
-      { name: 'Bottom 100 Products', desc: 'Lowest performing items', icon: ArrowDownCircle, href: '/dashboard/reports/special/bottom-100-products' },
-      { name: 'Seasonal Analysis', desc: 'Peak sales periods', icon: Activity, href: '/dashboard/reports/special/seasonal-analysis' },
-      { name: 'Dead Stock Recovery', desc: 'Liquidation recommendations', icon: AlertTriangle, href: '/dashboard/reports/special/dead-stock-recovery' },
-      { name: 'Forecast Purchase', desc: 'Predict reorder requirements', icon: ShoppingCart, href: '/dashboard/reports/special/forecast-purchase-planning' },
-      { name: 'Forecast Sales', desc: 'Predict future revenue', icon: TrendingUp, href: '/dashboard/reports/special/forecast-sales-planning' },
-
-      { name: 'City Wise Customer', desc: 'Customers grouped by city', icon: MapPin, href: '/dashboard/reports/special/city-wise-customer-report' },
-      { name: 'Customer Ledger', desc: 'Detailed account statement', icon: BookOpen, href: '/dashboard/reports/special/customer-ledger-report' },
-      { name: 'Customer Purchase Frequency', desc: 'Average days between orders', icon: Calendar, href: '/dashboard/reports/special/customer-purchase-frequency' },
-      { name: 'Top 50 Customers', desc: 'Highest value customers', icon: Star, href: '/dashboard/reports/special/top-50-customers' },
-      { name: 'Customer Wise Item Sales', desc: 'Products bought by each customer', icon: ShoppingBag, href: '/dashboard/reports/special/customer-wise-item-sales' },
-      { name: 'Supplier Ledger', desc: 'Supplier account statement', icon: BookOpen, href: '/dashboard/reports/special/supplier-ledger-report' },
-      { name: 'Supplier Payment History', desc: 'Supplier payment behavior', icon: CreditCard, href: '/dashboard/reports/special/supplier-payment-history' },
-      { name: 'Supplier Wise Purchase', desc: 'Purchase volume per supplier', icon: Truck, href: '/dashboard/reports/special/supplier-wise-purchase' },
-      { name: 'Supplier Rate Comparison', desc: 'Compare item rates', icon: GitMerge, href: '/dashboard/reports/special/supplier-rate-comparison' },
-      { name: 'Supplier Item History', desc: 'Item history per supplier', icon: Clock, href: '/dashboard/reports/special/supplier-item-history' },
-      { name: 'Top Suppliers', desc: 'Most important suppliers', icon: Award, href: '/dashboard/reports/special/top-suppliers' },
-      { name: 'Purchase Return', desc: 'Returned purchases tracker', icon: CornerUpLeft, href: '/dashboard/reports/special/purchase-return-report' },
-      { name: 'Purchase Summary', desc: 'Executive purchase overview', icon: BarChart2, href: '/dashboard/reports/special/purchase-summary-report' },
-      { name: 'Item Wise Profit', desc: 'Profitability per item', icon: DollarSign, href: '/dashboard/reports/special/item-wise-profit' },
-      { name: 'Category Wise Profit', desc: 'Profitability per category', icon: Layers, href: '/dashboard/reports/special/category-wise-profit' },
-      { name: 'Customer Wise Profit', desc: 'Profitability per customer', icon: UserCheck, href: '/dashboard/reports/special/customer-wise-profit' },
-      { name: 'Supplier Wise Profit', desc: 'Profitability via sourcing', icon: Shield, href: '/dashboard/reports/special/supplier-wise-profit' },
-      { name: 'Invoice Wise Profit', desc: 'Profitability per invoice', icon: FileText, href: '/dashboard/reports/special/invoice-wise-profit' },
-      { name: 'Brand Wise Profit', desc: 'Profitability per brand', icon: Tag, href: '/dashboard/reports/special/brand-wise-profit' },
-    ]
+      { name: 'Reorder & Purchase Planner', desc: 'Critical stock, reorder levels & recommended purchase quantities', icon: ShoppingCart, href: '/dashboard/reports/special/forecast-purchase-planning', badge: 'IMPROVED' },
+      { name: 'Sales Forecast',             desc: 'Predict future revenue based on historical trends',                icon: TrendingUp,   href: '/dashboard/reports/special/forecast-sales-planning', badge: 'IMPROVED' },
+      { name: 'Seasonal Analysis',          desc: 'Peak sales periods and seasonal demand patterns',                  icon: Calendar,     href: '/dashboard/reports/special/seasonal-analysis' },
+    ],
   },
 ];
 
-export default function ReportsPage() {
+const BADGE_CONFIG: Record<Badge, { label: string; cls: string }> = {
+  'NEW':          { label: 'NEW',          cls: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+  'IMPROVED':     { label: 'IMPROVED',     cls: 'bg-blue-100 text-blue-700 border border-blue-200' },
+  'CONSOLIDATED': { label: 'MERGED',       cls: 'bg-violet-100 text-violet-700 border border-violet-200' },
+};
+
+// ─── Components ──────────────────────────────────────────────────────────────
+function ReportCard({ item, category }: { item: ReportItem; category: string }) {
+  const cfg = CAT_CONFIG[category] ?? CAT_CONFIG['Accounts'];
   return (
-    <div className="flex flex-col min-h-screen">
+    <Link
+      href={item.href}
+      className={`group relative flex flex-col bg-white border ${cfg.border} rounded-xl p-4 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150`}
+    >
+      {item.badge && (
+        <span className={`absolute top-3 right-3 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${BADGE_CONFIG[item.badge].cls}`}>
+          {BADGE_CONFIG[item.badge].label}
+        </span>
+      )}
+      <div className={`w-9 h-9 rounded-lg ${cfg.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+        <item.icon className={`w-5 h-5 ${cfg.color}`} />
+      </div>
+      <h4 className="font-semibold text-slate-900 text-sm leading-tight">{item.name}</h4>
+      <p className="text-slate-500 text-xs mt-1 leading-relaxed flex-1">{item.desc}</p>
+      <div className={`flex items-center gap-1 mt-3 text-xs font-medium ${cfg.color} opacity-0 group-hover:opacity-100 transition-opacity`}>
+        <span>Open report</span>
+        <ChevronRight className="w-3 h-3" />
+      </div>
+    </Link>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function ReportsPage() {
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const totalReports = useMemo(() => REPORTS.reduce((acc, s) => acc + s.items.length, 0), []);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return REPORTS
+      .filter(s => !activeCategory || s.category === activeCategory)
+      .map(s => ({
+        ...s,
+        items: s.items.filter(item =>
+          !q ||
+          item.name.toLowerCase().includes(q) ||
+          item.desc.toLowerCase().includes(q)
+        ),
+      }))
+      .filter(s => s.items.length > 0);
+  }, [search, activeCategory]);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <Topbar title="Reports Center" />
-      <main className="flex-1 p-6 space-y-10 max-w-7xl mx-auto w-full">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Reports Center</h2>
-          <p className="text-slate-500 text-sm mt-1">Real-time financial, inventory, GST, and business analytics for your business.</p>
+      <main className="flex-1 max-w-[1400px] mx-auto w-full px-6 pb-12">
+
+        {/* Header */}
+        <div className="py-6 border-b border-slate-200 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Reports Center</h2>
+              <p className="text-slate-500 text-sm mt-1">
+                {totalReports} reports across {REPORTS.length} categories — financial, inventory, GST, and business analytics.
+              </p>
+            </div>
+            {/* Search */}
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search reports..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
+          {/* Category pills */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${!activeCategory ? 'bg-slate-900 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-400'}`}
+            >
+              All ({totalReports})
+            </button>
+            {REPORTS.map(s => {
+              const cfg = CAT_CONFIG[s.category];
+              const isActive = activeCategory === s.category;
+              return (
+                <button
+                  key={s.category}
+                  onClick={() => setActiveCategory(prev => prev === s.category ? null : s.category)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${isActive ? `${cfg.bg} ${cfg.color} ${cfg.border} shadow-sm` : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                >
+                  <s.icon className={`w-3 h-3 ${isActive ? cfg.color : ''}`} />
+                  {s.category}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="space-y-10">
-          {REPORTS.map(section => (
-            <div key={section.category} className="space-y-4">
-              <div className="flex items-center gap-3">
-                <h3 className={`text-sm font-bold uppercase tracking-widest ${categoryColors[section.category] || 'text-slate-700'}`}>
-                  {section.category}
-                </h3>
-                <span className="text-xs text-slate-400">{section.items.length} report{section.items.length !== 1 ? 's' : ''}</span>
-                <div className="flex-1 h-px bg-slate-100" />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {section.items.map(item => (
-                  <Link key={item.name} href={item.href}
-                    className={`glass rounded-2xl p-5 border transition group hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 ${categoryBadges[section.category] || 'border-slate-200 bg-white'}`}>
-                    <item.icon className={`w-7 h-7 mb-3 ${categoryColors[section.category] || 'text-slate-600'} transition group-hover:scale-110`} />
-                    <h4 className="font-semibold text-slate-900 text-sm leading-tight">{item.name}</h4>
-                    <p className="text-slate-500 text-xs mt-1 leading-relaxed">{item.desc}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Report Sections */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-20 text-slate-400">
+            <Search className="w-10 h-10 mx-auto mb-3 opacity-40" />
+            <p className="font-medium">No reports match &ldquo;{search}&rdquo;</p>
+            <button onClick={() => setSearch('')} className="mt-2 text-sm text-indigo-600 hover:underline">Clear search</button>
+          </div>
+        ) : (
+          <div className="space-y-10">
+            {filtered.map(section => {
+              const cfg = CAT_CONFIG[section.category];
+              return (
+                <section key={section.category} id={`section-${section.category.replace(/\s+/g, '-').toLowerCase()}`}>
+                  {/* Section Header */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center`}>
+                      <section.icon className={`w-4 h-4 ${cfg.color}`} />
+                    </div>
+                    <h3 className={`text-sm font-bold uppercase tracking-widest ${cfg.color}`}>
+                      {section.category}
+                    </h3>
+                    <span className="text-xs text-slate-400 font-medium">
+                      {section.items.length} report{section.items.length !== 1 ? 's' : ''}
+                    </span>
+                    <div className="flex-1 h-px bg-slate-100" />
+                  </div>
+
+                  {/* Report Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {section.items.map(item => (
+                      <ReportCard key={item.name} item={item} category={section.category} />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
