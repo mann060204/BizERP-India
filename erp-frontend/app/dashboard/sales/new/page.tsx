@@ -1584,7 +1584,7 @@ export default function NewInvoicePage() {
                 : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border border-indigo-200'
             }`}
           >
-            <Tag className="w-4 h-4" />
+            <TagIcon className="w-4 h-4" />
             {appliedSchemes.length > 0 ? `${appliedSchemes.length} Scheme(s) Applied (-₹${schemeDiscountAmount.toFixed(2)})` : 'Apply Discount Scheme'}
           </button>
         </div>
@@ -1610,7 +1610,7 @@ export default function NewInvoicePage() {
             <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                  <Tag className="w-4 h-4" />
+                  <TagIcon className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-slate-900 font-bold text-sm">Available Discount Schemes</h3>
@@ -1630,7 +1630,7 @@ export default function NewInvoicePage() {
                 </div>
               ) : eligibleSchemes.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-xl border border-slate-200 border-dashed">
-                  <Tag className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                  <TagIcon className="w-8 h-8 text-slate-300 mx-auto mb-3" />
                   <p className="text-sm font-medium text-slate-900 mb-1">No Schemes Available</p>
                   <p className="text-xs text-slate-500">There are no active discount schemes applicable for these items.</p>
                 </div>
