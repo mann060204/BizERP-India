@@ -8,7 +8,7 @@ import Topbar from '../../../../components/layout/Topbar';
 import { customersApi, productsApi, invoicesApi, businessApi, inventoryApi, banksApi, accountsApi, paymentModesApi, discountSchemesApi } from '../../../../lib/erp-api';
 import { formatAccountingBalance } from '@/lib/utils';
 import { 
-  Plus, Trash2, Search, Loader2, Save, CheckCircle, 
+  Plus, Trash2, Search, Loader2, Save, CheckCircle, FileText,
   Printer, RotateCcw, Calculator, Bell, Truck, Wallet, Hand, X, 
   Calendar, ChevronDown, User, MapPin, CreditCard, Tag as TagIcon, Pencil, UserPlus
 } from 'lucide-react';
