@@ -14,7 +14,7 @@ interface Column {
   disableTotal?: boolean;
 }
 
-type ReportCategory = 'Accounts' | 'Inventory' | 'Sales' | 'Customers' | 'Purchases' | 'Suppliers' | 'Expenses' | 'GSTR';
+type ReportCategory = 'Accounts' | 'Inventory' | 'Sales' | 'Customers' | 'Purchases' | 'Suppliers' | 'Expenses' | 'GSTR' | 'Analytics' | 'Management';
 
 const categoryColors: Record<ReportCategory, { badge: string; text: string }> = {
   Accounts: { badge: 'bg-orange-50 text-orange-600', text: 'text-orange-600' },
@@ -25,6 +25,8 @@ const categoryColors: Record<ReportCategory, { badge: string; text: string }> = 
   Suppliers: { badge: 'bg-yellow-50 text-yellow-700', text: 'text-yellow-700' },
   Expenses: { badge: 'bg-rose-50 text-rose-700', text: 'text-rose-700' },
   GSTR: { badge: 'bg-indigo-50 text-indigo-700', text: 'text-indigo-700' },
+  Analytics: { badge: 'bg-sky-50 text-sky-700', text: 'text-sky-700' },
+  Management: { badge: 'bg-sky-50 text-sky-700', text: 'text-sky-700' },
 };
 
 interface ReportLayoutProps {
