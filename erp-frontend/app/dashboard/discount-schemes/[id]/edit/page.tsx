@@ -1,12 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Topbar from '../../../../components/layout/Topbar';
-import { discountSchemesApi } from '../../../../lib/erp-api';
+import Topbar from '../../../../../components/layout/Topbar';
+import { discountSchemesApi } from '../../../../../lib/erp-api';
 import toast from 'react-hot-toast';
 import { Save, ArrowLeft, Plus, Trash2, Gift, ShoppingCart, Package, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import ProductSelector from '../../../../components/shared/ProductSelector';
+import ProductSelector from '../../../../../components/shared/ProductSelector';
 
 export default function EditDiscountSchemePage() {
   const router = useRouter();
