@@ -38,19 +38,23 @@ export default function Supplier360Page() {
         reportsApi.getPurchasesBillwise({ supplierId: s._id }),
       ]);
       setLedger((ledgerRes as any).data?.ledger || (ledgerRes as any).data || []);
-      setPurchases((purchRes as any).data?.data || []);
+      setPurchases((purchRes as any).data?.data || (purchRes as any).data || []);
     } catch (e: any) {
       setDetailError(e?.response?.data?.message || e?.message || 'Failed to load supplier data');
     } finally { setLoadingDetail(false); }
   }, []);
 
-  const filtered = suppliers.filter(s =>
+  const filtered = (Array.isArray(suppliers) ? suppliers : []).filter(s =>
     (s.name || '').toLowerCase().includes(search.toLowerCase()) ||
     (s.phone || '').includes(search)
   );
 
-  const totalPurchases = purchases.reduce((s, i) => s + (i.grandTotal || 0), 0);
-  const totalPaid = purchases.reduce((s, i) => s + (i.paidAmount || 0), 0);
+  // Always-safe arrays — never crash on .reduce/.map/.filter
+  const safePurchases = Array.isArray(purchases) ? purchases : [];
+  const safeLedger = Array.isArray(ledger) ? ledger : [];
+
+  const totalPurchases = safePurchases.reduce((s, i) => s + (i.grandTotal || 0), 0);
+  const totalPaid = safePurchases.reduce((s, i) => s + (i.paidAmount || i.amountReceived || 0), 0);
   const outstanding = totalPurchases - totalPaid;
 
   return (
@@ -80,6 +84,8 @@ export default function Supplier360Page() {
           <div className="flex-1 overflow-y-auto">
             {loadingSuppliers ? (
               <div className="flex justify-center py-12"><RefreshCw className="w-5 h-5 animate-spin text-slate-400" /></div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 text-sm">No suppliers found</div>
             ) : filtered.map(s => (
               <button key={s._id} onClick={() => loadDetail(s)}
                 className={`w-full flex items-start gap-3 p-4 text-left border-b border-slate-50 transition hover:bg-amber-50 ${selected?._id === s._id ? 'bg-amber-50 border-l-2 border-l-amber-500' : ''}`}>
@@ -114,6 +120,7 @@ export default function Supplier360Page() {
             </div>
           ) : (
             <>
+              {/* Header Card */}
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-6">
                 <div className="flex items-start gap-5">
                   <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-2xl shrink-0">
@@ -134,7 +141,7 @@ export default function Supplier360Page() {
                     { icon: IndianRupee, label: 'Total Purchases', value: INR(totalPurchases), color: 'text-amber-600', bg: 'bg-amber-50' },
                     { icon: IndianRupee, label: 'Total Paid', value: INR(totalPaid), color: 'text-emerald-600', bg: 'bg-emerald-50' },
                     { icon: AlertTriangle, label: 'Outstanding', value: INR(outstanding), color: outstanding > 0 ? 'text-red-600' : 'text-slate-400', bg: outstanding > 0 ? 'bg-red-50' : 'bg-slate-50' },
-                    { icon: Package, label: 'Total Bills', value: purchases.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { icon: Package, label: 'Total Bills', value: safePurchases.length, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   ].map((k, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <div className={`w-9 h-9 rounded-lg ${k.bg} flex items-center justify-center`}><k.icon className={`w-4 h-4 ${k.color}`} /></div>
@@ -144,6 +151,7 @@ export default function Supplier360Page() {
                 </div>
               </div>
 
+              {/* Tabs */}
               <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit mb-5">
                 {TABS.map(t => (
                   <button key={t} onClick={() => setTab(t)}
@@ -171,8 +179,8 @@ export default function Supplier360Page() {
                       <th className="px-4 py-2.5 text-right">Debit</th><th className="px-4 py-2.5 text-right">Credit</th><th className="px-4 py-2.5 text-right">Balance</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {ledger.length === 0 ? <tr><td colSpan={5} className="text-center py-12 text-slate-400">No ledger entries</td></tr> :
-                        ledger.map((e: any, i: number) => (
+                      {safeLedger.length === 0 ? <tr><td colSpan={5} className="text-center py-12 text-slate-400">No ledger entries</td></tr> :
+                        safeLedger.map((e: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-2.5 text-slate-500 text-xs">{e.date ? new Date(e.date).toLocaleDateString('en-IN') : '—'}</td>
                             <td className="px-4 py-2.5">{e.description || e.narration || '—'}</td>
@@ -189,7 +197,7 @@ export default function Supplier360Page() {
 
               {tab === 'Purchase History' && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50"><h3 className="font-semibold text-slate-800">All Purchase Bills ({purchases.length})</h3></div>
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50"><h3 className="font-semibold text-slate-800">All Purchase Bills ({safePurchases.length})</h3></div>
                   <table className="w-full text-sm">
                     <thead><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
                       <th className="px-4 py-2.5 text-left">Bill No.</th><th className="px-4 py-2.5 text-left">Date</th>
@@ -197,15 +205,15 @@ export default function Supplier360Page() {
                       <th className="px-4 py-2.5 text-center">Status</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {purchases.length === 0 ? <tr><td colSpan={6} className="text-center py-12 text-slate-400">No purchase bills found</td></tr> :
-                        purchases.map((p: any, i: number) => (
+                      {safePurchases.length === 0 ? <tr><td colSpan={6} className="text-center py-12 text-slate-400">No purchase bills found</td></tr> :
+                        safePurchases.map((p: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-2.5 font-medium">{p.billNumber || p.purchaseNumber || '—'}</td>
                             <td className="px-4 py-2.5 text-slate-500 text-xs">{p.billDate ? new Date(p.billDate).toLocaleDateString('en-IN') : '—'}</td>
                             <td className="px-4 py-2.5 text-right">{INR(p.grandTotal)}</td>
-                            <td className="px-4 py-2.5 text-right text-emerald-600">{INR(p.paidAmount)}</td>
-                            <td className="px-4 py-2.5 text-right text-amber-600">{INR(p.grandTotal - p.paidAmount)}</td>
-                            <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.paymentStatus === 'PAID' ? 'bg-emerald-50 text-emerald-700' : p.paymentStatus === 'PARTIAL' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{p.paymentStatus}</span></td>
+                            <td className="px-4 py-2.5 text-right text-emerald-600">{INR(p.paidAmount || p.amountReceived)}</td>
+                            <td className="px-4 py-2.5 text-right text-amber-600">{INR((p.grandTotal || 0) - (p.paidAmount || p.amountReceived || 0))}</td>
+                            <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.paymentStatus === 'PAID' || p.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : p.paymentStatus === 'PARTIAL' || p.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{p.paymentStatus || p.status || '—'}</span></td>
                           </tr>
                         ))
                       }
@@ -218,13 +226,13 @@ export default function Supplier360Page() {
                 <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                   <h3 className="font-semibold text-slate-800 mb-4">Item Rate History</h3>
                   <p className="text-sm text-slate-500 mb-4">This shows all items purchased from <strong>{selected.name}</strong> and their last purchase rates.</p>
-                  {purchases.length > 0 ? (
+                  {safePurchases.length > 0 ? (
                     <table className="w-full text-sm">
                       <thead><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
                         <th className="px-4 py-2.5 text-left">Item</th><th className="px-4 py-2.5 text-right">Last Rate</th><th className="px-4 py-2.5 text-right">Qty</th><th className="px-4 py-2.5 text-left">Date</th>
                       </tr></thead>
                       <tbody className="divide-y divide-slate-100">
-                        {purchases.flatMap((p: any) => (p.items || []).map((item: any, j: number) => ({ ...item, billDate: p.billDate, billNumber: p.billNumber || p.purchaseNumber }))).slice(0, 30).map((item: any, i: number) => (
+                        {safePurchases.flatMap((p: any) => (Array.isArray(p.items) ? p.items : []).map((item: any) => ({ ...item, billDate: p.billDate, billNumber: p.billNumber || p.purchaseNumber }))).slice(0, 30).map((item: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-2.5 font-medium">{item.productName || item.name || '—'}</td>
                             <td className="px-4 py-2.5 text-right font-semibold">{INR(item.rate || item.unitPrice)}</td>
@@ -245,16 +253,16 @@ export default function Supplier360Page() {
                     {(() => {
                       const now = Date.now();
                       const buckets = [
-                        { label: 'Current (0–30 days)', filter: (p: any) => p.paymentStatus !== 'PAID' && (now - new Date(p.billDate).getTime()) <= 30 * 86400000 },
-                        { label: '31–60 days', filter: (p: any) => p.paymentStatus !== 'PAID' && (now - new Date(p.billDate).getTime()) > 30 * 86400000 && (now - new Date(p.billDate).getTime()) <= 60 * 86400000 },
-                        { label: '61–90 days', filter: (p: any) => p.paymentStatus !== 'PAID' && (now - new Date(p.billDate).getTime()) > 60 * 86400000 && (now - new Date(p.billDate).getTime()) <= 90 * 86400000 },
-                        { label: '91–180 days', filter: (p: any) => p.paymentStatus !== 'PAID' && (now - new Date(p.billDate).getTime()) > 90 * 86400000 && (now - new Date(p.billDate).getTime()) <= 180 * 86400000 },
-                        { label: '180+ days (Overdue)', filter: (p: any) => p.paymentStatus !== 'PAID' && (now - new Date(p.billDate).getTime()) > 180 * 86400000 },
+                        { label: 'Current (0–30 days)', filter: (p: any) => (p.paymentStatus !== 'PAID' && p.status !== 'paid') && (now - new Date(p.billDate).getTime()) <= 30 * 86400000 },
+                        { label: '31–60 days', filter: (p: any) => (p.paymentStatus !== 'PAID' && p.status !== 'paid') && (now - new Date(p.billDate).getTime()) > 30 * 86400000 && (now - new Date(p.billDate).getTime()) <= 60 * 86400000 },
+                        { label: '61–90 days', filter: (p: any) => (p.paymentStatus !== 'PAID' && p.status !== 'paid') && (now - new Date(p.billDate).getTime()) > 60 * 86400000 && (now - new Date(p.billDate).getTime()) <= 90 * 86400000 },
+                        { label: '91–180 days', filter: (p: any) => (p.paymentStatus !== 'PAID' && p.status !== 'paid') && (now - new Date(p.billDate).getTime()) > 90 * 86400000 && (now - new Date(p.billDate).getTime()) <= 180 * 86400000 },
+                        { label: '180+ days (Overdue)', filter: (p: any) => (p.paymentStatus !== 'PAID' && p.status !== 'paid') && (now - new Date(p.billDate).getTime()) > 180 * 86400000 },
                       ];
                       const colors = ['text-emerald-700 bg-emerald-50', 'text-amber-700 bg-amber-50', 'text-orange-700 bg-orange-50', 'text-red-700 bg-red-50', 'text-red-900 bg-red-100'];
                       return buckets.map((b, i) => {
-                        const matching = purchases.filter(b.filter);
-                        const total = matching.reduce((s: number, p: any) => s + (p.grandTotal - p.paidAmount), 0);
+                        const matching = safePurchases.filter(b.filter);
+                        const total = matching.reduce((s: number, p: any) => s + ((p.grandTotal || 0) - (p.paidAmount || p.amountReceived || 0)), 0);
                         return (
                           <div key={i} className={`flex items-center justify-between p-4 rounded-xl ${colors[i].split(' ')[1]}`}>
                             <div>
