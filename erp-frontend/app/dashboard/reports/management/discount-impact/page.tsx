@@ -51,7 +51,7 @@ export default function DiscountImpactPage() {
     setError(null);
     try {
       const res = await reportsApi.getDiscountImpact({ fromDate, toDate });
-      setData((res as any).data?.data || null);
+      setData((res as any).data || res || null);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }

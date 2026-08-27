@@ -143,3 +143,14 @@ export function compactINR(v: unknown): string {
   if (n >= 1_000) return `₹${(n / 1_000).toFixed(1)}K`;
   return `₹${n.toFixed(0)}`;
 }
+
+/** Safely extracts an array from various API response shapes. */
+export function extractArray(res: any): any[] {
+  if (!res) return [];
+  if (Array.isArray(res)) return res;
+  if (Array.isArray(res.data)) return res.data;
+  if (res.data && Array.isArray(res.data.data)) return res.data.data;
+  if (Array.isArray(res.items)) return res.items;
+  if (res.data && Array.isArray(res.data.items)) return res.data.items;
+  return [];
+}

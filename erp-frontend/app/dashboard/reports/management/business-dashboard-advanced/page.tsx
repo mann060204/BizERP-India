@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi, dashboardApi } from '../../../../../lib/erp-api';
+import { extractArray } from '../../../../../lib/report-utils';
 
 const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
 const NUM = (v: number) => new Intl.NumberFormat('en-IN').format(v || 0);
@@ -75,10 +76,10 @@ export default function BusinessHealthDashboard() {
         dashboardApi.topCustomers({ period }),
         reportsApi.getTopSellingProducts(),
       ]);
-      setKpis((dashRes as any).data?.data?.kpis || (dashRes as any).data?.kpis || null);
-      setTrend((trendRes as any).data || (trendRes as any).trend || []);
-      setTopCustomers((custRes as any).data?.customers || (custRes as any).data || []);
-      setTopProducts((prodRes as any).data?.data || (prodRes as any).data || []);
+      setKpis((dashRes as any).data?.data?.kpis || (dashRes as any).data?.kpis || (dashRes as any).kpis || null);
+      setTrend(extractArray((trendRes as any).trend || trendRes));
+      setTopCustomers(extractArray((custRes as any).data?.customers || custRes));
+      setTopProducts(extractArray(prodRes));
     } catch (e) {
       console.error(e);
     } finally {
@@ -89,9 +90,9 @@ export default function BusinessHealthDashboard() {
   useEffect(() => { loadAll(); }, [loadAll]);
 
   const kpiCards = kpis ? [
-    { title: 'Total Revenue',      value: INR(kpis.revenue),       icon: TrendingUp,     color: 'bg-emerald-500', trend: kpis.revenueGrowth },
+    { title: 'Total Revenue',      value: INR(kpis.revenue),       icon: TrendingUp,     color: 'bg-emerald-500', trend: null },
     { title: 'Total Purchases',    value: INR(kpis.purchases),     icon: ShoppingCart,   color: 'bg-red-500',     trend: null },
-    { title: 'Gross Profit',       value: INR(kpis.grossProfit),   icon: BarChart3,      color: 'bg-indigo-500',  trend: kpis.profitGrowth },
+    { title: 'Profit Margin',       value: `${((kpis.profit / (kpis.revenue || 1)) * 100).toFixed(1)}%`,   icon: BarChart3,      color: 'bg-indigo-500',  trend: null },
     { title: 'Net Profit',         value: INR(kpis.profit),        icon: IndianRupee,    color: 'bg-blue-500',    trend: null, sub: `Margin: ${((kpis.profit / (kpis.revenue || 1)) * 100).toFixed(1)}%` },
     { title: 'Total Expenses',     value: INR(kpis.expenses),      icon: DollarSign,     color: 'bg-orange-500',  trend: null },
     { title: 'Receivables',        value: INR(kpis.receivables),   icon: AlertTriangle,  color: 'bg-amber-500',   trend: null },
@@ -171,12 +172,12 @@ export default function BusinessHealthDashboard() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
-                      <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#6366f1" fill="url(#revGrad)" strokeWidth={2} dot={false} />
-                      <Area type="monotone" dataKey="purchase" name="Purchase" stroke="#ef4444" fill="url(#purGrad)" strokeWidth={2} dot={false} />
+                      <Area type="monotone" dataKey="sales" name="Revenue" stroke="#6366f1" fill="url(#revGrad)" strokeWidth={2} dot={false} />
+                      <Area type="monotone" dataKey="purchases" name="Purchase" stroke="#ef4444" fill="url(#purGrad)" strokeWidth={2} dot={false} />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
@@ -191,7 +192,7 @@ export default function BusinessHealthDashboard() {
                   <>
                     <ResponsiveContainer width="100%" height={160}>
                       <PieChart>
-                        <Pie data={topCustomers.slice(0, 5)} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="totalSales">
+                        <Pie data={topCustomers.slice(0, 5)} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="revenue">
                           {topCustomers.slice(0, 5).map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(v: any) => INR(v)} />
@@ -202,9 +203,9 @@ export default function BusinessHealthDashboard() {
                         <div key={i} className="flex items-center justify-between text-xs">
                           <div className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
-                            <span className="text-slate-600 truncate max-w-[130px]">{c.customerName || c.name || 'Unknown'}</span>
+                            <span className="text-slate-600 truncate max-w-[130px]">{c.customer || c.customerName || c.name || 'Unknown'}</span>
                           </div>
-                          <span className="font-semibold text-slate-800">{INR(c.totalSales || c.revenue)}</span>
+                          <span className="font-semibold text-slate-800">{INR(c.revenue || c.totalSales)}</span>
                         </div>
                       ))}
                     </div>
@@ -225,9 +226,9 @@ export default function BusinessHealthDashboard() {
                     <BarChart data={topProducts.slice(0, 7)} layout="vertical" margin={{ left: 0, right: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
-                      <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={100} />
+                      <YAxis type="category" dataKey="product" tick={{ fontSize: 10 }} width={100} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="totalRevenue" name="Revenue" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                      <Bar dataKey="revenue" name="Revenue" fill="#6366f1" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -241,7 +242,6 @@ export default function BusinessHealthDashboard() {
                 {kpis && (
                   <div className="space-y-0 divide-y divide-slate-100">
                     {[
-                      { label: 'Gross Profit Margin',    value: `${((kpis.grossProfit / (kpis.revenue || 1)) * 100).toFixed(1)}%`, positive: kpis.grossProfit > 0 },
                       { label: 'Net Profit Margin',      value: `${((kpis.profit / (kpis.revenue || 1)) * 100).toFixed(1)}%`, positive: kpis.profit > 0 },
                       { label: 'Working Capital',        value: INR((kpis.receivables || 0) + (kpis.inventoryValue || 0) + (kpis.cashBalance || 0) - (kpis.payables || 0)), positive: true },
                       { label: 'Receivables',            value: INR(kpis.receivables), positive: false },

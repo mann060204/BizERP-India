@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, ArrowLeft, Search, Users, IndianRupee, AlertTriangle, History, Package, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { customersApi, reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safeNum, safeDate } from '../../../../../lib/report-utils';
+import { safeINR, safeNum, safeDate, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 
@@ -38,8 +38,8 @@ export default function Customer360Page() {
         customersApi.getLedger(c._id),
         reportsApi.getSalesInvoicewise({ customerId: c._id }),
       ]);
-      setLedger((ledgerRes as any).data?.ledger || (ledgerRes as any).data || []);
-      setInvoices((invRes as any).data?.data || []);
+      setLedger(extractArray((ledgerRes as any).data?.ledger || ledgerRes));
+      setInvoices(extractArray(invRes));
     } catch (e: any) {
       setDetailError(e?.response?.data?.message || e?.message || 'Failed to load customer data');
     } finally { setLoadingDetail(false); }

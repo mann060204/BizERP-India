@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, ArrowLeft, Search, Truck, IndianRupee, AlertTriangle, Package, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { suppliersApi, reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 
@@ -37,8 +37,8 @@ export default function Supplier360Page() {
         suppliersApi.getLedger(s._id),
         reportsApi.getPurchasesBillwise({ supplierId: s._id }),
       ]);
-      setLedger((ledgerRes as any).data?.ledger || (ledgerRes as any).data || []);
-      setPurchases((purchRes as any).data?.data || (purchRes as any).data || []);
+      setLedger(extractArray((ledgerRes as any).data?.ledger || ledgerRes));
+      setPurchases(extractArray(purchRes));
     } catch (e: any) {
       setDetailError(e?.response?.data?.message || e?.message || 'Failed to load supplier data');
     } finally { setLoadingDetail(false); }

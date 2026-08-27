@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#14b8a6'];
@@ -41,9 +41,9 @@ export default function CategoryPerformancePage() {
         reportsApi.getCategoryWiseProfitAndLoss(),
         reportsApi.getCategoryWiseMargin(),
       ]);
-      setCatSales((salesRes as any).data?.data || []);
-      setCatPnl((pnlRes as any).data?.data || []);
-      setCatMargin((marginRes as any).data?.data || []);
+      setCatSales(extractArray(salesRes));
+      setCatPnl(extractArray(pnlRes));
+      setCatMargin(extractArray(marginRes));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }

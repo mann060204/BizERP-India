@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -39,10 +39,10 @@ export default function CustomerPerformancePage() {
         reportsApi.getRepeatCustomerReport(),
         reportsApi.getCustomerPurchaseFrequency(),
       ]);
-      setTopCust((topRes as any).data?.data?.data || (topRes as any).data?.data || (topRes as any).data || []);
-      setClv((clvRes as any).data?.data || []);
-      setRepeat((repeatRes as any).data?.data || []);
-      setFreq((freqRes as any).data?.data || []);
+      setTopCust(extractArray(topRes));
+      setClv(extractArray(clvRes));
+      setRepeat(extractArray(repeatRes));
+      setFreq(extractArray(freqRes));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }

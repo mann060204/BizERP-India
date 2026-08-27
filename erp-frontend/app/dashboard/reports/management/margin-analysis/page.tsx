@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 
@@ -42,7 +42,7 @@ export default function MarginAnalysisPage() {
     setError(null);
     try {
       const res = await (reportsApi as any)[d.fetch]();
-      setData((res as any).data?.data || (res as any).data || []);
+      setData(extractArray(res));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }

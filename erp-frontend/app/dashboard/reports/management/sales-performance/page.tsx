@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, Minus, Users, Package, BarChart3, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
 
@@ -66,22 +66,19 @@ export default function SalesPerformancePage() {
         reportsApi.getTopSellingProducts(),
         reportsApi.getSalespersonPerformance(),
       ]);
-      const trendData = (trendRes as any).data?.data?.data || (trendRes as any).data?.data || [];
-      const trendSum = (trendRes as any).data?.data?.summary || null;
-      setTrend(Array.isArray(trendData) ? trendData : []);
+      const trendData = extractArray(trendRes);
+      const trendSum = (trendRes as any).summary || (trendRes as any).data?.summary || null;
+      setTrend(trendData);
       setSummary(trendSum);
 
       // Top customers: backend returns { customer, revenue, orders, outstanding }
-      const custRaw = (custRes as any).data?.data?.data || (custRes as any).data?.data || (custRes as any).data || [];
-      setTopCustomers(Array.isArray(custRaw) ? custRaw : []);
+      setTopCustomers(extractArray(custRes));
 
       // Top products: backend returns { product, revenue, quantitySold, margin }
-      const prodRaw = (prodRes as any).data?.data?.data || (prodRes as any).data?.data || (prodRes as any).data || [];
-      setTopProducts(Array.isArray(prodRaw) ? prodRaw : []);
+      setTopProducts(extractArray(prodRes));
 
       // Salesperson: backend returns { salesperson, orders, revenue, profit, collectionPct }
-      const spRaw = (spRes as any).data?.data?.data || (spRes as any).data?.data || (spRes as any).data || [];
-      setSalesperson(Array.isArray(spRaw) ? spRaw : []);
+      setSalesperson(extractArray(spRes));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }

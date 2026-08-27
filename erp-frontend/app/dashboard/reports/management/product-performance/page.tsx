@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -38,9 +38,9 @@ export default function ProductPerformancePage() {
         reportsApi.getBottom100Products(),
         reportsApi.getAbcAnalysis(),
       ]);
-      setTop100((topRes as any).data?.data || []);
-      setBottom100((botRes as any).data?.data || []);
-      setAbc((abcRes as any).data?.data || []);
+      setTop100(extractArray(topRes));
+      setBottom100(extractArray(botRes));
+      setAbc(extractArray(abcRes));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, ArrowLeft, Banknote, AlertCircle, Download } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum, safeDate, getPresetRange, formatDateForAPI, currentFYStart } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, safeDate, getPresetRange, formatDateForAPI, currentFYStart, extractArray } from '../../../../../lib/report-utils';
 
 const STATUS_COLORS: Record<string, string> = {
   paid: 'bg-emerald-50 text-emerald-700',
@@ -40,9 +40,9 @@ export default function CashInvoiceReportPage() {
       if (statusFilter) params.status = statusFilter;
 
       const res = await reportsApi.getCashInvoiceReport(params);
-      const d = (res as any).data?.data;
+      const d = res || (res as any).data;
       setSummary(d?.summary || null);
-      setRows(Array.isArray(d?.data) ? d.data : []);
+      setRows(extractArray(d));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }
