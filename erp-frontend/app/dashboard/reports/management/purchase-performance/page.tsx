@@ -4,23 +4,28 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer
 } from 'recharts';
-import { RefreshCw, ArrowLeft } from 'lucide-react';
+import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl">
+    <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl border border-slate-700">
       <p className="font-semibold mb-1">{label}</p>
-      {payload.map((p: any, i: number) => <p key={i} style={{ color: p.color }}>{p.name}: {typeof p.value === 'number' && p.value > 1000 ? INR(p.value) : p.value}</p>)}
+      {payload.map((p: any, i: number) => (
+        <p key={i} style={{ color: p.color }}>
+          {p.name}: {typeof p.value === 'number' && p.value > 1000 ? safeINR(p.value) : p.value}
+        </p>
+      ))}
     </div>
   );
 };
 
 export default function PurchasePerformancePage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [trend, setTrend] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
@@ -28,18 +33,24 @@ export default function PurchasePerformancePage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [trendRes, suppRes, sumRes] = await Promise.all([
+      const [trendRes, suppRes] = await Promise.all([
         reportsApi.getPurchaseTrend(),
         reportsApi.getSupplierPerformance(),
-        reportsApi.getPurchaseSummaryReport(),
       ]);
-      const t = (trendRes as any).data?.data?.data || (trendRes as any).data?.data || [];
-      setTrend(Array.isArray(t) ? t : []);
-      setSummary((trendRes as any).data?.data?.summary || null);
-      setSuppliers((suppRes as any).data?.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      // Backend: { data: { summary: {...}, data: [...] } }
+      const trendData = (trendRes as any).data?.data?.data || (trendRes as any).data?.data || [];
+      const trendSum = (trendRes as any).data?.data?.summary || null;
+      setTrend(Array.isArray(trendData) ? trendData : []);
+      setSummary(trendSum);
+
+      // Backend supplier fields: supplier, purchaseValue, deliveries, delayedDeliveries
+      const suppRaw = (suppRes as any).data?.data?.data || (suppRes as any).data?.data || (suppRes as any).data || [];
+      setSuppliers(Array.isArray(suppRaw) ? suppRaw : []);
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -62,18 +73,29 @@ export default function PurchasePerformancePage() {
       </header>
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold text-red-800 text-sm">Unable to load this report.</p>
+              <p className="text-red-600 text-xs mt-0.5">{error}</p>
+            </div>
+            <button onClick={load} className="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">Retry</button>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-32"><RefreshCw className="w-8 h-8 text-red-400 animate-spin" /></div>
-        ) : (
+        ) : !error && (
           <>
             {/* KPIs */}
             {summary && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Avg Monthly Purchase', value: INR(summary.monthlyPurchase || summary.monthlyRevenue) },
-                  { label: 'Total Bills', value: (summary.billCount || summary.ordersCount || 0).toString() },
-                  { label: 'Avg Bill Value', value: INR(summary.averageBillValue || summary.averageOrderValue) },
-                  { label: 'Growth %', value: `${(summary.growthPct || 0).toFixed(1)}%` },
+                  { label: 'Avg Monthly Purchase', value: safeINR(summary.monthlyPurchases || summary.monthlyRevenue) },
+                  { label: 'Total Bills', value: String(safeNum(summary.billCount || summary.ordersCount)) },
+                  { label: 'Avg Bill Value', value: safeINR(summary.averageOrderValue) },
+                  { label: 'Growth %', value: safePctStr(summary.purchaseGrowthPct || summary.growthPct) },
                 ].map((c, i) => (
                   <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                     <div className="text-xs text-slate-400 uppercase tracking-wider mb-2">{c.label}</div>
@@ -83,11 +105,12 @@ export default function PurchasePerformancePage() {
               </div>
             )}
 
+            {/* Tabs */}
             <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
               {(['trend', 'suppliers'] as const).map(t => (
                 <button key={t} onClick={() => setTab(t)}
-                  className={`px-4 py-1.5 text-sm font-semibold rounded-lg capitalize transition-all ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                  {t === 'trend' ? 'Purchase Trend' : 'Supplier Performance'}
+                  className={`px-5 py-2 text-sm font-semibold rounded-lg capitalize transition-all ${tab === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                  {t === 'trend' ? '📈 Purchase Trend' : '🏭 Supplier Performance'}
                 </button>
               ))}
             </div>
@@ -97,69 +120,68 @@ export default function PurchasePerformancePage() {
                 <>
                   <h3 className="font-semibold text-slate-800 mb-4">Monthly Purchase Trend</h3>
                   {trend.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={280}>
+                    <ResponsiveContainer width="100%" height={300}>
                       <AreaChart data={trend}>
                         <defs>
                           <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} /><stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend />
-                        <Area type="monotone" dataKey="revenue" name="Purchase Value" stroke="#ef4444" fill="url(#pg)" strokeWidth={2} dot={false} />
+                        <Area type="monotone" dataKey="purchaseValue" name="Purchase Value" stroke="#ef4444" fill="url(#pg)" strokeWidth={2} dot={false} />
                       </AreaChart>
                     </ResponsiveContainer>
-                  ) : <div className="text-center py-12 text-slate-400">No trend data available</div>}
-                  <table className="w-full text-sm mt-6 border-t border-slate-100">
-                    <thead><tr className="text-xs text-slate-500 uppercase bg-slate-50">
-                      <th className="px-4 py-2.5 text-left">Month</th>
-                      <th className="px-4 py-2.5 text-right">Purchase Value</th>
-                      <th className="px-4 py-2.5 text-right">Bills</th>
-                      <th className="px-4 py-2.5 text-right">Growth %</th>
-                    </tr></thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {trend.map((r: any, i: number) => (
-                        <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-2.5 font-medium">{r.month}</td>
-                          <td className="px-4 py-2.5 text-right">{INR(r.revenue || r.purchase)}</td>
-                          <td className="px-4 py-2.5 text-right">{r.orders || '—'}</td>
-                          <td className={`px-4 py-2.5 text-right font-semibold ${(r.growthPct || 0) >= 0 ? 'text-amber-600' : 'text-emerald-600'}`}>{(r.growthPct || 0).toFixed(1)}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  ) : <div className="text-center py-12 text-slate-400">No purchase trend data available</div>}
+                  {trend.length > 0 && (
+                    <table className="w-full text-sm mt-6 border-t border-slate-100">
+                      <thead><tr className="text-xs text-slate-500 uppercase bg-slate-50">
+                        <th className="px-4 py-2.5 text-left">Month</th>
+                        <th className="px-4 py-2.5 text-right">Purchase Value</th>
+                        <th className="px-4 py-2.5 text-right">Suppliers</th>
+                        <th className="px-4 py-2.5 text-right">Growth %</th>
+                      </tr></thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {trend.map((r: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-4 py-2.5 font-medium">{r.month}</td>
+                            <td className="px-4 py-2.5 text-right">{safeINR(r.purchaseValue)}</td>
+                            <td className="px-4 py-2.5 text-right">{safeNum(r.supplierCount)}</td>
+                            <td className={`px-4 py-2.5 text-right font-semibold ${safeNum(r.growthPct) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {safePctStr(r.growthPct)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </>
               )}
+
               {tab === 'suppliers' && (
                 <>
-                  <h3 className="font-semibold text-slate-800 mb-4">Top Suppliers by Purchase Value</h3>
-                  {suppliers.slice(0, 10).length > 0 ? (
-                    <ResponsiveContainer width="100%" height={260}>
-                      <BarChart data={suppliers.slice(0, 10)} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
-                        <YAxis type="category" dataKey="supplierName" tick={{ fontSize: 10 }} width={120} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="totalPurchase" name="Purchase Value" fill="#ef4444" radius={[0, 4, 4, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : <div className="text-center py-12 text-slate-400">No supplier data</div>}
-                  <table className="w-full text-sm mt-6 border-t border-slate-100">
-                    <thead><tr className="text-xs text-slate-500 uppercase bg-slate-50">
+                  <h3 className="font-semibold text-slate-800 mb-4">Supplier-wise Purchase Performance</h3>
+                  <table className="w-full text-sm">
+                    <thead><tr className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
                       <th className="px-4 py-2.5 text-left">Supplier</th>
-                      <th className="px-4 py-2.5 text-right">Total Purchase</th>
+                      <th className="px-4 py-2.5 text-right">Purchase Value</th>
                       <th className="px-4 py-2.5 text-right">Bills</th>
+                      <th className="px-4 py-2.5 text-right">Delayed</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {suppliers.map((r: any, i: number) => (
+                      {suppliers.length === 0 ? (
+                        <tr><td colSpan={4} className="text-center py-12 text-slate-400">No supplier data available</td></tr>
+                      ) : suppliers.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-2.5 font-medium">{r.supplierName || r.name || '—'}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">{INR(r.totalPurchase || r.revenue)}</td>
-                          <td className="px-4 py-2.5 text-right">{r.billCount || r.invoiceCount || '—'}</td>
+                          {/* Backend field: supplier (not name) */}
+                          <td className="px-4 py-2.5 font-medium">{r.supplier || r.supplierName || r.name || '—'}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold">{safeINR(r.purchaseValue || r.totalPurchase)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeNum(r.deliveries || r.billCount)}</td>
+                          <td className={`px-4 py-2.5 text-right ${safeNum(r.delayedDeliveries) > 0 ? 'text-red-600 font-semibold' : 'text-slate-400'}`}>
+                            {safeNum(r.delayedDeliveries) > 0 ? safeNum(r.delayedDeliveries) : '—'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -4,11 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, LineChart, Line, AreaChart, Area
 } from 'recharts';
-import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const INR = safeINR;
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -37,9 +38,11 @@ export default function ProfitPerformancePage() {
   const [profitTrend, setProfitTrend] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [tab, setTab] = useState<'trend' | 'category' | 'margin'>('trend');
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [pnlRes, trendRes, catRes] = await Promise.all([
         reportsApi.pnl(),
@@ -47,11 +50,12 @@ export default function ProfitPerformancePage() {
         reportsApi.getCategoryWiseProfitAndLoss(),
       ]);
       setPnlData((pnlRes as any).data?.data || null);
-      const t = (trendRes as any).data?.data?.data || [];
+      const t = (trendRes as any).data?.data?.data || (trendRes as any).data?.data || [];
       setProfitTrend(Array.isArray(t) ? t : []);
       setCategoryData((catRes as any).data?.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);

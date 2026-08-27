@@ -4,11 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { RefreshCw, ArrowLeft } from 'lucide-react';
+import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const INR = safeINR;
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#14b8a6'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -29,9 +30,11 @@ export default function CategoryPerformancePage() {
   const [catPnl, setCatPnl] = useState<any[]>([]);
   const [catMargin, setCatMargin] = useState<any[]>([]);
   const [tab, setTab] = useState<'sales' | 'pnl' | 'margin'>('sales');
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [salesRes, pnlRes, marginRes] = await Promise.all([
         reportsApi.getCategoryWiseSales(),
@@ -41,8 +44,9 @@ export default function CategoryPerformancePage() {
       setCatSales((salesRes as any).data?.data || []);
       setCatPnl((pnlRes as any).data?.data || []);
       setCatMargin((marginRes as any).data?.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -67,6 +71,13 @@ export default function CategoryPerformancePage() {
       </header>
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1"><p className="font-semibold text-red-800 text-sm">Unable to load this report.</p><p className="text-red-600 text-xs mt-0.5">{error}</p></div>
+            <button onClick={load} className="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">Retry</button>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center py-32"><RefreshCw className="w-8 h-8 text-sky-400 animate-spin" /></div>
         ) : (

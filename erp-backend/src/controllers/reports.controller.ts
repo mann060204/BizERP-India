@@ -2690,3 +2690,96 @@ export const getDashboardSupplierPending = async (req: AuthRequest, res: Respons
   } catch (e: any) { sendError(res, e.message); }
 };
 
+// ─── CASH INVOICE REPORT ──────────────────────────────────────────────────────
+// GET /reports/sales/cash-invoice
+// A "Cash Invoice" is identified by billTo === 'Cash' (the semantic field on the
+// Invoice model). paymentMode can be used as an ADDITIONAL filter only.
+export const getCashInvoiceReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const {
+      fromDate, toDate,
+      customerId,
+      paymentMode,
+      soldBy,
+      invoiceType,   // 'GST' | 'NON-GST' | 'Bill of Supply'
+      status,
+    } = req.query as Record<string, string>;
+
+    // Build date range
+    const dateFilter: any = {};
+    if (fromDate) dateFilter.$gte = new Date(fromDate);
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      dateFilter.$lte = to;
+    }
+
+    // Build match filter
+    const match: any = {
+      businessId,
+      billTo: 'Cash',           // Primary cash invoice definition
+      status: { $ne: 'cancelled' },
+    };
+
+    if (Object.keys(dateFilter).length) match.invoiceDate = dateFilter;
+    if (customerId) match.customerId = new mongoose.Types.ObjectId(customerId);
+    if (paymentMode) match.paymentMode = paymentMode;
+    if (soldBy) match.soldBy = soldBy;
+    if (invoiceType) match.invoiceType = invoiceType;
+    if (status) match.status = status;
+
+    const invoices = await Invoice.find(match)
+      .sort({ invoiceDate: -1 })
+      .lean();
+
+    // Summary aggregation
+    let totalInvoices = 0;
+    let totalSales = 0;
+    let totalDiscount = 0;
+    let totalGST = 0;
+    let totalReceived = 0;
+    let totalOutstanding = 0;
+
+    const rows = invoices.map((inv: any) => {
+      totalInvoices++;
+      totalSales += inv.grandTotal || 0;
+      totalDiscount += inv.totalDiscount || 0;
+      totalGST += inv.totalGST || 0;
+      totalReceived += inv.amountReceived || 0;
+      totalOutstanding += inv.balance || 0;
+
+      return {
+        invoiceNumber: inv.invoiceNumber,
+        invoiceDate: inv.invoiceDate,
+        customerName: inv.customerSnapshot?.name || 'Cash Customer',
+        invoiceType: inv.invoiceType,
+        gstType: inv.invoiceType === 'NON-GST' ? 'Non-GST' : 'GST',
+        paymentMode: inv.paymentMode || 'Cash',
+        soldBy: inv.soldBy || '—',
+        subtotal: inv.subtotal || 0,
+        discount: inv.totalDiscount || 0,
+        gst: inv.totalGST || 0,
+        grandTotal: inv.grandTotal || 0,
+        amountReceived: inv.amountReceived || 0,
+        balance: inv.balance || 0,
+        status: inv.status,
+        billTo: inv.billTo,
+      };
+    });
+
+    sendSuccess(res, {
+      summary: {
+        totalInvoices,
+        totalSales,
+        totalDiscount,
+        totalGST,
+        totalReceived,
+        totalOutstanding,
+      },
+      data: rows,
+    });
+  } catch (e: any) { sendError(res, e.message); }
+};
+
+

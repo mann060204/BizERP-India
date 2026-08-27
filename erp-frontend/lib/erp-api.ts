@@ -269,6 +269,10 @@ export const reportsApi = {
   getSupplierWiseProfit: () => api.get('/reports/special/supplier-wise-profit'),
   getInvoiceWiseProfit: () => api.get('/reports/special/invoice-wise-profit'),
   getBrandWiseProfit: () => api.get('/reports/special/brand-wise-profit'),
+
+  // --- DISCOUNT IMPACT & CASH INVOICE (NEW) ---
+  getDiscountImpact: (params?: any) => api.get('/reports/advanced/discount-impact', { params }),
+  getCashInvoiceReport: (params?: any) => api.get('/reports/sales/cash-invoice', { params }),
 };
 
 // ─── Business / Settings ──────────────────────────────────────────────────────

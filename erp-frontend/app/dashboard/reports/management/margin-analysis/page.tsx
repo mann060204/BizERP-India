@@ -4,11 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const INR = safeINR;
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -34,14 +35,17 @@ export default function MarginAnalysisPage() {
   const [dim, setDim] = useState<typeof DIMENSIONS[number]>(DIMENSIONS[0]);
   const [data, setData] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'profit' | 'margin' | 'sales'>('profit');
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (d: typeof DIMENSIONS[number]) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await (reportsApi as any)[d.fetch]();
       setData((res as any).data?.data || (res as any).data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(dim); }, [dim, load]);
@@ -70,6 +74,13 @@ export default function MarginAnalysisPage() {
       </header>
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1"><p className="font-semibold text-red-800 text-sm">Unable to load this report.</p><p className="text-red-600 text-xs mt-0.5">{error}</p></div>
+            <button onClick={() => load(dim)} className="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">Retry</button>
+          </div>
+        )}
         {/* Dimension Selector */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">

@@ -2,13 +2,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell
+  Legend, ResponsiveContainer, LineChart, Line
 } from 'recharts';
-import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, Minus, Users, Package, BarChart3 } from 'lucide-react';
+import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, Minus, Users, Package, BarChart3, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { reportsApi, dashboardApi } from '../../../../../lib/erp-api';
+import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -17,7 +17,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl border border-slate-700">
       <p className="font-semibold mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: {typeof p.value === 'number' && p.value > 1000 ? INR(p.value) : p.value}</p>
+        <p key={i} style={{ color: p.color }}>
+          {p.name}: {typeof p.value === 'number' && p.value > 1000 ? safeINR(p.value) : p.value}
+        </p>
       ))}
     </div>
   );
@@ -27,11 +29,13 @@ function KPICard({ title, value, sub, icon: Icon, color, growth }: any) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}><Icon className="w-5 h-5 text-white" /></div>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
         {growth !== undefined && growth !== null && (
           <div className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${growth > 0 ? 'bg-emerald-50 text-emerald-700' : growth < 0 ? 'bg-red-50 text-red-700' : 'bg-slate-50 text-slate-500'}`}>
             {growth > 0 ? <TrendingUp className="w-3 h-3" /> : growth < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-            {`${growth > 0 ? '+' : ''}${(growth || 0).toFixed(1)}%`}
+            {`${growth > 0 ? '+' : ''}${safeNum(growth).toFixed(1)}%`}
           </div>
         )}
       </div>
@@ -44,6 +48,7 @@ function KPICard({ title, value, sub, icon: Icon, color, growth }: any) {
 
 export default function SalesPerformancePage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [trend, setTrend] = useState<any[]>([]);
   const [topCustomers, setTopCustomers] = useState<any[]>([]);
   const [topProducts, setTopProducts] = useState<any[]>([]);
@@ -53,6 +58,7 @@ export default function SalesPerformancePage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [trendRes, custRes, prodRes, spRes] = await Promise.all([
         reportsApi.getSalesTrend(),
@@ -64,11 +70,21 @@ export default function SalesPerformancePage() {
       const trendSum = (trendRes as any).data?.data?.summary || null;
       setTrend(Array.isArray(trendData) ? trendData : []);
       setSummary(trendSum);
-      setTopCustomers((custRes as any).data?.data || (custRes as any).data || []);
-      setTopProducts((prodRes as any).data?.data || (prodRes as any).data || []);
-      setSalesperson((spRes as any).data?.data || (spRes as any).data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+
+      // Top customers: backend returns { customer, revenue, orders, outstanding }
+      const custRaw = (custRes as any).data?.data?.data || (custRes as any).data?.data || (custRes as any).data || [];
+      setTopCustomers(Array.isArray(custRaw) ? custRaw : []);
+
+      // Top products: backend returns { product, revenue, quantitySold, margin }
+      const prodRaw = (prodRes as any).data?.data?.data || (prodRes as any).data?.data || (prodRes as any).data || [];
+      setTopProducts(Array.isArray(prodRaw) ? prodRaw : []);
+
+      // Salesperson: backend returns { salesperson, orders, revenue, profit, collectionPct }
+      const spRaw = (spRes as any).data?.data?.data || (spRes as any).data?.data || (spRes as any).data || [];
+      setSalesperson(Array.isArray(spRaw) ? spRaw : []);
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -93,16 +109,28 @@ export default function SalesPerformancePage() {
       </header>
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6">
+        {/* Error state */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold text-red-800 text-sm">Unable to load this report.</p>
+              <p className="text-red-600 text-xs mt-0.5">{error}</p>
+            </div>
+            <button onClick={load} className="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">Retry</button>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-32"><RefreshCw className="w-8 h-8 text-emerald-400 animate-spin" /></div>
-        ) : (
+        ) : !error && (
           <>
             {/* KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <KPICard title="Avg Monthly Revenue" value={INR(summary?.monthlyRevenue)} icon={BarChart3} color="bg-emerald-500" growth={summary?.growthPct} />
-              <KPICard title="Total Orders" value={new Intl.NumberFormat('en-IN').format(summary?.ordersCount || 0)} icon={Package} color="bg-indigo-500" />
-              <KPICard title="Avg Order Value" value={INR(summary?.averageOrderValue)} icon={TrendingUp} color="bg-blue-500" />
-              <KPICard title="Growth Rate" value={`${(summary?.growthPct || 0).toFixed(1)}%`} icon={summary?.growthPct >= 0 ? TrendingUp : TrendingDown} color={summary?.growthPct >= 0 ? 'bg-emerald-500' : 'bg-red-500'} />
+              <KPICard title="Avg Monthly Revenue" value={safeINR(summary?.monthlyRevenue)} icon={BarChart3} color="bg-emerald-500" growth={summary?.growthPct} />
+              <KPICard title="Total Orders" value={new Intl.NumberFormat('en-IN').format(safeNum(summary?.ordersCount))} icon={Package} color="bg-indigo-500" />
+              <KPICard title="Avg Order Value" value={safeINR(summary?.averageOrderValue)} icon={TrendingUp} color="bg-blue-500" />
+              <KPICard title="Growth Rate" value={safePctStr(summary?.growthPct)} icon={safeNum(summary?.growthPct) >= 0 ? TrendingUp : TrendingDown} color={safeNum(summary?.growthPct) >= 0 ? 'bg-emerald-500' : 'bg-red-500'} />
             </div>
 
             {/* Tabs */}
@@ -130,15 +158,13 @@ export default function SalesPerformancePage() {
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
+                        <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend />
                         <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" fill="url(#sg)" strokeWidth={2} dot={false} />
-                        <Line type="monotone" dataKey="orders" name="Orders" stroke="#6366f1" strokeWidth={2} dot={false} yAxisId={1} />
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : <div className="text-center py-12 text-slate-400">No sales trend data available</div>}
-                  {/* Table */}
                   {trend.length > 0 && (
                     <table className="w-full text-sm mt-6 border-t border-slate-100">
                       <thead><tr className="text-xs text-slate-500 uppercase bg-slate-50">
@@ -152,10 +178,12 @@ export default function SalesPerformancePage() {
                         {trend.map((r: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-2.5 font-medium">{r.month}</td>
-                            <td className="px-4 py-2.5 text-right">{INR(r.revenue)}</td>
-                            <td className="px-4 py-2.5 text-right">{r.orders}</td>
-                            <td className="px-4 py-2.5 text-right">{INR(r.revenue / (r.orders || 1))}</td>
-                            <td className={`px-4 py-2.5 text-right font-semibold ${(r.growthPct || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{(r.growthPct || 0).toFixed(1)}%</td>
+                            <td className="px-4 py-2.5 text-right">{safeINR(r.revenue)}</td>
+                            <td className="px-4 py-2.5 text-right">{safeNum(r.orders)}</td>
+                            <td className="px-4 py-2.5 text-right">{safeINR(safeNum(r.revenue) / (safeNum(r.orders) || 1))}</td>
+                            <td className={`px-4 py-2.5 text-right font-semibold ${safeNum(r.growthPct) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {safePctStr(r.growthPct)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -171,10 +199,11 @@ export default function SalesPerformancePage() {
                     <ResponsiveContainer width="100%" height={280}>
                       <BarChart data={topCustomers.slice(0, 10)} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
-                        <YAxis type="category" dataKey="customerName" tick={{ fontSize: 10 }} width={110} />
+                        <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
+                        {/* Backend field: customer (not customerName) */}
+                        <YAxis type="category" dataKey="customer" tick={{ fontSize: 10 }} width={110} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="totalSales" name="Revenue" fill="#10b981" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="revenue" name="Revenue" fill="#10b981" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : <div className="text-center py-12 text-slate-400">No customer data available</div>}
@@ -184,14 +213,21 @@ export default function SalesPerformancePage() {
                       <th className="px-4 py-2.5 text-right">Total Sales</th>
                       <th className="px-4 py-2.5 text-right">Orders</th>
                       <th className="px-4 py-2.5 text-right">Avg Value</th>
+                      <th className="px-4 py-2.5 text-right">Outstanding</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {topCustomers.slice(0, 20).map((r: any, i: number) => (
+                      {topCustomers.length === 0 ? (
+                        <tr><td colSpan={5} className="text-center py-8 text-slate-400">No data available</td></tr>
+                      ) : topCustomers.slice(0, 20).map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-2.5 font-medium">{r.customerName || r.name || '—'}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">{INR(r.totalSales || r.revenue)}</td>
-                          <td className="px-4 py-2.5 text-right">{r.invoiceCount || r.orders || '—'}</td>
-                          <td className="px-4 py-2.5 text-right">{INR((r.totalSales || r.revenue) / (r.invoiceCount || r.orders || 1))}</td>
+                          {/* Backend field: customer */}
+                          <td className="px-4 py-2.5 font-medium">{r.customer || r.customerName || r.name || '—'}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold">{safeINR(r.revenue || r.totalSales)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeNum(r.orders || r.invoiceCount)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeINR(safeNum(r.revenue || r.totalSales) / (safeNum(r.orders || r.invoiceCount) || 1))}</td>
+                          <td className={`px-4 py-2.5 text-right ${safeNum(r.outstanding) > 0 ? 'text-amber-600 font-semibold' : 'text-slate-400'}`}>
+                            {safeNum(r.outstanding) > 0 ? safeINR(r.outstanding) : '—'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -206,10 +242,11 @@ export default function SalesPerformancePage() {
                     <ResponsiveContainer width="100%" height={280}>
                       <BarChart data={topProducts.slice(0, 10)} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={120} />
+                        <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
+                        {/* Backend field: product (not name) */}
+                        <YAxis type="category" dataKey="product" tick={{ fontSize: 10 }} width={120} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="totalRevenue" name="Revenue" fill="#6366f1" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="revenue" name="Revenue" fill="#6366f1" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : <div className="text-center py-12 text-slate-400">No product data available</div>}
@@ -221,12 +258,15 @@ export default function SalesPerformancePage() {
                       <th className="px-4 py-2.5 text-right">Margin %</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {topProducts.slice(0, 20).map((r: any, i: number) => (
+                      {topProducts.length === 0 ? (
+                        <tr><td colSpan={4} className="text-center py-8 text-slate-400">No data available</td></tr>
+                      ) : topProducts.slice(0, 20).map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-2.5 font-medium">{r.name || '—'}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">{INR(r.totalRevenue || r.revenue)}</td>
-                          <td className="px-4 py-2.5 text-right">{r.totalQty || r.qtySold || '—'}</td>
-                          <td className="px-4 py-2.5 text-right">{r.marginPct ? `${r.marginPct.toFixed(1)}%` : '—'}</td>
+                          {/* Backend field: product (not name/totalRevenue) */}
+                          <td className="px-4 py-2.5 font-medium">{r.product || r.name || '—'}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold">{safeINR(r.revenue || r.totalRevenue)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeNum(r.quantitySold || r.totalQty || r.qtySold).toFixed(0)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeNum(r.margin) > 0 ? safePctStr(r.margin) : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -241,22 +281,21 @@ export default function SalesPerformancePage() {
                     <thead><tr className="text-xs text-slate-500 uppercase bg-slate-50">
                       <th className="px-4 py-2.5 text-left">Salesperson</th>
                       <th className="px-4 py-2.5 text-right">Total Sales</th>
-                      <th className="px-4 py-2.5 text-right">Invoices</th>
+                      <th className="px-4 py-2.5 text-right">Orders</th>
                       <th className="px-4 py-2.5 text-right">Avg Value</th>
-                      <th className="px-4 py-2.5 text-right">Profit</th>
-                      <th className="px-4 py-2.5 text-right">Margin %</th>
+                      <th className="px-4 py-2.5 text-right">Collection %</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
                       {salesperson.length === 0 ? (
-                        <tr><td colSpan={6} className="text-center py-12 text-slate-400">No salesperson data available</td></tr>
+                        <tr><td colSpan={5} className="text-center py-12 text-slate-400">No salesperson data available</td></tr>
                       ) : salesperson.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
+                          {/* Backend field: salesperson (not name) */}
                           <td className="px-4 py-2.5 font-medium">{r.salesperson || r.name || '—'}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold">{INR(r.totalSales || r.revenue)}</td>
-                          <td className="px-4 py-2.5 text-right">{r.invoiceCount || '—'}</td>
-                          <td className="px-4 py-2.5 text-right">{INR(r.avgInvoiceValue)}</td>
-                          <td className="px-4 py-2.5 text-right text-emerald-600">{INR(r.profit)}</td>
-                          <td className="px-4 py-2.5 text-right">{r.marginPct ? `${r.marginPct.toFixed(1)}%` : '—'}</td>
+                          <td className="px-4 py-2.5 text-right font-semibold">{safeINR(r.revenue || r.totalSales)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeNum(r.orders || r.invoiceCount)}</td>
+                          <td className="px-4 py-2.5 text-right">{safeINR(safeNum(r.revenue || r.totalSales) / (safeNum(r.orders || r.invoiceCount) || 1))}</td>
+                          <td className="px-4 py-2.5 text-right">{safeNum(r.collectionPct) > 0 ? safePctStr(r.collectionPct) : '—'}</td>
                         </tr>
                       ))}
                     </tbody>

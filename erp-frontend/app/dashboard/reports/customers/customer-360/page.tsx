@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, ArrowLeft, Search, Users, IndianRupee, AlertTriangle, History, Package } from 'lucide-react';
+import { RefreshCw, ArrowLeft, Search, Users, IndianRupee, AlertTriangle, History, Package, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { customersApi, reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safeNum, safeDate } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const INR = safeINR;
 
 const TABS = ['Overview', 'Ledger', 'Purchase History', 'Items Bought', 'Aging'] as const;
 type Tab = typeof TABS[number];
@@ -17,6 +18,7 @@ export default function Customer360Page() {
   const [itemSales, setItemSales] = useState<any[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('Overview');
   const [search, setSearch] = useState('');
 
@@ -29,6 +31,7 @@ export default function Customer360Page() {
   const loadCustomerDetail = useCallback(async (c: any) => {
     setSelected(c);
     setTab('Overview');
+    setDetailError(null);
     setLoadingDetail(true);
     try {
       const [ledgerRes, invRes] = await Promise.all([
@@ -37,8 +40,9 @@ export default function Customer360Page() {
       ]);
       setLedger((ledgerRes as any).data?.ledger || (ledgerRes as any).data || []);
       setInvoices((invRes as any).data?.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoadingDetail(false); }
+    } catch (e: any) {
+      setDetailError(e?.response?.data?.message || e?.message || 'Failed to load customer data');
+    } finally { setLoadingDetail(false); }
   }, []);
 
   const filtered = customers.filter(c =>
@@ -109,6 +113,13 @@ export default function Customer360Page() {
             </div>
           ) : loadingDetail ? (
             <div className="flex items-center justify-center py-32"><RefreshCw className="w-8 h-8 text-blue-400 animate-spin" /></div>
+          ) : detailError ? (
+            <div className="flex flex-col items-center justify-center h-full gap-4">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+              <p className="font-semibold text-slate-700">Failed to load customer data</p>
+              <p className="text-sm text-slate-400">{detailError}</p>
+              <button onClick={() => selected && loadCustomerDetail(selected)} className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition">Try Again</button>
+            </div>
           ) : (
             <>
               {/* Header */}

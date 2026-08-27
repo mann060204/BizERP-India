@@ -1191,3 +1191,130 @@ export const getAuditTrail = async (req: AuthRequest, res: Response) => {
     });
   } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
+
+// =================================================
+// DISCOUNT IMPACT ANALYSIS
+// GET /reports/advanced/discount-impact
+// =================================================
+
+export const getDiscountImpact = async (req: AuthRequest, res: Response) => {
+  try {
+    const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
+    const { fromDate, toDate } = req.query as Record<string, string>;
+
+    // Build date filter
+    const dateFilter: any = {};
+    if (fromDate) dateFilter.$gte = new Date(fromDate);
+    if (toDate) {
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+      dateFilter.$lte = to;
+    }
+
+    const match: any = {
+      businessId,
+      status: { $nin: ['cancelled', 'draft'] },
+    };
+    if (Object.keys(dateFilter).length) match.invoiceDate = dateFilter;
+
+    const invoices = await Invoice.find(match).lean();
+
+    // Summary level
+    let grossSales = 0;       // subtotal (before discount)
+    let totalDiscount = 0;    // totalDiscount field
+    let netSales = 0;         // grandTotal
+    let totalGST = 0;
+
+    // Customer breakdown
+    const byCustomer = new Map<string, any>();
+    // Product breakdown
+    const byProduct = new Map<string, any>();
+    // Category breakdown
+    const byCategory = new Map<string, any>();
+    // Salesperson breakdown
+    const bySalesperson = new Map<string, any>();
+
+    invoices.forEach((inv: any) => {
+      grossSales += inv.subtotal || 0;
+      totalDiscount += inv.totalDiscount || inv.discountAmount || 0;
+      netSales += inv.grandTotal || 0;
+      totalGST += inv.totalGST || 0;
+
+      // Customer
+      const cid = inv.customerId?.toString() || 'cash';
+      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      if (!byCustomer.has(cid)) {
+        byCustomer.set(cid, { customerName: cname, grossSales: 0, discount: 0, netSales: 0, invoiceCount: 0 });
+      }
+      const c = byCustomer.get(cid);
+      c.grossSales += inv.subtotal || 0;
+      c.discount += inv.totalDiscount || inv.discountAmount || 0;
+      c.netSales += inv.grandTotal || 0;
+      c.invoiceCount++;
+
+      // Salesperson
+      const sp = inv.soldBy || 'Direct Sales';
+      if (!bySalesperson.has(sp)) {
+        bySalesperson.set(sp, { salesperson: sp, grossSales: 0, discount: 0, netSales: 0, invoiceCount: 0 });
+      }
+      const s = bySalesperson.get(sp);
+      s.grossSales += inv.subtotal || 0;
+      s.discount += inv.totalDiscount || inv.discountAmount || 0;
+      s.netSales += inv.grandTotal || 0;
+      s.invoiceCount++;
+
+      // Product & Category level
+      (inv.lineItems || []).forEach((item: any) => {
+        const pid = item.productId?.toString() || item.productName;
+        const itemDiscount = item.discountAmount || 0;
+        const itemGross = (item.quantity || 0) * (item.rate || 0);
+        const itemNet = item.taxableAmount || 0;
+        const cat = item.tag || item.category || 'Uncategorised';
+
+        if (!byProduct.has(pid)) {
+          byProduct.set(pid, { productName: item.productName, grossSales: 0, discount: 0, netSales: 0, qtySold: 0 });
+        }
+        const p = byProduct.get(pid);
+        p.grossSales += itemGross;
+        p.discount += itemDiscount;
+        p.netSales += itemNet;
+        p.qtySold += item.quantity || 0;
+
+        if (!byCategory.has(cat)) {
+          byCategory.set(cat, { category: cat, grossSales: 0, discount: 0, netSales: 0 });
+        }
+        const cat2 = byCategory.get(cat);
+        cat2.grossSales += itemGross;
+        cat2.discount += itemDiscount;
+        cat2.netSales += itemNet;
+      });
+    });
+
+    const discountPct = grossSales > 0 ? (totalDiscount / grossSales) * 100 : 0;
+
+    // Sort and add discountPct to each breakdown
+    const addPct = (arr: any[]) => arr.map(r => ({
+      ...r,
+      discountPct: r.grossSales > 0 ? (r.discount / r.grossSales) * 100 : 0,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          grossSales,
+          totalDiscount,
+          netSales,
+          discountPct,
+          totalGST,
+          invoiceCount: invoices.length,
+        },
+        byCustomer: addPct(Array.from(byCustomer.values()).sort((a, b) => b.discount - a.discount)),
+        byProduct: addPct(Array.from(byProduct.values()).sort((a, b) => b.discount - a.discount)),
+        byCategory: addPct(Array.from(byCategory.values()).sort((a, b) => b.discount - a.discount)),
+        bySalesperson: addPct(Array.from(bySalesperson.values()).sort((a, b) => b.discount - a.discount)),
+      },
+    });
+  } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
+};
+

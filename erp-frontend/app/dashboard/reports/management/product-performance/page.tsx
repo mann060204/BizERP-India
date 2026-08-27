@@ -4,11 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import { RefreshCw, ArrowLeft } from 'lucide-react';
+import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const INR = safeINR;
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -26,8 +27,11 @@ export default function ProductPerformancePage() {
   const [abc, setAbc] = useState<any[]>([]);
   const [tab, setTab] = useState<'top' | 'bottom' | 'abc'>('top');
 
+  const [error, setError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [topRes, botRes, abcRes] = await Promise.all([
         reportsApi.getTop100Products(),
@@ -37,8 +41,9 @@ export default function ProductPerformancePage() {
       setTop100((topRes as any).data?.data || []);
       setBottom100((botRes as any).data?.data || []);
       setAbc((abcRes as any).data?.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -66,9 +71,16 @@ export default function ProductPerformancePage() {
       </header>
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1"><p className="font-semibold text-red-800 text-sm">Unable to load this report.</p><p className="text-red-600 text-xs mt-0.5">{error}</p></div>
+            <button onClick={load} className="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">Retry</button>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center py-32"><RefreshCw className="w-8 h-8 text-purple-400 animate-spin" /></div>
-        ) : (
+        ) : !error && (
           <>
             <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
               {([['top', '🏆 Top 100 Products'], ['bottom', '📉 Bottom 100 Products'], ['abc', 'ABC Analysis']] as const).map(([t, label]) => (
@@ -88,9 +100,11 @@ export default function ProductPerformancePage() {
                       <BarChart data={top100.slice(0, 12)} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                         <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={130} />
+                        {/* Backend field: product (not name) */}
+                        <YAxis type="category" dataKey="product" tick={{ fontSize: 10 }} width={130} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="totalRevenue" name="Revenue" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                        {/* Backend field: revenue (not totalRevenue) */}
+                        <Bar dataKey="revenue" name="Revenue" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : <div className="text-center py-12 text-slate-400">No data</div>}
@@ -106,14 +120,18 @@ export default function ProductPerformancePage() {
                       <th className="px-4 py-3 text-right">Margin %</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {top100.map((r: any, i: number) => (
+                      {top100.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-slate-400">No data available</td></tr> :
+                      top100.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-slate-400 text-xs font-bold">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium">{r.name || '—'}</td>
+                          {/* Backend field: product */}
+                          <td className="px-4 py-3 font-medium">{r.product || r.name || '—'}</td>
                           <td className="px-4 py-3 text-slate-500 text-xs">{r.category || '—'}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalRevenue || r.revenue)}</td>
-                          <td className="px-4 py-3 text-right">{r.totalQty || r.qtySold || '—'}</td>
-                          <td className="px-4 py-3 text-right">{r.marginPct ? `${r.marginPct.toFixed(1)}%` : '—'}</td>
+                          {/* Backend field: revenue */}
+                          <td className="px-4 py-3 text-right font-semibold">{safeINR(r.revenue || r.totalRevenue)}</td>
+                          {/* Backend field: quantitySold */}
+                          <td className="px-4 py-3 text-right">{safeNum(r.quantitySold || r.totalQty || r.qtySold).toFixed(0) || '—'}</td>
+                          <td className="px-4 py-3 text-right">{safeNum(r.margin || r.marginPct) > 0 ? safePctStr(r.margin || r.marginPct) : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -140,9 +158,9 @@ export default function ProductPerformancePage() {
                       bottom100.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-slate-400 text-xs font-bold">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium">{r.name || '—'}</td>
-                          <td className="px-4 py-3 text-right">{INR(r.totalRevenue || r.revenue)}</td>
-                          <td className="px-4 py-3 text-right">{r.totalQty || r.qtySold || '—'}</td>
+                          <td className="px-4 py-3 font-medium">{r.product || r.name || '—'}</td>
+                          <td className="px-4 py-3 text-right">{safeINR(r.revenue || r.totalRevenue)}</td>
+                          <td className="px-4 py-3 text-right">{safeNum(r.quantitySold || r.totalQty || r.qtySold).toFixed(0) || '—'}</td>
                           <td className="px-4 py-3 text-right">{r.currentStock ?? '—'}</td>
                         </tr>
                       ))}

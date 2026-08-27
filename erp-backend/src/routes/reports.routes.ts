@@ -45,6 +45,9 @@ router.get('/sales/itemwise-summary', reportsController.getSalesItemwiseSummary 
 router.get('/sales/gst', reportsController.getSalesGST as any);
 router.get('/sales/recurring', reportsController.getActiveRecurringInvoices as any);
 
+// --- CASH INVOICE REPORT (NEW) ---
+router.get('/sales/cash-invoice', reportsController.getCashInvoiceReport as any);
+
 // --- CUSTOMER REPORTS ---
 router.get('/customers/amount-due', reportsController.getCustomerAmountDue as any);
 router.get('/customers/payment-history', reportsController.getCustomerPaymentHistory as any);
@@ -118,6 +121,9 @@ router.get('/advanced/profitability-analysis', advancedReportsController.getProf
 router.get('/advanced/budget-vs-actual', advancedReportsController.getBudgetVsActual as any);
 router.get('/advanced/audit-trail', advancedReportsController.getAuditTrail as any);
 
+// --- DISCOUNT IMPACT (NEW) ---
+router.get('/advanced/discount-impact', advancedReportsController.getDiscountImpact as any);
+
 // --- SPECIAL REPORTS ---
 router.get('/special/inventory-wise-customer-summary', specialReportsController.getInventoryWiseCustomerSummary as any);
 router.get('/special/inventory-wise-supplier-summary', specialReportsController.getInventoryWiseSupplierSummary as any);
@@ -162,4 +168,3 @@ router.get('/special/invoice-wise-profit', specialReportsController.getInvoiceWi
 router.get('/special/brand-wise-profit', specialReportsController.getBrandWiseProfit as any);
 
 export default router;
-

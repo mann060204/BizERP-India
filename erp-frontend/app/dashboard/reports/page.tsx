@@ -96,6 +96,7 @@ const REPORTS: ReportSection[] = [
       { name: 'GST Sales Register',      desc: 'Invoice-level outward GST detail',            icon: IndianRupee, href: '/dashboard/reports/sales/gst' },
       { name: 'Active Recurring',        desc: 'All unpaid recurring invoices',                icon: ArrowDownCircle, href: '/dashboard/reports/sales/recurring' },
       { name: 'Salesperson Performance', desc: 'Sales, targets & margin by salesperson',      icon: Users,       href: '/dashboard/reports/advanced-sales/salesperson-performance', badge: 'IMPROVED' },
+      { name: 'Cash Invoice Report',     desc: 'All cash sales invoices with payment & discount details', icon: Banknote, href: '/dashboard/reports/sales/cash-invoice', badge: 'NEW' },
     ],
   },
   {

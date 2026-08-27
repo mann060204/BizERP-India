@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { RefreshCw, ArrowLeft, AlertTriangle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
+import { safeINR, safeNum } from '../../../../../lib/report-utils';
 
-const INR = (v: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const INR = safeINR;
 
 interface AgingBucket { label: string; key: string; color: string; headerColor: string }
 
@@ -21,18 +22,21 @@ export default function AgingSummaryPage() {
   const [receivables, setReceivables] = useState<any[]>([]);
   const [payables, setPayables] = useState<any[]>([]);
   const [view, setView] = useState<'receivables' | 'payables'>('receivables');
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const [recRes, payRes] = await Promise.all([
         reportsApi.getOutstandingReceivables(),
         reportsApi.getOutstandingPayables(),
       ]);
-      setReceivables((recRes as any).data?.data || []);
-      setPayables((payRes as any).data?.data || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      setReceivables((recRes as any).data?.data?.data || (recRes as any).data?.data || []);
+      setPayables((payRes as any).data?.data?.data || (payRes as any).data?.data || []);
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || 'Failed to load report');
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -64,6 +68,13 @@ export default function AgingSummaryPage() {
       </header>
 
       <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1"><p className="font-semibold text-red-800 text-sm">Unable to load this report.</p><p className="text-red-600 text-xs mt-0.5">{error}</p></div>
+            <button onClick={load} className="px-3 py-1.5 text-xs font-semibold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition">Retry</button>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center py-32"><RefreshCw className="w-8 h-8 text-sky-400 animate-spin" /></div>
         ) : (
