@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, ArrowLeft, AlertTriangle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 
@@ -32,8 +32,10 @@ export default function AgingSummaryPage() {
         reportsApi.getOutstandingReceivables(),
         reportsApi.getOutstandingPayables(),
       ]);
-      setReceivables((recRes as any).data?.data?.data || (recRes as any).data?.data || []);
-      setPayables((payRes as any).data?.data?.data || (payRes as any).data?.data || []);
+      const r = extractArray(recRes);
+      const p = extractArray(payRes);
+      setReceivables(Array.isArray(r) ? r : []);
+      setPayables(Array.isArray(p) ? p : []);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }
@@ -41,7 +43,8 @@ export default function AgingSummaryPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const activeData = view === 'receivables' ? receivables : payables;
+  const rawData = view === 'receivables' ? receivables : payables;
+  const activeData = Array.isArray(rawData) ? rawData : [];
 
   const totals = BUCKETS.reduce((acc, b) => {
     acc[b.key] = activeData.reduce((s: number, r: any) => s + (r[b.key] || r[b.label] || 0), 0);

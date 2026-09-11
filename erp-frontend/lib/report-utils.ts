@@ -156,5 +156,13 @@ export function extractArray(res: any): any[] {
   if (Array.isArray(res.items)) return res.items;
   if (res.result && Array.isArray(res.result)) return res.result;
   if (res.data?.result && Array.isArray(res.data.result)) return res.data.result;
+  if (res.data?.categories && Array.isArray(res.data.categories)) return res.data.categories;
+  if (Array.isArray(res.categories)) return res.categories;
+  if (res.data?.customers && Array.isArray(res.data.customers)) return res.data.customers;
+  if (Array.isArray(res.customers)) return res.customers;
+  if (res.data?.suppliers && Array.isArray(res.data.suppliers)) return res.data.suppliers;
+  if (Array.isArray(res.suppliers)) return res.suppliers;
+  if (res.data?.trend && Array.isArray(res.data.trend)) return res.data.trend;
+  if (Array.isArray(res.trend)) return res.trend;
   return [];
 }

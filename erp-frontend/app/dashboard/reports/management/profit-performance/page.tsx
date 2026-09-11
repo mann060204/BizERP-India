@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum } from '../../../../../lib/report-utils';
+import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -49,10 +49,11 @@ export default function ProfitPerformancePage() {
         reportsApi.getSalesTrend(),
         reportsApi.getCategoryWiseProfitAndLoss(),
       ]);
-      setPnlData((pnlRes as any).data?.data || null);
-      const t = (trendRes as any).data?.data?.data || (trendRes as any).data?.data || [];
+      setPnlData((pnlRes as any).data?.data || (pnlRes as any).data || pnlRes || null);
+      const t = extractArray(trendRes);
       setProfitTrend(Array.isArray(t) ? t : []);
-      setCategoryData((catRes as any).data?.data || []);
+      const c = extractArray(catRes);
+      setCategoryData(Array.isArray(c) ? c : []);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }
@@ -140,7 +141,7 @@ export default function ProfitPerformancePage() {
               {tab === 'trend' && (
                 <>
                   <h3 className="font-semibold text-slate-800 mb-4">Monthly Profit Trend</h3>
-                  {profitTrend.length > 0 ? (
+                  {(Array.isArray(profitTrend) && profitTrend.length > 0) ? (
                     <ResponsiveContainer width="100%" height={260}>
                       <AreaChart data={profitTrend}>
                         <defs>
@@ -173,17 +174,25 @@ export default function ProfitPerformancePage() {
                       <th className="px-4 py-2.5 text-right">Margin %</th>
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
-                      {categoryData.length === 0 ? (
+                      {(!Array.isArray(categoryData) || categoryData.length === 0) ? (
                         <tr><td colSpan={5} className="text-center py-12 text-slate-400">No category data</td></tr>
-                      ) : categoryData.map((r: any, i: number) => (
-                        <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-2.5 font-medium">{r.category || r._id || '—'}</td>
-                          <td className="px-4 py-2.5 text-right">{INR(r.totalSales || r.revenue)}</td>
-                          <td className="px-4 py-2.5 text-right">{INR(r.totalCost || r.cogs)}</td>
-                          <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">{INR(r.grossProfit || (r.totalSales - r.totalCost))}</td>
-                          <td className="px-4 py-2.5 text-right">{r.marginPct ? `${r.marginPct.toFixed(1)}%` : '—'}</td>
-                        </tr>
-                      ))}
+                      ) : (
+                        categoryData.map((r: any, i: number) => {
+                          const rev = Number(r.totalSales ?? r.revenue ?? 0);
+                          const cost = Number(r.totalCost ?? r.cost ?? r.cogs ?? 0);
+                          const gp = Number(r.grossProfit ?? r.profit ?? (rev - cost));
+                          const margin = r.marginPct != null ? Number(r.marginPct) : rev > 0 ? (gp / rev) * 100 : 0;
+                          return (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="px-4 py-2.5 font-medium">{r.category || r.name || r._id || '—'}</td>
+                              <td className="px-4 py-2.5 text-right">{INR(rev)}</td>
+                              <td className="px-4 py-2.5 text-right">{INR(cost)}</td>
+                              <td className="px-4 py-2.5 text-right font-semibold text-emerald-700">{INR(gp)}</td>
+                              <td className="px-4 py-2.5 text-right">{margin > 0 ? `${margin.toFixed(1)}%` : '0.0%'}</td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </>
