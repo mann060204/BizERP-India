@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
+import { safeINR, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -33,16 +33,103 @@ export default function CustomerPerformancePage() {
     setLoading(true);
     setError(null);
     try {
-      const [topRes, clvRes, repeatRes, freqRes] = await Promise.all([
+      const [topRes, clvRes, repeatRes, freqRes] = await Promise.allSettled([
         reportsApi.getTopCustomersAdvanced(),
         reportsApi.getCustomerLifetimeValue(),
         reportsApi.getRepeatCustomerReport(),
         reportsApi.getCustomerPurchaseFrequency(),
       ]);
-      setTopCust(extractArray(topRes));
-      setClv(extractArray(clvRes));
-      setRepeat(extractArray(repeatRes));
-      setFreq(extractArray(freqRes));
+
+      const rawTop = topRes.status === 'fulfilled' ? extractArray(topRes.value) : [];
+      const rawClv = clvRes.status === 'fulfilled' ? extractArray(clvRes.value) : [];
+      const rawRepeat = repeatRes.status === 'fulfilled' ? extractArray(repeatRes.value) : [];
+      const rawFreq = freqRes.status === 'fulfilled' ? extractArray(freqRes.value) : [];
+
+      const normalizedTop = rawTop.map((r: any) => {
+        const customerName = r.customerName || r.customer || r.name || 'Cash Customer';
+        const totalSales = Number(r.totalSales ?? r.revenue ?? r.totalRevenue ?? 0);
+        const invoiceCount = Number(r.invoiceCount ?? r.ordersCount ?? r.orders ?? r.totalOrders ?? 1);
+        const avgInvoice = invoiceCount > 0 ? totalSales / invoiceCount : totalSales;
+        return {
+          ...r,
+          customerName,
+          name: customerName,
+          customer: customerName,
+          totalSales,
+          revenue: totalSales,
+          invoiceCount,
+          orders: invoiceCount,
+          avgInvoice,
+        };
+      });
+      setTopCust(normalizedTop);
+
+      const normalizedClv = rawClv.map((r: any) => {
+        const customerName = r.customerName || r.customer || r.name || 'Cash Customer';
+        const lifetimeValue = Number(r.lifetimeValue ?? r.clv ?? r.totalSales ?? r.totalRevenue ?? r.revenue ?? 0);
+        const totalOrders = Number(r.totalOrders ?? r.ordersCount ?? r.invoiceCount ?? r.orders ?? 1);
+        const avgOrderValue = Number(r.avgOrderValue ?? r.averageOrderValue ?? (totalOrders > 0 ? lifetimeValue / totalOrders : lifetimeValue));
+        const firstPurchase = r.firstPurchase || r.firstOrderDate || null;
+        return {
+          ...r,
+          customerName,
+          name: customerName,
+          customer: customerName,
+          lifetimeValue,
+          clv: lifetimeValue,
+          avgOrderValue,
+          averageOrderValue: avgOrderValue,
+          totalOrders,
+          ordersCount: totalOrders,
+          invoiceCount: totalOrders,
+          firstPurchase,
+          firstOrderDate: firstPurchase,
+        };
+      });
+      setClv(normalizedClv);
+
+      const normalizedRepeat = rawRepeat.map((r: any) => {
+        const customerName = r.customerName || r.customer || r.name || 'Cash Customer';
+        const totalOrders = Number(r.totalOrders ?? r.ordersCount ?? r.invoiceCount ?? r.orders ?? 0);
+        const totalRevenue = Number(r.totalRevenue ?? r.totalSales ?? r.revenue ?? 0);
+        const lastPurchase = r.lastPurchase || r.latestPurchase || r.lastOrderDate || null;
+        const purchaseFrequency = Number(r.purchaseFrequency ?? r.avgDaysBetween ?? 0);
+        return {
+          ...r,
+          customerName,
+          name: customerName,
+          customer: customerName,
+          totalOrders,
+          ordersCount: totalOrders,
+          totalRevenue,
+          totalSales: totalRevenue,
+          lastPurchase,
+          latestPurchase: lastPurchase,
+          purchaseFrequency,
+          avgDaysBetween: purchaseFrequency,
+        };
+      });
+      setRepeat(normalizedRepeat);
+
+      const normalizedFreq = rawFreq.map((r: any) => {
+        const customerName = r.customerName || r.customer || r.name || 'Cash Customer';
+        const totalPurchases = Number(r.totalPurchases ?? r.ordersCount ?? r.invoiceCount ?? r.orders ?? 0);
+        const avgDaysBetween = Number(r.avgDaysBetween ?? r.purchaseFrequency ?? 0);
+        const totalSpend = Number(r.totalSpend ?? r.revenue ?? r.totalRevenue ?? r.totalSales ?? 0);
+        return {
+          ...r,
+          customerName,
+          name: customerName,
+          customer: customerName,
+          totalPurchases,
+          ordersCount: totalPurchases,
+          avgDaysBetween,
+          purchaseFrequency: avgDaysBetween,
+          totalSpend,
+          revenue: totalSpend,
+        };
+      });
+      setFreq(normalizedFreq);
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }
@@ -104,7 +191,7 @@ export default function CustomerPerformancePage() {
                       <BarChart data={topCust.slice(0, 10)} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                         <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => `₹${(v/1000).toFixed(0)}K`} />
-                        <YAxis type="category" dataKey="customerName" tick={{ fontSize: 10 }} width={120} />
+                        <YAxis type="category" dataKey="customerName" tick={{ fontSize: 10 }} width={130} />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="totalSales" name="Revenue" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                       </BarChart>
@@ -124,10 +211,10 @@ export default function CustomerPerformancePage() {
                       {topCust.slice(0, 50).map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
                           <td className="px-4 py-3 text-slate-400 text-xs font-bold">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium">{r.customerName || r.name || '—'}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalSales || r.revenue)}</td>
-                          <td className="px-4 py-3 text-right">{r.invoiceCount || '—'}</td>
-                          <td className="px-4 py-3 text-right">{INR((r.totalSales || r.revenue) / (r.invoiceCount || 1))}</td>
+                          <td className="px-4 py-3 font-medium">{r.customerName || r.customer || r.name || '—'}</td>
+                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalSales ?? r.revenue ?? 0)}</td>
+                          <td className="px-4 py-3 text-right">{r.invoiceCount ?? r.orders ?? '—'}</td>
+                          <td className="px-4 py-3 text-right">{INR(r.avgInvoice ?? ((r.totalSales || r.revenue || 0) / (r.invoiceCount || r.orders || 1)))}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -153,11 +240,11 @@ export default function CustomerPerformancePage() {
                     {clv.length === 0 ? <tr><td colSpan={5} className="text-center py-12 text-slate-400">No CLV data</td></tr> :
                       clv.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium">{r.customerName || r.name || '—'}</td>
-                          <td className="px-4 py-3 text-right font-bold text-blue-700">{INR(r.lifetimeValue || r.totalSales)}</td>
-                          <td className="px-4 py-3 text-right">{INR(r.avgOrderValue)}</td>
-                          <td className="px-4 py-3 text-right">{r.totalOrders || r.invoiceCount || '—'}</td>
-                          <td className="px-4 py-3 text-right text-xs text-slate-500">{r.firstPurchase ? new Date(r.firstPurchase).toLocaleDateString('en-IN') : '—'}</td>
+                          <td className="px-4 py-3 font-medium">{r.customerName || r.customer || r.name || '—'}</td>
+                          <td className="px-4 py-3 text-right font-bold text-blue-700">{INR(r.lifetimeValue ?? r.clv ?? r.totalSales ?? 0)}</td>
+                          <td className="px-4 py-3 text-right">{INR(r.avgOrderValue ?? r.averageOrderValue ?? 0)}</td>
+                          <td className="px-4 py-3 text-right">{r.totalOrders ?? r.ordersCount ?? r.invoiceCount ?? '—'}</td>
+                          <td className="px-4 py-3 text-right text-xs text-slate-500">{(r.firstPurchase || r.firstOrderDate) ? new Date(r.firstPurchase || r.firstOrderDate).toLocaleDateString('en-IN') : '—'}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -181,12 +268,12 @@ export default function CustomerPerformancePage() {
                     {repeat.length === 0 ? <tr><td colSpan={4} className="text-center py-12 text-slate-400">No repeat customer data</td></tr> :
                       repeat.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium">{r.customerName || r.name || '—'}</td>
+                          <td className="px-4 py-3 font-medium">{r.customerName || r.customer || r.name || '—'}</td>
                           <td className="px-4 py-3 text-right">
-                            <span className="bg-blue-50 text-blue-700 font-bold text-xs px-2 py-0.5 rounded-full">{r.totalOrders || r.invoiceCount}</span>
+                            <span className="bg-blue-50 text-blue-700 font-bold text-xs px-2 py-0.5 rounded-full">{r.totalOrders ?? r.ordersCount ?? r.invoiceCount ?? 0}</span>
                           </td>
-                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalRevenue || r.totalSales)}</td>
-                          <td className="px-4 py-3 text-right text-xs text-slate-500">{r.lastPurchase ? new Date(r.lastPurchase).toLocaleDateString('en-IN') : '—'}</td>
+                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalRevenue ?? r.totalSales ?? r.revenue ?? 0)}</td>
+                          <td className="px-4 py-3 text-right text-xs text-slate-500">{(r.lastPurchase || r.latestPurchase) ? new Date(r.lastPurchase || r.latestPurchase).toLocaleDateString('en-IN') : '—'}</td>
                         </tr>
                       ))}
                   </tbody>
@@ -210,10 +297,10 @@ export default function CustomerPerformancePage() {
                     {freq.length === 0 ? <tr><td colSpan={4} className="text-center py-12 text-slate-400">No frequency data</td></tr> :
                       freq.map((r: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-3 font-medium">{r.customerName || r.name || '—'}</td>
-                          <td className="px-4 py-3 text-right">{r.totalPurchases || r.invoiceCount}</td>
-                          <td className="px-4 py-3 text-right">{r.avgDaysBetween ? `${r.avgDaysBetween.toFixed(0)} days` : '—'}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalSpend || r.totalSales)}</td>
+                          <td className="px-4 py-3 font-medium">{r.customerName || r.customer || r.name || '—'}</td>
+                          <td className="px-4 py-3 text-right">{r.totalPurchases ?? r.ordersCount ?? r.invoiceCount ?? '—'}</td>
+                          <td className="px-4 py-3 text-right">{r.avgDaysBetween != null && r.avgDaysBetween > 0 ? `${Number(r.avgDaysBetween).toFixed(0)} days` : '—'}</td>
+                          <td className="px-4 py-3 text-right font-semibold">{INR(r.totalSpend ?? r.revenue ?? r.totalRevenue ?? r.totalSales ?? 0)}</td>
                         </tr>
                       ))}
                   </tbody>

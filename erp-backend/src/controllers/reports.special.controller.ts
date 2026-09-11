@@ -809,28 +809,52 @@ export const getNetProfitPct = async (req: AuthRequest, res: Response) => {
 export const getCustomerLifetimeValue = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .populate('customerId', 'name')
+      .lean();
 
     const map = new Map<string, any>();
 
     invoices.forEach(inv => {
-      const cid = inv.customerId?.toString() || 'Cash';
-      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      const cid = inv.customerId ? (inv.customerId as any)._id?.toString() || inv.customerId.toString() : 'Cash';
+      const cname = inv.customerSnapshot?.name || (inv.customerId as any)?.name || 'Cash Customer';
 
       if (!map.has(cid)) {
         map.set(cid, {
+          customerId: cid,
+          customer: cname,
           customerName: cname,
+          name: cname,
           totalRevenue: 0,
+          totalSales: 0,
+          revenue: 0,
           ordersCount: 0,
+          totalOrders: 0,
+          invoiceCount: 0,
           firstOrderDate: inv.invoiceDate,
-          lastOrderDate: inv.invoiceDate
+          firstPurchase: inv.invoiceDate,
+          lastOrderDate: inv.invoiceDate,
+          latestPurchase: inv.invoiceDate,
+          lastPurchase: inv.invoiceDate,
         });
       }
       const m = map.get(cid);
-      m.totalRevenue += inv.grandTotal;
+      const grandTotal = inv.grandTotal || 0;
+      m.totalRevenue += grandTotal;
+      m.totalSales += grandTotal;
+      m.revenue += grandTotal;
       m.ordersCount++;
-      if (new Date(inv.invoiceDate) < new Date(m.firstOrderDate)) m.firstOrderDate = inv.invoiceDate;
-      if (new Date(inv.invoiceDate) > new Date(m.lastOrderDate)) m.lastOrderDate = inv.invoiceDate;
+      m.totalOrders++;
+      m.invoiceCount++;
+      if (new Date(inv.invoiceDate) < new Date(m.firstOrderDate)) {
+        m.firstOrderDate = inv.invoiceDate;
+        m.firstPurchase = inv.invoiceDate;
+      }
+      if (new Date(inv.invoiceDate) > new Date(m.lastOrderDate)) {
+        m.lastOrderDate = inv.invoiceDate;
+        m.latestPurchase = inv.invoiceDate;
+        m.lastPurchase = inv.invoiceDate;
+      }
     });
 
     let grandTotalRevenue = 0, grandTotalOrders = 0;
@@ -846,7 +870,9 @@ export const getCustomerLifetimeValue = async (req: AuthRequest, res: Response) 
       return {
         ...m,
         averageOrderValue: aov,
-        clv: clv
+        avgOrderValue: aov,
+        clv: clv,
+        lifetimeValue: clv,
       };
     }).sort((a, b) => b.clv - a.clv);
 
@@ -871,28 +897,50 @@ export const getCustomerLifetimeValue = async (req: AuthRequest, res: Response) 
 export const getRepeatCustomerReport = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .populate('customerId', 'name')
+      .lean();
 
     const map = new Map<string, any>();
 
     invoices.forEach(inv => {
-      const cid = inv.customerId?.toString() || 'Cash';
-      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      const cid = inv.customerId ? (inv.customerId as any)._id?.toString() || inv.customerId.toString() : 'Cash';
+      const cname = inv.customerSnapshot?.name || (inv.customerId as any)?.name || 'Cash Customer';
 
       if (!map.has(cid)) {
         map.set(cid, {
+          customerId: cid,
+          customer: cname,
           customerName: cname,
+          name: cname,
           ordersCount: 0,
+          totalOrders: 0,
+          invoiceCount: 0,
           totalRevenue: 0,
+          totalSales: 0,
+          revenue: 0,
           firstPurchase: inv.invoiceDate,
-          latestPurchase: inv.invoiceDate
+          firstOrderDate: inv.invoiceDate,
+          latestPurchase: inv.invoiceDate,
+          lastPurchase: inv.invoiceDate,
         });
       }
       const m = map.get(cid);
+      const grandTotal = inv.grandTotal || 0;
       m.ordersCount++;
-      m.totalRevenue += inv.grandTotal;
-      if (new Date(inv.invoiceDate) < new Date(m.firstPurchase)) m.firstPurchase = inv.invoiceDate;
-      if (new Date(inv.invoiceDate) > new Date(m.latestPurchase)) m.latestPurchase = inv.invoiceDate;
+      m.totalOrders++;
+      m.invoiceCount++;
+      m.totalRevenue += grandTotal;
+      m.totalSales += grandTotal;
+      m.revenue += grandTotal;
+      if (new Date(inv.invoiceDate) < new Date(m.firstPurchase)) {
+        m.firstPurchase = inv.invoiceDate;
+        m.firstOrderDate = inv.invoiceDate;
+      }
+      if (new Date(inv.invoiceDate) > new Date(m.latestPurchase)) {
+        m.latestPurchase = inv.invoiceDate;
+        m.lastPurchase = inv.invoiceDate;
+      }
     });
 
     let totalCustomers = 0, repeatCustomers = 0, repeatRevenue = 0, totalRevenue = 0;
@@ -904,7 +952,8 @@ export const getRepeatCustomerReport = async (req: AuthRequest, res: Response) =
         const freq = daysDiff > 0 ? daysDiff / m.ordersCount : 0;
         return {
           ...m,
-          purchaseFrequency: freq // Days between purchases
+          purchaseFrequency: freq, // Days between purchases
+          avgDaysBetween: freq,
         };
       })
       .sort((a, b) => b.ordersCount - a.ordersCount);
@@ -1419,28 +1468,58 @@ export const getCustomerLedgerReport = async (req: AuthRequest, res: Response) =
 export const getCustomerPurchaseFrequency = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .populate('customerId', 'name')
+      .lean();
 
     const map = new Map<string, any>();
 
     invoices.forEach(inv => {
-      const cid = inv.customerId?.toString() || 'Cash';
-      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      const cid = inv.customerId ? (inv.customerId as any)._id?.toString() || inv.customerId.toString() : 'Cash';
+      const cname = inv.customerSnapshot?.name || (inv.customerId as any)?.name || 'Cash Customer';
 
       if (!map.has(cid)) {
         map.set(cid, {
+          customerId: cid,
+          customer: cname,
           customerName: cname,
+          name: cname,
           ordersCount: 0,
+          totalOrders: 0,
+          totalPurchases: 0,
+          invoiceCount: 0,
           revenue: 0,
+          totalRevenue: 0,
+          totalSales: 0,
+          totalSpend: 0,
           firstDate: inv.invoiceDate,
-          lastDate: inv.invoiceDate
+          firstPurchase: inv.invoiceDate,
+          lastDate: inv.invoiceDate,
+          latestPurchase: inv.invoiceDate,
+          lastPurchase: inv.invoiceDate,
+          lastPurchaseDate: inv.invoiceDate,
         });
       }
       const m = map.get(cid);
+      const grandTotal = inv.grandTotal || 0;
       m.ordersCount++;
-      m.revenue += inv.grandTotal;
-      if (new Date(inv.invoiceDate) < new Date(m.firstDate)) m.firstDate = inv.invoiceDate;
-      if (new Date(inv.invoiceDate) > new Date(m.lastDate)) m.lastDate = inv.invoiceDate;
+      m.totalOrders++;
+      m.totalPurchases++;
+      m.invoiceCount++;
+      m.revenue += grandTotal;
+      m.totalRevenue += grandTotal;
+      m.totalSales += grandTotal;
+      m.totalSpend += grandTotal;
+      if (new Date(inv.invoiceDate) < new Date(m.firstDate)) {
+        m.firstDate = inv.invoiceDate;
+        m.firstPurchase = inv.invoiceDate;
+      }
+      if (new Date(inv.invoiceDate) > new Date(m.lastDate)) {
+        m.lastDate = inv.invoiceDate;
+        m.latestPurchase = inv.invoiceDate;
+        m.lastPurchase = inv.invoiceDate;
+        m.lastPurchaseDate = inv.invoiceDate;
+      }
     });
 
     let repeatCount = 0;
@@ -1453,13 +1532,13 @@ export const getCustomerPurchaseFrequency = async (req: AuthRequest, res: Respon
         repeatCount++;
         totalFreq += freq;
       }
+      const aov = m.ordersCount > 0 ? m.revenue / m.ordersCount : 0;
       return {
-        customerName: m.customerName,
-        ordersCount: m.ordersCount,
-        revenue: m.revenue,
-        averageOrderValue: m.ordersCount > 0 ? m.revenue / m.ordersCount : 0,
-        lastPurchaseDate: m.lastDate,
-        purchaseFrequency: freq
+        ...m,
+        averageOrderValue: aov,
+        avgOrderValue: aov,
+        purchaseFrequency: freq,
+        avgDaysBetween: freq,
       };
     }).sort((a, b) => b.ordersCount - a.ordersCount);
 
@@ -1482,22 +1561,46 @@ export const getCustomerPurchaseFrequency = async (req: AuthRequest, res: Respon
 export const getTop50Customers = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .populate('customerId', 'name')
+      .lean();
     const productsMap = await getProductsMap(businessId);
 
     const map = new Map<string, any>();
 
     invoices.forEach(inv => {
-      const cid = inv.customerId?.toString() || 'Cash';
-      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      const cid = inv.customerId ? (inv.customerId as any)._id?.toString() || inv.customerId.toString() : 'Cash';
+      const cname = inv.customerSnapshot?.name || (inv.customerId as any)?.name || 'Cash Customer';
 
       if (!map.has(cid)) {
-        map.set(cid, { customerName: cname, ordersCount: 0, revenue: 0, cost: 0, outstandingAmount: 0 });
+        map.set(cid, {
+          customerId: cid,
+          customer: cname,
+          customerName: cname,
+          name: cname,
+          ordersCount: 0,
+          totalOrders: 0,
+          invoiceCount: 0,
+          orders: 0,
+          revenue: 0,
+          totalSales: 0,
+          totalRevenue: 0,
+          cost: 0,
+          outstandingAmount: 0,
+          outstanding: 0,
+        });
       }
       const m = map.get(cid);
       m.ordersCount++;
-      m.revenue += inv.grandTotal;
+      m.totalOrders++;
+      m.invoiceCount++;
+      m.orders++;
+      const grandTotal = inv.grandTotal || 0;
+      m.revenue += grandTotal;
+      m.totalSales += grandTotal;
+      m.totalRevenue += grandTotal;
       m.outstandingAmount += (inv.balance || 0);
+      m.outstanding += (inv.balance || 0);
 
       inv.lineItems?.forEach(item => {
         const product = item.productId ? productsMap.get(item.productId.toString()) : null;

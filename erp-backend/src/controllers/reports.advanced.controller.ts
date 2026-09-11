@@ -717,24 +717,45 @@ export const getTopCustomersAdvanced = async (req: AuthRequest, res: Response) =
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .populate('customerId', 'name')
+      .lean();
 
     const customers = new Map<string, any>();
     let totalRevenue = 0;
     let repeatCustomersCount = 0;
 
     invoices.forEach(inv => {
-      const cid = inv.customerId?.toString() || 'Cash';
-      const cname = inv.customerSnapshot?.name || 'Cash Customer';
+      const cid = inv.customerId ? (inv.customerId as any)._id?.toString() || inv.customerId.toString() : 'Cash';
+      const cname = inv.customerSnapshot?.name || (inv.customerId as any)?.name || 'Cash Customer';
       if (!customers.has(cid)) {
-        customers.set(cid, { id: cid, customer: cname, orders: 0, revenue: 0, profit: 0, outstanding: 0 });
+        customers.set(cid, {
+          id: cid,
+          customer: cname,
+          customerName: cname,
+          name: cname,
+          orders: 0,
+          ordersCount: 0,
+          invoiceCount: 0,
+          totalOrders: 0,
+          revenue: 0,
+          totalSales: 0,
+          totalRevenue: 0,
+          profit: 0,
+          outstanding: 0,
+        });
       }
       const c = customers.get(cid);
       c.orders++;
-      c.revenue += inv.grandTotal;
-      c.outstanding += inv.balance;
-      c.profit += inv.totalTaxableAmount * 0.20; // Simulated
-      totalRevenue += inv.grandTotal;
+      c.ordersCount++;
+      c.invoiceCount++;
+      c.totalOrders++;
+      c.revenue += (inv.grandTotal || 0);
+      c.totalSales += (inv.grandTotal || 0);
+      c.totalRevenue += (inv.grandTotal || 0);
+      c.outstanding += (inv.balance || 0);
+      c.profit += (inv.totalTaxableAmount || 0) * 0.20; // Simulated
+      totalRevenue += (inv.grandTotal || 0);
     });
 
     Array.from(customers.values()).forEach(c => {
