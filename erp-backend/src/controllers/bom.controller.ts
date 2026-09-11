@@ -65,7 +65,7 @@ export const getBOMByProduct = async (req: AuthRequest, res: Response): Promise<
     const enrichedComponents = await Promise.all(bom.components.map(async (comp) => {
       const prod = await Product.findOne({ _id: comp.productId, businessId });
       return {
-        ...comp.toObject(),
+        ...((comp as any).toObject ? (comp as any).toObject() : comp),
         currentStock: prod?.currentStock ?? 0,
         productType: prod?.productType ?? 'General',
         unit: prod?.unit || comp.unit,
@@ -95,7 +95,7 @@ export const saveBOMForProduct = async (req: AuthRequest, res: Response): Promis
     for (const comp of components) {
       if (comp.productId === fgProductId) { res.status(400).json({ message: `A product cannot be its own BOM component` }); return; }
       if (!comp.quantity || comp.quantity <= 0) { res.status(400).json({ message: `Qty for all components must be > 0` }); return; }
-      const hasCycle = await detectCycle(businessId.toString(), fgProductId, comp.productId);
+      const hasCycle = await detectCycle(businessId.toString(), fgProductId as string, comp.productId);
       if (hasCycle) {
         const cp = await Product.findById(comp.productId);
         res.status(400).json({ message: `Circular BOM reference: "${cp?.name}" creates a cycle` });

@@ -5,17 +5,71 @@ import Invoice from '../models/Invoice.model';
 import PurchaseBill from '../models/PurchaseBill.model';
 import Product from '../models/Product.model';
 
-// --- HELPER FUNCTION TO GET PRODUCTS ---
+// --- HELPER FUNCTION TO GET PRODUCTS WITH REAL COST DATA ---
 const getProductsMap = async (businessId: mongoose.Types.ObjectId) => {
-  const products = await Product.find({ businessId }).lean();
+  const [products, purchaseBills] = await Promise.all([
+    Product.find({ businessId }).lean(),
+    PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+      .sort({ billDate: -1 })
+      .lean()
+  ]);
+
+  // Build map of actual latest purchase rates from vendor bills
+  const billRatesMap = new Map<string, number>();
+  purchaseBills.forEach(bill => {
+    bill.lineItems?.forEach(item => {
+      const rate = Number(item.rate || (item.quantity > 0 ? item.taxableAmount / item.quantity : 0));
+      if (rate > 0) {
+        const pid = item.productId?.toString();
+        const pname = (item.productName || '').toLowerCase().trim();
+        if (pid && !billRatesMap.has(pid)) billRatesMap.set(pid, rate);
+        if (pname && !billRatesMap.has(pname)) billRatesMap.set(pname, rate);
+      }
+    });
+  });
+
   const map = new Map<string, any>();
   products.forEach((p: any) => {
-    map.set(p._id.toString(), p);
-    if (p.name) {
-      map.set(p.name.toLowerCase().trim(), p);
+    const pid = p._id.toString();
+    const pname = (p.name || '').toLowerCase().trim();
+
+    let cost = Number(p.purchasePrice || 0);
+    if (cost <= 0) {
+      cost = billRatesMap.get(pid) || billRatesMap.get(pname) || 0;
+    }
+    if (cost <= 0 && p.openingStock > 0 && p.openingStockValue > 0) {
+      cost = p.openingStockValue / p.openingStock;
+    }
+
+    const enhanced = {
+      ...p,
+      purchasePrice: cost,
+    };
+
+    map.set(pid, enhanced);
+    if (pname) {
+      map.set(pname, enhanced);
     }
   });
+
+  billRatesMap.forEach((rate, key) => {
+    if (!map.has(key)) {
+      map.set(key, { purchasePrice: rate });
+    }
+  });
+
   return map;
+};
+
+// --- HELPER FUNCTION TO RESOLVE REAL PRODUCT UNIT COST ---
+const resolveUnitCost = (item: any, product: any): number => {
+  if (product && typeof product.purchasePrice === 'number' && product.purchasePrice > 0) {
+    return product.purchasePrice;
+  }
+  if ((item as any).purchaseRate && Number((item as any).purchaseRate) > 0) {
+    return Number((item as any).purchaseRate);
+  }
+  return 0;
 };
 
 // --- HELPER FUNCTION TO RESOLVE PRODUCT CATEGORY ---
@@ -248,7 +302,7 @@ export const getGroupWiseProfitAndLoss = async (req: AuthRequest, res: Response)
         }
         const m = map.get(groupName);
         m.revenue += item.totalAmount;
-        const unitCost = product?.purchasePrice || (item.rate * 0.8); // fallback
+        const unitCost = resolveUnitCost(item, product);
         m.cost += unitCost * item.quantity;
       });
     });
@@ -371,13 +425,8 @@ export const getCategoryWiseProfitAndLoss = async (req: AuthRequest, res: Respon
         const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
 
         const qty = Number(item.quantity ?? item.actualQty ?? 1);
-        const amount = Number(
-          item.totalAmount ??
-          (item.taxableAmount != null ? (item.taxableAmount + (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)) : null) ??
-          ((item.quantity || 0) * (item.rate || 0)) ??
-          0
-        );
-        const unitCost = Number(product?.purchasePrice ?? (item.rate ? item.rate * 0.8 : 0));
+        const amount = Number(item.totalAmount || ((item.quantity || 0) * (item.rate || 0)) || 0);
+        const unitCost = resolveUnitCost(item, product);
         const cost = unitCost * qty;
 
         if (!map.has(cat)) {
@@ -454,13 +503,8 @@ export const getCategoryWiseSales = async (req: AuthRequest, res: Response) => {
         const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
 
         const qty = Number(item.quantity ?? item.actualQty ?? 1);
-        const amount = Number(
-          item.totalAmount ??
-          (item.taxableAmount != null ? (item.taxableAmount + (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)) : null) ??
-          ((item.quantity || 0) * (item.rate || 0)) ??
-          0
-        );
-        const unitCost = Number(product?.purchasePrice ?? (item.rate ? item.rate * 0.8 : 0));
+        const amount = Number(item.totalAmount || ((item.quantity || 0) * (item.rate || 0)) || 0);
+        const unitCost = resolveUnitCost(item, product);
         const cost = unitCost * qty;
 
         if (!map.has(cat)) {
@@ -543,13 +587,8 @@ export const getCategoryWiseMargin = async (req: AuthRequest, res: Response) => 
         const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
 
         const qty = Number(item.quantity ?? item.actualQty ?? 1);
-        const amount = Number(
-          item.totalAmount ??
-          (item.taxableAmount != null ? (item.taxableAmount + (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)) : null) ??
-          ((item.quantity || 0) * (item.rate || 0)) ??
-          0
-        );
-        const unitCost = Number(product?.purchasePrice ?? (item.rate ? item.rate * 0.8 : 0));
+        const amount = Number(item.totalAmount || ((item.quantity || 0) * (item.rate || 0)) || 0);
+        const unitCost = resolveUnitCost(item, product);
         const cost = unitCost * qty;
 
         if (!map.has(cat)) {
@@ -748,7 +787,7 @@ export const getInventoryTurnoverRatio = async (req: AuthRequest, res: Response)
         }
         const m = map.get(pid);
         const product = productsMap.get(pid);
-        const cost = product?.purchasePrice || (item.rate * 0.8); // fallback to 80% of rate
+        const cost = resolveUnitCost(item, product);
         m.cogs += cost * item.quantity;
       });
     });
@@ -809,7 +848,7 @@ export const getGrossProfitPct = async (req: AuthRequest, res: Response) => {
         const m = map.get(pid);
         m.revenue += item.totalAmount;
         const product = productsMap.get(pid);
-        const cost = product?.purchasePrice || (item.rate * 0.8);
+        const cost = resolveUnitCost(item, product);
         m.cost += cost * item.quantity;
       });
     });
@@ -878,7 +917,7 @@ export const getNetProfitPct = async (req: AuthRequest, res: Response) => {
         const m = map.get(pid);
         m.revenue += item.totalAmount;
         const product = productsMap.get(pid);
-        const cost = product?.purchasePrice || (item.rate * 0.8);
+        const cost = resolveUnitCost(item, product);
         m.cogs += cost * item.quantity;
         
         totalRevenue += item.totalAmount;
@@ -1121,7 +1160,7 @@ export const getTop100Products = async (req: AuthRequest, res: Response) => {
         m.revenue += item.totalAmount;
         m.quantitySold += item.quantity;
         const product = productsMap.get(pid);
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
       });
     });
 
@@ -1180,7 +1219,7 @@ export const getBottom100Products = async (req: AuthRequest, res: Response) => {
         m.revenue += item.totalAmount;
         m.quantitySold += item.quantity;
         const product = productsMap.get(pid);
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
         if (new Date(inv.invoiceDate) > new Date(m.lastSoldDate)) m.lastSoldDate = inv.invoiceDate;
       });
     });
@@ -1716,7 +1755,7 @@ export const getTop50Customers = async (req: AuthRequest, res: Response) => {
 
       inv.lineItems?.forEach(item => {
         const product = item.productId ? productsMap.get(item.productId.toString()) : null;
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
       });
     });
 
@@ -2216,7 +2255,7 @@ export const getItemWiseProfit = async (req: AuthRequest, res: Response) => {
         const m = map.get(pid);
         m.revenue += item.totalAmount;
         const product = productsMap.get(pid);
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
       });
     });
 
@@ -2267,7 +2306,7 @@ export const getCategoryWiseProfit = async (req: AuthRequest, res: Response) => 
         if (!map.has(cat)) map.set(cat, { category: cat, revenue: 0, cost: 0 });
         const m = map.get(cat);
         m.revenue += item.totalAmount;
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
       });
     });
 
@@ -2314,7 +2353,7 @@ export const getCustomerWiseProfit = async (req: AuthRequest, res: Response) => 
 
       inv.lineItems?.forEach(item => {
         const product = item.productId ? productsMap.get(item.productId.toString()) : null;
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
       });
     });
 
@@ -2374,7 +2413,7 @@ export const getSupplierWiseProfit = async (req: AuthRequest, res: Response) => 
         const m = map.get(sname);
         m.salesValue += item.totalAmount;
         const product = productsMap.get(pid);
-        m.purchaseValue += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.purchaseValue += resolveUnitCost(item, product) * item.quantity;
       });
     });
 
@@ -2417,7 +2456,7 @@ export const getInvoiceWiseProfit = async (req: AuthRequest, res: Response) => {
       let cost = 0;
       inv.lineItems?.forEach(item => {
         const product = item.productId ? productsMap.get(item.productId.toString()) : null;
-        cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        cost += resolveUnitCost(item, product) * item.quantity;
       });
 
       const revenue = inv.grandTotal;
@@ -2468,7 +2507,7 @@ export const getBrandWiseProfit = async (req: AuthRequest, res: Response) => {
         if (!map.has(brand)) map.set(brand, { brand, revenue: 0, cost: 0 });
         const m = map.get(brand);
         m.revenue += item.totalAmount;
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.cost += resolveUnitCost(item, product) * item.quantity;
       });
     });
 

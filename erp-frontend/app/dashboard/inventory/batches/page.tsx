@@ -11,7 +11,6 @@ interface BatchItem {
   productId: any;
   batchNo: string;
   currentStock: number;
-  currentStock: number;
   salePrice: number;
   salePrice2?: number;
   salePrice3?: number;

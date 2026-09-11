@@ -5,6 +5,59 @@ import AccountLedger from '../models/AccountLedger.model';
 import Account from '../models/Account.model';
 import Invoice from '../models/Invoice.model';
 import PurchaseBill from '../models/PurchaseBill.model';
+import Product from '../models/Product.model';
+import Expense from '../models/Expense.model';
+import { getDashboardDateRange } from './reports.controller';
+
+// --- COST CALCULATION HELPERS ---
+const getProductCostMap = async (businessId: mongoose.Types.ObjectId) => {
+  const [products, purchaseBills] = await Promise.all([
+    Product.find({ businessId }).lean(),
+    PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).sort({ billDate: -1 }).lean()
+  ]);
+
+  const costMap = new Map<string, number>();
+  purchaseBills.forEach(bill => {
+    bill.lineItems?.forEach(item => {
+      const rate = Number(item.rate || (item.quantity > 0 ? item.taxableAmount / item.quantity : 0));
+      if (rate > 0) {
+        const pid = item.productId?.toString();
+        const pname = (item.productName || '').toLowerCase().trim();
+        if (pid && !costMap.has(pid)) costMap.set(pid, rate);
+        if (pname && !costMap.has(pname)) costMap.set(pname, rate);
+      }
+    });
+  });
+
+  products.forEach((p: any) => {
+    const pid = p._id.toString();
+    const pname = (p.name || '').toLowerCase().trim();
+    let cost = Number(p.purchasePrice || 0);
+    if (cost <= 0) {
+      cost = costMap.get(pid) || costMap.get(pname) || 0;
+    }
+    if (cost <= 0 && p.openingStock > 0 && p.openingStockValue > 0) {
+      cost = p.openingStockValue / p.openingStock;
+    }
+    if (cost > 0) {
+      costMap.set(pid, cost);
+      if (pname) costMap.set(pname, cost);
+    }
+  });
+
+  return costMap;
+};
+
+const calcInvoiceCost = (inv: any, costMap: Map<string, number>): number => {
+  let cost = 0;
+  inv.lineItems?.forEach((item: any) => {
+    const pid = item.productId ? (item.productId as any)._id?.toString() || item.productId.toString() : '';
+    const pname = (item.productName || '').toLowerCase().trim();
+    const unitCost = (pid && costMap.get(pid)) || (pname && costMap.get(pname)) || 0;
+    cost += unitCost * (item.quantity || 1);
+  });
+  return cost;
+};
 
 // =================================================
 // PHASE 2: FINANCIAL REPORTS
@@ -613,7 +666,10 @@ export const getSalespersonPerformance = async (req: AuthRequest, res: Response)
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     
     // Group invoices by 'soldBy'
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const [invoices, costMap] = await Promise.all([
+      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean(),
+      getProductCostMap(businessId)
+    ]);
 
     const salespeople = new Map<string, any>();
 
@@ -627,8 +683,9 @@ export const getSalespersonPerformance = async (req: AuthRequest, res: Response)
       s.revenue += inv.grandTotal;
       s.received += inv.amountReceived;
       
-      // Rough profit estimate: totalTaxableAmount * 0.20 for demo (Real would need purchasePrice of items)
-      s.profit += inv.totalTaxableAmount * 0.20; 
+      const invCost = calcInvoiceCost(inv, costMap);
+      const invProfit = invCost > 0 ? Math.max(0, (inv.totalTaxableAmount || inv.grandTotal) - invCost) : (inv.totalTaxableAmount || inv.grandTotal);
+      s.profit += invProfit;
     });
 
     let totalSales = 0;
@@ -666,7 +723,10 @@ export const getSalesTrend = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const [invoices, costMap] = await Promise.all([
+      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean(),
+      getProductCostMap(businessId)
+    ]);
 
     const trends = new Map<string, any>();
     
@@ -679,7 +739,9 @@ export const getSalesTrend = async (req: AuthRequest, res: Response) => {
       const t = trends.get(month);
       t.revenue += inv.grandTotal;
       t.orders++;
-      t.profit += inv.totalTaxableAmount * 0.20; // Simulated profit
+      const invCost = calcInvoiceCost(inv, costMap);
+      const invProfit = invCost > 0 ? Math.max(0, (inv.totalTaxableAmount || inv.grandTotal) - invCost) : (inv.totalTaxableAmount || inv.grandTotal);
+      t.profit += invProfit;
     });
 
     const data = Array.from(trends.values()).sort((a, b) => a.month.localeCompare(b.month));
@@ -717,9 +779,12 @@ export const getTopCustomersAdvanced = async (req: AuthRequest, res: Response) =
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
     
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
-      .populate('customerId', 'name')
-      .lean();
+    const [invoices, costMap] = await Promise.all([
+      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } })
+        .populate('customerId', 'name')
+        .lean(),
+      getProductCostMap(businessId)
+    ]);
 
     const customers = new Map<string, any>();
     let totalRevenue = 0;
@@ -754,7 +819,10 @@ export const getTopCustomersAdvanced = async (req: AuthRequest, res: Response) =
       c.totalSales += (inv.grandTotal || 0);
       c.totalRevenue += (inv.grandTotal || 0);
       c.outstanding += (inv.balance || 0);
-      c.profit += (inv.totalTaxableAmount || 0) * 0.20; // Simulated
+
+      const invCost = calcInvoiceCost(inv, costMap);
+      const invProfit = invCost > 0 ? Math.max(0, (inv.totalTaxableAmount || inv.grandTotal) - invCost) : (inv.totalTaxableAmount || inv.grandTotal);
+      c.profit += invProfit;
       totalRevenue += (inv.grandTotal || 0);
     });
 
@@ -782,21 +850,39 @@ export const getTopCustomersAdvanced = async (req: AuthRequest, res: Response) =
 export const getTopSellingProducts = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const { start, end } = getDashboardDateRange(req);
+
+    const match: any = { businessId, status: { $nin: ['cancelled', 'draft'] } };
+    if (req.query.period || (req.query.from && req.query.to)) {
+      match.invoiceDate = { $gte: start, $lte: end };
+    }
+
+    const [invoices, costMap] = await Promise.all([
+      Invoice.find(match).lean(),
+      getProductCostMap(businessId)
+    ]);
 
     const products = new Map<string, any>();
 
     invoices.forEach(inv => {
       inv.lineItems?.forEach(item => {
-        const pid = item.productId?.toString() || 'Misc';
-        if (!products.has(pid)) {
-          products.set(pid, { product: item.productName, quantitySold: 0, revenue: 0, margin: 0, profit: 0 });
+        const pid = item.productId ? (item.productId as any)._id?.toString() || item.productId.toString() : '';
+        const pname = (item.productName || 'Misc').toLowerCase().trim();
+        const key = pid || pname;
+        if (!products.has(key)) {
+          products.set(key, { product: item.productName || 'Unnamed Product', quantitySold: 0, revenue: 0, margin: 0, profit: 0 });
         }
-        const p = products.get(pid);
-        p.quantitySold += item.quantity;
-        p.revenue += item.totalAmount;
-        p.profit += item.taxableAmount * 0.20; // Simulated
+        const p = products.get(key);
+        const qty = Number(item.quantity || 1);
+        const rev = Number(item.totalAmount || (item.rate * qty) || 0);
+        const taxable = Number(item.taxableAmount || rev);
+        const unitCost = (pid && costMap.get(pid)) || (pname && costMap.get(pname)) || 0;
+        const totalItemCost = unitCost * qty;
+        const itemProfit = totalItemCost > 0 ? Math.max(0, taxable - totalItemCost) : taxable;
+
+        p.quantitySold += qty;
+        p.revenue += rev;
+        p.profit += itemProfit;
       });
     });
 
@@ -1064,32 +1150,64 @@ export const getEwayBillRegister = async (req: AuthRequest, res: Response) => {
 export const getBusinessDashboardAdvanced = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    
-    // Massive aggregation across modules
-    const [invoices, purchases, accounts, products] = await Promise.all([
-      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean(),
-      PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean(),
-      Account.find({ businessId, type: 'Bank' }).lean(),
-      mongoose.model('Product').find({ businessId, type: 'product' }).lean()
+    const { start, end } = getDashboardDateRange(req);
+
+    // Filter transactions by the selected date range
+    const [invoices, purchases, expenses, accounts, products, costMap] = await Promise.all([
+      Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] }, invoiceDate: { $gte: start, $lte: end } }).lean(),
+      PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] }, billDate: { $gte: start, $lte: end } }).lean(),
+      Expense.find({ businessId, date: { $gte: start, $lte: end } }).lean(),
+      Account.find({ businessId, type: { $in: ['Bank', 'Cash'] }, isActive: true }).lean(),
+      Product.find({ businessId, type: 'product', isActive: true }).lean(),
+      getProductCostMap(businessId)
     ]);
 
     const revenue = invoices.reduce((sum, i) => sum + (i.grandTotal || 0), 0);
-    const expenses = purchases.reduce((sum, p) => sum + (p.grandTotal || 0), 0); // Simplified
+    const purchasesTotal = purchases.reduce((sum, p) => sum + (p.grandTotal || 0), 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + (e.totalWithTax || e.amount || 0), 0);
     const receivables = invoices.reduce((sum, i) => sum + (i.balance || 0), 0);
     const payables = purchases.reduce((sum, p) => sum + (p.balance || 0), 0);
-    const inventoryValue = products.reduce((sum: any, p: any) => sum + ((p.currentStock || 0) * (p.purchasePrice || 0)), 0);
-    const cashBalance = accounts.reduce((sum: any, a: any) => sum + (a.openingBalance || 0), 0); // Simplified
+
+    // Calculate real COGS and GST Liability
+    let totalCogs = 0;
+    let outputGst = 0;
+    invoices.forEach(inv => {
+      totalCogs += calcInvoiceCost(inv, costMap);
+      outputGst += (inv.totalGST || ((inv.totalCGST || 0) + (inv.totalSGST || 0) + (inv.totalIGST || 0)));
+    });
+
+    let inputGst = 0;
+    purchases.forEach(p => {
+      inputGst += (p.totalGST || ((p.totalCGST || 0) + (p.totalSGST || 0) + (p.totalIGST || 0)));
+    });
+    expenses.forEach(e => {
+      inputGst += (e.cgst || 0) + (e.sgst || 0) + (e.igst || 0);
+    });
+
+    const gstLiability = Math.max(0, outputGst - inputGst);
+
+    // Profit: Gross Profit (Revenue - COGS) - Expenses
+    let profit = 0;
+    if (totalCogs > 0) {
+      profit = revenue - totalCogs - totalExpenses;
+    } else {
+      profit = revenue - purchasesTotal - totalExpenses;
+    }
+
+    const inventoryValue = products.reduce((sum: number, p: any) => sum + ((p.currentStock || 0) * (p.purchasePrice || 0)), 0);
+    const cashBalance = accounts.reduce((sum: number, a: any) => sum + (a.openingBalance || 0), 0);
 
     res.status(200).json({
       success: true,
       data: {
         kpis: {
           revenue,
-          expenses,
-          profit: revenue - expenses,
+          purchases: purchasesTotal,
+          expenses: totalExpenses,
+          profit,
           receivables,
           payables,
-          gstLiability: 0, // Mock
+          gstLiability,
           inventoryValue,
           cashBalance
         }
@@ -1101,14 +1219,25 @@ export const getBusinessDashboardAdvanced = async (req: AuthRequest, res: Respon
 export const getProfitabilityAnalysis = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).lean();
+    const { start, end } = getDashboardDateRange(req);
+
+    const match: any = { businessId, status: { $nin: ['cancelled', 'draft'] } };
+    if (req.query.period || (req.query.from && req.query.to)) {
+      match.invoiceDate = { $gte: start, $lte: end };
+    }
+
+    const [invoices, costMap] = await Promise.all([
+      Invoice.find(match).lean(),
+      getProductCostMap(businessId)
+    ]);
 
     let totalRevenue = 0;
     let totalCost = 0;
 
     invoices.forEach(inv => {
-      totalRevenue += inv.grandTotal;
-      totalCost += inv.totalTaxableAmount * 0.8; // Simulated 80% cost
+      totalRevenue += (inv.grandTotal || 0);
+      const invCost = calcInvoiceCost(inv, costMap);
+      totalCost += invCost;
     });
 
     const profit = totalRevenue - totalCost;

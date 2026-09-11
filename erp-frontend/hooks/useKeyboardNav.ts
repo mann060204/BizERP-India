@@ -235,6 +235,7 @@ export function useEnterToNext(
       if (e.target instanceof HTMLTextAreaElement) return;
       if (e.target instanceof HTMLButtonElement) return;
 
+      if (!container) return;
       const fields = Array.from(
         container.querySelectorAll<HTMLElement>('[data-nav-field]')
       ).filter(el => !el.hasAttribute('disabled'));

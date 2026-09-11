@@ -71,15 +71,15 @@ export default function BusinessHealthDashboard() {
     setLoading(true);
     try {
       const [dashRes, trendRes, custRes, prodRes] = await Promise.all([
-        reportsApi.getBusinessDashboardAdvanced(),
+        reportsApi.getBusinessDashboardAdvanced({ period }),
         dashboardApi.businessTrend({ period }),
         dashboardApi.topCustomers({ period }),
-        reportsApi.getTopSellingProducts(),
+        reportsApi.getTopSellingProducts({ period }),
       ]);
       setKpis((dashRes as any).data?.data?.kpis || (dashRes as any).data?.kpis || (dashRes as any).kpis || null);
-      setTrend(extractArray((trendRes as any).trend || trendRes));
-      setTopCustomers(extractArray((custRes as any).data?.customers || custRes));
-      setTopProducts(extractArray(prodRes));
+      setTrend(extractArray((trendRes as any).trend || (trendRes as any).data || trendRes));
+      setTopCustomers(extractArray((custRes as any).data?.customers || (custRes as any).data || custRes));
+      setTopProducts(extractArray((prodRes as any).data?.data || (prodRes as any).data || prodRes));
     } catch (e) {
       console.error(e);
     } finally {
@@ -192,7 +192,7 @@ export default function BusinessHealthDashboard() {
                   <>
                     <ResponsiveContainer width="100%" height={160}>
                       <PieChart>
-                        <Pie data={topCustomers.slice(0, 5)} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="revenue">
+                        <Pie data={topCustomers.slice(0, 5).map(c => ({ ...c, revenue: c.revenue || c.totalSales || c.totalRevenue || 0 }))} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="revenue">
                           {topCustomers.slice(0, 5).map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(v: any) => INR(v)} />
@@ -205,7 +205,7 @@ export default function BusinessHealthDashboard() {
                             <div className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
                             <span className="text-slate-600 truncate max-w-[130px]">{c.customer || c.customerName || c.name || 'Unknown'}</span>
                           </div>
-                          <span className="font-semibold text-slate-800">{INR(c.revenue || c.totalSales)}</span>
+                          <span className="font-semibold text-slate-800">{INR(c.revenue || c.totalSales || c.totalRevenue)}</span>
                         </div>
                       ))}
                     </div>

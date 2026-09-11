@@ -211,19 +211,19 @@ export const reportsApi = {
   getDeadStockAdvanced: () => api.get('/reports/advanced/dead-stock-advanced'),
 
   // --- ADVANCED SALES & PURCHASE REPORTS ---
-  getSalespersonPerformance: () => api.get('/reports/advanced/salesperson-performance'),
-  getSalesTrend: () => api.get('/reports/advanced/sales-trend'),
-  getTopCustomersAdvanced: () => api.get('/reports/advanced/top-customers-advanced'),
-  getTopSellingProducts: () => api.get('/reports/advanced/top-selling-products'),
-  getSupplierPerformance: () => api.get('/reports/advanced/supplier-performance'),
-  getPurchaseTrend: () => api.get('/reports/advanced/purchase-trend'),
+  getSalespersonPerformance: (params?: any) => api.get('/reports/advanced/salesperson-performance', { params }),
+  getSalesTrend: (params?: any) => api.get('/reports/advanced/sales-trend', { params }),
+  getTopCustomersAdvanced: (params?: any) => api.get('/reports/advanced/top-customers-advanced', { params }),
+  getTopSellingProducts: (params?: any) => api.get('/reports/advanced/top-selling-products', { params }),
+  getSupplierPerformance: (params?: any) => api.get('/reports/advanced/supplier-performance', { params }),
+  getPurchaseTrend: (params?: any) => api.get('/reports/advanced/purchase-trend', { params }),
 
   // --- COMPLIANCE & MANAGEMENT REPORTS ---
-  getGSTAudit: () => api.get('/reports/advanced/gst-audit'),
-  getEInvoiceRegister: () => api.get('/reports/advanced/e-invoice-register'),
-  getEwayBillRegister: () => api.get('/reports/advanced/eway-bill-register'),
-  getBusinessDashboardAdvanced: () => api.get('/reports/advanced/business-dashboard-advanced'),
-  getProfitabilityAnalysis: () => api.get('/reports/advanced/profitability-analysis'),
+  getGSTAudit: (params?: any) => api.get('/reports/advanced/gst-audit', { params }),
+  getEInvoiceRegister: (params?: any) => api.get('/reports/advanced/e-invoice-register', { params }),
+  getEwayBillRegister: (params?: any) => api.get('/reports/advanced/eway-bill-register', { params }),
+  getBusinessDashboardAdvanced: (params?: any) => api.get('/reports/advanced/business-dashboard-advanced', { params }),
+  getProfitabilityAnalysis: (params?: any) => api.get('/reports/advanced/profitability-analysis', { params }),
   getBudgetVsActual: () => api.get('/reports/advanced/budget-vs-actual'),
   getAuditTrail: () => api.get('/reports/advanced/audit-trail'),
 

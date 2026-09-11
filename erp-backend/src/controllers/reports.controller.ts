@@ -1,4 +1,4 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import AccountLedger from '../models/AccountLedger.model';
@@ -2695,8 +2695,9 @@ export const getGSTR3B = async (req: AuthRequest, res: Response) => {
 // ─── DASHBOARD ANALYTICS HELPERS ─────────────────────────────────────────────
 // ─── DASHBOARD ANALYTICS HELPERS ─────────────────────────────────────────────
 
-function getDashboardDateRange(req: any): { start: Date; end: Date; groupBy: string } {
+export function getDashboardDateRange(req: any): { start: Date; end: Date; groupBy: string } {
   const { period, from, to } = req.query;
+  const now = new Date();
   const end = new Date();
   end.setHours(23, 59, 59, 999);
   let start = new Date();
@@ -2712,23 +2713,41 @@ function getDashboardDateRange(req: any): { start: Date; end: Date; groupBy: str
     return { start, end: endDate, groupBy };
   }
 
-  switch (period) {
-    case 'week':
-      start.setDate(end.getDate() - 6);
-      start.setHours(0, 0, 0, 0);
-      groupBy = 'day';
-      break;
-    case 'year':
-      start.setFullYear(end.getFullYear() - 1);
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      groupBy = 'month';
-      break;
-    default: // month
-      start.setDate(1);
-      start.setHours(0, 0, 0, 0);
-      groupBy = 'day';
+  const p = (period || '').toString().toLowerCase();
+
+  if (p === 'today') {
+    start.setHours(0, 0, 0, 0);
+    groupBy = 'day';
+  } else if (p === 'week' || p === 'this_week' || p === '7_days') {
+    start.setDate(now.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    groupBy = 'day';
+  } else if (p === 'this_month' || p === 'month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    groupBy = 'day';
+  } else if (p === 'last_month') {
+    start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+    end.setTime(new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime());
+    groupBy = 'day';
+  } else if (p === 'last_3_months' || p === '3_months') {
+    start = new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0);
+    groupBy = 'month';
+  } else if (p === 'last_6_months' || p === '6_months') {
+    start = new Date(now.getFullYear(), now.getMonth() - 5, 1, 0, 0, 0, 0);
+    groupBy = 'month';
+  } else if (p === 'this_year' || p === 'year') {
+    start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    groupBy = 'month';
+  } else if (p === 'last_year') {
+    start = new Date(now.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
+    end.setTime(new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999).getTime());
+    groupBy = 'month';
+  } else {
+    // Default: This Month
+    start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    groupBy = 'day';
   }
+
   return { start, end, groupBy };
 }
 
@@ -2885,11 +2904,18 @@ export const getDashboardTopCustomers = async (req: AuthRequest, res: Response) 
     const limit = parseInt(req.query.limit as string) || 5;
 
     const agg = await Invoice.aggregate([
-      { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $ne: 'cancelled' }, billTo: 'Customer', customerId: { $exists: true } } },
-      { $group: { _id: '$customerId', name: { $first: '$customerSnapshot.name' }, totalRevenue: { $sum: '$grandTotal' }, invoiceCount: { $sum: 1 } } },
+      { $match: { businessId: new mongoose.Types.ObjectId(businessId), invoiceDate: { $gte: start, $lte: end }, status: { $nin: ['cancelled', 'draft'] } } },
+      {
+        $group: {
+          _id: { $ifNull: ['$customerId', '$customerSnapshot.name'] },
+          name: { $first: { $ifNull: ['$customerSnapshot.name', 'Cash Customer'] } },
+          totalRevenue: { $sum: '$grandTotal' },
+          invoiceCount: { $sum: 1 }
+        }
+      },
       { $sort: { totalRevenue: -1 } },
       { $limit: limit },
-      { $project: { _id: 0, customerId: '$_id', name: 1, totalRevenue: 1, invoiceCount: 1 } }
+      { $project: { _id: 0, customerId: '$_id', name: 1, totalRevenue: 1, revenue: '$totalRevenue', totalSales: '$totalRevenue', invoiceCount: 1 } }
     ]);
 
     sendSuccess(res, agg);

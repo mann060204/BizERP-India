@@ -43,7 +43,7 @@ export default function InventoryPage() {
 
   const openAdjust = async (p: Product) => {
     setAdjusting(p);
-    setForm({ type: 'add', quantity: 0, reason: 'Physical Count', notes: '', batchNo: '' });
+    setForm({ type: 'add', quantity: 0, reason: 'Physical Count', notes: '', batchNo: '', location: '' });
     setBatches([]);
     setShowModal(true);
     // Fetch batches for this product

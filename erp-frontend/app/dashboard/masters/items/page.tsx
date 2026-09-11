@@ -450,7 +450,7 @@ export default function MastersPage() {
                       </td>
                       <td className="px-5 py-4 text-slate-600">
                         <span className="text-slate-900">{p.unit}</span>
-                        {p.secondaryUnit && p.conversionRate > 0 && (
+                        {p.secondaryUnit && p.conversionRate && p.conversionRate > 0 && (
                           <div className="text-xs text-slate-500 mt-0.5">
                             <span>1 {p.unit} = {p.conversionRate} {p.secondaryUnit}</span>
                             <span className="mx-1 text-slate-300">|</span>
