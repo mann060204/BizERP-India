@@ -1,26 +1,54 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, ArrowLeft, Search, Users, IndianRupee, AlertTriangle, History, Package, AlertCircle } from 'lucide-react';
+import { RefreshCw, ArrowLeft, Search, Users, IndianRupee, AlertTriangle, Package, AlertCircle, Download } from 'lucide-react';
 import Link from 'next/link';
 import { customersApi, reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safeNum, safeDate, extractArray } from '../../../../../lib/report-utils';
+import { safeINR, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 
-const TABS = ['Overview', 'Ledger', 'Purchase History', 'Items Bought', 'Aging'] as const;
+const TABS = ['Overview', 'Ledger', 'Invoice History', 'Items Bought', 'Aging'] as const;
 type Tab = typeof TABS[number];
+
+/** Build an "Items Bought" summary from invoice lineItems */
+function buildItemSummary(invoices: any[]) {
+  const map = new Map<string, { itemName: string; lastRate: number; totalQty: number; lastDate: Date | null; unit: string }>();
+  // Sort invoices newest first so first seen = latest
+  const sorted = [...invoices].sort((a, b) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime());
+  sorted.forEach(inv => {
+    (inv.lineItems || []).forEach((li: any) => {
+      const key = li.productId?.toString() || li.productName;
+      if (!key) return;
+      if (!map.has(key)) {
+        map.set(key, { itemName: li.productName || '—', lastRate: li.rate || 0, totalQty: 0, lastDate: inv.invoiceDate ? new Date(inv.invoiceDate) : null, unit: li.unit || '' });
+      }
+      const entry = map.get(key)!;
+      entry.totalQty += (li.quantity || 0);
+    });
+  });
+  return Array.from(map.values()).sort((a, b) => b.totalQty - a.totalQty);
+}
+
+/** Export data as CSV — accepts any[][] and stringifies each cell */
+function exportCSV(filename: string, headers: string[], rows: any[][]) {
+  const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = filename;
+  a.click();
+}
 
 export default function Customer360Page() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [selected, setSelected] = useState<any>(null);
   const [ledger, setLedger] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
-  const [itemSales, setItemSales] = useState<any[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('Overview');
   const [search, setSearch] = useState('');
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc');
 
   useEffect(() => {
     customersApi.list({ limit: 200 }).then(res => {
@@ -36,10 +64,13 @@ export default function Customer360Page() {
     try {
       const [ledgerRes, invRes] = await Promise.all([
         customersApi.getLedger(c._id),
+        // FIXED: pass customerId so backend strictly filters to this customer only
         reportsApi.getSalesInvoicewise({ customerId: c._id }),
       ]);
-      setLedger(extractArray((ledgerRes as any).data?.ledger || ledgerRes));
-      setInvoices(extractArray(invRes));
+      setLedger(extractArray((ledgerRes as any).data?.ledger || (ledgerRes as any).data || ledgerRes));
+      // Backend returns { success, data: { summary, data: [...] } }
+      const invData = (invRes as any)?.data?.data || (invRes as any)?.data || invRes;
+      setInvoices(extractArray(invData));
     } catch (e: any) {
       setDetailError(e?.response?.data?.message || e?.message || 'Failed to load customer data');
     } finally { setLoadingDetail(false); }
@@ -53,17 +84,27 @@ export default function Customer360Page() {
 
   const safeInvoices = Array.isArray(invoices) ? invoices : [];
   const safeLedger = Array.isArray(ledger) ? ledger : [];
+
+  // ── CANONICAL CALCULATIONS using correct field names ────────────────────────
   const totalSales = safeInvoices.reduce((s, i) => s + (i.grandTotal || 0), 0);
-  const totalPaid = safeInvoices.reduce((s, i) => s + (i.paidAmount || i.amountReceived || 0), 0);
-  const outstanding = totalSales - totalPaid;
+  const totalPaid = safeInvoices.reduce((s, i) => s + (i.amountReceived || 0), 0);
+  const outstanding = Math.max(0, totalSales - totalPaid);
   const invoiceCount = safeInvoices.length;
+
+  const itemSummary = buildItemSummary(safeInvoices);
+
+  const sortedInvoices = [...safeInvoices].sort((a, b) => {
+    const diff = new Date(a.invoiceDate).getTime() - new Date(b.invoiceDate).getTime();
+    return sortDir === 'desc' ? -diff : diff;
+  });
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="flex items-center justify-between px-6 h-16 max-w-[1400px] mx-auto w-full">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard/reports" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition"><ArrowLeft className="w-5 h-5" /></Link>
+            {/* Back to Customer Reports list */}
+            <Link href="/dashboard/reports/customers" className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition"><ArrowLeft className="w-5 h-5" /></Link>
             <div>
               <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-600">Customer Reports</span>
               <h1 className="text-lg font-bold text-slate-900 leading-tight mt-0.5">Customer 360°</h1>
@@ -124,7 +165,7 @@ export default function Customer360Page() {
             </div>
           ) : (
             <>
-              {/* Header */}
+              {/* Header Card */}
               <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-6">
                 <div className="flex items-start gap-5">
                   <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center font-bold text-blue-700 text-2xl shrink-0">
@@ -171,7 +212,7 @@ export default function Customer360Page() {
                 ))}
               </div>
 
-              {/* Tab Content */}
+              {/* ── Tab: Overview ─────────────────────────────────────────────── */}
               {tab === 'Overview' && (
                 <div className="space-y-4">
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
@@ -190,29 +231,45 @@ export default function Customer360Page() {
                   </div>
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                     <h3 className="font-semibold text-slate-800 mb-3">Recent Invoices</h3>
-                    <table className="w-full text-sm">
-                      <thead><tr className="text-xs text-slate-400 uppercase border-b"><th className="pb-2 text-left">Invoice</th><th className="pb-2 text-right">Amount</th><th className="pb-2 text-right">Paid</th><th className="pb-2 text-right">Outstanding</th><th className="pb-2 text-center">Status</th></tr></thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {safeInvoices.slice(0, 10).map((inv: any, i: number) => (
-                          <tr key={i} className="hover:bg-slate-50">
-                            <td className="py-2 font-medium">{inv.invoiceNumber}</td>
-                            <td className="py-2 text-right">{INR(inv.grandTotal)}</td>
-                            <td className="py-2 text-right text-emerald-600">{INR(inv.paidAmount || inv.amountReceived)}</td>
-                            <td className="py-2 text-right text-amber-600">{INR((inv.grandTotal || 0) - (inv.paidAmount || inv.amountReceived || 0))}</td>
-                            <td className="py-2 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${inv.paymentStatus === 'PAID' || inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : inv.paymentStatus === 'PARTIAL' || inv.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{inv.paymentStatus || inv.status}</span></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    {safeInvoices.length === 0 ? (
+                      <p className="text-center py-6 text-slate-400 text-sm">No invoices found for this customer</p>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <thead><tr className="text-xs text-slate-400 uppercase border-b">
+                          <th className="pb-2 text-left">Invoice</th>
+                          <th className="pb-2 text-left">Date</th>
+                          <th className="pb-2 text-right">Amount</th>
+                          <th className="pb-2 text-right">Paid</th>
+                          <th className="pb-2 text-right">Balance</th>
+                          <th className="pb-2 text-center">Status</th>
+                        </tr></thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {sortedInvoices.slice(0, 10).map((inv: any, i: number) => {
+                            const bal = inv.balance ?? Math.max(0, (inv.grandTotal||0) - (inv.amountReceived||0));
+                            return (
+                              <tr key={i} className="hover:bg-slate-50">
+                                <td className="py-2 font-medium">{inv.invoiceNumber}</td>
+                                <td className="py-2 text-slate-500 text-xs">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN') : '—'}</td>
+                                <td className="py-2 text-right">{INR(inv.grandTotal)}</td>
+                                <td className="py-2 text-right text-emerald-600">{INR(inv.amountReceived)}</td>
+                                <td className="py-2 text-right text-amber-600">{INR(bal)}</td>
+                                <td className="py-2 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : inv.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{inv.status}</span></td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 </div>
               )}
 
+              {/* ── Tab: Ledger ─────────────────────────────────────────────── */}
               {tab === 'Ledger' && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                   <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50"><h3 className="font-semibold text-slate-800">Account Ledger</h3></div>
                   <table className="w-full text-sm">
-                    <thead><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
+                    <thead className="sticky top-0 z-10"><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
                       <th className="px-4 py-2.5 text-left">Date</th>
                       <th className="px-4 py-2.5 text-left">Description</th>
                       <th className="px-4 py-2.5 text-right">Debit</th>
@@ -236,36 +293,97 @@ export default function Customer360Page() {
                 </div>
               )}
 
-              {tab === 'Purchase History' && (
+              {/* ── Tab: Invoice History ─────────────────────────────────────── */}
+              {tab === 'Invoice History' && (
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50"><h3 className="font-semibold text-slate-800">All Invoices ({safeInvoices.length})</h3></div>
-                  <table className="w-full text-sm">
-                    <thead><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
-                      <th className="px-4 py-2.5 text-left">Invoice</th>
-                      <th className="px-4 py-2.5 text-left">Date</th>
-                      <th className="px-4 py-2.5 text-right">Amount</th>
-                      <th className="px-4 py-2.5 text-right">Paid</th>
-                      <th className="px-4 py-2.5 text-right">Balance</th>
-                      <th className="px-4 py-2.5 text-center">Status</th>
-                    </tr></thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {safeInvoices.length === 0 ? (
-                        <tr><td colSpan={6} className="text-center py-12 text-slate-400">No invoices found</td></tr>
-                      ) : safeInvoices.map((inv: any, i: number) => (
-                        <tr key={i} className="hover:bg-slate-50">
-                          <td className="px-4 py-2.5 font-medium">{inv.invoiceNumber}</td>
-                          <td className="px-4 py-2.5 text-slate-500 text-xs">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN') : '—'}</td>
-                          <td className="px-4 py-2.5 text-right">{INR(inv.grandTotal)}</td>
-                          <td className="px-4 py-2.5 text-right text-emerald-600">{INR(inv.paidAmount || inv.amountReceived)}</td>
-                          <td className="px-4 py-2.5 text-right text-amber-600">{INR((inv.grandTotal || 0) - (inv.paidAmount || inv.amountReceived || 0))}</td>
-                          <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${inv.paymentStatus === 'PAID' || inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : inv.paymentStatus === 'PARTIAL' || inv.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{inv.paymentStatus || inv.status}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-800">All Invoices ({safeInvoices.length})</h3>
+                    <div className="flex items-center gap-2">
+                      <select value={sortDir} onChange={e => setSortDir(e.target.value as any)}
+                        className="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-indigo-400">
+                        <option value="desc">Newest First</option>
+                        <option value="asc">Oldest First</option>
+                      </select>
+                      <button onClick={() => exportCSV(`invoices_${selected?.name}.csv`,
+                        ['Invoice', 'Date', 'Amount', 'Paid', 'Balance', 'Status'],
+                        sortedInvoices.map(i => [i.invoiceNumber, new Date(i.invoiceDate).toLocaleDateString('en-IN'), i.grandTotal, i.amountReceived, i.balance ?? Math.max(0,(i.grandTotal||0)-(i.amountReceived||0)), i.status])
+                      )} className="flex items-center gap-1 text-xs px-3 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                        <Download className="w-3 h-3" /> Export
+                      </button>
+                    </div>
+                  </div>
+                  <div className="overflow-auto max-h-[60vh]">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 z-10"><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
+                        <th className="px-4 py-2.5 text-left">Invoice</th>
+                        <th className="px-4 py-2.5 text-left">Date</th>
+                        <th className="px-4 py-2.5 text-right">Amount</th>
+                        <th className="px-4 py-2.5 text-right">Paid</th>
+                        <th className="px-4 py-2.5 text-right">Balance</th>
+                        <th className="px-4 py-2.5 text-center">Status</th>
+                      </tr></thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {safeInvoices.length === 0 ? (
+                          <tr><td colSpan={6} className="text-center py-12 text-slate-400">No invoices found for this customer</td></tr>
+                        ) : sortedInvoices.map((inv: any, i: number) => {
+                          const bal = inv.balance ?? Math.max(0, (inv.grandTotal||0) - (inv.amountReceived||0));
+                          return (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="px-4 py-2.5 font-medium">{inv.invoiceNumber}</td>
+                              <td className="px-4 py-2.5 text-slate-500 text-xs">{inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN') : '—'}</td>
+                              <td className="px-4 py-2.5 text-right">{INR(inv.grandTotal)}</td>
+                              <td className="px-4 py-2.5 text-right text-emerald-600">{INR(inv.amountReceived)}</td>
+                              <td className="px-4 py-2.5 text-right text-amber-600">{INR(bal)}</td>
+                              <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${inv.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : inv.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{inv.status}</span></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
+              {/* ── Tab: Items Bought ─────────────────────────────────────────── */}
+              {tab === 'Items Bought' && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-800">Items Bought from {selected.name}</h3>
+                    <button onClick={() => exportCSV(`items_${selected?.name}.csv`,
+                      ['Item', 'Last Rate', 'Total Qty', 'Last Purchase'],
+                      itemSummary.map(it => [it.itemName, it.lastRate, it.totalQty, it.lastDate ? it.lastDate.toLocaleDateString('en-IN') : '—'])
+                    )} className="flex items-center gap-1 text-xs px-3 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+                      <Download className="w-3 h-3" /> Export
+                    </button>
+                  </div>
+                  {itemSummary.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400">No items found — ensure invoices have line items.</div>
+                  ) : (
+                    <div className="overflow-auto max-h-[60vh]">
+                      <table className="w-full text-sm">
+                        <thead className="sticky top-0 z-10"><tr className="text-xs text-slate-400 uppercase bg-slate-50 border-b">
+                          <th className="px-4 py-2.5 text-left">Item Name</th>
+                          <th className="px-4 py-2.5 text-right">Last Rate</th>
+                          <th className="px-4 py-2.5 text-right">Total Qty</th>
+                          <th className="px-4 py-2.5 text-left">Last Purchase</th>
+                        </tr></thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {itemSummary.map((it, i) => (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="px-4 py-2.5 font-medium">{it.itemName}</td>
+                              <td className="px-4 py-2.5 text-right font-semibold text-indigo-700">{INR(it.lastRate)}</td>
+                              <td className="px-4 py-2.5 text-right">{it.totalQty} {it.unit}</td>
+                              <td className="px-4 py-2.5 text-slate-500 text-xs">{it.lastDate ? it.lastDate.toLocaleDateString('en-IN') : '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Tab: Aging ───────────────────────────────────────────────── */}
               {tab === 'Aging' && (
                 <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                   <h3 className="font-semibold text-slate-800 mb-5">Receivable Aging</h3>
@@ -273,20 +391,30 @@ export default function Customer360Page() {
                     {(() => {
                       const now = Date.now();
                       const buckets = [
-                        { label: 'Current (0–30 days)', invs: safeInvoices.filter(i => (i.paymentStatus !== 'PAID' && i.status !== 'paid') && (now - new Date(i.invoiceDate).getTime()) <= 30 * 86400000) },
-                        { label: '31–60 days', invs: safeInvoices.filter(i => (i.paymentStatus !== 'PAID' && i.status !== 'paid') && (now - new Date(i.invoiceDate).getTime()) > 30 * 86400000 && (now - new Date(i.invoiceDate).getTime()) <= 60 * 86400000) },
-                        { label: '61–90 days', invs: safeInvoices.filter(i => (i.paymentStatus !== 'PAID' && i.status !== 'paid') && (now - new Date(i.invoiceDate).getTime()) > 60 * 86400000 && (now - new Date(i.invoiceDate).getTime()) <= 90 * 86400000) },
-                        { label: '91–180 days', invs: safeInvoices.filter(i => (i.paymentStatus !== 'PAID' && i.status !== 'paid') && (now - new Date(i.invoiceDate).getTime()) > 90 * 86400000 && (now - new Date(i.invoiceDate).getTime()) <= 180 * 86400000) },
-                        { label: '180+ days (Critical)', invs: safeInvoices.filter(i => (i.paymentStatus !== 'PAID' && i.status !== 'paid') && (now - new Date(i.invoiceDate).getTime()) > 180 * 86400000) },
+                        { label: 'Current (0–30 days)', test: (ms: number) => ms <= 30 * 86400000 },
+                        { label: '31–60 days', test: (ms: number) => ms > 30 * 86400000 && ms <= 60 * 86400000 },
+                        { label: '61–90 days', test: (ms: number) => ms > 60 * 86400000 && ms <= 90 * 86400000 },
+                        { label: '91–180 days', test: (ms: number) => ms > 90 * 86400000 && ms <= 180 * 86400000 },
+                        { label: '180+ days (Critical)', test: (ms: number) => ms > 180 * 86400000 },
                       ];
+                      const colors = ['text-emerald-700 bg-emerald-50', 'text-amber-700 bg-amber-50', 'text-orange-700 bg-orange-50', 'text-red-700 bg-red-50', 'text-red-900 bg-red-100'];
                       return buckets.map((b, i) => {
-                        const total = b.invs.reduce((s: number, inv: any) => s + (inv.grandTotal - inv.paidAmount), 0);
-                        const colors = ['text-emerald-700 bg-emerald-50', 'text-amber-700 bg-amber-50', 'text-orange-700 bg-orange-50', 'text-red-700 bg-red-50', 'text-red-900 bg-red-100'];
+                        // Only show unpaid/partial invoices with a real pending balance
+                        const invs = safeInvoices.filter(inv => {
+                          if (inv.status === 'paid') return false;
+                          const pendingBal = inv.balance ?? Math.max(0, (inv.grandTotal||0) - (inv.amountReceived||0));
+                          if (pendingBal <= 0) return false;
+                          const ageMs = now - new Date(inv.invoiceDate).getTime();
+                          return b.test(ageMs);
+                        });
+                        // Use stored balance or compute fallback — NEVER use undefined paidAmount
+                        const total = invs.reduce((s: number, inv: any) =>
+                          s + (inv.balance ?? Math.max(0, (inv.grandTotal||0) - (inv.amountReceived||0))), 0);
                         return (
                           <div key={i} className={`flex items-center justify-between p-4 rounded-xl ${colors[i].split(' ')[1]}`}>
                             <div>
                               <div className={`font-semibold text-sm ${colors[i].split(' ')[0]}`}>{b.label}</div>
-                              <div className="text-xs text-slate-500 mt-0.5">{b.invs.length} invoice{b.invs.length !== 1 ? 's' : ''}</div>
+                              <div className="text-xs text-slate-500 mt-0.5">{invs.length} invoice{invs.length !== 1 ? 's' : ''}</div>
                             </div>
                             <div className={`text-xl font-bold ${colors[i].split(' ')[0]}`}>{INR(total)}</div>
                           </div>

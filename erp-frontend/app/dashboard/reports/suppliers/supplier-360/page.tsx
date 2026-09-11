@@ -35,10 +35,13 @@ export default function Supplier360Page() {
     try {
       const [ledgerRes, purchRes] = await Promise.all([
         suppliersApi.getLedger(s._id),
+        // FIXED: pass supplierId so backend strictly filters to this supplier only
         reportsApi.getPurchasesBillwise({ supplierId: s._id }),
       ]);
-      setLedger(extractArray((ledgerRes as any).data?.ledger || ledgerRes));
-      setPurchases(extractArray(purchRes));
+      setLedger(extractArray((ledgerRes as any).data?.ledger || (ledgerRes as any).data || ledgerRes));
+      // Backend returns { success, data: { summary, data: [...] } }
+      const purchData = (purchRes as any)?.data?.data || (purchRes as any)?.data || purchRes;
+      setPurchases(extractArray(purchData));
     } catch (e: any) {
       setDetailError(e?.response?.data?.message || e?.message || 'Failed to load supplier data');
     } finally { setLoadingDetail(false); }
@@ -53,9 +56,11 @@ export default function Supplier360Page() {
   const safePurchases = Array.isArray(purchases) ? purchases : [];
   const safeLedger = Array.isArray(ledger) ? ledger : [];
 
+  // ── CANONICAL CALCULATIONS using correct PurchaseBill field names ───────────
   const totalPurchases = safePurchases.reduce((s, i) => s + (i.grandTotal || 0), 0);
-  const totalPaid = safePurchases.reduce((s, i) => s + (i.paidAmount || i.amountReceived || 0), 0);
-  const outstanding = totalPurchases - totalPaid;
+  // PurchaseBill model field is `amountPaid` — NOT `amountReceived` or `paidAmount`
+  const totalPaid = safePurchases.reduce((s, i) => s + (i.amountPaid || 0), 0);
+  const outstanding = Math.max(0, totalPurchases - totalPaid);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -206,17 +211,21 @@ export default function Supplier360Page() {
                     </tr></thead>
                     <tbody className="divide-y divide-slate-100">
                       {safePurchases.length === 0 ? <tr><td colSpan={6} className="text-center py-12 text-slate-400">No purchase bills found</td></tr> :
-                        safePurchases.map((p: any, i: number) => (
+                        safePurchases.map((p: any, i: number) => {
+                          // FIXED: use amountPaid (PurchaseBill model field)
+                          const paid = p.amountPaid || 0;
+                          const bal = p.balance ?? Math.max(0, (p.grandTotal || 0) - paid);
+                          return (
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-2.5 font-medium">{p.billNumber || p.purchaseNumber || '—'}</td>
                             <td className="px-4 py-2.5 text-slate-500 text-xs">{p.billDate ? new Date(p.billDate).toLocaleDateString('en-IN') : '—'}</td>
                             <td className="px-4 py-2.5 text-right">{INR(p.grandTotal)}</td>
-                            <td className="px-4 py-2.5 text-right text-emerald-600">{INR(p.paidAmount || p.amountReceived)}</td>
-                            <td className="px-4 py-2.5 text-right text-amber-600">{INR((p.grandTotal || 0) - (p.paidAmount || p.amountReceived || 0))}</td>
-                            <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.paymentStatus === 'PAID' || p.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : p.paymentStatus === 'PARTIAL' || p.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{p.paymentStatus || p.status || '—'}</span></td>
+                            <td className="px-4 py-2.5 text-right text-emerald-600">{INR(paid)}</td>
+                            <td className="px-4 py-2.5 text-right text-amber-600">{INR(bal)}</td>
+                            <td className="px-4 py-2.5 text-center"><span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : p.status === 'partial' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>{p.status || '—'}</span></td>
                           </tr>
-                        ))
-                      }
+                        );})}
+
                     </tbody>
                   </table>
                 </div>
@@ -232,7 +241,14 @@ export default function Supplier360Page() {
                         <th className="px-4 py-2.5 text-left">Item</th><th className="px-4 py-2.5 text-right">Last Rate</th><th className="px-4 py-2.5 text-right">Qty</th><th className="px-4 py-2.5 text-left">Date</th>
                       </tr></thead>
                       <tbody className="divide-y divide-slate-100">
-                        {safePurchases.flatMap((p: any) => (Array.isArray(p.items) ? p.items : []).map((item: any) => ({ ...item, billDate: p.billDate, billNumber: p.billNumber || p.purchaseNumber }))).slice(0, 30).map((item: any, i: number) => (
+                        {/* FIXED: read lineItems (correct field) not p.items (undefined) */}
+                        {safePurchases.flatMap((p: any) =>
+                          (Array.isArray(p.lineItems) ? p.lineItems : []).map((item: any) => ({
+                            ...item,
+                            billDate: p.billDate,
+                            billNumber: p.billNumber || p.purchaseNumber,
+                          }))
+                        ).slice(0, 50).map((item: any, i: number) => (
                           <tr key={i} className="hover:bg-slate-50">
                             <td className="px-4 py-2.5 font-medium">{item.productName || item.name || '—'}</td>
                             <td className="px-4 py-2.5 text-right font-semibold">{INR(item.rate || item.unitPrice)}</td>
@@ -262,7 +278,9 @@ export default function Supplier360Page() {
                       const colors = ['text-emerald-700 bg-emerald-50', 'text-amber-700 bg-amber-50', 'text-orange-700 bg-orange-50', 'text-red-700 bg-red-50', 'text-red-900 bg-red-100'];
                       return buckets.map((b, i) => {
                         const matching = safePurchases.filter(b.filter);
-                        const total = matching.reduce((s: number, p: any) => s + ((p.grandTotal || 0) - (p.paidAmount || p.amountReceived || 0)), 0);
+                        // FIXED: use amountPaid (PurchaseBill model field) for balance
+                        const total = matching.reduce((s: number, p: any) =>
+                          s + (p.balance ?? Math.max(0, (p.grandTotal || 0) - (p.amountPaid || 0))), 0);
                         return (
                           <div key={i} className={`flex items-center justify-between p-4 rounded-xl ${colors[i].split(' ')[1]}`}>
                             <div>

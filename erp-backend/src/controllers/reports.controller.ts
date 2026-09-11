@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import AccountLedger from '../models/AccountLedger.model';
@@ -23,54 +23,83 @@ const sendError = (res: Response, message: string, status = 500) => res.status(s
 export const getCashBook = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    
-    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', description: { $regex: /Cash/i } }).lean();
-    
-    const bankLedgers: any[] = []; // Removed bank ledgers from cash book
-    
-    const expenses = await Expense.find({ businessId, paymentMode: { $in: ['Cash', '', null] } }).lean();
-    
+    const { from, to } = req.query as any;
+
+    const dateFilter: any = {};
+    if (from || to) {
+      dateFilter.$gte = from ? new Date(from) : new Date('2000-01-01');
+      dateFilter.$lte = to ? new Date(to) : new Date();
+    }
+
     const transactions: any[] = [];
-    
-    paymentLedgers.forEach((l: any) => {
-      let debit = 0, credit = 0;
-      if (l.customerId && l.credit > 0) debit = l.credit;
-      else if (l.supplierId && l.debit > 0) credit = l.debit;
-      else return;
-      
+
+    // ── Cash receipts from invoices (amountReceived on Cash-mode invoices) ────
+    const cashInvoiceQuery: any = { businessId, paymentMode: 'Cash', amountReceived: { $gt: 0 }, status: { $ne: 'cancelled' } };
+    if (Object.keys(dateFilter).length) cashInvoiceQuery.invoiceDate = dateFilter;
+    const cashInvoices = await Invoice.find(cashInvoiceQuery)
+      .select('invoiceNumber invoiceDate customerSnapshot amountReceived paymentMode')
+      .sort({ invoiceDate: -1 }).lean();
+    cashInvoices.forEach((inv: any) => {
       transactions.push({
-        date: l.date,
-        particulars: l.description,
-        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-        debit, credit,
-        referenceType: l.referenceType
+        date: inv.invoiceDate,
+        particulars: `Sale - ${inv.customerSnapshot?.name || 'Cash Customer'}`,
+        voucherNo: inv.invoiceNumber,
+        debit: inv.amountReceived || 0,
+        credit: 0,
+        referenceType: 'Sale',
       });
     });
-    
-    bankLedgers.forEach((l: any) => {
+
+    // ── Cash payments for purchase bills ──────────────────────────────────────
+    const cashBillQuery: any = { businessId, paymentMode: 'Cash', amountPaid: { $gt: 0 }, status: { $ne: 'cancelled' } };
+    if (Object.keys(dateFilter).length) cashBillQuery.billDate = dateFilter;
+    const cashBills = await PurchaseBill.find(cashBillQuery)
+      .select('billNumber billDate supplierSnapshot amountPaid paymentMode')
+      .sort({ billDate: -1 }).lean();
+    cashBills.forEach((b: any) => {
       transactions.push({
-        date: l.date,
-        particulars: l.description,
-        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-        debit: l.debit || 0,
-        credit: l.credit || 0,
-        referenceType: l.referenceType || 'Journal'
+        date: b.billDate,
+        particulars: `Purchase - ${b.supplierSnapshot?.name || 'Supplier'}`,
+        voucherNo: b.billNumber,
+        debit: 0,
+        credit: b.amountPaid || 0,
+        referenceType: 'Purchase',
       });
     });
-    
+
+    // ── Cash expenses ─────────────────────────────────────────────────────────
+    const expenseQuery: any = { businessId, paymentMode: { $in: ['Cash', 'cash', null, ''] } };
+    if (Object.keys(dateFilter).length) expenseQuery.date = dateFilter;
+    const expenses = await Expense.find(expenseQuery)
+      .select('date category vendorName amount totalWithTax paymentMode')
+      .sort({ date: -1 }).lean();
     expenses.forEach((e: any) => {
       transactions.push({
         date: e.date,
-        particulars: e.category + (e.vendorName ? ` - ${e.vendorName}` : ''),
-        voucherNo: e._id.toString().slice(-6).toUpperCase(),
+        particulars: `${e.category}${e.vendorName ? ' - ' + e.vendorName : ''}`,
+        voucherNo: (e as any)._id.toString().slice(-6).toUpperCase(),
         debit: 0,
         credit: e.totalWithTax || e.amount || 0,
-        referenceType: 'Expense'
+        referenceType: 'Expense',
       });
     });
-    
+
+    // ── AccountLedger cash entries (if any exist) ─────────────────────────────
+    const ledgerQuery: any = { businessId, $or: [{ voucherType: 'Receipt' }, { voucherType: 'Payment' }, { referenceType: 'Payment' }] };
+    if (Object.keys(dateFilter).length) ledgerQuery.date = dateFilter;
+    const ledgerEntries = await AccountLedger.find(ledgerQuery).sort({ date: -1 }).lean();
+    ledgerEntries.forEach((l: any) => {
+      transactions.push({
+        date: l.date,
+        particulars: l.description || l.partyName || 'Transaction',
+        voucherNo: l.voucherNo || l.referenceId || (l as any)._id.toString().slice(-6).toUpperCase(),
+        debit: l.debit || 0,
+        credit: l.credit || 0,
+        referenceType: l.voucherType || l.referenceType || 'Journal',
+      });
+    });
+
     transactions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
     sendSuccess(res, transactions);
   } catch (error: any) {
     sendError(res, error.message);
@@ -80,38 +109,87 @@ export const getCashBook = async (req: AuthRequest, res: Response) => {
 export const getBusinessBook = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const ledgers = await AccountLedger.find({ businessId })
+    const { from, to } = req.query as any;
+
+    const dateFilter: any = {};
+    if (from || to) {
+      dateFilter.$gte = from ? new Date(from) : new Date('2000-01-01');
+      dateFilter.$lte = to ? new Date(to) : new Date();
+    }
+
+    const transformed: any[] = [];
+
+    // ── AccountLedger entries (journal, adjustments, etc.) ────────────────────
+    const ledgerQuery: any = { businessId };
+    if (Object.keys(dateFilter).length) ledgerQuery.date = dateFilter;
+    const ledgers = await AccountLedger.find(ledgerQuery)
       .populate('accountId', 'name type')
       .populate('customerId', 'name')
       .populate('supplierId', 'name')
-      .sort({ date: -1 })
-      .limit(1000)
-      .lean();
-      
-    const expenses = await Expense.find({ businessId }).sort({ date: -1 }).limit(1000).lean();
-    
-    const transformed = ledgers.map((l: any) => ({
-      date: l.date,
-      accountId: l.accountId || l.customerId || l.supplierId || { name: 'Cash / Bank' },
-      particulars: l.description,
-      voucherType: l.referenceType || 'Journal',
-      debit: l.debit || 0,
-      credit: l.credit || 0,
-    }));
-    
+      .sort({ date: -1 }).limit(500).lean();
+    ledgers.forEach((l: any) => {
+      transformed.push({
+        date: l.date,
+        accountId: l.accountId || l.customerId || l.supplierId || { name: 'Cash / Bank' },
+        particulars: l.description || l.partyName || '—',
+        voucherType: l.voucherType || l.referenceType || 'Journal',
+        debit: l.debit || 0,
+        credit: l.credit || 0,
+      });
+    });
+
+    // ── Sales Invoices ────────────────────────────────────────────────────────
+    const invQuery: any = { businessId, status: { $ne: 'cancelled' } };
+    if (Object.keys(dateFilter).length) invQuery.invoiceDate = dateFilter;
+    const invoices = await Invoice.find(invQuery)
+      .select('invoiceNumber invoiceDate customerSnapshot grandTotal amountReceived')
+      .sort({ invoiceDate: -1 }).limit(500).lean();
+    invoices.forEach((inv: any) => {
+      transformed.push({
+        date: inv.invoiceDate,
+        accountId: { name: inv.customerSnapshot?.name || 'Customer' },
+        particulars: `Invoice ${inv.invoiceNumber}`,
+        voucherType: 'Sale',
+        debit: inv.grandTotal || 0,
+        credit: 0,
+      });
+    });
+
+    // ── Purchase Bills ────────────────────────────────────────────────────────
+    const billQuery: any = { businessId, status: { $ne: 'cancelled' } };
+    if (Object.keys(dateFilter).length) billQuery.billDate = dateFilter;
+    const bills = await PurchaseBill.find(billQuery)
+      .select('billNumber billDate supplierSnapshot grandTotal amountPaid')
+      .sort({ billDate: -1 }).limit(500).lean();
+    bills.forEach((b: any) => {
+      transformed.push({
+        date: b.billDate,
+        accountId: { name: b.supplierSnapshot?.name || 'Supplier' },
+        particulars: `Purchase Bill ${b.billNumber}`,
+        voucherType: 'Purchase',
+        debit: 0,
+        credit: b.grandTotal || 0,
+      });
+    });
+
+    // ── Expenses ──────────────────────────────────────────────────────────────
+    const expQuery: any = { businessId };
+    if (Object.keys(dateFilter).length) expQuery.date = dateFilter;
+    const expenses = await Expense.find(expQuery)
+      .select('date category vendorName amount totalWithTax')
+      .sort({ date: -1 }).limit(300).lean();
     expenses.forEach((e: any) => {
       transformed.push({
         date: e.date,
-        accountId: { name: 'Expense Account' },
+        accountId: { name: 'Expense' },
         particulars: e.category + (e.vendorName ? ` - ${e.vendorName}` : ''),
         voucherType: 'Expense',
         debit: e.totalWithTax || e.amount || 0,
         credit: 0,
       });
     });
-    
+
     transformed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
     sendSuccess(res, transformed.slice(0, 1000));
   } catch (error: any) {
     sendError(res, error.message);
@@ -121,46 +199,67 @@ export const getBusinessBook = async (req: AuthRequest, res: Response) => {
 export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', debit: { $gt: 0 }, supplierId: { $exists: true } }).populate('supplierId', 'name').sort({ date: -1 }).lean();
-    
-    const bankAccounts = await Account.find({ businessId, type: 'Bank' });
-    const bankIds = bankAccounts.map(a => a._id);
-    const bankLedgers = await AccountLedger.find({ businessId, accountId: { $in: bankIds }, credit: { $gt: 0 } }).populate('accountId', 'name').sort({ date: -1 }).lean();
-    
-    const expenses = await Expense.find({ businessId }).sort({ date: -1 }).lean();
-    
+    const { from, to } = req.query as any;
+
+    const dateFilter: any = {};
+    if (from || to) {
+      dateFilter.$gte = from ? new Date(from) : new Date('2000-01-01');
+      dateFilter.$lte = to ? new Date(to) : new Date();
+    }
+
     const transformed: any[] = [];
-    
+
+    // ── Primary source: PurchaseBill where amountPaid > 0 ────────────────────
+    const billQuery: any = { businessId, amountPaid: { $gt: 0 }, status: { $ne: 'cancelled' } };
+    if (Object.keys(dateFilter).length) billQuery.billDate = dateFilter;
+    const bills = await PurchaseBill.find(billQuery)
+      .select('billNumber billDate supplierSnapshot amountPaid paymentMode')
+      .sort({ billDate: -1 }).lean();
+    bills.forEach((b: any) => {
+      transformed.push({
+        date: b.billDate,
+        party: b.supplierSnapshot?.name || '—',
+        voucherNo: b.billNumber,
+        amount: b.amountPaid || 0,
+        paymentMode: b.paymentMode || 'Cash',
+        type: 'Purchase Payment',
+      });
+    });
+
+    // ── Secondary: AccountLedger payment entries (if populated) ──────────────
+    const ledgerQuery: any = { businessId, $or: [{ voucherType: 'Payment' }, { referenceType: 'Payment' }], supplierId: { $exists: true, $ne: null } };
+    if (Object.keys(dateFilter).length) ledgerQuery.date = dateFilter;
+    const paymentLedgers = await AccountLedger.find(ledgerQuery)
+      .populate('supplierId', 'name').sort({ date: -1 }).lean();
     paymentLedgers.forEach((l: any) => {
+      // Only add if not already captured from PurchaseBill (avoid duplicates by referenceId)
       transformed.push({
         date: l.date,
-        accountId: l.supplierId,
-        particulars: l.description,
-        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-        credit: l.debit || 0,
+        party: (l.supplierId as any)?.name || '—',
+        voucherNo: l.voucherNo || l.referenceId || (l as any)._id.toString().slice(-6).toUpperCase(),
+        amount: l.debit || l.credit || 0,
+        paymentMode: '—',
+        type: 'Journal Payment',
       });
     });
-    
-    bankLedgers.forEach((l: any) => {
-      transformed.push({
-        date: l.date,
-        accountId: l.accountId,
-        particulars: l.description,
-        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-        credit: l.credit || 0,
-      });
-    });
-    
+
+    // ── Expenses (outgoing cash/bank) ─────────────────────────────────────────
+    const expQuery: any = { businessId };
+    if (Object.keys(dateFilter).length) expQuery.date = dateFilter;
+    const expenses = await Expense.find(expQuery)
+      .select('date category vendorName amount totalWithTax paymentMode')
+      .sort({ date: -1 }).lean();
     expenses.forEach((e: any) => {
       transformed.push({
         date: e.date,
-        accountId: { name: 'Expense' },
-        particulars: e.category + (e.vendorName ? ` - ${e.vendorName}` : ''),
-        voucherNo: e._id.toString().slice(-6).toUpperCase(),
-        credit: e.totalWithTax || e.amount || 0,
+        party: e.vendorName || e.category || '—',
+        voucherNo: (e as any)._id.toString().slice(-6).toUpperCase(),
+        amount: e.totalWithTax || e.amount || 0,
+        paymentMode: e.paymentMode || 'Cash',
+        type: 'Expense',
       });
     });
-    
+
     transformed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     sendSuccess(res, transformed);
   } catch (error: any) {
@@ -171,34 +270,73 @@ export const getPaymentPaid = async (req: AuthRequest, res: Response) => {
 export const getPaymentReceived = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const paymentLedgers = await AccountLedger.find({ businessId, referenceType: 'Payment', credit: { $gt: 0 }, customerId: { $exists: true } }).populate('customerId', 'name').sort({ date: -1 }).lean();
-    
-    const bankAccounts = await Account.find({ businessId, type: 'Bank' });
-    const bankIds = bankAccounts.map(a => a._id);
-    const bankLedgers = await AccountLedger.find({ businessId, accountId: { $in: bankIds }, debit: { $gt: 0 } }).populate('accountId', 'name').sort({ date: -1 }).lean();
-    
+    const { from, to } = req.query as any;
+
+    const dateFilter: any = {};
+    if (from || to) {
+      dateFilter.$gte = from ? new Date(from) : new Date('2000-01-01');
+      dateFilter.$lte = to ? new Date(to) : new Date();
+    }
+
     const transformed: any[] = [];
-    
-    paymentLedgers.forEach((l: any) => {
+
+    // ── Primary source: Invoice where amountReceived > 0 ─────────────────────
+    const invQuery: any = { businessId, amountReceived: { $gt: 0 }, status: { $ne: 'cancelled' } };
+    if (Object.keys(dateFilter).length) invQuery.invoiceDate = dateFilter;
+    const invoices = await Invoice.find(invQuery)
+      .select('invoiceNumber invoiceDate customerSnapshot amountReceived paymentMode')
+      .sort({ invoiceDate: -1 }).lean();
+    invoices.forEach((inv: any) => {
       transformed.push({
-        date: l.date,
-        accountId: l.customerId,
-        particulars: l.description,
-        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-        debit: l.credit || 0,
+        date: inv.invoiceDate,
+        party: inv.customerSnapshot?.name || '—',
+        voucherNo: inv.invoiceNumber,
+        amount: inv.amountReceived || 0,
+        paymentMode: inv.paymentMode || 'Cash',
+        type: 'Invoice Receipt',
       });
     });
-    
-    bankLedgers.forEach((l: any) => {
-      transformed.push({
-        date: l.date,
-        accountId: l.accountId,
-        particulars: l.description,
-        voucherNo: l.referenceId || l._id.toString().slice(-6).toUpperCase(),
-        debit: l.debit || 0,
+
+    // ── Also add individual paymentHistory entries from invoices ──────────────
+    const invWithHistory = await Invoice.find({ businessId, 'paymentHistory.0': { $exists: true }, status: { $ne: 'cancelled' } })
+      .select('invoiceNumber customerSnapshot paymentHistory')
+      .lean();
+    invWithHistory.forEach((inv: any) => {
+      (inv.paymentHistory || []).forEach((ph: any) => {
+        if (!ph.amount || ph.amount <= 0) return;
+        // Skip if date outside filter
+        if (Object.keys(dateFilter).length) {
+          const phDate = new Date(ph.date);
+          if (dateFilter.$gte && phDate < dateFilter.$gte) return;
+          if (dateFilter.$lte && phDate > dateFilter.$lte) return;
+        }
+        transformed.push({
+          date: ph.date,
+          party: inv.customerSnapshot?.name || '—',
+          voucherNo: inv.invoiceNumber,
+          amount: ph.amount,
+          paymentMode: ph.mode || 'Cash',
+          type: 'Part Payment',
+        });
       });
     });
-    
+
+    // ── Secondary: AccountLedger receipt entries (if populated) ───────────────
+    const ledgerQuery: any = { businessId, $or: [{ voucherType: 'Receipt' }, { referenceType: 'Receipt' }], customerId: { $exists: true, $ne: null } };
+    if (Object.keys(dateFilter).length) ledgerQuery.date = dateFilter;
+    const receiptLedgers = await AccountLedger.find(ledgerQuery)
+      .populate('customerId', 'name').sort({ date: -1 }).lean();
+    receiptLedgers.forEach((l: any) => {
+      transformed.push({
+        date: l.date,
+        party: (l.customerId as any)?.name || '—',
+        voucherNo: l.voucherNo || l.referenceId || (l as any)._id.toString().slice(-6).toUpperCase(),
+        amount: l.credit || l.debit || 0,
+        paymentMode: '—',
+        type: 'Journal Receipt',
+      });
+    });
+
     transformed.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     sendSuccess(res, transformed);
   } catch (error: any) {
@@ -862,27 +1000,71 @@ export const getSalesItemwise = async (req: AuthRequest, res: Response) => {
 export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const invoices = await Invoice.find({ businessId, status: { $nin: ['draft'] } }).sort({ invoiceDate: -1 });
-    
+    const { customerId, from, to } = req.query as any;
+
+    // Build strict query — always scoped to this business
+    const query: any = { businessId, status: { $nin: ['draft', 'cancelled'] } };
+
+    // CRITICAL: filter by customer when provided (Customer 360 requirement)
+    if (customerId) {
+      query.customerId = new mongoose.Types.ObjectId(customerId);
+    }
+
+    if (from || to) {
+      query.invoiceDate = {
+        $gte: from ? new Date(from) : new Date('2000-01-01'),
+        $lte: to ? new Date(to) : new Date(),
+      };
+    }
+
+    const invoices = await Invoice.find(query).sort({ invoiceDate: -1 }).lean();
+
     let totalInvoices = invoices.length;
     let totalSalesValue = 0;
+    let totalAmountReceived = 0;
     let paidInvoices = 0;
     let unpaidInvoices = 0;
 
     const transformed = invoices.map((inv: any) => {
-      totalSalesValue += inv.grandTotal || 0;
+      const grandTotal = inv.grandTotal || 0;
+      const amountReceived = inv.amountReceived || 0;
+      // Use stored balance, or compute as fallback
+      const balance = inv.balance != null ? inv.balance : Math.max(0, grandTotal - amountReceived);
+
+      totalSalesValue += grandTotal;
+      totalAmountReceived += amountReceived;
       if (inv.status === 'paid') paidInvoices++;
-      if (inv.status === 'overdue' || inv.status === 'partial' || (inv.balance > 0 && inv.status !== 'cancelled')) unpaidInvoices++;
-      
+      else unpaidInvoices++;
+
       return {
+        // ── Canonical fields (used by Customer 360, Invoice History, Aging) ──
         invoiceNumber: inv.invoiceNumber,
         invoiceDate: inv.invoiceDate,
+        dueDate: inv.dueDate || null,
+        customerId: inv.customerId,
         customer: inv.customerSnapshot?.name || 'Unknown',
+        status: inv.status,
+        // ── Amounts (canonical) ──────────────────────────────────────────────
+        grandTotal,
+        amountReceived,
+        balance,
+        // ── Legacy aliases (for backward compatibility) ───────────────────────
+        totalAmount: grandTotal,
+        paidAmount: amountReceived,
+        balanceAmount: balance,
+        paymentStatus: inv.status,
+        // ── Tax detail ───────────────────────────────────────────────────────
         invoiceAmount: inv.totalTaxableAmount || 0,
         taxAmount: inv.totalGST || 0,
-        totalAmount: inv.grandTotal || 0,
-        paymentStatus: inv.status,
-        dueDate: inv.dueDate || inv.invoiceDate
+        // ── Line items (for Items Bought tab in Customer 360) ─────────────────
+        lineItems: (inv.lineItems || []).map((li: any) => ({
+          productId: li.productId,
+          productName: li.productName,
+          quantity: li.quantity || 0,
+          rate: li.rate || 0,
+          unit: li.unit || 'Nos',
+          totalAmount: li.totalAmount || 0,
+        })),
       };
     });
 
@@ -892,11 +1074,13 @@ export const getSalesInvoicewise = async (req: AuthRequest, res: Response) => {
         summary: {
           totalInvoices,
           totalSalesValue,
+          totalAmountReceived,
+          outstanding: Math.max(0, totalSalesValue - totalAmountReceived),
           paidInvoices,
-          unpaidInvoices
+          unpaidInvoices,
         },
-        data: transformed
-      }
+        data: transformed,
+      },
     });
   } catch (error: any) { res.status(500).json({ success: false, message: error.message }); }
 };
@@ -1859,25 +2043,70 @@ export const getPurchaseAging = async (req: AuthRequest, res: Response) => {
 export const getPurchasesBillwise = async (req: AuthRequest, res: Response) => {
   try {
     const businessId = new mongoose.Types.ObjectId(req.user!.businessId);
-    const bills = await PurchaseBill.find({ businessId, status: { $nin: ['cancelled', 'draft'] } }).sort({ billDate: -1 });
+    const { supplierId, from, to } = req.query as any;
+
+    // Build strict query — always scoped to this business
+    const query: any = { businessId, status: { $nin: ['cancelled', 'draft'] } };
+
+    // CRITICAL: filter by supplier when provided (Supplier 360 requirement)
+    if (supplierId) {
+      query.supplierId = new mongoose.Types.ObjectId(supplierId);
+    }
+
+    if (from || to) {
+      query.billDate = {
+        $gte: from ? new Date(from) : new Date('2000-01-01'),
+        $lte: to ? new Date(to) : new Date(),
+      };
+    }
+
+    const bills = await PurchaseBill.find(query).sort({ billDate: -1 }).lean();
 
     let totalPurchaseValue = 0;
+    let totalAmountPaid = 0;
     let paidBills = 0;
     let unpaidBills = 0;
 
     const transformed = bills.map((b: any) => {
-      totalPurchaseValue += b.grandTotal || 0;
+      const grandTotal = b.grandTotal || 0;
+      const amountPaid = b.amountPaid || 0;
+      // Use stored balance, or compute as fallback
+      const balance = b.balance != null ? b.balance : Math.max(0, grandTotal - amountPaid);
+
+      totalPurchaseValue += grandTotal;
+      totalAmountPaid += amountPaid;
       if (b.status === 'paid') paidBills++;
       else unpaidBills++;
 
       return {
+        // ── Canonical fields (used by Supplier 360, Purchase History, Aging) ──
         billNumber: b.billNumber,
         billDate: b.billDate,
+        dueDate: b.dueDate || null,
+        supplierId: b.supplierId,
         supplier: b.supplierSnapshot?.name || 'Unknown',
+        status: b.status,
+        // ── Amounts (canonical) ──────────────────────────────────────────────
+        grandTotal,
+        amountPaid,
+        balance,
+        // ── Legacy aliases (for backward compatibility) ───────────────────────
+        totalBillAmount: grandTotal,
+        paidAmount: amountPaid,
+        balanceAmount: balance,
+        paymentStatus: b.status,
+        // ── Tax detail ───────────────────────────────────────────────────────
         taxableAmount: b.totalTaxableAmount || 0,
         gstAmount: b.totalGST || 0,
-        totalBillAmount: b.grandTotal || 0,
-        paymentStatus: b.status
+        // ── Line items (for Rate History tab in Supplier 360) ─────────────────
+        lineItems: (b.lineItems || []).map((li: any) => ({
+          productId: li.productId,
+          productName: li.productName,
+          quantity: li.quantity || 0,
+          rate: li.rate || 0,
+          unit: li.unit || 'Nos',
+          totalAmount: li.totalAmount || 0,
+        })),
       };
     });
 
@@ -1887,11 +2116,13 @@ export const getPurchasesBillwise = async (req: AuthRequest, res: Response) => {
         summary: {
           totalPurchaseBills: bills.length,
           totalPurchaseValue,
+          totalAmountPaid,
+          outstanding: Math.max(0, totalPurchaseValue - totalAmountPaid),
           paidBills,
-          unpaidBills
+          unpaidBills,
         },
-        data: transformed
-      }
+        data: transformed,
+      },
     });
   } catch (e: any) { res.status(500).json({ success: false, message: e.message }); }
 };
