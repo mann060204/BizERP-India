@@ -5,6 +5,7 @@ import Link from 'next/link';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { extractArray } from '../../lib/report-utils';
 
 interface Column {
   key: string;
@@ -137,7 +138,7 @@ export default function ReportLayout({ title, subtitle, columns, fetchData, cate
     setLoading(true);
     setError(null);
     fetchRef.current().then(res => {
-      setData(Array.isArray(res) ? res : []);
+      setData(Array.isArray(res) ? res : extractArray(res));
       setLoading(false);
     }).catch(err => {
       console.error('Report fetch error:', err);

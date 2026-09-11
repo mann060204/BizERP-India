@@ -1,9 +1,9 @@
-﻿/**
+/**
  * report-utils.ts
- * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ * -----------------------------------------------------------------
  * Shared safe-access utilities for all report pages.
  * Never throws on null / undefined / NaN / "" / 0.
- * ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ * -----------------------------------------------------------------
  */
 
 /** Returns a safe finite number (0 if null / undefined / NaN / Infinity). */
@@ -20,7 +20,7 @@ export const safeINR = (v: unknown): string =>
     maximumFractionDigits: 0,
   }).format(safeNum(v));
 
-/** Returns a safe percentage number (0ΓÇô100). */
+/** Returns a safe percentage number (0–100). */
 export function safePct(v: unknown): number {
   const n = safeNum(v);
   return isFinite(n) ? n : 0;
@@ -31,15 +31,15 @@ export function safePctStr(v: unknown, decimals = 1): string {
   return `${safePct(v).toFixed(decimals)}%`;
 }
 
-/** Formats a date safely. Returns 'ΓÇö' for invalid dates. */
+/** Formats a date safely. Returns '—' for invalid dates. */
 export function safeDate(v: unknown, locale = 'en-IN'): string {
-  if (!v) return 'ΓÇö';
+  if (!v) return '—';
   try {
     const d = new Date(v as any);
-    if (isNaN(d.getTime())) return 'ΓÇö';
+    if (isNaN(d.getTime())) return '—';
     return d.toLocaleDateString(locale);
   } catch {
-    return 'ΓÇö';
+    return '—';
   }
 }
 
@@ -138,19 +138,23 @@ export function getPresetRange(preset: DatePreset): DateRange {
 /** Compact number formatter (1.2K, 3.4L, 1.2Cr). */
 export function compactINR(v: unknown): string {
   const n = safeNum(v);
-  if (n >= 1_00_00_000) return `Γé╣${(n / 1_00_00_000).toFixed(2)}Cr`;
-  if (n >= 1_00_000) return `Γé╣${(n / 1_00_000).toFixed(2)}L`;
-  if (n >= 1_000) return `Γé╣${(n / 1_000).toFixed(1)}K`;
-  return `Γé╣${n.toFixed(0)}`;
+  if (n >= 1_00_00_000) return `₹${(n / 1_00_00_000).toFixed(2)}Cr`;
+  if (n >= 1_00_000) return `₹${(n / 1_00_000).toFixed(2)}L`;
+  if (n >= 1_000) return `₹${(n / 1_000).toFixed(1)}K`;
+  return `₹${n.toFixed(0)}`;
 }
 
-/** Safely extracts an array from various API response shapes. */
+/** Safely extracts an array from various API response shapes (AxiosResponse, unwrapped, nested summaries, items, etc.). */
 export function extractArray(res: any): any[] {
   if (!res) return [];
   if (Array.isArray(res)) return res;
   if (Array.isArray(res.data)) return res.data;
   if (res.data && Array.isArray(res.data.data)) return res.data.data;
-  if (Array.isArray(res.items)) return res.items;
+  if (res.data?.data && Array.isArray(res.data.data.data)) return res.data.data.data;
   if (res.data && Array.isArray(res.data.items)) return res.data.items;
+  if (res.data?.data && Array.isArray(res.data.data.items)) return res.data.data.items;
+  if (Array.isArray(res.items)) return res.items;
+  if (res.result && Array.isArray(res.result)) return res.result;
+  if (res.data?.result && Array.isArray(res.data.result)) return res.data.result;
   return [];
 }

@@ -67,7 +67,7 @@ export default function SalesPerformancePage() {
         reportsApi.getSalespersonPerformance(),
       ]);
       const trendData = extractArray(trendRes);
-      const trendSum = (trendRes as any).summary || (trendRes as any).data?.summary || null;
+      const trendSum = (trendRes as any)?.data?.data?.summary || (trendRes as any)?.data?.summary || (trendRes as any)?.summary || null;
       setTrend(trendData);
       setSummary(trendSum);
 

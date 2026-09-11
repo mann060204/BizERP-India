@@ -40,9 +40,9 @@ export default function CashInvoiceReportPage() {
       if (statusFilter) params.status = statusFilter;
 
       const res = await reportsApi.getCashInvoiceReport(params);
-      const d = res || (res as any).data;
-      setSummary(d?.summary || null);
-      setRows(extractArray(d));
+      const summary = (res as any)?.data?.data?.summary || (res as any)?.data?.summary || (res as any)?.summary || null;
+      setSummary(summary);
+      setRows(extractArray(res));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }
