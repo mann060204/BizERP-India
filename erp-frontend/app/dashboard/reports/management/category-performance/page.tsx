@@ -7,7 +7,7 @@ import {
 import { RefreshCw, ArrowLeft, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { reportsApi } from '../../../../../lib/erp-api';
-import { safeINR, safePctStr, safeNum, extractArray } from '../../../../../lib/report-utils';
+import { safeINR, extractArray } from '../../../../../lib/report-utils';
 
 const INR = safeINR;
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#14b8a6'];
@@ -18,7 +18,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl">
       <p className="font-semibold mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: {typeof p.value === 'number' && p.value > 1000 ? INR(p.value) : p.value}</p>
+        <p key={i} style={{ color: p.color }}>
+          {p.name}: {typeof p.value === 'number' && (p.name.includes('%') ? `${p.value.toFixed(1)}%` : p.value > 1000 ? INR(p.value) : p.value)}
+        </p>
       ))}
     </div>
   );
@@ -36,14 +38,40 @@ export default function CategoryPerformancePage() {
     setLoading(true);
     setError(null);
     try {
-      const [salesRes, pnlRes, marginRes] = await Promise.all([
+      const [salesRes, pnlRes, marginRes] = await Promise.allSettled([
         reportsApi.getCategoryWiseSales(),
         reportsApi.getCategoryWiseProfitAndLoss(),
         reportsApi.getCategoryWiseMargin(),
       ]);
-      setCatSales(extractArray(salesRes));
-      setCatPnl(extractArray(pnlRes));
-      setCatMargin(extractArray(marginRes));
+
+      const rawSales = salesRes.status === 'fulfilled' ? extractArray(salesRes.value) : [];
+      const rawPnl = pnlRes.status === 'fulfilled' ? extractArray(pnlRes.value) : [];
+      const rawMargin = marginRes.status === 'fulfilled' ? extractArray(marginRes.value) : [];
+
+      const normalizeCat = (arr: any[]) => arr.map((r: any) => {
+        const cat = r.category || r._id || r.name || 'General';
+        const sales = Number(r.totalSales ?? r.revenue ?? r.totalRevenue ?? 0);
+        const qty = Number(r.totalQty ?? r.quantitySold ?? r.quantity ?? 0);
+        const gp = Number(r.grossProfit ?? r.profit ?? (sales - (r.cost || 0)));
+        const margin = Number(r.marginPct ?? (sales > 0 ? (gp / sales) * 100 : 0));
+        return {
+          ...r,
+          category: cat,
+          _id: cat,
+          name: cat,
+          totalSales: sales,
+          revenue: sales,
+          totalQty: qty,
+          quantitySold: qty,
+          grossProfit: gp,
+          profit: gp,
+          marginPct: margin,
+        };
+      });
+
+      setCatSales(normalizeCat(rawSales));
+      setCatPnl(normalizeCat(rawPnl));
+      setCatMargin(normalizeCat(rawMargin));
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || 'Failed to load report');
     } finally { setLoading(false); }
@@ -103,7 +131,7 @@ export default function CategoryPerformancePage() {
                     <BarChart data={activeData.slice(0, 12)} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={v => tab === 'margin' ? `${v}%` : `₹${(v/1000).toFixed(0)}K`} />
-                      <YAxis type="category" dataKey={activeData[0]?.category ? 'category' : '_id'} tick={{ fontSize: 10 }} width={110} />
+                      <YAxis type="category" dataKey="category" tick={{ fontSize: 10 }} width={120} />
                       <Tooltip content={<CustomTooltip />} />
                       <Bar
                         dataKey={tab === 'sales' ? 'totalSales' : tab === 'pnl' ? 'grossProfit' : 'marginPct'}
@@ -127,7 +155,7 @@ export default function CategoryPerformancePage() {
                           dataKey={tab === 'sales' ? 'totalSales' : tab === 'pnl' ? 'grossProfit' : 'marginPct'}>
                           {activeData.slice(0, 8).map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                         </Pie>
-                        <Tooltip formatter={(v: any) => tab === 'margin' ? `${v}%` : INR(v)} />
+                        <Tooltip formatter={(v: any) => tab === 'margin' ? `${Number(v).toFixed(1)}%` : INR(v)} />
                       </PieChart>
                     </ResponsiveContainer>
                     <div className="space-y-1.5 mt-2">
@@ -138,7 +166,7 @@ export default function CategoryPerformancePage() {
                             <span className="text-slate-600 truncate max-w-[120px]">{c.category || c._id || 'Other'}</span>
                           </div>
                           <span className="font-semibold text-slate-800">
-                            {tab === 'margin' ? `${(c.marginPct || 0).toFixed(1)}%` : INR(tab === 'sales' ? c.totalSales : c.grossProfit)}
+                            {tab === 'margin' ? `${(c.marginPct || 0).toFixed(1)}%` : INR(tab === 'sales' ? (c.totalSales ?? c.revenue ?? 0) : (c.grossProfit ?? 0))}
                           </span>
                         </div>
                       ))}
@@ -168,10 +196,10 @@ export default function CategoryPerformancePage() {
                     ) : activeData.map((r: any, i: number) => (
                       <tr key={i} className="hover:bg-slate-50">
                         <td className="px-4 py-3 font-medium">{r.category || r._id || '—'}</td>
-                        <td className="px-4 py-3 text-right">{INR(r.totalSales || r.revenue)}</td>
-                        <td className="px-4 py-3 text-right">{r.totalQty || '—'}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-emerald-700">{INR(r.grossProfit || 0)}</td>
-                        <td className="px-4 py-3 text-right">{r.marginPct ? `${r.marginPct.toFixed(1)}%` : '—'}</td>
+                        <td className="px-4 py-3 text-right">{INR(r.totalSales ?? r.revenue ?? 0)}</td>
+                        <td className="px-4 py-3 text-right">{r.totalQty ?? r.quantitySold ?? '—'}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-emerald-700">{INR(r.grossProfit ?? r.profit ?? 0)}</td>
+                        <td className="px-4 py-3 text-right">{r.marginPct != null ? `${Number(r.marginPct).toFixed(1)}%` : '—'}</td>
                       </tr>
                     ))}
                   </tbody>

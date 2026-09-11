@@ -3,15 +3,37 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 import mongoose from 'mongoose';
 import Invoice from '../models/Invoice.model';
 import PurchaseBill from '../models/PurchaseBill.model';
+import Product from '../models/Product.model';
 
 // --- HELPER FUNCTION TO GET PRODUCTS ---
 const getProductsMap = async (businessId: mongoose.Types.ObjectId) => {
-  const products = await mongoose.model('Product').find({ businessId }).lean();
+  const products = await Product.find({ businessId }).lean();
   const map = new Map<string, any>();
   products.forEach((p: any) => {
     map.set(p._id.toString(), p);
+    if (p.name) {
+      map.set(p.name.toLowerCase().trim(), p);
+    }
   });
   return map;
+};
+
+// --- HELPER FUNCTION TO RESOLVE PRODUCT CATEGORY ---
+const resolveCategory = (item: any, productsMap: Map<string, any>): string => {
+  const pid = item.productId ? (item.productId as any)._id?.toString() || item.productId.toString() : '';
+  const pname = (item.productName || '').toLowerCase().trim();
+  const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
+
+  const cat = (
+    product?.category?.trim() ||
+    product?.group?.trim() ||
+    product?.subGroup?.trim() ||
+    (item as any).category?.trim() ||
+    item.tag?.trim() ||
+    product?.productType ||
+    'General'
+  );
+  return cat;
 };
 
 // 1. INVENTORY WISE CUSTOMER SUMMARY
@@ -343,16 +365,42 @@ export const getCategoryWiseProfitAndLoss = async (req: AuthRequest, res: Respon
 
     invoices.forEach(inv => {
       inv.lineItems?.forEach(item => {
-        const pid = item.productId?.toString();
-        const product = pid ? productsMap.get(pid) : null;
-        const cat = product?.category || 'Uncategorized';
+        const cat = resolveCategory(item, productsMap);
+        const pid = item.productId ? (item.productId as any)._id?.toString() || item.productId.toString() : '';
+        const pname = (item.productName || '').toLowerCase().trim();
+        const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
 
-        if (!map.has(cat)) map.set(cat, { category: cat, revenue: 0, cost: 0 });
+        const qty = Number(item.quantity ?? item.actualQty ?? 1);
+        const amount = Number(
+          item.totalAmount ??
+          (item.taxableAmount != null ? (item.taxableAmount + (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)) : null) ??
+          ((item.quantity || 0) * (item.rate || 0)) ??
+          0
+        );
+        const unitCost = Number(product?.purchasePrice ?? (item.rate ? item.rate * 0.8 : 0));
+        const cost = unitCost * qty;
+
+        if (!map.has(cat)) {
+          map.set(cat, {
+            category: cat,
+            _id: cat,
+            name: cat,
+            revenue: 0,
+            totalSales: 0,
+            totalRevenue: 0,
+            quantitySold: 0,
+            totalQty: 0,
+            cost: 0,
+          });
+        }
         
         const m = map.get(cat);
-        m.revenue += item.totalAmount;
-        const unitCost = product?.purchasePrice || (item.rate * 0.8);
-        m.cost += unitCost * item.quantity;
+        m.revenue += amount;
+        m.totalSales += amount;
+        m.totalRevenue += amount;
+        m.quantitySold += qty;
+        m.totalQty += qty;
+        m.cost += cost;
       });
     });
 
@@ -362,10 +410,12 @@ export const getCategoryWiseProfitAndLoss = async (req: AuthRequest, res: Respon
       totalRevenue += m.revenue;
       totalCost += m.cost;
       const gp = m.revenue - m.cost;
+      const marginPct = m.revenue > 0 ? (gp / m.revenue) * 100 : 0;
       return {
         ...m,
         grossProfit: gp,
-        marginPct: m.revenue > 0 ? (gp / m.revenue) * 100 : 0
+        profit: gp,
+        marginPct
       };
     }).sort((a, b) => b.grossProfit - a.grossProfit);
 
@@ -398,19 +448,49 @@ export const getCategoryWiseSales = async (req: AuthRequest, res: Response) => {
     invoices.forEach(inv => {
       const invCategories = new Set<string>(); // To track unique orders per category
       inv.lineItems?.forEach(item => {
-        const pid = item.productId?.toString();
-        const product = pid ? productsMap.get(pid) : null;
-        const cat = product?.category || 'Uncategorized';
+        const cat = resolveCategory(item, productsMap);
+        const pid = item.productId ? (item.productId as any)._id?.toString() || item.productId.toString() : '';
+        const pname = (item.productName || '').toLowerCase().trim();
+        const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
 
-        if (!map.has(cat)) map.set(cat, { category: cat, quantitySold: 0, revenue: 0, ordersCount: 0 });
+        const qty = Number(item.quantity ?? item.actualQty ?? 1);
+        const amount = Number(
+          item.totalAmount ??
+          (item.taxableAmount != null ? (item.taxableAmount + (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)) : null) ??
+          ((item.quantity || 0) * (item.rate || 0)) ??
+          0
+        );
+        const unitCost = Number(product?.purchasePrice ?? (item.rate ? item.rate * 0.8 : 0));
+        const cost = unitCost * qty;
+
+        if (!map.has(cat)) {
+          map.set(cat, {
+            category: cat,
+            _id: cat,
+            name: cat,
+            quantitySold: 0,
+            totalQty: 0,
+            revenue: 0,
+            totalSales: 0,
+            totalRevenue: 0,
+            cost: 0,
+            ordersCount: 0,
+            totalOrders: 0,
+          });
+        }
         
         const m = map.get(cat);
-        m.quantitySold += item.quantity;
-        m.revenue += item.totalAmount;
+        m.quantitySold += qty;
+        m.totalQty += qty;
+        m.revenue += amount;
+        m.totalSales += amount;
+        m.totalRevenue += amount;
+        m.cost += cost;
         
         if (!invCategories.has(cat)) {
           invCategories.add(cat);
           m.ordersCount++;
+          m.totalOrders++;
         }
       });
     });
@@ -420,11 +500,16 @@ export const getCategoryWiseSales = async (req: AuthRequest, res: Response) => {
     const data = Array.from(map.values()).map(m => {
       totalSales += m.revenue;
       totalQty += m.quantitySold;
+      const gp = m.revenue - m.cost;
+      const marginPct = m.revenue > 0 ? (gp / m.revenue) * 100 : 0;
       return {
         ...m,
+        grossProfit: gp,
+        profit: gp,
+        marginPct,
         averageSellingPrice: m.quantitySold > 0 ? m.revenue / m.quantitySold : 0
       };
-    }).sort((a, b) => b.revenue - a.revenue);
+    }).sort((a, b) => b.totalSales - a.totalSales);
 
     res.status(200).json({
       success: true,
@@ -452,14 +537,41 @@ export const getCategoryWiseMargin = async (req: AuthRequest, res: Response) => 
 
     invoices.forEach(inv => {
       inv.lineItems?.forEach(item => {
-        const pid = item.productId?.toString();
-        const product = pid ? productsMap.get(pid) : null;
-        const cat = product?.category || 'Uncategorized';
+        const cat = resolveCategory(item, productsMap);
+        const pid = item.productId ? (item.productId as any)._id?.toString() || item.productId.toString() : '';
+        const pname = (item.productName || '').toLowerCase().trim();
+        const product = (pid && productsMap.get(pid)) || (pname && productsMap.get(pname)) || null;
 
-        if (!map.has(cat)) map.set(cat, { category: cat, revenue: 0, cost: 0 });
+        const qty = Number(item.quantity ?? item.actualQty ?? 1);
+        const amount = Number(
+          item.totalAmount ??
+          (item.taxableAmount != null ? (item.taxableAmount + (item.cgst || 0) + (item.sgst || 0) + (item.igst || 0)) : null) ??
+          ((item.quantity || 0) * (item.rate || 0)) ??
+          0
+        );
+        const unitCost = Number(product?.purchasePrice ?? (item.rate ? item.rate * 0.8 : 0));
+        const cost = unitCost * qty;
+
+        if (!map.has(cat)) {
+          map.set(cat, {
+            category: cat,
+            _id: cat,
+            name: cat,
+            revenue: 0,
+            totalSales: 0,
+            totalRevenue: 0,
+            quantitySold: 0,
+            totalQty: 0,
+            cost: 0,
+          });
+        }
         const m = map.get(cat);
-        m.revenue += item.totalAmount;
-        m.cost += (product?.purchasePrice || (item.rate * 0.8)) * item.quantity;
+        m.revenue += amount;
+        m.totalSales += amount;
+        m.totalRevenue += amount;
+        m.quantitySold += qty;
+        m.totalQty += qty;
+        m.cost += cost;
       });
     });
 
@@ -469,10 +581,12 @@ export const getCategoryWiseMargin = async (req: AuthRequest, res: Response) => 
       const gp = m.revenue - m.cost;
       totalGrossProfit += gp;
       totalRevenue += m.revenue;
+      const marginPct = m.revenue > 0 ? (gp / m.revenue) * 100 : 0;
       return {
         ...m,
         grossProfit: gp,
-        marginPct: m.revenue > 0 ? (gp / m.revenue) * 100 : 0
+        profit: gp,
+        marginPct
       };
     }).sort((a, b) => b.marginPct - a.marginPct); // Sort by highest margin %
 
@@ -505,17 +619,15 @@ export const getCategoryWiseSupplierAnalysis = async (req: AuthRequest, res: Res
       const sname = bill.supplierSnapshot?.name || 'Cash Supplier';
 
       bill.lineItems?.forEach(item => {
-        const pid = item.productId?.toString();
-        const product = pid ? productsMap.get(pid) : null;
-        const cat = product?.category || 'Uncategorized';
+        const cat = resolveCategory(item, productsMap);
         const key = `${cat}_${sid}`;
 
         if (!map.has(key)) {
           map.set(key, { category: cat, supplierName: sname, purchaseValue: 0, quantityPurchased: 0 });
         }
         const m = map.get(key);
-        m.purchaseValue += item.totalAmount;
-        m.quantityPurchased += item.quantity;
+        m.purchaseValue += (item.totalAmount || (item.quantity * item.rate) || 0);
+        m.quantityPurchased += (item.quantity || 1);
       });
     });
 
